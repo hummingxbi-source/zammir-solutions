@@ -19,7 +19,7 @@
 | [0011](docs/decisiones/0011-redondeo-y-desglose-de-iva.md) | Redondeo y desglose de IVA | Aceptada | 2026-10-26 |
 | [0012](docs/decisiones/0012-motor-de-sincronizacion.md) | Motor de sincronización sin conexión | Aceptada (sujeta a `spike/sync`) | 2026-10-26 |
 | [0013](docs/decisiones/0013-autenticacion-por-dispositivo-y-pin.md) | Autenticación por dispositivo y PIN (PIN sin conexión) | Aceptada | 2026-10-26 |
-| [0014](docs/decisiones/0014-estructura-del-repositorio-y-herramientas.md) | Estructura del repositorio y herramientas | **Propuesta** | 2026-10-26 |
+| [0014](docs/decisiones/0014-estructura-del-repositorio-y-herramientas.md) | Estructura del repositorio y herramientas | Aceptada | 2026-10-26 |
 | [0015](docs/decisiones/0015-convenciones-del-modelo-de-datos.md) | Convenciones del modelo de datos | **Propuesta** | 2026-10-26 |
 | [0016](docs/decisiones/0016-protocolo-de-operaciones-y-folios.md) | Protocolo de operaciones y asignación de folios | **Propuesta** (se cierra con `spike/sync`) | 2026-10-26 |
 | [0017](docs/decisiones/0017-reconciliacion-con-el-documento-completo.md) | Reconciliación con el documento de construcción completo: qué decisión manda | Aceptada (calendario abierto: PD-34) | 2026-10-27 |
