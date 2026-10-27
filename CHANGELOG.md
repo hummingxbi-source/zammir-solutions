@@ -13,3 +13,4 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). L
 
 ### Cambiado
 - ADR-0009 (idioma del código) aceptada; PD-18 resuelto.
+- Referencia de la demo (`docs/producto/DEMO_REFERENCIA.md`) y revisión de negocio con reglas propuestas (`docs/producto/REVISION_DE_NEGOCIO.md`). PD-25 a PD-36 y PP-01 a PP-19 en `PENDIENTES.md`.
