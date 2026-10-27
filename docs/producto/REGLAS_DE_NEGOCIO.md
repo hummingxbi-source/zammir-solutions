@@ -41,6 +41,7 @@
 ## Anticipo, saldo y pagos
 
 **RN-08 Anticipo obligatorio.** Trabajos a medida y puertas y ventanas siempre piden anticipo. Por defecto 50%, configurable. El saldo se paga contra entrega o instalación [DC §5.2].
+- Redondeo: el anticipo se redondea hacia arriba al centavo y el saldo es la resta [ADR-0011].
 
 **RN-09 Sin crédito.** No existen límites de crédito, intereses ni estados de cuenta. Un saldo pendiente solo existe como remanente de un trabajo en proceso o entregado con adeudo autorizado [DC §5.2].
 

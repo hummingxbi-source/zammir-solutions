@@ -27,10 +27,13 @@
 | PD-15 | Modelo de impresora térmica de 80 mm | Juanito | Sí, para la prueba de impresión | Semana 1 [ADR-0008] | — |
 | PD-16 | Modelo de tablet (Wi-Fi o con datos móviles) | Juanito | No | Antes de comprar | — |
 | PD-17 | Confirmar que Luis y Ricardo tienen exactamente los mismos permisos [DC §4] | Luis | No | Antes de construir permisos | Mismos permisos, configurable |
-| PD-18 | Idioma de los identificadores en el código [ADR-0009] | Juanito | Sí, antes de escribir código | Fase 2 | Propuesta: inglés |
 | PD-19 | Pasar a privado el repositorio de la demo (`HummingX-BI/formularios`), que hoy es público y contiene datos del cliente | Juanito | No | **Urgente** | — |
 | PD-20 | Costo mensual de hosting en producción, para el contrato [ADR-0003] | Juanito | No | Antes de firmar | — |
-| PD-21 | Cómo se mide el "metro lineal" de un producto: largo capturado o perímetro [RN-01] | Luis | No | Antes de cargar el catálogo real | Configurable por regla de precio |
+| PD-21 | Cierre de sesión de administradores por inactividad: ¿cuánto tiempo? [DC §4 dice "prolongada"] | Juanito / Luis | No | Antes de Sprint 0 | Valor configurable; sin valor fijo en el código |
+| PD-22 | Política de intentos fallidos de PIN: cuántos y cuánto dura el bloqueo | Juanito | No | Antes de Sprint 1 | Valores configurables propuestos en ADR-0013 |
+| PD-23 | ¿Qué año lleva el folio de un documento creado sin conexión el 31 de dic. y enviado en enero? [RN-15 dice "año real en curso"] | Juanito / Luis | No | Antes de Sprint 2 | Propuesta en SINCRONIZACION.md: año de la fecha de emisión en hora de México |
+| PD-24 | Qué efecto tiene cancelar una venta de mostrador en el corte de caja (¿se devuelve efectivo?) [RF-M4-07] | Luis | No | Antes de Sprint 3 | Se registra la cancelación con motivo, sin regla automática sobre la caja |
+| PD-25 | Cómo se mide el "metro lineal" de un producto: largo capturado o perímetro [RN-01] | Luis | No | Antes de cargar el catálogo real | Configurable por regla de precio |
 
 ## Resueltos
 
@@ -39,6 +42,7 @@
 | PR-01 | ¿Los precios incluyen IVA? [DC §5.6] | Sí, incluyen IVA [ADR-0004] | 26 oct 2026 |
 | PR-02 | ¿Se imprime en tamaño carta? [DC RF-M2-06] | No, fuera del alcance [ADR-0005] | 26 oct 2026 |
 | PR-03 | ¿Se reutiliza el código de la demo? | No, se construye desde cero [ADR-0002] | 26 oct 2026 |
+| PR-04 | PD-18: idioma de los identificadores en el código | Inglés; interfaz, docs y commits en español [ADR-0009] | 26 oct 2026 |
 
 ## Propuestas
 

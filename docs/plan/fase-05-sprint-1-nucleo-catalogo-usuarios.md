@@ -23,7 +23,7 @@ Construir la base de la que depende todo lo demás: **el dinero que nunca se equ
   - Interfaz común: recibe medidas, cantidad y parámetros; devuelve importe y detalle legible del cálculo.
   - Reglas iniciales: por m², por metro lineal, por pieza, por servicio. Todas con los parámetros previstos (área mínima, redondeo de medida, mínimo) **apagados por defecto** hasta tener datos (PD-02).
   - Registro de reglas: una regla nueva se agrega sin tocar las existentes.
-  - ⚠ PD-21: cómo se mide el metro lineal (largo capturado o perímetro). Se implementa configurable.
+  - ⚠ PD-25: cómo se mide el metro lineal (largo capturado o perímetro). Se implementa configurable.
 
 ### 5.2 Catálogo — M1
 - RF-M1-01 a RF-M1-06. RF-M1-07 (existencias) se construye en el Sprint 3, detrás del interruptor P2.
@@ -142,5 +142,5 @@ Construir la base de la que depende todo lo demás: **el dinero que nunca se equ
 
 ## Riesgos y pendientes
 
-- PD-02 (reglas reales), PD-03 (catálogo real), PD-17 (permisos de administradores), PD-21 (metro lineal).
+- PD-02 (reglas reales), PD-03 (catálogo real), PD-17 (permisos de administradores), PD-25 (metro lineal).
 - El manejo del PIN sin conexión sigue lo decidido en `AUTENTICACION.md`; si en pruebas resulta inseguro o incómodo, se detiene y se replantea con Juanito.
