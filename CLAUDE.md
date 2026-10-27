@@ -18,7 +18,8 @@ El corazón del sistema es un **cotizador en tablet que funciona sin internet**.
 | Cómo se llama cada cosa | `docs/producto/GLOSARIO.md` |
 | Qué no está definido todavía | `docs/producto/PENDIENTES.md` |
 | Qué ya se decidió | `DECISIONES.md` |
-| Fases y sprints | `docs/ROADMAP.md` |
+| **Qué construir en cada fase, con sus pruebas y compuertas** | `docs/plan/` — empieza por su README y `00-principios-de-ingenieria.md` |
+| Fases y sprints (resumen) | `docs/ROADMAP.md` |
 | Cómo se trabaja en el repositorio | `CONTRIBUTING.md` |
 | Arquitectura | `docs/arquitectura/` (en construcción, Fase 2) |
 
@@ -34,6 +35,7 @@ El corazón del sistema es un **cotizador en tablet que funciona sin internet**.
 8. **Las decisiones se registran.** Si tomas una decisión técnica o de negocio, escribe su ADR en `docs/decisiones/` y agrégala al índice de `DECISIONES.md`.
 9. **No reutilices código de la demo** (`HummingX-BI/formularios`) [ADR-0002].
 10. **Antes de una tarea grande, presenta un plan breve** (qué, en qué orden, qué riesgos) y espera aprobación.
+11. **No se avanza con algo en rojo.** Una fase no se cierra hasta que su compuerta de calidad está en verde. Nunca se desactivan pruebas ni se bajan umbrales para que pase. Si no alcanza el tiempo, se recorta alcance con aprobación de Juanito, nunca calidad (`docs/plan/README.md`).
 
 ## Cómo citar
 
