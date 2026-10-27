@@ -137,7 +137,7 @@ UPDATE folio_counters SET last_value = last_value + 1
 | Precio cotizado distinto al actual | Cotización hecha con catálogo viejo | Se acepta: el precio queda congelado [RN-03]. El servidor guarda la versión del catálogo usada y marca la diferencia como informativa |
 | Operaciones de usuario inactivo o dispositivo revocado | Operación hecha antes de que se enterara | Se aplica y queda "por revisar"; las posteriores al corte de acceso se rechazan de forma estructural [ADR-0013] |
 
-**Alcance de esta tabla y [RNF-05]:** la regla "gana el último cambio por campo, con bitácora" aplica a los datos *editables* de una orden (responsables, fecha estimada, notas), igual que a los clientes. El **estatus** de una orden no es un campo editable: es una transición de la máquina de estados y sigue la fila "Cambios de estado". (Aclaración incluida al integrar; **Juanito debe confirmarla de forma explícita**. La ampliación completa del punto 8 de `docs/plan/fase-02-arquitectura.md` §2.8 queda para la Fase 2.)
+**Alcance de esta tabla y [RNF-05]:** la regla "gana el último cambio por campo, con bitácora" aplica a los datos *editables* de una orden (responsables, fecha estimada, notas), igual que a los clientes. El **estatus** de una orden no es un campo editable: es una transición de la máquina de estados y sigue la fila "Cambios de estado". (Aclaración confirmada por Juanito el 2026-10-27. La ampliación completa del punto 8 de `docs/plan/fase-02-arquitectura.md` §2.8 queda para la Fase 2.)
 
 **"Por revisar"** es un estado visible para administradores con el motivo. Nada se descarta automáticamente [RN-18].
 
