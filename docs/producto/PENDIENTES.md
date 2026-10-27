@@ -30,6 +30,7 @@
 | PD-18 | Idioma de los identificadores en el código [ADR-0009] | Juanito | Sí, antes de escribir código | Fase 2 | Propuesta: inglés |
 | PD-19 | Pasar a privado el repositorio de la demo (`HummingX-BI/formularios`), que hoy es público y contiene datos del cliente | Juanito | No | **Urgente** | — |
 | PD-20 | Costo mensual de hosting en producción, para el contrato [ADR-0003] | Juanito | No | Antes de firmar | — |
+| PD-21 | Cómo se mide el "metro lineal" de un producto: largo capturado o perímetro [RN-01] | Luis | No | Antes de cargar el catálogo real | Configurable por regla de precio |
 
 ## Resueltos
 
