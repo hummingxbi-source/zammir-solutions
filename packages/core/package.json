@@ -1,0 +1,17 @@
+{
+  "name": "@zammir/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Dominio y aplicación en TypeScript puro (sin React, Supabase ni Dexie)",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.3"
+  }
+}
