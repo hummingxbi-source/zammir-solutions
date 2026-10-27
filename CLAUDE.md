@@ -22,6 +22,7 @@ El corazón del sistema es un **cotizador en tablet que funciona sin internet**.
 | Recorridos que deben pasar antes de entregar (E1 a E10) | `docs/calidad/PRUEBAS_DE_ACEPTACION.md` |
 | Qué ya se decidió | `DECISIONES.md` |
 | **Qué construir en cada fase, con sus pruebas y compuertas** | `docs/plan/` — empieza por su README y `00-principios-de-ingenieria.md` |
+| Historias por sprint y su trazabilidad | `docs/backlog/` (borrador hasta que Juanito lo apruebe) |
 | Fases y sprints (resumen) | `docs/ROADMAP.md` |
 | Cómo se trabaja en el repositorio | `CONTRIBUTING.md` |
 | Arquitectura | `docs/arquitectura/` (en construcción, Fase 2) |

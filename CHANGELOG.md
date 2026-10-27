@@ -20,6 +20,8 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). L
 - Pendientes PD-26 a PD-35, incluido el calendario (PD-34).
 - Referencia de la demo (`docs/producto/DEMO_REFERENCIA.md`) y revisión de negocio con reglas propuestas (`docs/producto/REVISION_DE_NEGOCIO.md`), con lo que Juanito contó el 27 de octubre. Preguntas para Luis PD-36 a PD-47 y propuestas PP-01 a PP-19 en `PENDIENTES.md`. Riesgos R16 y R17.
 
+- Backlog de la Fase 3 en `docs/backlog/` (143 historias en los sprints S0 a S5, trazabilidad y análisis de capacidad). Borrador a la espera de la aprobación de Juanito.
+
 ### Cambiado
 - Calendario decidido (PD-34): se mantiene el plan actual de sprints con recortes desde ahora [ADR-0019]. ADR-0014 actualizada: la impresión de tickets ya no está "sin elegir" [ADR-0018].
 - ADR-0009 (idioma del código) aceptada; PD-18 resuelto.
