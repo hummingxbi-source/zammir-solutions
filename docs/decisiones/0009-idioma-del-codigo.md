@@ -1,6 +1,6 @@
 # ADR-0009: Idioma del código
 
-- **Estado:** Propuesta — la confirma Juanito antes de escribir código (PD-18)
+- **Estado:** Aceptada (confirmada por Juanito el 2026-10-26, resuelve PD-18)
 - **Fecha:** 2026-10-26
 - **Decide:** Juanito
 
@@ -8,7 +8,7 @@
 
 La interfaz va en español de México con el vocabulario del oficio [DC §0 regla 6]. Hay que decidir en qué idioma se nombran tablas, tipos, funciones y archivos.
 
-## Propuesta
+## Decisión
 
 - **Código en inglés:** tablas, tipos, funciones, variables, carpetas y archivos de código.
 - **Interfaz, documentación, mensajes al usuario y commits en español.**
