@@ -1,3 +1,5 @@
-export function App() {
+import type { ReactElement } from 'react';
+
+export function App(): ReactElement {
   return <main>ZAMMIR</main>;
 }
