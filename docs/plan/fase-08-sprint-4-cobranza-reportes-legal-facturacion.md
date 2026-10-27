@@ -71,14 +71,13 @@ Cerrar el círculo del negocio: saber quién debe, ver los números que pidió L
 
 **Fuera del alcance:** factura global, complemento de pago, notas de crédito complejas y otros complementos [DC §7.8].
 
-### 8.6 Orientación para usuarios nuevos [RF-UX-02 a RF-UX-04]
+### 8.6 Orientación para usuarios nuevos [RF-UX-02, RF-UX-03 y RF-UX-05]
 Va en este sprint porque necesita que todas las secciones existan.
 - Pantalla de "Primeros pasos" en el primer ingreso, con cinco tarjetas en el orden de la navegación.
 - Botón fijo "¿Por dónde empiezo?".
-- Recorrido guiado opcional con globos de ayuda.
-- Si no cabe, Juanito decide si el recorrido guiado se mueve; "Primeros pasos" y el botón no se recortan.
+- **El recorrido guiado con globos de ayuda [RF-UX-04] queda fuera de la entrega** [ADR-0019]; se hace después, salvo que Juanito decida otra cosa. "Primeros pasos" y el botón no se recortan.
 
-### 8.5 Portal de seguimiento — P1, detrás del interruptor (último del sprint)
+### 8.5 Portal de seguimiento — P1, detrás del interruptor (fuera de la entrega salvo que Luis lo active [ADR-0019])
 - RF-M2-11: el cliente ve y acepta la cotización en línea con un enlace público.
 - Línea de tiempo del trabajo [DC §3.2].
 - Si no cabe, Juanito decide moverlo a después de la entrega.
@@ -153,7 +152,6 @@ Va en este sprint porque necesita que todas las secciones existan.
 
 **Orientación**
 - [ ] "Primeros pasos" aparece solo en el primer ingreso de cada usuario; el botón "¿Por dónde empiezo?" la vuelve a abrir.
-- [ ] El recorrido guiado se puede omitir y no vuelve a aparecer solo.
 
 **Rendimiento**
 - [ ] Reportes con 12 meses de datos de prueba en menos de 3 segundos [RNF-27].

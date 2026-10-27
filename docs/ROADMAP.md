@@ -17,7 +17,7 @@
 
 | Fase | Qué incluye | Resultado | Fechas |
 |---|---|---|---|
-| 0. Cierre de contexto | Documento completo, lista de pendientes con responsables | `PENDIENTES.md` al día | 26–27 oct ✅ (falta confirmar PD-34) |
+| 0. Cierre de contexto | Documento completo, lista de pendientes con responsables | `PENDIENTES.md` al día | 26–27 oct ✅ |
 | 1. Documentación base | Alcance, reglas, glosario, requerimientos, decisiones, guías del repositorio | Esta carpeta `docs/` | 26–28 oct |
 | 2. Arquitectura | Capas y módulos, modelo de datos, sincronización sin conexión y folios, autenticación por dispositivo y PIN, dinero y redondeo, entornos, pruebas | `docs/arquitectura/`, `docs/calidad/` y ADRs | 26–30 oct (en curso) |
 | 3. Backlog | Épicas por módulo, historias con criterios de aceptación, Definition of Ready y de Done | Backlog en GitHub (Issues y Projects) | 30–31 oct |
@@ -30,10 +30,12 @@
 | S1 | 2 – 8 nov | Núcleo del dominio: dinero e IVA [ADR-0004], reglas de precio [ADR-0006]. Catálogo con importación CSV, clientes, usuarios con PIN y bitácora |
 | S2 | 9 – 15 nov | Cotizador completo: captura en tablet, PDF en el dispositivo, envío por WhatsApp, modo sin conexión y folios temporales |
 | S3 | 16 – 22 nov (16 feriado) | Órdenes de trabajo con anticipo, saldo y garantía. Mostrador: venta, ticket térmico en tres capas y corte de caja |
-| S4 | 23 – 29 nov | Cuentas por cobrar, reportes, legal, facturación (desde el sistema y portal) con adaptador simulado y PAC en pruebas [ADR-0007], orientación para usuarios nuevos |
+| S4 | 23 – 29 nov | Cuentas por cobrar, reportes, legal, facturación (desde el sistema y portal) con adaptador simulado y PAC en pruebas [ADR-0007], "Primeros pasos" y botón "¿Por dónde empiezo?". Preparar producción vacía, dominio y manuales [ADR-0019] |
 | S5 | 30 nov – 1 dic | Salida a producción: dominio, PAC en producción, carga del catálogo real, E1 a E10 con el equipo real, capacitación (3 sesiones de 3 horas) y acta de entrega |
 
-## ⚠ Calendario por decidir (PD-34)
+## Calendario: decidido, opción A (PD-34, [ADR-0019])
+
+Se mantiene el plan actual y se recorta desde ahora. Abajo queda la comparación que se tuvo a la vista.
 
 El documento de construcción propone otro reparto [DC §13]. La diferencia importante: **el documento deja una semana completa para estabilizar y entregar; el plan actual deja dos días.**
 
@@ -50,7 +52,7 @@ El documento de construcción propone otro reparto [DC §13]. La diferencia impo
 - **A. Mantener el plan actual y recortar desde ahora.** P1, P2 y el recorrido guiado pasan a "después de la entrega" salvo que Luis los active; producción vacía, dominio y manuales se preparan durante el S4; la entrega se acuerda para el final de la ventana (1 dic). *A favor:* respeta la carga semanal que pide la calidad exigida (100% de cobertura y mutación en dinero y folios). *En contra:* sin colchón; cualquier atraso del cliente recorre la fecha.
 - **B. Adoptar el plan del documento.** *A favor:* una semana completa para entregar y absorber sorpresas del equipo, el PAC o el cliente. *En contra:* la semana del 2 al 8 nov junta el núcleo de dinero, el catálogo, el cotizador y el motor de sincronización, que es lo más difícil del proyecto, para una sola persona y con la compuerta de calidad completa.
 
-**Recomendación: A**, porque B concentra el riesgo técnico mayor en una sola semana y la regla de avance impide cerrar un sprint a medias. Si se elige A, conviene avisar a Luis desde ahora que la entrega es al final de la ventana. **La decisión es de Juanito y se toma antes de armar el backlog (Fase 3).**
+**Decisión: A** [ADR-0019], por la recomendación original: B concentra el riesgo técnico mayor en una sola semana y la regla de avance impide cerrar un sprint a medias. **Pendiente:** avisar a Luis desde ahora que la entrega es al final de la ventana (1 dic) y que P1, P2 y el recorrido guiado quedan fuera de la entrega salvo que los active.
 
 ## Después de la entrega (fuera del calendario)
 

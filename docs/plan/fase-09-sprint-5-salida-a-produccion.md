@@ -77,5 +77,5 @@ Entregar a ZAMMIR un sistema en producción, con sus datos reales, su equipo con
 ## Riesgos y pendientes
 
 - **Insumos del cliente tarde** (catálogo, CSD): es el riesgo principal de la fecha, y no depende de HummingX. Se reporta de inmediato con su impacto en la fecha.
-- Dos días es muy poco para todo esto, más tres sesiones presenciales de capacitación: es la razón de PD-34. Si el calendario no cambia, lo que se pueda preparar antes (proyectos de producción vacíos, dominio, manuales) se adelanta durante el Sprint 4.
-- PD-02, PD-03, PD-04, PD-06, PD-09, PD-10, PD-11, PD-12, PD-29, PD-30, PD-32, PD-34.
+- Dos días es muy poco para todo esto, más tres sesiones presenciales de capacitación: fue la razón de PD-34. Con la opción A [ADR-0019], lo que se pueda preparar antes (proyectos de producción vacíos, dominio, manuales) se adelanta durante el Sprint 4.
+- PD-02, PD-03, PD-04, PD-06, PD-09, PD-10, PD-11, PD-12, PD-29, PD-30, PD-32.

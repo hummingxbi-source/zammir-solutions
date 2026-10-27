@@ -193,7 +193,7 @@ La demo la llama "riesgo de cobranza" y usa "contrato". En el sistema real: **Cu
 
 ## 8. Priorización sugerida de las propuestas
 
-Escala mía (valor para ZAMMIR / esfuerzo de construcción). Es una sugerencia para que Juanito decida. **Los sprints sugeridos dependen del calendario que se elija en PD-34.**
+Escala mía (valor para ZAMMIR / esfuerzo de construcción). Es una sugerencia para que Juanito decida. Los sprints sugeridos siguen el plan actual de sprints [ADR-0019].
 
 | ID | Propuesta | Valor | Esfuerzo | Cuándo |
 |---|---|---|---|---|

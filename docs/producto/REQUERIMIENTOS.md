@@ -183,7 +183,7 @@ La sección se llama "Reportes": sin predicciones ni periodos de calibración.
 - **RF-UX-01** Navegación en el orden real del trabajo: Catálogo, Cotizador, Órdenes de trabajo, Mostrador y Reportes, con numeración discreta y marca de las secciones ya visitadas. El panel de inicio va aparte, accesible desde el logo. Su contenido por rol está por definir (PD-31) [DC §12.2 punto 1].
 - **RF-UX-02** Pantalla de "Primeros pasos" en el primer ingreso, con cinco tarjetas en el orden de la navegación [DC §12.2 punto 2].
 - **RF-UX-03** Botón fijo "¿Por dónde empiezo?" [DC §12.2 punto 2].
-- **RF-UX-04** Recorrido guiado opcional con globos de ayuda [DC §12.2 punto 2].
+- **RF-UX-04** Recorrido guiado opcional con globos de ayuda [DC §12.2 punto 2]. *Fuera de la entrega salvo decisión en contrario de Juanito [ADR-0019].*
 - **RF-UX-05** Avisos contextuales que se pueden cerrar cuando una sección depende de otra (por ejemplo, "revisa primero tu catálogo") [DC §12.2 punto 2].
 - **RF-UX-06** Estados siempre visibles: conexión a internet, operaciones pendientes de enviar ("N pendientes") e impresora conectada o desconectada [DC §9, §12.2 punto 7, §8.3].
 - **RF-UX-07** Estados vacíos que enseñan qué hacer; nunca datos de relleno [RN-23].

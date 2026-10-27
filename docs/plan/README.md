@@ -5,7 +5,7 @@
 >
 > Alcance de este plan: el documento de construcción completo [DC §0–§17], recibido el 27 de octubre de 2026. Donde el documento choca con una decisión posterior de Juanito, manda el ADR ([ADR-0017]).
 >
-> **Calendario en revisión (PD-34):** las fechas de abajo son las del plan actual. El documento propone otro reparto con una semana completa de estabilización; ver opciones en `docs/ROADMAP.md`.
+> **Calendario decidido (PD-34, [ADR-0019]):** se mantiene el plan de abajo. P1, P2 y el recorrido guiado quedan fuera de la entrega salvo que Luis los active.
 
 ## Fases
 

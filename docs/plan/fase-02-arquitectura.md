@@ -103,5 +103,5 @@ Los borradores se escribieron antes de recibir §7 a §17 (marcados ⚠ PD-01). 
 
 - El PIN sin conexión es el punto más delicado de seguridad: hay que elegir entre comodidad y riesgo y dejarlo por escrito.
 - PD-01 resuelto: la §7 y la §8 ya llegaron; su efecto está en la sección 2.8.
-- PD-34 (calendario) puede mover el orden de los sprints, no la arquitectura.
+- PD-34 (calendario) quedó resuelto en [ADR-0019]: se mantiene el plan actual de sprints.
 - PD-16 afecta el tamaño de pantalla de pruebas.

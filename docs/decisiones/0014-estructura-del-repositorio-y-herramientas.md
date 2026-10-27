@@ -34,7 +34,7 @@ Monorepo con tres áreas: `apps/web` (PWA), `packages/core` (dominio y aplicaci�
 | Estado | Estado local de React y lecturas vivas de Dexie; un almacén pequeño solo para sesión y usuario activo | Evitar una capa de estado global innecesaria | Sprint 1 |
 | Secretos | gitleaks en CI | [ADR-0010] | Sprint 0 |
 | PDF en el dispositivo | **Sin elegir**; se decide con una validación corta (`spike/pdf`) | Requiere medir tamaño, fuentes y soporte sin conexión | Sprint 2 |
-| Impresión de tickets | **Sin elegir**; depende de la prueba [ADR-0008], PD-15 y §8 (PD-01) | — | Sprint 0 |
+| Impresión de tickets | Puerto `TicketPrinter` con tres adaptadores: Web Bluetooth + ESC/POS, `window.print()` y compartir [ADR-0018]. El modelo de impresora y el resultado de la capa 1 se registran tras la prueba de concepto (PD-15) | [ADR-0018] | Sprint 0 |
 
 > Las versiones concretas se fijan al crear el repositorio, verificando la documentación vigente. No las dejo escritas aquí porque podrían estar desactualizadas.
 

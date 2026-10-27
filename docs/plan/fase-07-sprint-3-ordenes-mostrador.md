@@ -59,7 +59,7 @@ Seguir cada trabajo desde el anticipo hasta la entrega con su garantía por escr
 - RF-M5-02: historial completo del cliente (cotizaciones, órdenes, ventas, pagos, garantías; facturas en el Sprint 4).
 - RF-M5-03: marca de cliente recurrente con dos o más trabajos entregados.
 
-### 7.5 Existencias — P2, detrás del interruptor (último del sprint)
+### 7.5 Existencias — P2, detrás del interruptor (fuera de la entrega salvo que Luis lo active [ADR-0019])
 - RF-M1-07: existencias de piezas estándar, mínimo configurable, alerta de existencia baja, descuento automático al vender o entregar.
 - Si no cabe en el sprint, Juanito decide moverlo a después de la entrega.
 

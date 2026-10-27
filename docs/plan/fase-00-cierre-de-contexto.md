@@ -2,7 +2,7 @@
 
 - **Tipo:** documentación
 - **Fechas:** 26–27 de octubre de 2026
-- **Estado:** lista para cerrar. Falta que Juanito confirme la lista de pendientes y decida el calendario (PD-34)
+- **Estado:** lista para cerrar. Falta que Juanito confirme la lista de pendientes. El calendario ya se decidió (PD-34, [ADR-0019])
 
 ## Objetivo
 
@@ -36,9 +36,9 @@ Que no quede ninguna pregunta abierta sin registrar: todo lo que falta saber est
 - [x] Documento fuente completo guardado.
 - [x] Revisión cruzada completa.
 - [ ] Juanito confirmó la lista de pendientes.
-- [ ] Juanito decidió el calendario (PD-34), porque cambia el backlog de la Fase 3.
+- [x] Juanito decidió el calendario (PD-34): opción A [ADR-0019].
 
 ## Riesgos y pendientes
 
 - Si algo del documento contradice el contrato firmado, manda lo firmado [DC §15].
-- PD-34 (calendario).
+- PD-34 (calendario): resuelto en [ADR-0019].
