@@ -42,6 +42,7 @@
 **Propósito:** reemplazar el catálogo desordenado por uno limpio que alimente cotizador, mostrador y facturación.
 
 - **RF-M1-01** Cada producto tiene: código (opcional, autogenerable), nombre, categoría, tipo, unidad de cobro, precio de lista **con IVA incluido** [RN-06], activo/inactivo, garantía sugerida (meses y texto, opcional) y datos fiscales para CFDI (clave de producto o servicio, clave de unidad, objeto de impuesto) con valores predeterminados por categoría. **[Cambio]** Se agrega la regla de precio asignada [RN-02], [ADR-0006].
+  *Nota [Juanito, 2026-10-27]: en la demo el código lo capturaba Luis; Juanito prefiere que lo genere el sistema (iniciales del nombre + número). Regla por definir: PP-05. La demo también capturaba una descripción del producto: PP-04.*
 - **RF-M1-02** Categorías iniciales: vidrio claro/flotado, vidrio templado, esmerilado/satinado, decorado/emplomado, espejo, cristal doble/termopanel, acrílico, aluminio y cancelería, herrajes, selladores y silicón, servicios.
 - **RF-M1-03** Búsqueda rápida tolerante a acentos y mayúsculas, con filtros por categoría y tipo.
 - **RF-M1-04** Alta, edición y desactivación por un administrador, sin intervención técnica. Nada se borra.
@@ -71,6 +72,7 @@
 
 - **RF-M3-01** Crear una orden desde una cotización aceptada o manualmente. Campos: folio, cliente, descripción, líneas copiadas, total, anticipo, saldo, responsables (quién mide, fabrica e instala), fecha estimada de entrega, notas y fotos opcionales de la medición.
 - **RF-M3-02** Estatus: en espera → en proceso → listo para entrega o instalación → entregado; y cancelado (con motivo). Botón "Avanzar" al siguiente estatus. Cada cambio guarda usuario y hora.
+  *Nota [Juanito, 2026-10-27]: "hay que ir definiendo los estatus". Propuesta de definiciones y requisitos de cada estatus en `docs/producto/REVISION_DE_NEGOCIO.md` §2; no es requerimiento hasta que Juanito la apruebe.*
 - **RF-M3-03** Registrar el anticipo (50% sugerido, editable) con método de pago y quién cobró. El saldo se calcula y queda visible hasta liquidarse.
 - **RF-M3-04** No se puede marcar "entregado" con saldo mayor a cero sin autorización de un administrador y un motivo; en ese caso el saldo pasa a cuentas por cobrar.
 - **RF-M3-05** Al entregar se crea el registro de garantía: fecha de inicio, duración, cobertura y exclusiones.
@@ -93,6 +95,7 @@
   - Un corte cerrado no se edita; solo un administrador lo reabre, con rastro.
 - **RF-M4-07** Cancelar una venta: solo administradores, con motivo y rastro.
 - **RF-M4-08** Cambio de usuario por PIN en un toque, con bloqueo por inactividad.
+  *Nota [Juanito, 2026-10-27]: en la demo el cajero se elegía de una lista sin autenticarse; Juanito quiere que cada cajero tenga su propia sesión. Ya está cubierto: nombre y PIN [ADR-0013]; el alta de cajeros la hace un administrador [RF-M8-01].*
 
 ## M5. Clientes e historial
 

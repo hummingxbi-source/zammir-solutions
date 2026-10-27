@@ -185,3 +185,4 @@ Va en este sprint porque necesita que todas las secciones existan.
 - Si el sprint no alcanza, el orden de recorte es: P1, luego detalles de presentación de reportes. Facturación y cuentas por cobrar no se recortan.
 - R12: el IVA por línea puede diferir un centavo del que espera el PAC [ADR-0011]; se confirma en su entorno de pruebas al inicio del sprint, no al final.
 - PD-04, PD-05, PD-08, PD-09, PD-12, PD-13, PD-26, PD-27, PD-28, PD-31.
+- Detalle de reportes visto en la demo [Juanito, 2026-10-27]: comparar periodos equivalentes (PP-13), valor contratado (PP-17), m² vendidos (PP-18), lista de atención (PP-07). Tolerancia de caja: PD-44. Ver `docs/producto/DEMO_REFERENCIA.md` §8 y `REVISION_DE_NEGOCIO.md` §6.

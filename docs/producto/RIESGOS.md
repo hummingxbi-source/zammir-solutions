@@ -25,3 +25,5 @@
 | R13 | El PAC real se conecta tarde y su API sorprende | Contrato del `BillingProvider` basado en el estándar CFDI; elegir el PAC antes del Sprint 4 | [ADR-0007], [ADR-0017], PD-05 |
 | R14 | El dominio cambia después de imprimir tickets reales y los QR dejan de funcionar | Definir el dominio antes de imprimir el primer ticket real; rutas estables | [RNF-37], PD-10 |
 | R15 | Semana de estabilización insuficiente | Decidir el calendario antes del backlog | PD-34 |
+| R16 | El corte de caja por cajero no corresponde a cómo ZAMMIR maneja el efectivo (cajón compartido por tres personas, una tablet que cobra en campo) | Preguntar a Luis antes del Sprint 3; el modelo separa turno de caja y cobros por cajero | PD-36, PD-37, `REVISION_DE_NEGOCIO.md` §4 |
+| R17 | La medición final en obra cambia el precio que se congeló al cotizar | Ajuste en la orden por un administrador, con motivo y bitácora (propuesta) | PD-38, [RN-03], [RN-13] |
