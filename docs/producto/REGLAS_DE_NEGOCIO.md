@@ -61,7 +61,7 @@
 ## Garantía
 
 **RN-14 Garantía escrita.** La garantía hoy es verbal; el sistema la vuelve un registro escrito ligado a cada trabajo entregado, con duración, cobertura y exclusiones, impresa en el comprobante [DC §5.4].
-- **Duración [POR DEFINIR].** La demo usó 6 meses como relleno: **no es un dato real**.
+- **Duración y texto [POR DEFINIR]**, configurables **por producto (garantía sugerida) y por orden** [DC §15 punto 5]. La demo usó 6 meses como relleno: **no es un dato real**.
 
 ## Folios
 
@@ -94,3 +94,43 @@
 ## Reportes
 
 **RN-20 Base de "ventas".** Por defecto, "ventas" = ventas de mostrador + pagos recibidos de órdenes de trabajo en el periodo (base de efectivo recibido) [DC §6 M7]. **[POR DEFINIR con Luis]**: se construye así y la base queda documentada en la pantalla.
+
+## Identidad y formatos
+
+**RN-21 Identidad en documentos.** Cotizaciones, comprobantes, tickets y facturas llevan la identidad de ZAMMIR (logo y datos del negocio), no la de HummingX [DC §12.3].
+- HummingX BI no está constituida como sociedad: nunca se escriben razón social ni datos fiscales de HummingX en ninguna pantalla; la marca solo aparece como nombre comercial [DC §1.1].
+- La leyenda "Powered by HummingX BI" solo puede ir en el pie de la aplicación y solo si el cliente lo acepta **[POR DEFINIR]** (PD-30). Mientras tanto, apagada por configuración.
+
+**RN-22 Formatos en pantalla y documentos** [DC §12.2 punto 9]:
+
+| Dato | Formato |
+|---|---|
+| Dinero | `$1,234.50` |
+| Fecha | `27 oct 2026` |
+| Teléfono | 10 dígitos |
+
+**RN-23 Sin datos de relleno.** Nunca se muestran ceros sin sentido, "Cliente 1" ni datos inventados; las pantallas vacías enseñan qué hacer ("Crea tu primera cotización") [DC §12.2 punto 5].
+
+## Facturación
+
+**RN-24 Una operación, una factura.** Una venta o una orden solo puede generar una factura vigente. Si el PAC falla o tarda, la solicitud queda "en proceso" con reintentos automáticos; **nunca se duplica un timbre** [DC §7.6].
+
+**RN-25 Qué se puede facturar.** Una venta de mostrador o una orden de trabajo **liquidada** (saldo cero), que no esté facturada ni cancelada [DC §7.5, §7.6].
+
+**RN-26 Plazo de autofacturación.** El cliente puede autofacturar hasta el **último día del mes** en que hizo la compra o liquidó el trabajo, en hora de México [DC §7.6].
+- La regla vive en un solo lugar de configuración y se confirma con el contador de ZAMMIR **[POR DEFINIR]** (PD-09).
+- Pasado el plazo, el portal explica con amabilidad que la factura debe pedirse directamente al negocio. Un administrador sí puede facturar desde el sistema.
+
+**RN-27 Tratamiento fiscal de anticipos.** Ajuste de configuración con dos opciones [DC §7.7]:
+- **(a) Por defecto:** un solo CFDI por el total cuando la orden queda liquidada.
+- (b) Un CFDI por el anticipo y otro final relacionado con el primero.
+- La decisión es **[POR DEFINIR con el contador de ZAMMIR]** (PD-27). Se construye la opción (a); la (b) solo se construye si el contador la exige y Juanito lo aprueba.
+
+**RN-28 Datos del CFDI** [DC §7.2, §7.4, §7.5]:
+- CFDI versión 4.0, timbrado por un PAC.
+- Forma de pago: `01` efectivo, `03` transferencia. La regla para pagos mixtos se define con el contador **[POR DEFINIR]** (PD-28).
+- Método de pago: `PUE` (una sola exhibición).
+- Cada concepto lleva clave de producto o servicio del SAT, clave de unidad y objeto de impuesto (normalmente `02`, sí objeto de impuesto). Unidades de ejemplo: pieza `H87`, metro cuadrado `MTK`, unidad de servicio `E48`, metro `MTR`. **Todos se validan con el contador o el PAC antes de cargar el catálogo real** (PD-29).
+- Los errores de captura del receptor (RFC o nombre incorrectos) no se corrigen solos: un administrador cancela y vuelve a emitir con el motivo que corresponda [DC §7.6].
+- La cancelación de un CFDI solo la hace un administrador, con los motivos que pide el SAT [DC §7.8].
+- Toda decisión fiscal dudosa se valida con el contador de ZAMMIR; el documento de construcción no sustituye su asesoría [DC §7.2].

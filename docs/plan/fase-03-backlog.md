@@ -10,6 +10,7 @@ Convertir los requerimientos en historias de usuario listas para construir, orde
 ## Entra si
 
 - Fase 2 aprobada.
+- Calendario decidido (PD-34).
 
 ## Alcance
 
@@ -40,7 +41,8 @@ Convertir los requerimientos en historias de usuario listas para construir, orde
 
 ## Compuerta de salida
 
-- [ ] Cada `RF` de M1 a M9 está cubierto por al menos una historia. Tabla de trazabilidad RF → historias.
+- [ ] Cada `RF` de M1 a M10 y cada `RF-UX` está cubierto por al menos una historia. Tabla de trazabilidad RF → historias.
+- [ ] Cada recorrido E1 a E10 tiene su historia de prueba de aceptación en el sprint indicado en `PRUEBAS_DE_ACEPTACION.md`.
 - [ ] Cada historia cumple la Definition of Ready de `CONTRIBUTING.md`.
 - [ ] La carga de cada sprint no excede la capacidad estimada, o Juanito aprobó el riesgo.
 - [ ] Las historias de P1 y P2 están identificadas y al final de su sprint, por si hay que moverlas.
@@ -48,4 +50,4 @@ Convertir los requerimientos en historias de usuario listas para construir, orde
 ## Riesgos y pendientes
 
 - El calendario tiene como mucho un sprint de colchón (ver `docs/ROADMAP.md`). Esta fase es el momento de detectar si no cabe.
-- ⚠ PD-01: las historias de M10 se completan cuando llegue la §7.
+- PD-34: el calendario que elija Juanito define en qué sprint cae cada historia; se decide antes de esta fase.

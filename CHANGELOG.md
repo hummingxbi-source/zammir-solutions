@@ -13,5 +13,13 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). L
 - Borradores de `MODELO_DE_DATOS.md` (con trazabilidad requerimiento → entidad) y `SINCRONIZACION.md`; ADR-0015 y ADR-0016 como propuestas.
 - PD-21 a PD-24 (valores de sesión de administrador y de intentos de PIN).
 
+- Documento de construcción completo (§0 a §17) en `docs/contexto/`; resuelve PD-01.
+- M10 completo (RF-M10-01 a RF-M10-21), experiencia de usuario (RF-UX-01 a RF-UX-10) y reglas RN-21 a RN-28.
+- `REQUERIMIENTOS_NO_FUNCIONALES.md` (RNF-01 a RNF-37), `RIESGOS.md` (R1 a R15) y `docs/calidad/PRUEBAS_DE_ACEPTACION.md` (E1 a E10).
+- ADR-0017 (reconciliación con el documento completo) y ADR-0018 (impresión de tickets en tres capas).
+- Pendientes PD-26 a PD-35, incluido el calendario (PD-34).
+
 ### Cambiado
 - ADR-0009 (idioma del código) aceptada; PD-18 resuelto.
+- Plan de fases actualizado con el documento completo: prueba de concepto de impresión, M10 en el Sprint 4, entrega en el Sprint 5, feriado del 16 de noviembre y lista de lo que la arquitectura debe absorber (Fase 2).
+- `ALCANCE.md`, `GLOSARIO.md`, `PENDIENTES.md` y `SECURITY.md` al día con el documento completo.

@@ -2,7 +2,7 @@
 
 - **Tipo:** documentación
 - **Fechas:** 26–27 de octubre de 2026
-- **Estado:** en curso
+- **Estado:** lista para cerrar. Falta que Juanito confirme la lista de pendientes y decida el calendario (PD-34)
 
 ## Objetivo
 
@@ -10,48 +10,35 @@ Que no quede ninguna pregunta abierta sin registrar: todo lo que falta saber est
 
 ## Entra si
 
-- Se recibió el documento de construcción, aunque esté incompleto. ✅
+- Se recibió el documento de construcción. ✅ Completo desde el 27 de octubre.
 
-## Alcance
+## Alcance y resultado
 
-1. Recibir las secciones faltantes del documento de construcción (PD-01): §7 Facturación y PAC, §8 Impresión, §12 Demo, §15 Pendientes y detalle de M10.
-2. Guardarlas en `docs/contexto/` sin editar.
-3. Extraer lo nuevo hacia los documentos de producto:
-   - M10 completo en `REQUERIMIENTOS.md`.
-   - Reglas nuevas en `REGLAS_DE_NEGOCIO.md` con el siguiente número `RN-XX`.
-   - Términos nuevos en `GLOSARIO.md`.
-   - La lista de §15 cruzada contra `PENDIENTES.md`: lo que ya esté se marca con su fuente; lo nuevo se agrega.
-4. Si la §8 describe el método de impresión esperado, actualizar el plan de la prueba de impresión del Sprint 0.
-5. Confirmar con Juanito los pendientes que bloquean la Fase 2: PD-18 (idioma del código).
-
-## Fuera de esta fase
-
-- Decisiones de arquitectura (Fase 2).
-- Cualquier código.
-
-## Entregables
-
-- `docs/contexto/` con el documento completo.
-- `REQUERIMIENTOS.md` con M10 completo.
-- `PENDIENTES.md` revisado contra la §15.
-- ADRs nuevos si el documento trae decisiones.
+| # | Tarea | Resultado |
+|---|---|---|
+| 1 | Recibir las secciones faltantes (PD-01) | ✅ Recibidas §7 a §17; PD-01 resuelto (PR-05) |
+| 2 | Guardarlas en `docs/contexto/` sin editar | ✅ `documento-construccion-v1.txt` completo; diferencias con la copia cortada en `docs/contexto/README.md` |
+| 3 | Extraer lo nuevo hacia los documentos de producto | ✅ M10 (RF-M10-01 a 21) y experiencia de usuario (RF-UX-01 a 10) en `REQUERIMIENTOS.md`; RN-21 a RN-28; `REQUERIMIENTOS_NO_FUNCIONALES.md` (RNF-01 a 37); `RIESGOS.md`; glosario; `SECURITY.md` |
+| 4 | Cruzar la §15 contra `PENDIENTES.md` | ✅ Los 18 puntos tienen su PD o su resolución; nuevos PD-26 a PD-35 |
+| 5 | Registrar los choques entre el documento y las decisiones ya tomadas | ✅ [ADR-0017] |
+| 6 | Actualizar el plan de la prueba de impresión con la §8 | ✅ [ADR-0018] y Sprint 0 |
+| 7 | Confirmar PD-18 (idioma del código) | ✅ Resuelto (PR-04) [ADR-0009] |
 
 ## Verificación
 
-No lleva pruebas automáticas. Se verifica con esta revisión cruzada:
-
-- [ ] Cada `[POR DEFINIR]` del documento fuente aparece en `PENDIENTES.md`.
-- [ ] Cada requerimiento del documento fuente aparece en `REQUERIMIENTOS.md` con su identificador original.
-- [ ] Ninguna regla o requerimiento de `docs/producto/` carece de fuente (`[DC §x]` o `[ADR-xxxx]`).
-- [ ] Las referencias cruzadas (`RN-`, `RF-`, `ADR-`, `PD-`) apuntan a algo que existe. Se puede comprobar con una búsqueda de texto.
+- [x] Cada `[POR DEFINIR]` del documento fuente aparece en `PENDIENTES.md`.
+- [x] Cada requerimiento del documento fuente aparece en `REQUERIMIENTOS.md` o `REQUERIMIENTOS_NO_FUNCIONALES.md` con su fuente.
+- [x] Ninguna regla o requerimiento carece de fuente (`[DC §x]` o `[ADR-xxxx]`).
+- [x] Las referencias cruzadas (`RN-`, `RF-`, `RNF-`, `ADR-`, `PD-`) apuntan a algo que existe. Comprobado con una búsqueda de texto automática.
 
 ## Compuerta de salida
 
-- [ ] Documento fuente completo guardado.
-- [ ] Revisión cruzada completa.
+- [x] Documento fuente completo guardado.
+- [x] Revisión cruzada completa.
 - [ ] Juanito confirmó la lista de pendientes.
+- [ ] Juanito decidió el calendario (PD-34), porque cambia el backlog de la Fase 3.
 
 ## Riesgos y pendientes
 
-- Si las secciones faltantes cambian algo ya documentado, gana la decisión más reciente de Juanito y se registra como ADR.
-- PD-01, PD-18.
+- Si algo del documento contradice el contrato firmado, manda lo firmado [DC §15].
+- PD-34 (calendario).

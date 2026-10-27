@@ -19,7 +19,7 @@ Resolver el problema número uno del cliente [DC §2]: **una cotización profesi
 - Cola de salida en IndexedDB: cada operación con identificador único, tipo, contenido, intentos y estado.
 - Envío automático al recuperar la conexión, con reintentos y espera creciente.
 - Servidor idempotente: la misma operación enviada dos veces se aplica una sola vez.
-- Estado visible para el usuario con palabras del oficio: "Guardado en la tablet" / "Enviado" [GLOSARIO].
+- Estado visible para el usuario con palabras del oficio: "Guardado en la tablet" / "Enviado" [GLOSARIO], y el contador de operaciones pendientes en el indicador global [RF-UX-06], [RNF-04].
 - Política de conflictos según `SINCRONIZACION.md`.
 
 ### 6.2 Folios [RN-15, RN-16]
@@ -44,6 +44,7 @@ Resolver el problema número uno del cliente [DC §2]: **una cotización profesi
   - Estados: borrador → enviada → aceptada / rechazada; vencida cuando pasa la vigencia.
   - Duplicar cotización.
   - Historial de cotizaciones por cliente.
+  - Aviso contextual cerrable si el catálogo está vacío: "Revisa primero tu catálogo" [RF-UX-05].
 
 ### 6.4 Documento PDF [RF-M2-05]
 - Puerto `DocumentRenderer` con su adaptador que genera el PDF **en la tablet**.
@@ -117,6 +118,12 @@ Resolver el problema número uno del cliente [DC §2]: **una cotización profesi
 **Extremo a extremo (tamaño de tablet)**
 - [ ] Flujo completo **sin conexión**: buscar cliente, agregar vidrio a medida y un servicio, ver vista previa, emitir, generar PDF; reconectar y verificar folio definitivo.
 - [ ] Cajero intenta descuento: se le pide PIN de administrador.
+
+**Rendimiento**
+- [ ] PDF de una cotización típica en menos de 3 segundos en la tablet objetivo [RNF-25].
+
+**Aceptación (parte de E3)**
+- [ ] Modo avión, 3 cotizaciones; al reconectar: cero duplicados, folios correctos y totales exactos.
 
 **Manual en tablet**
 - [ ] Cotización completa en modo avión, compartida por WhatsApp a un número de prueba.

@@ -22,5 +22,7 @@
 | [0014](docs/decisiones/0014-estructura-del-repositorio-y-herramientas.md) | Estructura del repositorio y herramientas | **Propuesta** | 2026-10-26 |
 | [0015](docs/decisiones/0015-convenciones-del-modelo-de-datos.md) | Convenciones del modelo de datos | **Propuesta** | 2026-10-26 |
 | [0016](docs/decisiones/0016-protocolo-de-operaciones-y-folios.md) | Protocolo de operaciones y asignación de folios | **Propuesta** (se cierra con `spike/sync`) | 2026-10-26 |
+| [0017](docs/decisiones/0017-reconciliacion-con-el-documento-completo.md) | Reconciliación con el documento de construcción completo: qué decisión manda | Aceptada (calendario abierto: PD-34) | 2026-10-27 |
+| [0018](docs/decisiones/0018-impresion-de-tickets-en-tres-capas.md) | Impresión de tickets en tres capas (Web Bluetooth, impresión de Android, compartir) | Aceptada como estrategia | 2026-10-27 |
 
 Plantilla para una nueva decisión: [`docs/decisiones/0000-plantilla.md`](docs/decisiones/0000-plantilla.md).

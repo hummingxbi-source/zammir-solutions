@@ -80,7 +80,7 @@ Cada puerto es una interfaz pequeña, con un solo propósito:
 | `SyncOutbox` | Cola de cambios pendientes de enviar | IndexedDB |
 | `FolioAllocator` | Folio temporal en dispositivo y definitivo en servidor | Serie local por dispositivo; función SQL en servidor |
 | `DocumentRenderer` | Generar PDF de cotización y comprobante | Librería PDF en el dispositivo |
-| `TicketPrinter` | Imprimir ticket de 80 mm | Según resultado de la prueba de impresión [ADR-0008]; impresora falsa en pruebas |
+| `TicketPrinter` | Imprimir ticket de 80 mm | Tres capas [ADR-0018]: Web Bluetooth + ESC/POS, impresión de Android con `window.print()`, compartir por WhatsApp; impresora falsa en pruebas |
 | `ShareService` | Compartir PDF o abrir WhatsApp | Menú de compartir del dispositivo; enlace de WhatsApp |
 | `BillingProvider` | Timbrar, cancelar y consultar CFDI | Simulado; PAC elegido [ADR-0007] |
 | `PinHasher` | Verificar PIN | Algoritmo de hash definido en Fase 2 |
@@ -230,6 +230,8 @@ Además de todo lo anterior:
 - [ ] Lista de pruebas manuales en tablet completa y firmada.
 - [ ] Documentación al día: requerimientos, reglas, glosario, ADRs, `PENDIENTES.md`, `CHANGELOG.md`.
 - [ ] Revisión del sprint hecha (demo a Luis cuando aplique) y retrospectiva registrada.
+- [ ] Requerimientos no funcionales que toca el sprint verificados: tiempos de RNF-23 a RNF-27 medidos en la tablet, objetivos táctiles y texto de RNF-28, sin errores en la consola, sin datos personales en los registros de errores (RNF-34).
+- [ ] Los recorridos de aceptación (E1 a E10) asignados al sprint, automatizados y en verde (`docs/calidad/PRUEBAS_DE_ACEPTACION.md`).
 - [ ] La compuerta específica de la fase, en su propio archivo, en verde.
 
 **Si un solo punto queda en rojo, la fase no se cierra.**
@@ -238,14 +240,15 @@ Además de todo lo anterior:
 
 ## 6. Sin conexión: principios que aplican a todos los módulos
 
-Se detallan en `docs/arquitectura/SINCRONIZACION.md` (Fase 2). Mientras tanto, ningún sprint los contradice:
+Vienen de [DC §9] (`REQUERIMIENTOS_NO_FUNCIONALES.md`, RNF-01 a RNF-07) y se detallan en `docs/arquitectura/SINCRONIZACION.md`. Ningún sprint los contradice:
 
 1. **La tablet trabaja primero en local.** Toda captura (cotización, venta, pago) se guarda en IndexedDB y se encola para enviarse.
 2. **Identificadores generados en el dispositivo** (UUID), para que un registro creado sin conexión tenga identidad desde el inicio.
 3. **Operaciones idempotentes en el servidor.** Recibir dos veces la misma operación no duplica nada.
 4. **Folios temporales en el dispositivo, definitivos en el servidor** [RN-16]. El folio definitivo se asigna dentro de la misma transacción que guarda el documento, para que no queden huecos.
-5. **Lo contable se agrega, no se sobrescribe.** Pagos, ventas y cambios de estado son eventos que se suman; eso elimina la mayoría de los conflictos.
-6. **Lo que requiere servidor se dice claramente.** Facturar, reportes consolidados y administración de usuarios necesitan conexión; la interfaz lo explica con palabras del oficio, sin jerga [GLOSARIO].
+5. **Lo contable se agrega, no se sobrescribe.** Pagos, ventas y cambios de estado son eventos que se suman; eso elimina la mayoría de los conflictos. El catálogo lo manda el servidor. En datos editables (clientes, y datos de una orden como responsables o fecha estimada) gana el último cambio **por campo** y queda en bitácora [RNF-05].
+6. **Lo que requiere servidor se dice claramente.** Primer inicio de sesión, reportes, facturación, importaciones y administración de usuarios necesitan conexión [RNF-01]; la interfaz lo explica con palabras del oficio, sin jerga [GLOSARIO].
+7. **La tablet guarda lo mínimo.** Nada de datos fiscales de todos los clientes; lo antiguo ya enviado se depura [RNF-06].
 
 ---
 

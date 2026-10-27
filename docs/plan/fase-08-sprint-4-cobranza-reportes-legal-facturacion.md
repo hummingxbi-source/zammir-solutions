@@ -4,7 +4,7 @@
 - **Fechas:** 23 – 29 de noviembre de 2026 (empieza la ventana de entrega)
 - **Lee antes:** [`00-principios-de-ingenieria.md`](00-principios-de-ingenieria.md), `REQUERIMIENTOS.md` M6, M7, M9 y M10, RN-17, RN-20, [ADR-0007]
 
-> ⚠ **PD-01:** el detalle de M10 depende de la §7 del documento fuente. Este archivo describe lo que ya se sabe y debe completarse cuando llegue esa sección, **antes** de empezar el sprint.
+> M10 completo según [DC §7]: `REQUERIMIENTOS.md` RF-M10-01 a RF-M10-21 y reglas RN-24 a RN-28.
 
 ## Objetivo
 
@@ -13,8 +13,7 @@ Cerrar el círculo del negocio: saber quién debe, ver los números que pidió L
 ## Entra si
 
 - Sprint 3 cerrado con su compuerta en verde.
-- La §7 del documento fuente recibida y M10 completo en `REQUERIMIENTOS.md` (PD-01).
-- PAC elegido (PD-05), al menos para conectar su entorno de pruebas.
+- PAC elegido y su cuenta de pruebas abierta (PD-05). Quién lo contrata, definido.
 
 ## Alcance
 
@@ -38,17 +37,46 @@ Cerrar el círculo del negocio: saber quién debe, ver los números que pidió L
 - RF-M9-05: el aviso declara la transferencia de datos fiscales al PAC.
 - Textos de prueba hasta recibir los finales (PD-12).
 
-### 8.4 Facturación — M10 (lo conocido)
-- Puerto `BillingProvider` con su batería de contrato [ADR-0007].
-- Adaptador **simulado** que cumple el contrato.
-- Adaptador del **PAC elegido** contra su entorno de pruebas, pasando la misma batería de contrato.
-- Factura desde el sistema por administrador; cajero solo con autorización por PIN [DC §4].
+### 8.4 Facturación — M10 [DC §7]
+
+**Proveedor**
+- Puerto `BillingProvider` con timbrar, cancelar, consultar estatus y descargar XML y PDF, y su batería de contrato [RF-M10-01], [ADR-0007].
+- Adaptador **simulado** que cumple el contrato, y adaptador del **PAC elegido** contra su entorno de pruebas, pasando la misma batería.
+- El CSD (`.key` y contraseña) se sube directamente al PAC; nunca pasa por nuestro código ni base de datos [RF-M10-02].
+- Las llamadas al PAC solo ocurren en funciones del servidor.
+
+**Camino A: desde el sistema** [RF-M10-04 a RF-M10-08]
+- Solo ventas u órdenes liquidadas, no facturadas ni canceladas [RN-25].
+- Receptor desde la ficha del cliente o capturado: RFC, nombre o razón social como en su constancia, código postal fiscal, régimen y uso de CFDI.
+- Forma de pago `01` o `03`, método `PUE`; regla de pago mixto configurable (PD-28) [RN-28].
+- Guardar UUID, XML y PDF; reenviar por correo o WhatsApp.
+- Administrador; cajero solo con autorización por PIN de un administrador.
 - Folio `F-AAAA-0001`.
-- Datos fiscales de productos y cliente desde M1 y M5.
-- Portal público de autofacturación: el cliente final entra con el código del QR, captura sus datos fiscales, obtiene su factura; sin cuenta ni contraseña [DC §4].
-- Plazo para autofacturar configurable (PD-09).
-- La factura aparece en el historial del cliente [RF-M5-02].
-- ⚠ PD-01: cancelación, complementos, formatos de entrega y cualquier otra regla de la §7.
+
+**Camino B: portal `/factura`** [RF-M10-09 a RF-M10-17]
+- Entrada por QR (folio + código de verificación) o tecleando ambos.
+- Validaciones en el servidor antes de mostrar nada: folio, código, liquidada, no facturada, dentro del plazo de fin de mes [RN-26].
+- Límite de intentos por IP y por folio, verificación contra automatización, y nunca revelar si un folio existe [RF-M10-11].
+- Muestra solo conceptos y total; formulario con RFC (12 o 13 caracteres), código postal (5 dígitos), listas de régimen y uso de CFDI, y aceptación del aviso de privacidad que menciona al PAC.
+- Resultado con descarga de PDF y XML y envío por correo opcional.
+- Si el PAC falla o tarda: solicitud "en proceso", reintentos automáticos y aviso en el panel de administrador; **nunca un timbre duplicado** [RN-24].
+- Fuera de plazo: mensaje amable para pedir la factura al negocio.
+- Diseño para personas mayores: pocos pasos, botones grandes, instrucciones simples [RF-M10-16], [RF-UX-10].
+
+**Anticipos, cancelación y timbres**
+- Ajuste "tratamiento de anticipos" con la opción (a); la (b) no se construye salvo que el contador la exija y Juanito lo apruebe [RN-27], PD-27.
+- Cancelación de CFDI solo por administradores, con motivos del SAT y bitácora [RF-M10-19].
+- Contador de timbres con aviso al 80% del límite configurable [RF-M10-20], PD-26.
+- La factura aparece en el historial del cliente [RF-M10-21].
+
+**Fuera del alcance:** factura global, complemento de pago, notas de crédito complejas y otros complementos [DC §7.8].
+
+### 8.6 Orientación para usuarios nuevos [RF-UX-02 a RF-UX-04]
+Va en este sprint porque necesita que todas las secciones existan.
+- Pantalla de "Primeros pasos" en el primer ingreso, con cinco tarjetas en el orden de la navegación.
+- Botón fijo "¿Por dónde empiezo?".
+- Recorrido guiado opcional con globos de ayuda.
+- Si no cabe, Juanito decide si el recorrido guiado se mueve; "Primeros pasos" y el botón no se recortan.
 
 ### 8.5 Portal de seguimiento — P1, detrás del interruptor (último del sprint)
 - RF-M2-11: el cliente ve y acepta la cotización en línea con un enlace público.
@@ -106,12 +134,29 @@ Cerrar el círculo del negocio: saber quién debe, ver los números que pidió L
 - [ ] **Propiedad:** para cualquier venta u orden, el total del CFDI = total del ticket y del comprobante al centavo, con el mismo desglose de IVA.
 - [ ] Factura con productos exentos y gravados.
 - [ ] Cajero sin autorización rechazado; con autorización de administrador aceptado y en bitácora.
-- [ ] Portal: código válido, inválido, vencido (fuera de plazo) y ya usado; un ticket no se factura dos veces.
+- [ ] Portal: código válido, inválido, fuera de plazo, ya facturado y operación con saldo pendiente; cada caso con su mensaje claro (E5).
+- [ ] Plazo: último segundo del último día del mes en hora de México acepta; el primer segundo del mes siguiente rechaza; corriendo en otra zona horaria [RN-26].
+- [ ] Un código incorrecto y un folio inexistente dan **exactamente la misma respuesta** (no se revela si el folio existe).
+- [ ] Límite de intentos por IP y por folio: el siguiente intento se bloquea; la verificación contra automatización se exige.
+- [ ] **Idempotencia:** dos solicitudes simultáneas para la misma operación producen una sola factura; el PAC simulado que falla o tarda deja la solicitud "en proceso", se reintenta y nunca timbra dos veces [RN-24].
 - [ ] Portal: el código de un ticket no da acceso a datos de otro (prueba de acceso con códigos ajenos).
-- [ ] Portal: validación de RFC, régimen, código postal y uso de CFDI según lo que defina la §7.
+- [ ] Portal: RFC de 12 y 13 caracteres aceptado, otros rechazados; código postal de 5 dígitos; régimen y uso de CFDI solo de sus listas; sin aceptar el aviso no se timbra.
 - [ ] Respuestas de error del PAC (rechazo, tiempo agotado, servicio caído): mensaje claro y nada a medias.
 - [ ] Ningún secreto del PAC aparece en el código del navegador (prueba que revisa el paquete construido).
-- [ ] ⚠ PD-01: pruebas de cancelación y demás reglas de la §7.
+- [ ] Solo ventas u órdenes liquidadas se pueden facturar, desde el sistema y desde el portal [RN-25].
+- [ ] Forma de pago `01` para efectivo, `03` para transferencia, método `PUE` en el CFDI generado.
+- [ ] Cancelación: solo administrador, con motivo del SAT, en bitácora; una operación con factura cancelada se puede volver a facturar.
+- [ ] Ajuste de anticipos en opción (a): una orden con anticipo y saldo genera un solo CFDI por el total al liquidarse [RN-27].
+- [ ] Contador de timbres y aviso exactamente al 80% del límite configurado.
+- [ ] El CSD no existe en ninguna tabla, variable de entorno ni archivo del repositorio (revisión automatizada de esquema y secretos).
+- [ ] E6: cajero sin autorización no factura; con autorización sí.
+
+**Orientación**
+- [ ] "Primeros pasos" aparece solo en el primer ingreso de cada usuario; el botón "¿Por dónde empiezo?" la vuelve a abrir.
+- [ ] El recorrido guiado se puede omitir y no vuelve a aparecer solo.
+
+**Rendimiento**
+- [ ] Reportes con 12 meses de datos de prueba en menos de 3 segundos [RNF-27].
 
 **Portal de seguimiento (P1, si se construye)**
 - [ ] Con el interruptor apagado, el enlace no funciona.
@@ -121,6 +166,7 @@ Cerrar el círculo del negocio: saber quién debe, ver los números que pidió L
 - [ ] Venta en Mostrador → el cliente escanea el QR → autofactura con datos de prueba → la factura aparece en el historial.
 - [ ] Orden entregada con saldo → aparece en cuentas por cobrar → se cobra desde la lista → desaparece.
 - [ ] Administrador revisa los reportes en tamaño de celular.
+- [ ] E5, E6, E7 y E8 completos (`docs/calidad/PRUEBAS_DE_ACEPTACION.md`).
 
 **Manual**
 - [ ] Reportes en un celular real.
@@ -137,4 +183,5 @@ Cerrar el círculo del negocio: saber quién debe, ver los números que pidió L
 
 - **Mayor riesgo del proyecto en esta fase:** la API del PAC. Se mitiga con el contrato diseñado sobre el estándar CFDI y eligiendo el PAC antes de empezar.
 - Si el sprint no alcanza, el orden de recorte es: P1, luego detalles de presentación de reportes. Facturación y cuentas por cobrar no se recortan.
-- ⚠ PD-01, PD-04, PD-05, PD-08, PD-09, PD-12, PD-13.
+- R12: el IVA por línea puede diferir un centavo del que espera el PAC [ADR-0011]; se confirma en su entorno de pruebas al inicio del sprint, no al final.
+- PD-04, PD-05, PD-08, PD-09, PD-12, PD-13, PD-26, PD-27, PD-28, PD-31.

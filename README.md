@@ -21,10 +21,10 @@ Desarrollado por **HummingX BI**. Repositorio privado y confidencial.
     ├── ROADMAP.md         Fases y sprints (resumen)
     ├── plan/              Plan de construcción: principios, pruebas y una guía por fase
     ├── contexto/          Documentos fuente originales (no se editan)
-    ├── producto/          Alcance, reglas de negocio, requerimientos, glosario, pendientes
+    ├── producto/          Alcance, reglas, requerimientos (funcionales y no funcionales), glosario, pendientes, riesgos
     ├── decisiones/        Un archivo por decisión (ADR)
     ├── arquitectura/      Arquitectura y modelo de datos (Fase 2)
-    └── calidad/           Estrategia de pruebas (Fase 2)
+    └── calidad/           Casos de oro de dinero, pruebas de aceptación E1 a E10 y estrategia de pruebas
 ```
 
 ## Stack

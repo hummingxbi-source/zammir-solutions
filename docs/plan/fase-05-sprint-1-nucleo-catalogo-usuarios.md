@@ -36,7 +36,9 @@ Construir la base de la que depende todo lo demás: **el dinero que nunca se equ
 
 ### 5.3 Clientes — M5 (primera parte)
 - RF-M5-01 ficha, RF-M5-04 búsqueda y aviso de duplicados por teléfono, RF-M5-05 anonimización.
-- Validación de teléfono y, si se captura, del formato de RFC.
+- Validación de teléfono de 10 dígitos [RN-22] y, si se captura, del formato de RFC (12 o 13 caracteres) y del código postal fiscal (5 dígitos) [RF-M10-13].
+- La tablet guarda solo los clientes que necesita y **no** los datos fiscales de todos [RNF-06]; qué se replica lo define `SINCRONIZACION.md`.
+- Estados vacíos que enseñan qué hacer en Catálogo y Clientes [RF-UX-07].
 - RF-M5-02 (historial) y RF-M5-03 (cliente recurrente) se completan en el Sprint 3, cuando existan órdenes y ventas.
 
 ### 5.4 Legal — M9 (lo que necesitan los clientes)
@@ -123,6 +125,8 @@ Construir la base de la que depende todo lo demás: **el dinero que nunca se equ
 - [ ] El PIN nunca se guarda en claro (prueba que inspecciona lo guardado).
 - [ ] PIN correcto en dispositivo registrado: entra. En dispositivo no registrado o revocado: no entra.
 - [ ] PIN de usuario desactivado: no entra.
+- [ ] Límite de intentos fallidos de PIN con bloqueo creciente, valores desde configuración (PD-22) [RNF-09], [ADR-0013].
+- [ ] PIN triviales (`0000`, `1234`, repetidos) rechazados [ADR-0013].
 - [ ] Bloqueo tras el tiempo de inactividad configurado (con reloj fijo).
 - [ ] Cambio de usuario: las acciones posteriores quedan atribuidas al nuevo usuario.
 - [ ] Autorización de administrador por PIN: correcta, incorrecta, PIN de cajero rechazado.

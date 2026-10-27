@@ -43,11 +43,11 @@ Dejar listo el terreno: un repositorio donde es **imposible** fusionar código q
 - PWA instalable: manifiesto, ícono, service worker que guarda la aplicación para abrir sin conexión.
 - Sistema de diseño base en `shared/ui`: colores y tipografía como variables, botones y campos **grandes para uso táctil**, campo numérico que abre el teclado numérico, mensajes de error y de confirmación.
 - Textos de la interfaz centralizados en un solo lugar, con la prueba de palabras prohibidas [GLOSARIO].
-- Navegación base con las secciones del sistema (vacías), con los nombres del glosario: Cotizador, Órdenes, Mostrador, Clientes, Catálogo, Cuentas por cobrar, Reportes, Usuarios.
+- Navegación base con las secciones del sistema (vacías) y los nombres del glosario, en el orden de [RF-UX-01] (ver 4.8).
 - Indicador visible de "sin conexión" con lenguaje del oficio.
 
 ### 4.5 Configuración del negocio
-- Tabla de ajustes del negocio con los valores configurables conocidos: tasa de IVA (16%), porcentaje de anticipo (50%), vigencia de cotización (15 días), minutos de bloqueo por inactividad (5), umbral de antigüedad de cuentas por cobrar, y los interruptores P1 y P2 apagados.
+- Tabla de ajustes del negocio con los valores configurables conocidos: tasa de IVA (16%), porcentaje de anticipo (50%), vigencia de cotización (15 días), minutos de bloqueo por inactividad (5), umbral de antigüedad de cuentas por cobrar (10 días, PD-33), tratamiento de anticipos (opción a, RN-27), plazo de autofacturación (fin de mes, RN-26), leyenda "Powered by" apagada (PD-30), y los interruptores P1 y P2 apagados.
 - Puerto `FeatureFlags` leyendo esos interruptores.
 - Valores [POR DEFINIR] presentes como ajustes vacíos o de prueba, con su `PD` en el comentario de la migración.
 
@@ -57,17 +57,30 @@ Dejar listo el terreno: un repositorio donde es **imposible** fusionar código q
 - Tabla de bitácora y su caso de uso de registro, usada desde ya por el registro y la revocación de dispositivos [RN-19].
 - Políticas RLS de estas tablas.
 
-### 4.7 Prueba técnica de impresión [ADR-0008]
-En rama `spike/impresion-termica`, código desechable:
-1. Listar los métodos posibles desde una PWA en Android para el modelo candidato (por ejemplo: Bluetooth desde el navegador, red local, aplicación puente instalada en la tablet). ⚠ PD-01: si la §8 del documento fuente describe un método, se prueba ese primero.
-2. Imprimir desde la tablet real un ticket de prueba de 80 mm con texto con acentos y ñ, un total con centavos y un código QR.
-3. Medir: ¿funciona sin internet? ¿cuánto tarda? ¿qué pasa si la impresora está apagada o sin papel?
-4. Resultado en un ADR nuevo: método elegido, modelo de impresora recomendado, limitaciones. Juanito compra la impresora con base en ese ADR.
+### 4.7 Prueba de concepto de impresión [ADR-0008], [ADR-0018]
+En rama `spike/impresion-termica`, código desechable, con la impresora real **del lote que se va a comprar** (PD-15; candidata Epson serie TM-m30) y la tablet Android real:
+1. Descubrir los servicios y características GATT de la impresora (app tipo nRF Connect o página de prueba). El servicio `18F0` con escritura `2AF1` de algunas genéricas es una pista, no una garantía.
+2. Confirmar la característica de escritura y el tamaño de fragmento estable.
+3. Imprimir por **Web Bluetooth + ESC/POS** un ticket de 80 mm con acentos y ñ (página de códigos como CP858), un logo y un QR legible, con corte automático.
+4. Imprimir **30 tickets seguidos** sin pérdidas ni desincronización.
+5. Reconectar tras apagar y encender la impresora y tras bloquear la tablet.
+6. Repetir todo con la tablet **sin internet**.
+7. Si la capa 1 falla, probar la capa 2 (ticket de 80 mm con `window.print()` al servicio de impresión de Android) y dejar constancia.
+
+Resultado en un ADR nuevo: modelo validado, servicio y característica GATT, tamaño de fragmento, página de códigos, tiempos medidos y limitaciones. **Si el modelo no expone BLE utilizable, se avisa a Juanito ese mismo día: ZAMMIR no compra equipo hasta cambiar de modelo** [DC §8.4].
+
+### 4.8 Experiencia base [RF-UX]
+- Navegación en el orden del trabajo: Catálogo, Cotizador, Órdenes de trabajo, Mostrador y Reportes, con numeración discreta y marca de visitadas; panel de inicio aparte desde el logo, por ahora solo con accesos (PD-31) [RF-UX-01]. Clientes, Cuentas por cobrar, Usuarios y configuración quedan en un menú secundario según el rol.
+- Indicador siempre visible de conexión [RF-UX-06]; el de operaciones pendientes llega con la sincronización (Sprint 2) y el de impresora en el Sprint 3.
+- Componentes de confirmación para acciones destructivas y de mensajes de error que dicen qué hacer [RF-UX-08].
+- Animaciones sobrias que respetan "reducir movimiento" [RF-UX-09].
+- Objetivos táctiles de al menos 44 px y texto de al menos 16 px [RNF-28]. Formatos de [RN-22] como utilidades del sistema de diseño.
+- Identidad visual provisional según la guía general del documento (PD-35).
 
 ## Fuera de esta fase
 
 - Dinero, precios, catálogo, PIN de empleados (Sprint 1).
-- La implementación final del puerto `TicketPrinter` (Sprint 3); aquí solo se decide el método.
+- La implementación final del puerto `TicketPrinter` con sus tres adaptadores (Sprint 3); aquí solo se valida la capa 1 con el equipo real.
 
 ## Diseño
 
@@ -118,14 +131,25 @@ En rama `spike/impresion-termica`, código desechable:
 - [ ] Abrirla en modo avión.
 - [ ] Botones y campos cómodos con el dedo, en vertical y horizontal.
 
+**Prueba de concepto de impresión (manual, con evidencia en el ADR)**
+- [ ] Los seis pasos de 4.7, con fotos de los tickets: acentos, ñ, logo, QR escaneable con un teléfono.
+- [ ] 30 tickets seguidos sin pérdida (prueba E10, parte de impresión).
+- [ ] Tiempo de impresión de un ticket medido contra [RNF-26].
+
+**Experiencia base**
+- [ ] El orden de la navegación coincide con [RF-UX-01]; prueba de componente.
+- [ ] Con "reducir movimiento" activado no hay animaciones; prueba de componente.
+- [ ] Formatos de [RN-22]: `$1,234.50`, `27 oct 2026`, teléfono de 10 dígitos; pruebas unitarias de las utilidades.
+
 ## Compuerta de salida
 
 - [ ] Compuerta común de [00 §5.2] en verde.
 - [ ] Los cinco Pull Requests de prueba de la compuerta quedaron bloqueados.
 - [ ] Un clon nuevo del repositorio se levanta en local siguiendo solo el README.
-- [ ] ADR de impresión aceptado por Juanito.
+- [ ] Prueba de concepto de impresión completa en sus seis pasos y ADR con el resultado aceptado por Juanito.
+- [ ] Navegación y sistema de diseño base cumplen [RNF-28] (revisión con axe-core y medición de objetivos táctiles).
 
 ## Riesgos y pendientes
 
 - **Si ningún método de impresión funciona desde la PWA**, se detiene el sprint y se decide con Juanito antes de seguir: es un cambio de arquitectura o de equipo.
-- PD-15 (impresora), PD-16 (tablet), ⚠ PD-01 (§8).
+- PD-15 (impresora), PD-16 (tablet), PD-31 (panel de inicio), PD-35 (identidad visual).
