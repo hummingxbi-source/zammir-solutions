@@ -1,0 +1,260 @@
+DOCUMENTO DE CONSTRUCCIÓN — SISTEMA ZAMMIR
+Contexto del proyecto, alcance y requerimientos para el agente de IA constructor
+
+Cliente: Soluciones en Vidrio y Aluminio ZAMMIR (Otumba de Gómez Farías, Estado de México)
+Desarrolla: HummingX BI
+Responsable del proyecto: Juan Jesús Curiel García ("Juanito")
+Versión: 1.0 — finales de octubre de 2026
+Clasificación: confidencial, uso interno del equipo de construcción
+
+======================================================================
+0. CÓMO USAR ESTE DOCUMENTO Y REGLAS DE TRABAJO
+======================================================================
+
+Este documento existe porque el agente que lo recibe no tiene ningún contexto previo. Todo lo que se decidió durante semanas de conversación con el cliente y con el equipo de HummingX BI está aquí. Léelo completo antes de escribir una sola línea de código.
+
+Reglas de trabajo:
+
+1. No inventes reglas de negocio. Cuando algo está marcado [POR DEFINIR], hazlo configurable (un ajuste, un campo, una tabla), déjalo anotado en el registro de decisiones y avisa a Juanito solo si es un bloqueo real.
+2. Antes de cada fase, presenta un plan breve (qué vas a construir, en qué orden, qué riesgos ves). Al terminar cada fase, deja el sistema desplegable y funcionando, nunca a medias.
+3. Primero el riesgo, después lo cómodo. Hay dos riesgos técnicos que pueden romper el proyecto si se descubren tarde: la impresión inalámbrica de tickets desde la tablet (sección 8) y la integración de facturación con el PAC (sección 7). Se prueban en la primera semana.
+4. Lleva un archivo DECISIONES.md en el repositorio con cada decisión técnica o de negocio que tomes, la fecha y el motivo.
+5. Mantén la disciplina de alcance. Si crees que falta una función o que sobra una, anótalo como propuesta; no la construyas por tu cuenta.
+6. La interfaz va en español de México, con el vocabulario del oficio (anticipo, saldo contra entrega, medición a domicilio, cancelería, termopanel) y nunca con jerga de software ni de comercio electrónico (no "checkout", no "carrito").
+7. Seguridad y confidencialidad: nunca subas claves ni secretos al repositorio (usa variables de entorno); nunca pegues datos reales de clientes del negocio en herramientas de IA; nunca uses datos reales para pruebas.
+8. Existe una demo previa (sección 12). La demo es un prototipo visual con datos inventados y sin servidor. El sistema real es lo que describe este documento. Los nombres, montos y folios de la demo son ficticios, y no deben tratarse como datos reales.
+
+======================================================================
+1. QUIÉN ES QUIÉN Y ESTADO DEL PROYECTO
+======================================================================
+
+1.1 Quién desarrolla
+HummingX BI es una consultoría de software y business intelligence para negocios pequeños y regionales, con sede en el Valle de Teotihuacán, Estado de México. La fundan tres socios: Juan Jesús Curiel García (director general y responsable de este proyecto), Jesús Emmanuel Cruz Pérez y Juan Pablo Rodríguez Montero. HummingX BI todavía no está constituida como sociedad; no escribas razones sociales ni datos fiscales de HummingX en ninguna pantalla. La marca "HummingX BI" solo puede aparecer como nombre comercial.
+
+1.2 Quién es el cliente
+Soluciones en Vidrio y Aluminio ZAMMIR es una vidriería con un solo local en Otumba de Gómez Farías, con año y medio de operación. La dirigen Luis Ramírez Rodríguez (dueño) y su socio Ricardo. Tienen 3 empleados, los tres cobran en el mostrador, pero solo se usa una caja a la vez. El internet es de Telmex.
+
+1.3 Estado actual (octubre de 2026)
+- El cliente respondió un cuestionario diagnóstico, vio una demo en video de su panel y aceptó avanzar.
+- El contrato se está redactando. El arranque está previsto para el 23 de octubre de 2026.
+- La ventana de entrega comprometida es del 23 de noviembre al 1 de diciembre de 2026. Esa fecha depende de tres cosas: que llegue el anticipo (finales de octubre), que el cliente apruebe los requerimientos y que entregue sus insumos (sobre todo el catálogo de materiales y precios). Si alguna llega tarde, la fecha se recorre.
+- Ya existen: la especificación de 10 módulos, la demo interactiva, el guion del video, el cuestionario diagnóstico y un cuestionario de acuerdos que el cliente está respondiendo (datos fiscales, firmantes, fechas, preferencias).
+
+1.3.1 Lo que todavía no se sabe
+Los datos fiscales de ZAMMIR (RFC, régimen, e.firma, Certificado de Sello Digital), el dominio, las duraciones de garantía, el catálogo real y varias decisiones de alcance están pendientes. Se listan en la sección 15.
+
+======================================================================
+2. EL NEGOCIO DEL CLIENTE Y SUS PROBLEMAS
+======================================================================
+
+Resumen del diagnóstico que respondió Luis (dueño):
+
+- Hoy no usan ningún sistema: todo se lleva de memoria. No tienen computadora, impresora de tickets, escáner, cajón de dinero, terminal de tarjeta ni monitor táctil.
+- Venden vidrio claro/flotado, templado, esmerilado/satinado, decorado/emplomado, espejo, cristal doble/termopanel y acrílico, además de herrajes (bisagras, jaladores, chapas), selladores y masillas, silicón y cancelería de aluminio (puertas y ventanas).
+- Venden las dos cosas: vidrio a la medida del cliente y piezas estándar. El precio se calcula distinto según el producto.
+- Su catálogo tiene entre 50 y 150 productos y está desordenado.
+- Ellos mismos instalan. Siempre miden a domicilio. Hacen entregas a domicilio u obra con frecuencia.
+- Manejan trabajos que tardan días o semanas.
+- Dan garantía, pero solo de palabra.
+- Flujo típico: el cliente llega con sus medidas y pide el costo; si le conviene, se lo lleva. En puertas y ventanas hacen presupuesto en el negocio o a domicilio; si el precio le conviene, el cliente da 50% de anticipo para empezar y liquida el resto al entregar. Siempre piden anticipo.
+- No dan crédito ni fían; solo ventas de contado. Aceptan efectivo y transferencia. No cobran con tarjeta.
+- No hacen corte de caja.
+- Facturan solo cuando el cliente lo pide.
+- Tienen clientes recurrentes y quieren su historial.
+- Quieren ver: ventas del día, semana y mes; qué tipo de vidrio o producto se vende más; trabajos pendientes y su estado; quién les debe (cuentas por cobrar); y quién cobró qué (por cajero).
+- No tienen fecha límite propia de entrega.
+- Su mayor problema, en sus palabras: dar los presupuestos más rápido, en forma y que se vean más profesionales.
+
+Lo que esto significa para la construcción:
+- El corazón del sistema es el cotizador profesional, usable en la casa del cliente desde una tablet.
+- La garantía "de palabra" debe volverse un registro escrito y entregable.
+- La caja compartida por 3 personas necesita atribución por persona y corte de caja.
+- Los usuarios no tienen experiencia con sistemas: la claridad vale más que la cantidad de funciones. Muchos clientes finales de ZAMMIR son personas mayores o poco familiarizadas con tecnología.
+- Ellos usan "punto de venta" para referirse a todo el sistema. Por eso la sección de caja se llama "Mostrador" y nunca "Punto de Venta".
+
+======================================================================
+3. QUÉ SE CONSTRUYE: ALCANCE Y LÍMITES
+======================================================================
+
+3.1 Dentro del alcance (confirmado)
+M1  Catálogo de productos y servicios
+M2  Cotizador (en mostrador y en visita a domicilio) con PDF y envío por WhatsApp
+M3  Órdenes de trabajo, con anticipo, saldo y garantía documentada
+M4  Mostrador: venta rápida, ticket y corte de caja
+M5  Clientes e historial
+M6  Cuentas por cobrar
+M7  Reportes
+M8  Usuarios y roles
+M9  Legal y cumplimiento (aviso de privacidad y términos dentro del sistema)
+M10 Facturación CFDI y portal de autofacturación para los clientes de ZAMMIR
+Más: aplicación web instalable (PWA) para tablets Android, que funciona sin internet para capturar cotizaciones y ventas.
+
+3.2 Pendiente de confirmar con el cliente (constrúyelo detrás de un interruptor de configuración)
+P1  Portal de seguimiento para el cliente final de ZAMMIR (aceptar cotización en línea, línea de tiempo del trabajo, comprobante con QR). El cliente respondió que "quiere verlo antes de decidir". El comprobante imprimible con folio y QR de autofacturación SÍ es obligatorio, porque lo necesita la facturación.
+P2  Control sencillo de existencias de piezas estándar (puertas y ventanas) con alerta de mínimo. Es una propuesta de HummingX; el demo lo mostró.
+
+3.3 Fuera del alcance (no construir, aunque parezca natural)
+- Inventario completo (compras a proveedor, mermas, costos, descuento de material a medida por metro cuadrado, valuación).
+- Terminal de pago con tarjeta y cobros en línea.
+- Cajón de dinero.
+- Tercera tablet o más dispositivos de los acordados.
+- Aplicación nativa (iOS o Android). Solo aplicación web.
+- Integraciones con otros sistemas (contabilidad, ERP, marketplaces).
+- API oficial de WhatsApp Business. El envío por WhatsApp se hace solo con enlaces y con el menú de compartir del teléfono.
+- Créditos o líneas de crédito a clientes. "Cuentas por cobrar" es solo el saldo pendiente de un trabajo en proceso.
+- Inteligencia de negocio predictiva. Los reportes son sumas, conteos y comparativos simples.
+- Multi-sucursal. Un solo local.
+- Factura global ni contabilidad. El contador de ZAMMIR se encarga de lo que no sea emitir facturas desde el sistema.
+
+======================================================================
+4. ROLES Y PERMISOS
+======================================================================
+
+Roles del sistema:
+- DUEÑO (Luis) y SOCIO (Ricardo): ambos son administradores con los mismos permisos. [Supuesto de HummingX, ajustable por configuración.]
+- CAJERO/VENDEDOR: los empleados que cobran, cotizan y avanzan trabajos. Hoy son 3 personas, y uno de ellos también instala.
+- CLIENTE FINAL de ZAMMIR: no tiene cuenta ni contraseña. Accede solo a enlaces públicos con código (autofacturación y, si se aprueba P1, seguimiento).
+
+Matriz de permisos (sí / no / condicionado):
+- Generar cotizaciones: administradores sí, cajero sí.
+- Aplicar descuentos o cambiar el precio de una línea: administradores sí, cajero no (o con autorización de un administrador por PIN).
+- Editar catálogo y precios: administradores sí, cajero no.
+- Registrar ventas, anticipos y saldos: todos.
+- Avanzar el estatus de una orden de trabajo: todos.
+- Marcar una orden como entregada con saldo pendiente: solo administradores, con motivo.
+- Cancelar ventas u órdenes: solo administradores, con motivo.
+- Ver y cerrar su propio corte de caja: cajero sí; ver el de otros y el consolidado: solo administradores.
+- Reportes y cuentas por cobrar: solo administradores.
+- Generar una factura desde el sistema: administradores sí; cajero solo con autorización de un administrador.
+- Crear, desactivar usuarios y registrar dispositivos: solo administradores.
+- Editar aviso de privacidad y términos: solo administradores.
+
+Autenticación recomendada:
+- Administradores: correo y contraseña (Supabase Auth), con cierre de sesión por inactividad prolongada.
+- Empleados en la tablet compartida: la tablet queda registrada por un administrador como "dispositivo del mostrador". Sobre esa sesión de dispositivo, cada empleado entra con un PIN personal de 4 a 6 dígitos (guardado con hash) y cambia de usuario en un toque. Todas las acciones quedan atribuidas al usuario activo. El PIN solo funciona en dispositivos registrados. Bloqueo automático tras 5 minutos de inactividad (ajustable).
+- Nunca se comparte un usuario entre personas, porque el reporte "quién cobró qué" depende de eso.
+
+======================================================================
+5. REGLAS DE NEGOCIO TRANSVERSALES
+======================================================================
+
+5.1 Tipos de producto y cálculo de precio
+Cada producto tiene tipo y unidad de cobro:
+- A MEDIDA: se cobra por metro cuadrado (ancho × alto × cantidad), por metro lineal o por pieza, según el producto. Ejemplos: vidrio claro, templado, espejo, termopanel, cancelería a medida.
+- PIEZA ESTÁNDAR: se cobra por pieza. Ejemplos: puerta corrediza de aluminio, ventana fija, mampara.
+- SERVICIO: se cobra por visita o por unidad. Ejemplos: instalación a domicilio, medición a domicilio.
+La regla de precio es configurable por producto. El cliente dijo que "depende del producto". Reglas probables a soportar desde el diseño, pero con valores [POR DEFINIR] hasta recibir el catálogo: área mínima cobrable, redondeo de medidas, cargos adicionales (cantos, pulido, perforaciones, instalación) y mínimos por trabajo.
+El precio de una cotización u orden se congela al emitirse; cambios posteriores del catálogo no la modifican.
+
+5.2 Anticipo, saldo y crédito
+- ZAMMIR siempre pide anticipo en trabajos a medida y en puertas y ventanas. Por defecto, 50% para iniciar fabricación o apartar material (porcentaje configurable); el saldo se paga contra entrega o instalación.
+- No hay crédito. Un saldo pendiente solo existe como remanente de un trabajo en proceso o entregado con adeudo autorizado. No construyas límites de crédito, intereses ni estados de cuenta.
+- Formas de pago aceptadas: efectivo y transferencia. Se permite pago mixto en una misma operación.
+
+5.3 Cotizaciones
+- Vigencia por defecto: 15 días naturales (configurable).
+- Condiciones por defecto (editables por un administrador): se requiere el 50% de anticipo para iniciar fabricación o apartado de material; el saldo se liquida contra entrega o instalación; el tiempo de entrega está sujeto a disponibilidad de material y medición física final en obra.
+
+5.4 Garantía
+Hoy la garantía es verbal. El sistema debe volverla un registro escrito: duración, cobertura y exclusiones, ligada a cada trabajo entregado e impresa en el comprobante. La duración que ZAMMIR realmente maneja es [POR DEFINIR]. La demo usó 6 meses como valor de relleno; no lo asumas como real.
+
+5.5 Folios
+Formato sugerido: COT-AAAA-0001, OT-AAAA-0001, V-AAAA-0001 (venta de mostrador), F-AAAA-0001 (factura emitida por el sistema), con el año real en curso (la demo usó 2024 por error; no lo repitas). Como las dos tablets pueden capturar sin internet, cada dispositivo reserva su propia serie temporal (por ejemplo, T1-0001) y el sistema asigna el folio definitivo al sincronizar, sin huecos ni duplicados. Los comprobantes impresos sin conexión llevan el folio temporal y un identificador único que el servidor reconoce después.
+
+5.6 Dinero, impuestos y redondeo
+- Moneda: pesos mexicanos. Guardar importes como numéricos con 2 decimales (o enteros en centavos); nunca flotantes.
+- IVA 16%. Si los precios del catálogo ya incluyen IVA o no es [POR DEFINIR]; modélalo como ajuste global del negocio, con la posibilidad de exentar un producto. Los documentos muestran subtotal, IVA y total cuando aplica.
+- Reglas de redondeo consistentes y probadas, porque los totales del ticket, el PDF y la factura deben coincidir al centavo.
+
+5.7 Fechas y zona horaria
+Guardar en UTC y mostrar en America/Mexico_City. Los cortes de caja, el "día", la "semana" y el "mes" de los reportes se calculan en hora de México. La semana va de lunes a domingo.
+
+5.8 Auditoría y borrado
+No se borra nada con valor contable: ventas, órdenes, pagos, facturas. Solo se cancelan con motivo y rastro. Cada acción sensible (cambio de precio, descuento, cancelación, reapertura de corte, cambio de usuario o de permisos) guarda usuario, fecha y valor anterior y nuevo.
+
+======================================================================
+6. REQUERIMIENTOS FUNCIONALES POR MÓDULO
+======================================================================
+
+--- M1. CATÁLOGO ---
+Propósito: reemplazar el catálogo desordenado por uno limpio, que alimente cotizador, mostrador y facturación.
+RF-M1-01 Cada producto tiene: código (opcional, autogenerable), nombre, categoría, tipo (a medida, pieza estándar, servicio), unidad de cobro (m², pieza, metro lineal, servicio), precio de lista, activo/inactivo, garantía sugerida (meses y texto, opcional) y datos fiscales para CFDI (clave de producto o servicio, clave de unidad, objeto de impuesto) con valores predeterminados por categoría.
+RF-M1-02 Categorías iniciales: vidrio claro/flotado, vidrio templado, esmerilado/satinado, decorado/emplomado, espejo, cristal doble/termopanel, acrílico, aluminio y cancelería, herrajes, selladores y silicón, servicios.
+RF-M1-03 Búsqueda rápida tolerante a acentos y mayúsculas, con filtros por categoría y tipo.
+RF-M1-04 Alta, edición y desactivación por un administrador, sin intervención técnica. Nada se borra.
+RF-M1-05 Importación masiva desde CSV o Excel con plantilla descargable y vista previa de errores antes de confirmar. El catálogo real (50 a 150 productos) llegará del cliente por cuestionario en la etapa final del proyecto.
+RF-M1-06 Historial de cambios de precio con usuario y fecha.
+RF-M1-07 [Solo si P2 se aprueba] Para piezas estándar: existencias, mínimo configurable y alerta visual de existencia baja. Descuento automático de existencias al vender una pieza estándar o al entregar una orden. Sin compras a proveedor, mermas ni costos.
+
+--- M2. COTIZADOR ---
+Propósito: resolver el problema número uno del cliente: dar presupuestos más rápido, en forma y que se vean profesionales, incluso en la casa del cliente.
+RF-M2-01 Capturar o buscar al cliente (nombre y WhatsApp como mínimo; domicilio de la obra opcional).
+RF-M2-02 Agregar líneas desde el catálogo. Para productos a medida, capturar ancho, alto y cantidad (cm o m, con unidad clara). El sistema calcula el importe según la regla de precio y muestra el cálculo.
+RF-M2-03 Permitir cargos adicionales (instalación, medición, cantos) como líneas de servicio. Los descuentos o ajustes de precio requieren permiso de administrador y quedan registrados.
+RF-M2-04 Vista previa del documento en vivo mientras se captura. En pantallas grandes, dos paneles (datos a la izquierda, documento a la derecha); en pantallas chicas, una pestaña de vista previa.
+RF-M2-05 Documento PDF tamaño carta con: logo y datos de ZAMMIR, folio, fecha, vigencia, datos del cliente, tabla de conceptos con medidas, cantidades e importes, total, condiciones, espacio de firma, y aviso de privacidad abreviado. El PDF se genera en el dispositivo, para que funcione sin internet.
+RF-M2-06 Enviar: compartir el PDF con el menú de compartir del teléfono o tablet (opción WhatsApp) y, como respaldo, abrir un enlace de WhatsApp con mensaje prellenado y descargar el PDF. También imprimir en la impresora tamaño carta.
+RF-M2-07 Estados: borrador, enviada, aceptada, rechazada, vencida. Historial de cotizaciones por cliente.
+RF-M2-08 Convertir una cotización aceptada en orden de trabajo con un solo paso, sin recapturar.
+RF-M2-09 Duplicar cotizaciones. Guardado automático de borradores.
+RF-M2-10 Uso en campo: pantalla optimizada para tablet en vertical y horizontal, botones grandes, teclado numérico para medidas, y operación sin conexión.
+RF-M2-11 [Solo si P1 se aprueba] Enlace público para que el cliente vea y acepte la cotización en línea.
+
+--- M3. ÓRDENES DE TRABAJO ---
+Propósito: dar seguimiento a trabajos que tardan días o semanas, con saldo y garantía documentados.
+RF-M3-01 Crear una orden desde una cotización aceptada o manualmente. Campos: folio, cliente, descripción, líneas copiadas, total, anticipo, saldo, responsables (quién mide, quién fabrica, quién instala), fecha estimada de entrega, notas y fotos opcionales de la medición.
+RF-M3-02 Estatus: en espera, en proceso, listo para entrega o instalación, entregado y cancelado (con motivo). Botón "Avanzar" al siguiente estatus. Cada cambio guarda usuario y hora.
+RF-M3-03 Registrar el anticipo (por defecto 50% sugerido, editable) con método de pago y quién cobró. El saldo se calcula y queda visible hasta liquidarse.
+RF-M3-04 No se puede marcar "entregado" con saldo mayor a cero sin autorización de un administrador y un motivo; en ese caso el saldo pasa a cuentas por cobrar.
+RF-M3-05 Garantía: al entregar, se crea el registro de garantía (fecha de inicio, duración, cobertura, exclusiones).
+RF-M3-06 Comprobante de trabajo en PDF tamaño carta: folio, cliente, descripción y medidas, total, anticipo pagado, saldo, condiciones, garantía, y un QR con código de verificación para autofacturación. Se genera cuando se cobra el anticipo y se reimprime con el saldo liquidado al entregar.
+RF-M3-07 Vistas: tablero por estatus y lista con filtros (estatus, cliente, responsable, fechas). Resumen con valor en producción y saldo por cobrar de lo que ya está listo.
+RF-M3-08 Cancelación solo por administradores, con motivo; el tratamiento del anticipo queda registrado según lo que establezca el contrato [POR DEFINIR].
+
+--- M4. MOSTRADOR (VENTA Y CAJA) ---
+Propósito: control de la caja compartida por tres personas.
+RF-M4-01 Venta rápida: elegir productos del catálogo (piezas estándar, servicios y vidrio a medida con captura de medida), ajustar cantidades y ver el ticket actual.
+RF-M4-02 Cobro en efectivo (monto recibido y cambio), transferencia (referencia opcional) o mixto.
+RF-M4-03 Cada venta y cada pago guardan el usuario activo, el dispositivo y la hora.
+RF-M4-04 Ticket térmico de 80 mm con: nombre del negocio, folio, fecha, cajero, conceptos, total, forma de pago, y un QR más código para autofacturación con la leyenda del plazo.
+RF-M4-05 Los anticipos y saldos de órdenes de trabajo también se cobran desde Mostrador y cuentan en la caja del cajero que los recibió.
+RF-M4-06 Corte de caja en dos niveles. Nivel 1, por cajero o turno: apertura con fondo inicial opcional, ventas y cobros del turno por método de pago, efectivo esperado, efectivo contado por el cajero, diferencia (sobrante o faltante) y resumen imprimible. [El conteo y la diferencia son una recomendación de HummingX; constrúyelos.] Nivel 2, consolidado del día para administradores: por método y por cajero. Un corte cerrado no se edita; solo un administrador puede reabrirlo, con rastro.
+RF-M4-07 Cancelar una venta: solo administradores, con motivo y rastro.
+RF-M4-08 Cambio de usuario por PIN en un toque, con bloqueo por inactividad.
+
+--- M5. CLIENTES E HISTORIAL ---
+RF-M5-01 Ficha: nombre, WhatsApp o teléfono, correo opcional, domicilios de obra, datos fiscales opcionales (RFC, razón social, código postal fiscal, régimen, uso de CFDI) y notas.
+RF-M5-02 Historial por cliente: cotizaciones, órdenes, ventas, pagos, garantías y facturas.
+RF-M5-03 Marca de "cliente recurrente" cuando tiene dos o más trabajos entregados.
+RF-M5-04 Búsqueda rápida y aviso de posibles duplicados por teléfono.
+RF-M5-05 Atención de solicitudes de datos personales (acceso, rectificación, cancelación, oposición): un administrador puede corregir o anonimizar los datos de un cliente, conservando los registros contables y fiscales que la ley exija.
+
+--- M6. CUENTAS POR COBRAR ---
+RF-M6-01 Lista de órdenes con saldo mayor a cero: cliente, folio, saldo y días transcurridos. Antigüedad resaltada por umbral configurable (la demo usó 10 días).
+RF-M6-02 Registrar el pago del saldo desde la lista.
+RF-M6-03 Botón para enviar un recordatorio por WhatsApp con mensaje prellenado y amable.
+RF-M6-04 Los días se calculan con fechas reales (la demo mostró "hace 741 días" por un error de datos; no debe repetirse).
+
+--- M7. REPORTES ---
+Propósito: las cinco vistas que Luis pidió, nada más. Solo administradores. Legibles desde un celular.
+RF-M7-01 Ventas del día, de la semana y del mes, cada una comparada contra el periodo anterior (ayer, semana pasada, mes pasado), con porcentaje y flecha.
+RF-M7-02 Producto o tipo de vidrio más vendido (por importe y por cantidad) en la semana y el mes.
+RF-M7-03 Trabajos pendientes por estatus, con conteo y valor.
+RF-M7-04 Cuentas por cobrar con antigüedad.
+RF-M7-05 Cobros por cajero (hoy, semana, mes).
+RF-M7-06 Cobros por método de pago en el periodo.
+Definición a confirmar [POR DEFINIR con Luis]: "ventas" = ventas de mostrador más pagos recibidos de órdenes de trabajo en el periodo (base de efectivo recibido). Constrúyelo así por defecto y deja la base de cálculo documentada.
+La sección se llama "Reportes", no "Inteligencia de negocio": no hay predicciones ni periodos de calibración. Son sumas, conteos y comparativos.
+
+--- M8. USUARIOS Y ROLES ---
+RF-M8-01 Crear, editar y desactivar usuarios (nunca borrar). Asignar rol y PIN. Restablecer PIN.
+RF-M8-02 Registrar, listar y revocar dispositivos.
+RF-M8-03 Bitácora consultable de acciones sensibles.
+RF-M8-04 Capacidad prevista: 2 administradores y 3 a 5 empleados; no impongas un límite técnico.
+
+--- M9. LEGAL Y CUMPLIMIENTO ---
+RF-M9-01 Aviso de privacidad (versión simplificada) enlazado desde el cotizador, los comprobantes y el portal de autofacturación. Texto editable por administradores, con versión y fecha. HummingX entrega un borrador base; el texto final lo proporciona o valida ZAMMIR con su asesor.
+RF-M9-02 Términos del servicio de ZAMMIR (anticipo, garantía, cancelación, tiempos de entrega), visibles en cotizaciones y comprobantes.
+RF-M9-03 Al capturar datos de un cliente, registrar que se le informó el aviso de privacidad.
+RF-M9-04 Canal visible para ejercer derechos sobre sus datos (correo o WhatsApp del negocio).
+RF-M9-05 En el aviso debe quedar declarada la transferencia de datos fiscales al proveedor de timbrado (PAC) cuando se factura.
