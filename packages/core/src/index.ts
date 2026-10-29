@@ -1,3 +1,4 @@
-// Punto de entrada de @zammir/core. Aquí se exportan el dominio y la aplicación;
-// las piezas llegan historia por historia (ver docs/backlog/).
-export {};
+// Punto de entrada de @zammir/core: lo que el resto del sistema puede importar.
+export * from './shared-kernel/clock';
+export * from './shared-kernel/id';
+export * from './shared-kernel/result';
