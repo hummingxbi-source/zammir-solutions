@@ -31,3 +31,6 @@ Thumbs.db
 reports/
 test-results/
 playwright-report/
+
+# Generado por pnpm funciones:empaquetar (S0-17)
+supabase/functions/_shared/core.mjs

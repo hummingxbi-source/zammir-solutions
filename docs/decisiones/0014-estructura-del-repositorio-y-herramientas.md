@@ -48,3 +48,12 @@ Las funciones de Supabase corren en Deno. `packages/core` no usa APIs de Node ni
 ## Consecuencias
 - Una validación (spike) corta de Deno + `packages/core` entra al Sprint 0.
 - Cada herramienta marcada "Sprint 0" se verifica con su versión actual al crear el repositorio; si algo no funciona se registra un ADR de reemplazo.
+
+## Resultado de la validación (S0-17, 2026-10-29)
+
+**La hipótesis se sostiene con empaquetado.** `packages/core` corre dentro de una función de Supabase (entorno de ejecución 1.77.8, compatible con Deno 2.1.4) si se empaqueta antes en un solo archivo.
+
+- **Qué se probó:** la función `validar-core` usa `Result`, el generador de identificadores, la marca de ids, `hasIdleExpired` y el esquema Zod de la configuración. Con `supabase functions serve`, respondió `200` con todas las comprobaciones correctas.
+- **Por qué no se importan los fuentes directo:** el núcleo usa importaciones relativas sin extensión (`./result`), que Deno no resuelve. Se empaqueta con esbuild (`pnpm funciones:empaquetar` → `supabase/functions/_shared/core.mjs`, no se versiona). Tamaño: unos 750 KB, casi todo Zod.
+- **Costo:** esbuild entra como dependencia de desarrollo. Hay un paso de compilación antes de servir o desplegar funciones; la integración continua debe correrlo antes de desplegar (S0-06).
+- **Sin probar todavía:** `Money` y `FolioAllocator` (aún no existen), el despliegue a un proyecto real de Supabase y el tiempo de arranque en frío.

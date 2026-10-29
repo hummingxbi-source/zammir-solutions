@@ -24,7 +24,8 @@
     "test:mutacion": "stryker run",
     "test:mutacion:critico": "stryker run stryker.critico.config.mjs",
     "test:zonas": "node scripts/test-zonas.mjs",
-    "typecheck": "pnpm -r typecheck && tsc -p tsconfig.json"
+    "typecheck": "pnpm -r typecheck && tsc -p tsconfig.json",
+    "funciones:empaquetar": "node scripts/empaquetar-core.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",
@@ -40,6 +41,7 @@
     "@vitejs/plugin-react": "^6.1.2",
     "@vitest/coverage-v8": "^5.0.5",
     "dependency-cruiser": "^18.7.0",
+    "esbuild": "^0.28.2",
     "eslint": "^10.13.0",
     "fast-check": "^4.10.2",
     "globals": "^17.13.0",
