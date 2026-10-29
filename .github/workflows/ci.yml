@@ -75,10 +75,20 @@ jobs:
           pnpm exec playwright install --with-deps chromium
           pnpm test:e2e
 
-      - name: 10. Escaneo de secretos
+      - name: 10. Escaneo de secretos (solo los cambios de este Pull Request o de esta fusión)
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          CABEZA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
+          # Se revisan solo los commits nuevos: la bandera --all de gitleaks recorre todas las ramas
+          # del repositorio, incluidas las de prueba de la compuerta (S0-07) que llevan un secreto falso.
+          if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ]; then
+            RANGO="$CABEZA"
+          else
+            RANGO="$BASE..$CABEZA"
+          fi
           docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.30.1 \
-            detect --source /repo --no-banner --redact --verbose
+            detect --source /repo --log-opts="$RANGO" --no-banner --redact --verbose
 
       - name: Detener Supabase local
         if: always()
