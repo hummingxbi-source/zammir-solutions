@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import { Route, Routes } from 'react-router';
 
+import { ProtegidaAdmin } from './modules/identity/ui/ProtegidaAdmin';
 import { Layout } from './shell/Layout';
 import { PanelDeInicio, SeccionVacia } from './shell/Paginas';
 import { seccionesVisibles, type Interruptor } from './shell/secciones';
@@ -26,7 +27,15 @@ export function App({ interruptores = SIN_INTERRUPTORES }: AppProps): ReactEleme
           <Route
             key={seccion.id}
             path={seccion.ruta}
-            element={<SeccionVacia titulo={seccion.texto} />}
+            element={
+              seccion.soloAdministrador === true ? (
+                <ProtegidaAdmin>
+                  <SeccionVacia titulo={seccion.texto} />
+                </ProtegidaAdmin>
+              ) : (
+                <SeccionVacia titulo={seccion.texto} />
+              )
+            }
           />
         ))}
         <Route path="*" element={<PanelDeInicio interruptores={interruptores} />} />

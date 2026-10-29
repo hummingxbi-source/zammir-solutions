@@ -20,6 +20,7 @@
     "test:cobertura": "vitest run --coverage",
     "test:db": "supabase test db",
     "test:e2e": "playwright test",
+    "test:integracion": "node scripts/test-integracion.mjs",
     "test:mutacion": "stryker run",
     "test:mutacion:critico": "stryker run stryker.critico.config.mjs",
     "test:zonas": "node scripts/test-zonas.mjs",

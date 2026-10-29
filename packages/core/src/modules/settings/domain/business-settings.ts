@@ -41,7 +41,8 @@ export interface SettingRow {
 }
 
 export interface SettingsError {
-  readonly code: 'SETTINGS_INVALID';
+  /** Inválidos: faltan o tienen un valor que no vale. No disponibles: no se pudieron leer del servidor. */
+  readonly code: 'SETTINGS_INVALID' | 'SETTINGS_UNAVAILABLE';
   /** Qué ajustes faltan o tienen un valor inválido, para avisar a soporte. */
   readonly problemas: readonly string[];
 }

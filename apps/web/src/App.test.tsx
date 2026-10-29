@@ -105,8 +105,8 @@ describe('App y navegación', () => {
 
   it('al elegir un acceso del panel de inicio abre esa sección', () => {
     mostrar('/');
-    fireEvent.click(within(screen.getByRole('main')).getByRole('link', { name: 'Reportes' }));
-    expect(screen.getByRole('heading', { name: 'Reportes' })).toBeInTheDocument();
+    fireEvent.click(within(screen.getByRole('main')).getByRole('link', { name: 'Cotizador' }));
+    expect(screen.getByRole('heading', { name: 'Cotizador' })).toBeInTheDocument();
   });
 
   it('una ruta desconocida regresa al panel de inicio', () => {

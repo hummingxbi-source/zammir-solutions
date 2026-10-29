@@ -1,5 +1,8 @@
 import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
+
+// Las pruebas de integración necesitan Supabase local: `pnpm test:integracion` las enciende.
+const conSupabase = process.env.ZAMMIR_TEST_SUPABASE_URL !== undefined;
 
 export default defineConfig({
   test: {
@@ -17,9 +20,22 @@ export default defineConfig({
           name: 'web',
           environment: 'jsdom',
           include: ['apps/web/src/**/*.test.{ts,tsx}'],
+          exclude: [...configDefaults.exclude, '**/*.integracion.test.ts'],
           setupFiles: ['apps/web/src/test/setup.ts'],
         },
       },
+      ...(conSupabase
+        ? [
+            {
+              test: {
+                name: 'integracion',
+                environment: 'node',
+                include: ['apps/web/src/**/*.integracion.test.ts'],
+                testTimeout: 30_000,
+              },
+            },
+          ]
+        : []),
     ],
     coverage: {
       provider: 'v8',
