@@ -4,3 +4,4 @@ export * from './modules/identity/contracts/admin-auth.contract';
 export * from './modules/settings/contracts/settings-repository.contract';
 export * from './modules/settings/domain/business-settings.fixtures';
 export * from './modules/audit/contracts/audit-log.contract';
+export * from './modules/devices/contracts/device-repository.contract';
