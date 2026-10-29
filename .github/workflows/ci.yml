@@ -57,6 +57,8 @@ jobs:
 
       - name: 7a. Supabase local, migraciones desde cero
         run: |
+          # Las funciones de servidor importan el núcleo ya empaquetado (S0-17); el archivo no se versiona.
+          pnpm funciones:empaquetar
           # Solo lo necesario por ahora; auth y API se agregan cuando haya historias que los usen.
           pnpm exec supabase start -x studio,mailpit,vector,logflare,imgproxy
           pnpm exec supabase db reset
