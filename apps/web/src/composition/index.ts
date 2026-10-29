@@ -1,5 +1,6 @@
-import type { AdminAuth, Clock, IdGenerator } from '@zammir/core';
+import type { AdminAuth, Clock, DeviceRepository, IdGenerator } from '@zammir/core';
 
+import { supabaseDeviceRepository } from '../modules/devices/infra/supabase-device-repository';
 import {
   adminAuthNoConfigurada,
   supabaseAdminAuth,
@@ -15,6 +16,8 @@ export interface Composition {
   readonly clock: Clock;
   readonly idGenerator: IdGenerator;
   readonly adminAuth: AdminAuth;
+  /** `null` si no hay servidor configurado. */
+  readonly dispositivos: DeviceRepository | null;
   /** Minutos de inactividad para cerrar la sesión de un administrador; `null` = por definir (PD-21). */
   readonly cargarLimiteInactividad: () => Promise<number | null>;
 }
@@ -32,6 +35,7 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
     clock: systemClock,
     idGenerator: uuidIdGenerator,
     adminAuth: cliente === null ? adminAuthNoConfigurada : supabaseAdminAuth(cliente),
+    dispositivos: cliente === null ? null : supabaseDeviceRepository(cliente),
     cargarLimiteInactividad: async () => {
       if (ajustes === null) {
         return null;
