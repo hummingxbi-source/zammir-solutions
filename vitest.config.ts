@@ -1,3 +1,4 @@
+import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
@@ -10,11 +11,25 @@ export default defineConfig({
           include: ['packages/core/src/**/*.test.ts'],
         },
       },
+      {
+        plugins: [react()],
+        test: {
+          name: 'web',
+          environment: 'jsdom',
+          include: ['apps/web/src/**/*.test.{ts,tsx}'],
+          setupFiles: ['apps/web/src/test/setup.ts'],
+        },
+      },
     ],
     coverage: {
       provider: 'v8',
-      include: ['packages/core/src/**/*.ts'],
-      exclude: ['**/*.test.ts', '**/index.ts'],
+      include: ['packages/core/src/**/*.ts', 'apps/web/src/**/*.{ts,tsx}'],
+      exclude: [
+        '**/*.test.{ts,tsx}',
+        '**/index.ts',
+        'apps/web/src/main.tsx',
+        'apps/web/src/test/**',
+      ],
       reporter: ['text-summary', 'lcov'],
       // Umbrales de docs/plan/00-principios-de-ingenieria.md §4.2. Nunca se bajan [CLAUDE.md regla 11].
       thresholds: {
