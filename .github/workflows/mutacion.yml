@@ -1,0 +1,31 @@
+# Prueba de mutación sobre packages/core en cada Pull Request que lo toque
+# [docs/plan/00-principios-de-ingenieria.md §5.1].
+name: Mutación
+
+on:
+  pull_request:
+    paths:
+      - 'packages/core/**'
+      - 'stryker*.mjs'
+      - 'vitest.config.ts'
+
+permissions:
+  contents: read
+
+jobs:
+  mutacion:
+    name: Mutación del dominio
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Mutación del dominio (≥ 80 %)
+        run: pnpm test:mutacion
+      - name: Mutación de dinero, IVA, precios y folios (≥ 90 %)
+        run: pnpm test:mutacion:critico

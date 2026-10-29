@@ -1,0 +1,82 @@
+# Integración continua: los pasos de docs/plan/00-principios-de-ingenieria.md §5.1, en ese orden.
+# Se detiene en el primer fallo. Nada se salta ni se marca como "permitido que falle" [CLAUDE.md regla 11].
+name: Integración continua
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compuerta:
+    name: Compuerta de calidad
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # el escaneo de secretos revisa todo el historial
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: 1. Instalación limpia de dependencias
+        run: pnpm install --frozen-lockfile
+
+      - name: 2a. Formato
+        run: pnpm format:check
+
+      - name: 2b. Lint (cero errores y cero advertencias)
+        run: pnpm lint
+
+      - name: 3. Revisión de tipos estricta
+        run: pnpm typecheck
+
+      - name: 4. Reglas de dependencia entre capas
+        run: pnpm check:deps
+
+      - name: 5. Pruebas (en varias zonas horarias, distintas a la de México)
+        run: pnpm test:zonas
+
+      - name: 6. Umbrales de cobertura
+        run: pnpm test:cobertura
+
+      - name: 7. Variables de entorno documentadas
+        run: pnpm check:env
+
+      - name: 7a. Supabase local, migraciones desde cero
+        run: |
+          # Solo lo necesario por ahora; auth y API se agregan cuando haya historias que los usen.
+          pnpm exec supabase start -x studio,mailpit,vector,logflare,imgproxy
+          pnpm exec supabase db reset
+
+      - name: 7b. Pruebas de base de datos y de RLS por rol
+        run: pnpm test:db
+
+      - name: 8. Construcción de producción
+        run: pnpm build
+
+      - name: 9. Pruebas extremo a extremo (tamaño de tablet)
+        run: |
+          pnpm exec playwright install --with-deps chromium
+          pnpm test:e2e
+
+      - name: 10. Escaneo de secretos
+        run: |
+          docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.30.1 \
+            detect --source /repo --no-banner --redact --verbose
+
+      - name: Detener Supabase local
+        if: always()
+        run: pnpm exec supabase stop --no-backup
