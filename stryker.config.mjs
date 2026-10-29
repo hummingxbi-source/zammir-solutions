@@ -11,6 +11,8 @@ export default {
   mutate: [
     'packages/core/src/**/*.ts',
     '!packages/core/src/**/*.test.ts',
+    '!packages/core/src/**/*.fixtures.ts',
+    '!packages/core/src/**/contracts/**',
     '!packages/core/src/index.ts',
   ],
   vitest: { configFile: 'vitest.config.ts' },
