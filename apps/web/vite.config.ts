@@ -5,6 +5,8 @@ import { VitePWA } from 'vite-plugin-pwa';
 // PWA instalable que abre sin internet [RNF-01, RNF-02, ADR-0003, ADR-0008].
 // La aplicación se guarda en la tablet la primera vez que se abre con internet.
 export default defineConfig({
+  // Las variables VITE_* se leen del .env de la raíz del repositorio (ver .env.example).
+  envDir: '../..',
   plugins: [
     react(),
     VitePWA({
