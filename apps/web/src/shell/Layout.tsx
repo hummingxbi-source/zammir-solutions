@@ -3,6 +3,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { Link, NavLink, useLocation } from 'react-router';
 
 import { textos } from '../shared/i18n/textos';
+import { IndicadorDeConexion } from './IndicadorDeConexion';
 import { seccionesVisibles, SECCIONES, type Interruptor } from './secciones';
 import { useSeccionesVisitadas } from './useSeccionesVisitadas';
 
@@ -70,6 +71,8 @@ export function Layout({ interruptores, children }: LayoutProps): ReactElement {
           </nav>
         </details>
       </header>
+
+      <IndicadorDeConexion />
 
       <main className="marco__contenido">{children}</main>
     </div>

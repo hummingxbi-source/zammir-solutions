@@ -296,3 +296,11 @@ h3 {
   letter-spacing: 0.15em;
   margin-block: 0.5rem;
 }
+
+.aviso-conexion {
+  margin: 0;
+  padding: 0.5rem var(--espacio);
+  background: var(--color-texto);
+  color: var(--color-fondo);
+  text-align: center;
+}
