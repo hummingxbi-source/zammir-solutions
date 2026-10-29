@@ -1,0 +1,177 @@
+/* Sistema de diseño base [S0-10].
+ * Identidad PROVISIONAL según la guía general del documento de construcción (PD-35):
+ * fondo cálido claro, tarjetas blancas, acento azul marino, títulos con serifa y etiquetas en monoespaciada.
+ * Objetivos táctiles de al menos 44 px y texto de al menos 16 px [RNF-28]. */
+
+:root {
+  --color-fondo: #f6f1e9;
+  --color-superficie: #ffffff;
+  --color-texto: #1d1d1b;
+  --color-texto-suave: #55524c;
+  --color-borde: #8c8577;
+  --color-acento: #1f3a5f;
+  --color-acento-texto: #ffffff;
+  --color-error: #9c1c14;
+  --color-exito: #1e6b3a;
+
+  --tactil-minimo: 44px;
+  --texto-base: 1rem;
+
+  --fuente-base: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --fuente-titulo: Georgia, 'Times New Roman', serif;
+  --fuente-etiqueta: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+
+  --radio: 0.5rem;
+  --espacio: 1rem;
+}
+
+html {
+  font-size: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-fondo);
+  color: var(--color-texto);
+  font-family: var(--fuente-base);
+  font-size: var(--texto-base);
+  line-height: 1.5;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--fuente-titulo);
+  font-weight: 700;
+}
+
+/* Botones */
+.boton {
+  min-height: var(--tactil-minimo);
+  min-width: var(--tactil-minimo);
+  padding: 0.5rem 1.25rem;
+  border: 1px solid var(--color-acento);
+  border-radius: var(--radio);
+  background: var(--color-acento);
+  color: var(--color-acento-texto);
+  font: inherit;
+  font-size: var(--texto-base);
+  cursor: pointer;
+}
+
+.boton--secundario {
+  background: var(--color-superficie);
+  color: var(--color-acento);
+}
+
+.boton--peligro {
+  border-color: var(--color-error);
+  background: var(--color-error);
+  color: var(--color-acento-texto);
+}
+
+.boton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.boton:focus-visible,
+.campo__entrada:focus-visible {
+  outline: 3px solid var(--color-acento);
+  outline-offset: 2px;
+}
+
+/* Campos */
+.campo {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.campo__etiqueta {
+  font-family: var(--fuente-etiqueta);
+  font-size: var(--texto-base);
+  color: var(--color-texto-suave);
+}
+
+.campo__entrada {
+  box-sizing: border-box;
+  min-height: var(--tactil-minimo);
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+  background: var(--color-superficie);
+  color: var(--color-texto);
+  font: inherit;
+  font-size: var(--texto-base);
+}
+
+.campo__entrada[aria-invalid='true'] {
+  border-color: var(--color-error);
+}
+
+.campo__error {
+  color: var(--color-error);
+  font-size: var(--texto-base);
+}
+
+/* Avisos y confirmaciones */
+.aviso {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+  background: var(--color-superficie);
+}
+
+.aviso--error {
+  border-left: 6px solid var(--color-error);
+}
+
+.aviso--exito {
+  border-left: 6px solid var(--color-exito);
+}
+
+.aviso__que-hacer {
+  margin: 0.25rem 0 0;
+  color: var(--color-texto-suave);
+}
+
+.confirmacion {
+  max-width: 28rem;
+  padding: 1.25rem;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+  background: var(--color-superficie);
+}
+
+.confirmacion__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+/* Animación sobria */
+.anima-entrada {
+  animation: aparecer 200ms ease-out;
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Con "reducir movimiento" no hay animaciones [RF-UX-09] */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
