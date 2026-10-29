@@ -21,6 +21,8 @@ deviceRepositoryContract(
         cuentas += 1;
         return Promise.resolve(`cuenta-${String(cuentas)}`);
       },
+      consultasDeLista: () =>
+        Promise.resolve(auditLog.entries().filter((e) => e.action === 'DEVICES_LISTED').length),
       bitacoraDe: (id) =>
         Promise.resolve(
           auditLog

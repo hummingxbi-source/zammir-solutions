@@ -4,7 +4,7 @@
 -- puede revocar el dispositivo. Un dispositivo revocado deja de operar y de enviar.
 --
 -- Quién puede qué (docs/arquitectura/AUTENTICACION.md §3 y §6):
---   administradores → generan códigos, ven y revocan dispositivos (solo mediante las funciones)
+--   administradores → generan códigos, listan y revocan dispositivos (solo mediante las funciones)
 --   dispositivos    → ven únicamente su propio renglón, aunque estén revocados, para enterarse
 --   servidor        → canjea códigos (llave de servicio)
 --   cualquier otro  → nada
@@ -44,11 +44,12 @@ comment on table public.device_registration_codes is
 alter table public.devices enable row level security;
 alter table public.device_registration_codes enable row level security;
 
-create policy "administradores y el propio dispositivo ven un dispositivo"
+-- El administrador consulta la lista con list_devices(), que deja su entrada de bitácora.
+create policy "el propio dispositivo ve su renglón"
   on public.devices
   for select
   to authenticated
-  using ((select private.is_admin()) or auth_user_id = (select auth.uid()));
+  using (auth_user_id = (select auth.uid()));
 
 -- Los códigos no se tocan desde la API: solo por las funciones de abajo.
 revoke all on public.devices from anon, authenticated;
@@ -163,6 +164,26 @@ begin
 end;
 $$;
 
+-- ---------- Listar dispositivos (administradores) ----------
+create or replace function public.list_devices()
+returns setof public.devices
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if not (select private.is_admin()) then
+    raise exception 'NOT_AUTHORIZED' using errcode = '42501';
+  end if;
+
+  insert into public.audit_log
+    (id, occurred_at, recorded_by, user_id, action, entity_type, entity_id)
+  values (gen_random_uuid(), now(), (select auth.uid()), (select auth.uid()), 'DEVICES_LISTED', 'device', 'list');
+
+  return query select * from public.devices order by temp_series;
+end;
+$$;
+
 -- ---------- Revocar un dispositivo (administradores) ----------
 create or replace function public.revoke_device(p_device_id uuid)
 returns public.devices
@@ -204,6 +225,8 @@ $$;
 -- Permisos de ejecución: por omisión PostgreSQL deja ejecutar a todos; aquí se cierra y se abre a quien toca.
 revoke execute on function public.create_device_registration_code(integer) from public, anon;
 grant execute on function public.create_device_registration_code(integer) to authenticated;
+revoke execute on function public.list_devices() from public, anon;
+grant execute on function public.list_devices() to authenticated;
 revoke execute on function public.revoke_device(uuid) from public, anon;
 grant execute on function public.revoke_device(uuid) to authenticated;
 revoke execute on function public.redeem_device_registration_code(text, text, uuid)

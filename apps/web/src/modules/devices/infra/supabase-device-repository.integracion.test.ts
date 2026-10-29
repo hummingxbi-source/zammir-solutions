@@ -87,6 +87,14 @@ deviceRepositoryContract(
         `disp-tablet-${crypto.randomUUID()}@ejemplo.invalid`,
         `Clave-${sufijo}-Tab1`,
       ),
+    consultasDeLista: async () => {
+      const { count, error } = await servicio
+        .from('audit_log')
+        .select('id', { count: 'exact', head: true })
+        .eq('action', 'DEVICES_LISTED');
+      expect(error).toBeNull();
+      return count ?? 0;
+    },
     bitacoraDe: async (id: DeviceId) => {
       const { data, error } = await servicio
         .from('audit_log')

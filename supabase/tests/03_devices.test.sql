@@ -1,6 +1,6 @@
 -- Pruebas de dispositivos y códigos de registro [S0-16a].
 begin;
-select plan(32);
+select plan(35);
 
 select has_table('public', 'devices', 'existe la tabla de dispositivos');
 select has_table('public', 'device_registration_codes', 'existe la tabla de códigos');
@@ -39,6 +39,7 @@ select throws_ok($$ select * from public.create_device_registration_code(15) $$,
   'un cajero no genera códigos');
 select throws_ok($$ select * from public.revoke_device('00000000-0000-0000-0000-0000000000e1') $$,
   '42501', null, 'un cajero no revoca');
+select throws_ok($$ select * from public.list_devices() $$, '42501', null, 'un cajero no lista');
 select throws_ok(
   $$ select * from public.redeem_device_registration_code('AAAAAAAA', 'Tablet', '00000000-0000-0000-0000-0000000000f1') $$,
   '42501', null, 'un usuario con sesión no canjea: es del servidor');
@@ -122,8 +123,10 @@ select is((select temp_series from public.devices where auth_user_id = '00000000
 select set_config('request.jwt.claims',
   '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated","app_metadata":{"rol":"ADMIN"}}', true);
 set local role authenticated;
-select is((select count(*)::int from public.devices), 2, 'el administrador ve todos los dispositivos');
+select is((select count(*)::int from public.list_devices()), 2, 'el administrador lista todos los dispositivos');
+select is((select count(*)::int from public.devices), 0, 'el administrador no lee la tabla directo: usa la lista');
 reset role;
+select is((select count(*)::int from public.audit_log where action = 'DEVICES_LISTED'), 1, 'listar deja su entrada de bitácora');
 
 select set_config('request.jwt.claims',
   '{"sub":"00000000-0000-0000-0000-0000000000d1","role":"authenticated","app_metadata":{"rol":"DEVICE"}}', true);

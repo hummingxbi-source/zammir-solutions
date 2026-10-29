@@ -11,6 +11,8 @@ export interface DeviceRepositoryDelContrato {
   readonly nuevaCuenta: () => Promise<string>;
   /** Las entradas de bitácora de un dispositivo, leídas por un camino independiente del puerto. */
   readonly bitacoraDe: (id: DeviceId) => Promise<readonly string[]>;
+  /** Cuántas entradas de "se consultó la lista" hay en la bitácora. */
+  readonly consultasDeLista: () => Promise<number>;
 }
 
 /** Batería de contrato de DeviceRepository: la pasan todos los adaptadores (memoria, Supabase…). */
@@ -95,6 +97,14 @@ export function deviceRepositoryContract(
       if (resultado.ok && lista.ok) {
         expect(lista.value.find((d) => d.id === resultado.value.id)?.name).toBe('Tablet en lista');
       }
+    });
+
+    it('listar deja su entrada de bitácora cada vez', async () => {
+      const h = await crear();
+      const antes = await h.consultasDeLista();
+      await h.repo.list();
+      await h.repo.list();
+      expect(await h.consultasDeLista()).toBe(antes + 2);
     });
 
     it('revocar marca al dispositivo y fija la hora; revocarlo otra vez no cambia nada', async () => {

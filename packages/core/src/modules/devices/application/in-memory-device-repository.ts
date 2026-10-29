@@ -67,8 +67,17 @@ export function inMemoryDeviceRepository(deps: InMemoryDeviceDeps): DeviceReposi
       return ok(dispositivo);
     },
 
-    list() {
-      return Promise.resolve(ok([...dispositivos.values()]));
+    async list() {
+      await recordAuditEntry(auditoria, {
+        userId: null,
+        deviceId: null,
+        action: 'DEVICES_LISTED',
+        entityType: 'device',
+        entityId: 'list',
+        oldValue: null,
+        newValue: null,
+      });
+      return ok([...dispositivos.values()]);
     },
 
     async revoke(id) {

@@ -80,10 +80,7 @@ export function supabaseDeviceRepository(cliente: SupabaseClient): DeviceReposit
     },
 
     async list() {
-      const respuesta = await cliente
-        .from('devices')
-        .select('id, name, temp_series, status, created_at, last_sent_at, revoked_at')
-        .order('temp_series');
+      const respuesta = await cliente.rpc('list_devices');
       const { error } = respuesta;
       const data: unknown = respuesta.data;
       if (error !== null) {
