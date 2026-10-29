@@ -29,3 +29,5 @@ Thumbs.db
 *.log
 .stryker-tmp/
 reports/
+test-results/
+playwright-report/
