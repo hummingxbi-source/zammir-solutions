@@ -5,7 +5,11 @@ import { BrowserRouter } from 'react-router';
 import { App } from './App';
 import { createComposition } from './composition';
 import { ProveedorSesionAdmin } from './modules/identity/ui/SesionAdmin';
+import { registerSW } from 'virtual:pwa-register';
 import './shared/ui/estilos.css';
+
+// Guarda la aplicación en la tablet para abrirla sin internet [RNF-01].
+registerSW({ immediate: true });
 
 const composition = createComposition({
   url: import.meta.env.VITE_SUPABASE_URL,

@@ -114,6 +114,10 @@ export const textos = {
       },
     },
   },
+  conexion: {
+    sinInternet: 'Sin internet.',
+    puedesSeguir: 'Sigues trabajando: lo que captures queda guardado en la tablet.',
+  },
   seccionVacia: {
     descripcion: 'Esta sección estará lista pronto.',
   },
