@@ -6,3 +6,5 @@ export * from './modules/settings/domain/business-settings.fixtures';
 export * from './modules/audit/contracts/audit-log.contract';
 export * from './modules/devices/contracts/device-repository.contract';
 export * from './modules/catalog/contracts/catalog.contract';
+export * from './modules/identity/contracts/pin-hasher.contract';
+export * from './modules/identity/contracts/user-repository.contract';

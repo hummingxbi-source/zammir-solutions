@@ -1,16 +1,11 @@
 import type { DeviceId } from '../../../shared-kernel/id';
 import { err, type Result } from '../../../shared-kernel/result';
-import type { UserRole } from '../../identity/domain/auth';
+import type { Actor } from '../../identity/domain/auth';
 import type { Device, DeviceError, IssuedRegistrationCode } from '../domain/device';
 import type { DeviceRepository } from './ports';
 
 export interface DeviceDeps {
   readonly devices: DeviceRepository;
-}
-
-/** Quién pide la acción. Registrar, listar y revocar son solo de administradores [RF-M8-02]. */
-export interface Actor {
-  readonly role: UserRole | null;
 }
 
 function noEsAdministrador(actor: Actor): boolean {

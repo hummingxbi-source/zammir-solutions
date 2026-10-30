@@ -36,3 +36,8 @@ export function hasIdleExpired(
   }
   return now.getTime() - lastActivityAt.getTime() >= limitMinutes * MS_POR_MINUTO;
 }
+
+/** Quién pide una acción: su rol decide si el caso de uso la permite. Sin rol (`null`) no tiene permisos. */
+export interface Actor {
+  readonly role: UserRole | null;
+}

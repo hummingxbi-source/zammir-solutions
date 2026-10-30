@@ -60,6 +60,79 @@ export const textos = {
       },
     },
   },
+  usuarios: {
+    titulo: 'Personas del mostrador',
+    descripcion:
+      'Da de alta a quien usa la tablet, asígnale un rol y un PIN, y desactívalo cuando ya no trabaje contigo. Nadie se borra.',
+    cargando: 'Cargando personas…',
+    sinPersonas: 'Todavía no hay personas registradas. Da de alta a la primera.',
+    alta: {
+      titulo: 'Dar de alta a una persona',
+      nombre: 'Nombre',
+      rol: 'Rol',
+      pin: 'PIN',
+      ayudaPin:
+        'De 4 a 6 dígitos. No uses números fáciles como 0000 o 1234. Los administradores usan al menos',
+      digitos: 'dígitos',
+      guardar: 'Dar de alta',
+      guardando: 'Guardando…',
+      listo: 'Persona dada de alta.',
+    },
+    roles: { ADMIN: 'Administrador', STAFF: 'Cajero / vendedor' },
+    columnas: { nombre: 'Nombre', rol: 'Rol', estado: 'Estado', acciones: 'Acciones' },
+    estados: { activo: 'Activo', inactivo: 'Desactivado' },
+    desactivar: 'Desactivar',
+    activar: 'Activar',
+    restablecerPin: 'Restablecer PIN',
+    nuevoPin: 'PIN nuevo',
+    guardarPin: 'Guardar PIN',
+    pinRestablecido: 'PIN restablecido.',
+    cancelar: 'Cancelar',
+    confirmarDesactivar: {
+      titulo: 'Desactivar a',
+      mensaje: 'Ya no podrá entrar a la tablet. Su historial se conserva. ¿Quieres desactivarlo?',
+      confirmar: 'Sí, desactivar',
+      cancelar: 'No, dejarlo',
+    },
+    errores: {
+      NAME_REQUIRED: {
+        mensaje: 'Falta el nombre.',
+        queHacer: 'Escribe el nombre de la persona.',
+      },
+      NAME_TAKEN: {
+        mensaje: 'Ya hay alguien con ese nombre.',
+        queHacer: 'Agrega un apellido o una inicial para distinguirlos.',
+      },
+      NOT_FOUND: {
+        mensaje: 'Esa persona ya no aparece.',
+        queHacer: 'Actualiza la lista.',
+      },
+      NOT_AUTHORIZED: {
+        mensaje: 'Tu cuenta no puede administrar personas.',
+        queHacer: 'Entra con una cuenta de administrador.',
+      },
+      USERS_UNAVAILABLE: {
+        mensaje: 'No hay conexión con el servidor.',
+        queHacer: 'Conéctate a internet e intenta de nuevo.',
+      },
+      PIN_FORMAT: {
+        mensaje: 'El PIN no es válido.',
+        queHacer: 'Escribe de 4 a 6 dígitos, solo números.',
+      },
+      PIN_TOO_SHORT_FOR_ADMIN: {
+        mensaje: 'El PIN de un administrador es más largo.',
+        queHacer: 'Escribe 6 dígitos.',
+      },
+      PIN_TRIVIAL: {
+        mensaje: 'Ese PIN es muy fácil de adivinar.',
+        queHacer: 'Elige otro que no sea una secuencia ni se repita.',
+      },
+      PIN_REQUIRED: {
+        mensaje: 'Para ser administrador hace falta un PIN nuevo.',
+        queHacer: 'Escribe un PIN de 6 dígitos.',
+      },
+    },
+  },
   dispositivos: {
     titulo: 'Tablets',
     descripcion: 'Registra las tablets de ZAMMIR y quita el acceso a las que ya no se usen.',

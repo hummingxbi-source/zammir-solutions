@@ -29,3 +29,8 @@ export * from './modules/catalog/domain/initial-categories';
 export * from './modules/catalog/domain/product';
 export * from './modules/catalog/application/update-product';
 export * from './modules/catalog/domain/search';
+export * from './modules/identity/application/in-memory-users';
+export * from './modules/identity/application/manage-users';
+export * from './modules/identity/application/user-ports';
+export * from './modules/identity/domain/pin';
+export * from './modules/identity/domain/user';

@@ -1,12 +1,21 @@
-import type { AdminAuth, Clock, DeviceRepository, IdGenerator } from '@zammir/core';
+import type {
+  AdminAuth,
+  Clock,
+  DeviceRepository,
+  IdGenerator,
+  ManageUsersDeps,
+  UserPolicy,
+} from '@zammir/core';
 
 import { supabaseDeviceRepository } from '../modules/devices/infra/supabase-device-repository';
 import {
   adminAuthNoConfigurada,
   supabaseAdminAuth,
 } from '../modules/identity/infra/supabase-admin-auth';
+import { supabaseUsers } from '../modules/identity/infra/supabase-users';
 import { supabaseSettingsRepository } from '../modules/settings/infra/supabase-settings-repository';
 import { createSupabaseClient } from '../shared/infra/supabase-client';
+import { webCryptoPinHasher } from '../shared/infra/web-crypto-pin-hasher';
 import { systemClock } from '../shared/infra/system-clock';
 import { uuidIdGenerator } from '../shared/infra/uuid-id-generator';
 
@@ -18,6 +27,10 @@ export interface Composition {
   readonly adminAuth: AdminAuth;
   /** `null` si no hay servidor configurado. */
   readonly dispositivos: DeviceRepository | null;
+  /** Altas, PIN y desactivación de personas; `null` si no hay servidor configurado. */
+  readonly usuarios: ManageUsersDeps | null;
+  /** Mínimo de dígitos del PIN de un administrador y vueltas de PBKDF2, de la configuración. */
+  readonly cargarPoliticaDeUsuarios: () => Promise<UserPolicy | null>;
   /** Minutos de inactividad para cerrar la sesión de un administrador; `null` = por definir (PD-21). */
   readonly cargarLimiteInactividad: () => Promise<number | null>;
   /** Minutos sugeridos para la vigencia de un código de registro de tablet (PD-48). */
@@ -38,6 +51,26 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
     idGenerator: uuidIdGenerator,
     adminAuth: cliente === null ? adminAuthNoConfigurada : supabaseAdminAuth(cliente),
     dispositivos: cliente === null ? null : supabaseDeviceRepository(cliente),
+    usuarios:
+      cliente === null
+        ? null
+        : {
+            users: supabaseUsers(cliente),
+            hasher: webCryptoPinHasher,
+            idGenerator: uuidIdGenerator,
+          },
+    cargarPoliticaDeUsuarios: async () => {
+      if (ajustes === null) {
+        return null;
+      }
+      const resultado = await ajustes.load();
+      return resultado.ok
+        ? {
+            adminMinDigits: resultado.value.admin_pin_min_digits,
+            pbkdf2Iterations: resultado.value.pin_pbkdf2_iterations,
+          }
+        : null;
+    },
     cargarLimiteInactividad: async () => {
       if (ajustes === null) {
         return null;

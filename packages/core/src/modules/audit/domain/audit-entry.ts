@@ -10,7 +10,12 @@ export type AuditAction =
   | 'DEVICES_LISTED'
   | 'PRODUCT_PRICE_CHANGED'
   | 'PRODUCT_ACTIVATED'
-  | 'PRODUCT_DEACTIVATED';
+  | 'PRODUCT_DEACTIVATED'
+  | 'USER_CREATED'
+  | 'USER_UPDATED'
+  | 'USER_ACTIVATED'
+  | 'USER_DEACTIVATED'
+  | 'USER_PIN_RESET';
 
 export type AuditEntryId = Id<'AuditEntry'>;
 
