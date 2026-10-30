@@ -25,5 +25,7 @@
 | [0017](docs/decisiones/0017-reconciliacion-con-el-documento-completo.md) | Reconciliación con el documento de construcción completo: qué decisión manda | Aceptada (calendario abierto: PD-34) | 2026-10-27 |
 | [0018](docs/decisiones/0018-impresion-de-tickets-en-tres-capas.md) | Impresión de tickets en tres capas (Web Bluetooth, impresión de Android, compartir) | Aceptada como estrategia | 2026-10-27 |
 | [0019](docs/decisiones/0019-calendario-plan-actual-con-recortes.md) | Calendario: se mantiene el plan actual de sprints, con recortes desde ahora | Aceptada | 2026-10-27 |
+| [0020](docs/decisiones/0020-importacion-del-catalogo-todo-o-nada.md) | Importación del catálogo: todo o nada, primero CSV | Aceptada | 2026-10-30 |
+| [0021](docs/decisiones/0021-clientes-alta-directa-desde-la-tablet-transitoria.md) | La tablet da de alta clientes directo en la base (transitorio hasta el Sprint 2) | Aceptada (transitoria) | 2026-10-30 |
 
 Plantilla para una nueva decisión: [`docs/decisiones/0000-plantilla.md`](docs/decisiones/0000-plantilla.md).

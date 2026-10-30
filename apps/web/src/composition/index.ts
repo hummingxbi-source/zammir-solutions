@@ -1,13 +1,16 @@
-import type {
-  AdminAuth,
-  AuditReader,
-  Clock,
-  DeviceRepository,
-  IdGenerator,
-  LegalDeps,
-  ManageCustomersDeps,
-  ManageUsersDeps,
-  UserPolicy,
+import {
+  createPriceRegistry,
+  defaultRules,
+  type AdminAuth,
+  type AuditReader,
+  type Clock,
+  type DeviceRepository,
+  type IdGenerator,
+  type ImportCatalogDeps,
+  type LegalDeps,
+  type ManageCustomersDeps,
+  type ManageUsersDeps,
+  type UserPolicy,
 } from '@zammir/core';
 
 import { supabaseDeviceRepository } from '../modules/devices/infra/supabase-device-repository';
@@ -16,6 +19,7 @@ import {
   supabaseAdminAuth,
 } from '../modules/identity/infra/supabase-admin-auth';
 import { supabaseAuditReader } from '../modules/audit/infra/supabase-audit-reader';
+import { supabaseCatalog } from '../modules/catalog/infra/supabase-catalog';
 import { supabaseCustomers } from '../modules/customers/infra/supabase-customers';
 import { supabaseLegal } from '../modules/legal/infra/supabase-legal';
 import { supabaseUsers } from '../modules/identity/infra/supabase-users';
@@ -33,6 +37,8 @@ export interface Composition {
   readonly adminAuth: AdminAuth;
   /** `null` si no hay servidor configurado. */
   readonly dispositivos: DeviceRepository | null;
+  /** Importación del catálogo; `null` si no hay servidor configurado. */
+  readonly catalogo: ImportCatalogDeps | null;
   /** Lector de la bitácora; `null` si no hay servidor configurado. */
   readonly bitacora: AuditReader | null;
   /** Nombres de las personas, para mostrarlos en la bitácora en lugar de su identificador. */
@@ -56,6 +62,9 @@ export interface EntornoSupabase {
   readonly anonKey?: string | undefined;
 }
 
+const registroDeReglas = createPriceRegistry(defaultRules);
+const reglas = registroDeReglas.ok ? registroDeReglas.value : null;
+
 export function createComposition(entorno: EntornoSupabase = {}): Composition {
   const cliente = createSupabaseClient(entorno.url, entorno.anonKey);
   const ajustes = cliente === null ? null : supabaseSettingsRepository(cliente);
@@ -67,6 +76,15 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
     idGenerator: uuidIdGenerator,
     adminAuth: cliente === null ? adminAuthNoConfigurada : supabaseAdminAuth(cliente),
     dispositivos: cliente === null ? null : supabaseDeviceRepository(cliente),
+    catalogo:
+      cliente === null || reglas === null
+        ? null
+        : {
+            products: supabaseCatalog(cliente),
+            categories: supabaseCatalog(cliente),
+            idGenerator: uuidIdGenerator,
+            priceRules: reglas,
+          },
     bitacora: cliente === null ? null : supabaseAuditReader(cliente),
     cargarNombres: async () => {
       if (cliente === null) {
