@@ -4,7 +4,14 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig(
-  globalIgnores(['**/dist/**', '**/coverage/**', '**/node_modules/**', 'docs/**']),
+  globalIgnores([
+    '**/dist/**',
+    '**/coverage/**',
+    '**/node_modules/**',
+    'docs/**',
+    // Funciones de servidor: código para Deno, fuera del proyecto TypeScript (S0-17).
+    'supabase/functions/**',
+  ]),
 
   // Archivos de configuración (JavaScript): sin información de tipos.
   {
