@@ -56,3 +56,5 @@ export * from './modules/catalog/domain/import/csv';
 export * from './modules/catalog/domain/import/template';
 export * from './modules/audit/application/reader';
 export * from './modules/devices/application/register-tablet';
+export * from './modules/catalog/application/replica';
+export * from './modules/catalog/application/in-memory-catalog-local-store';

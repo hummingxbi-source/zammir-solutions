@@ -1,9 +1,12 @@
+import { createClient } from '@supabase/supabase-js';
 import {
   createPriceRegistry,
   defaultRules,
   type AdminAuth,
   type AuditReader,
+  type CatalogLocalStore,
   type Clock,
+  type DeviceCredentials,
   type DeviceRepository,
   type IdGenerator,
   type ImportCatalogDeps,
@@ -14,6 +17,12 @@ import {
   type UserPolicy,
 } from '@zammir/core';
 
+import {
+  actualizarCatalogoLocal,
+  type ResultadoDeActualizar,
+} from '../modules/catalog/infra/actualizar-catalogo-local';
+import { dexieCatalogStore } from '../modules/catalog/infra/dexie-catalog-store';
+import { supabaseCatalogReplica } from '../modules/catalog/infra/supabase-catalog';
 import { functionDeviceRegistrar } from '../modules/devices/infra/function-device-registrar';
 import { localCredentialsStore } from '../modules/devices/infra/local-credentials-store';
 import { supabaseDeviceRepository } from '../modules/devices/infra/supabase-device-repository';
@@ -52,6 +61,11 @@ export interface Composition {
   readonly clientes: ManageCustomersDeps | null;
   /** Conexión de esta tablet con un código de registro; `null` si no hay servidor configurado. */
   readonly conectarTablet: RegisterTabletDeps | null;
+  /** Catálogo guardado en la tablet para vender sin internet, y cómo ponerlo al día. */
+  readonly catalogoLocal: {
+    readonly store: CatalogLocalStore;
+    readonly actualizar: () => Promise<ResultadoDeActualizar>;
+  } | null;
   /** Altas, PIN y desactivación de personas; `null` si no hay servidor configurado. */
   readonly usuarios: ManageUsersDeps | null;
   /** Mínimo de dígitos del PIN de un administrador y vueltas de PBKDF2, de la configuración. */
@@ -70,11 +84,53 @@ export interface EntornoSupabase {
 const registroDeReglas = createPriceRegistry(defaultRules);
 const reglas = registroDeReglas.ok ? registroDeReglas.value : null;
 
+function crearCatalogoLocal(
+  url: string,
+  anonKey: string,
+  credenciales: ReturnType<typeof localCredentialsStore>,
+): NonNullable<Composition['catalogoLocal']> {
+  const store = dexieCatalogStore();
+  // La sesión de la tablet va en un cliente aparte, para no mezclarla con la de un administrador.
+  async function fuenteConSesion(c: DeviceCredentials) {
+    const cliente = createClient(url, anonKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { data, error } = await cliente.auth.setSession({
+      access_token: c.session.accessToken,
+      refresh_token: c.session.refreshToken,
+    });
+    if (error !== null || data.session === null) {
+      return null;
+    }
+    // Si la sesión se renovó, se guarda la nueva: la anterior ya no sirve.
+    if (data.session.refresh_token !== c.session.refreshToken) {
+      await credenciales.save({
+        ...c,
+        session: {
+          accessToken: data.session.access_token,
+          refreshToken: data.session.refresh_token,
+        },
+      });
+    }
+    return supabaseCatalogReplica(cliente);
+  }
+  return {
+    store,
+    actualizar: () => actualizarCatalogoLocal({ credenciales, fuenteConSesion, store }),
+  };
+}
+
 export function createComposition(entorno: EntornoSupabase = {}): Composition {
   const cliente = createSupabaseClient(entorno.url, entorno.anonKey);
   const ajustes = cliente === null ? null : supabaseSettingsRepository(cliente);
   const legal: LegalDeps | null =
     cliente === null ? null : { legal: supabaseLegal(cliente), clock: systemClock };
+
+  const credencialesDeLaTablet = localCredentialsStore(window.localStorage);
+  const catalogoLocal =
+    entorno.url === undefined || entorno.anonKey === undefined
+      ? null
+      : crearCatalogoLocal(entorno.url, entorno.anonKey, credencialesDeLaTablet);
 
   return {
     clock: systemClock,
@@ -123,6 +179,7 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
             store: localCredentialsStore(window.localStorage),
             clock: systemClock,
           },
+    catalogoLocal,
     cargarPoliticaDeUsuarios: async () => {
       if (ajustes === null) {
         return null;
