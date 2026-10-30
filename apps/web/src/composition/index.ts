@@ -20,6 +20,8 @@ export interface Composition {
   readonly dispositivos: DeviceRepository | null;
   /** Minutos de inactividad para cerrar la sesión de un administrador; `null` = por definir (PD-21). */
   readonly cargarLimiteInactividad: () => Promise<number | null>;
+  /** Minutos sugeridos para la vigencia de un código de registro de tablet (PD-48). */
+  readonly cargarVigenciaDeCodigo: () => Promise<number | null>;
 }
 
 export interface EntornoSupabase {
@@ -42,6 +44,13 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
       }
       const resultado = await ajustes.load();
       return resultado.ok ? resultado.value.admin_idle_logout_minutes : null;
+    },
+    cargarVigenciaDeCodigo: async () => {
+      if (ajustes === null) {
+        return null;
+      }
+      const resultado = await ajustes.load();
+      return resultado.ok ? resultado.value.device_code_validity_minutes : null;
     },
   };
 }

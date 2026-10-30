@@ -29,7 +29,10 @@ createRoot(root).render(
       cargarLimiteInactividad={composition.cargarLimiteInactividad}
     >
       <BrowserRouter>
-        <App dispositivos={composition.dispositivos} />
+        <App
+          dispositivos={composition.dispositivos}
+          cargarVigenciaDeCodigo={composition.cargarVigenciaDeCodigo}
+        />
       </BrowserRouter>
     </ProveedorSesionAdmin>
   </StrictMode>,

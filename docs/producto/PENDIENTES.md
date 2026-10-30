@@ -23,12 +23,9 @@
 | PD-12 | Texto final del aviso de privacidad y términos, que declare a los proveedores técnicos [RNF-17] [DC RF-M9-01] (§15 punto 11) | ZAMMIR con su asesor | No | Antes de producción | Borrador base de HummingX |
 | PD-13 | Activar o no P1 (portal de seguimiento). Se pregunta al cliente en el cuestionario de acuerdos **y Juanito debe aprobar el diseño del portal**, que el de la demo no tiene [DC §3.2] (§15 punto 6) | Luis y Juanito | No | Antes de pruebas con el cliente | Apagado por interruptor; fuera de la entrega salvo que se active [ADR-0019] |
 | PD-14 | Activar o no P2 (existencias de piezas estándar) (§15 punto 7) | Luis | No | Antes de pruebas con el cliente | Apagado por interruptor; fuera de la entrega salvo que se active [ADR-0019] |
-| PD-15 | Modelo exacto de impresora térmica de 80 mm con BLE utilizable. Candidata: Epson serie TM-m30. La prueba se hace **con el lote que se va a comprar**, porque algunos fabricantes cambian el chip sin cambiar el modelo [DC §8.1, §8.4] (§15 punto 9) | Juanito recomienda; ZAMMIR compra | Sí, para la prueba de impresión | Sprint 0 [ADR-0008] | — |
-| PD-16 | Modelo final de tablet. Candidata: Samsung Galaxy Tab A11+ 5G (SM-X236B). La de campo necesita datos móviles [DC §8.1, §8.6] (§15 punto 9) | Juanito recomienda; ZAMMIR compra | No | Antes de comprar | Tamaño de pantalla provisional en pruebas extremo a extremo |
 | PD-17 | Confirmar que Luis y Ricardo tienen exactamente los mismos permisos [DC §4] | Luis | No | Antes de construir permisos | Mismos permisos, configurable |
 | PD-19 | Pasar a privado el repositorio de la demo (`HummingX-BI/formularios`), que hoy es público y contiene datos del cliente | Juanito | No | **Urgente** | — |
 | PD-20 | Costo mensual de hosting en producción, para el contrato [ADR-0003] | Juanito | No | Antes de firmar | — |
-| PD-21 | Cierre de sesión de administradores por inactividad: ¿cuánto tiempo? [DC §4 dice "prolongada"] | Juanito / Luis | No | Antes de Sprint 0 | Valor configurable; sin valor fijo en el código |
 | PD-22 | Política de intentos fallidos de PIN: cuántos y cuánto dura el bloqueo | Juanito | No | Antes de Sprint 1 | Valores configurables propuestos en ADR-0013 |
 | PD-23 | ¿Qué año lleva el folio de un documento creado sin conexión el 31 de dic. y enviado en enero? [RN-15 dice "año real en curso"] | Juanito / Luis | No | Antes de Sprint 2 | Propuesta en SINCRONIZACION.md: año de la fecha de emisión en hora de México |
 | PD-24 | Qué efecto tiene cancelar una venta de mostrador en el corte de caja (¿se devuelve efectivo?) [RF-M4-07] | Luis | No | Antes de Sprint 3 | Se registra la cancelación con motivo, sin regla automática sobre la caja |
@@ -54,7 +51,6 @@
 | PD-45 | Descuentos: ¿hay un máximo y quién puede darlo? | Luis | No | Antes de Sprint 2 | Cualquier descuento exige PIN de administrador [RF-M2-03] |
 | PD-46 | ¿Se entregan trabajos por partes? (estatus por orden o por línea) | Luis | No, pero cambia el modelo | **Antes de Sprint 3** | Estatus por orden |
 | PD-47 | ¿Se quiere control de existencias de hojas o material, o solo de piezas estándar (P2)? | Luis | No | Antes de pruebas con el cliente | Fuera de alcance; P2 apagado. Relacionado con PD-14 (piezas estándar) |
-| PD-48 | Vigencia del código de registro de una tablet (ADR-0013 dice "vida corta" sin dar el tiempo) | Luis / Juanito | No | Antes de S0-16b | El administrador escribe los minutos al generar el código; no hay valor por omisión [S0-16] |
 
 ## Resueltos
 
@@ -68,6 +64,10 @@
 | PR-06 | ¿ZAMMIR ya tiene impresora tamaño carta? (§15 punto 9) | No aplica: la impresión carta queda fuera [ADR-0005] | 27 oct 2026 |
 | PR-07 | ¿Los precios incluyen IVA? (§15 punto 3) | Ya resuelto en PR-01 | 27 oct 2026 |
 | PR-08 | PD-34: calendario del proyecto | Se mantiene el plan actual de sprints, con recortes desde ahora (P1, P2 y recorrido guiado fuera de la entrega salvo activación) [ADR-0019] | 27 oct 2026 |
+| PR-09 | PD-21: cierre de sesión de administradores por inactividad | **30 minutos**, propuesto por el desarrollador a petición de Juanito; configurable (`admin_idle_logout_minutes`). Por confirmar con Luis | 29 oct 2026 |
+| PR-10 | PD-48: vigencia del código de registro de una tablet | **15 minutos**, sugerido al generar el código y editable (`device_code_validity_minutes`). Por confirmar con Luis | 29 oct 2026 |
+| PR-11 | PD-15: modelo de impresora térmica de 80 mm | **Epson TM-m30III-052** (tickets de 80 mm, 203 dpi, autocorte). La ficha de la tienda se contradice (anuncia Wi-Fi + Bluetooth pero su tabla dice "Bluetooth: No" y "Wifi: No"): **confirmar con Epson o el vendedor qué interfaces trae esa variante antes de comprar** y probarla en S0-18 | 29 oct 2026 |
+| PR-12 | PD-16: modelo de tablet | **Samsung Galaxy Tab A9+ 5G (SM-X236B)**: 11", 1920×1200, 6 GB de RAM, 128 GB, Android, con datos móviles (nano-SIM). Es la tablet de referencia para las pruebas manuales y de impresión | 29 oct 2026 |
 
 ## Propuestas
 

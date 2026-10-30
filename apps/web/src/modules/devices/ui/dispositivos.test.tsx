@@ -34,7 +34,11 @@ async function conTablet(repo: DeviceRepository): Promise<void> {
   });
 }
 
-function mostrar(repo: DeviceRepository, rol: 'ADMIN' | 'STAFF' = 'ADMIN'): void {
+function mostrar(
+  repo: DeviceRepository,
+  rol: 'ADMIN' | 'STAFF' = 'ADMIN',
+  vigencia?: () => Promise<number | null>,
+): void {
   const auth = inMemoryAdminAuth([
     { userId: 'u-1', email: 'a@ejemplo.invalid', password: 'clave-de-prueba-1', role: rol },
   ]);
@@ -45,7 +49,7 @@ function mostrar(repo: DeviceRepository, rol: 'ADMIN' | 'STAFF' = 'ADMIN'): void
       cargarLimiteInactividad={() => Promise.resolve(null)}
     >
       <MemoryRouter initialEntries={['/usuarios']}>
-        <App dispositivos={repo} />
+        <App dispositivos={repo} cargarVigenciaDeCodigo={vigencia} />
       </MemoryRouter>
     </ProveedorSesionAdmin>,
   );
@@ -80,6 +84,17 @@ describe('pantalla de tablets', () => {
     if (fila === null) return;
     expect(within(fila).getByText('Activa')).toBeTruthy();
     expect(within(fila).getByText('Aún no ha enviado')).toBeTruthy();
+  });
+
+  it('sugiere la vigencia de los ajustes y se puede cambiar', async () => {
+    mostrar(repositorioConUnaTablet(), 'ADMIN', () => Promise.resolve(15));
+    await entrar();
+    const campo = await screen.findByLabelText<HTMLInputElement>('Minutos que sirve el código');
+    await waitFor(() => {
+      expect(campo.value).toBe('15');
+    });
+    fireEvent.change(campo, { target: { value: '5' } });
+    expect(campo.value).toBe('5');
   });
 
   it('genera un código con los minutos que se escriben y lo muestra', async () => {
