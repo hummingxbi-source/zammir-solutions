@@ -90,6 +90,8 @@ catalogContract('Supabase', async () => {
         productosCreados.push(producto.id);
         return catalogo.create(producto);
       },
+      update: (producto) => catalogo.update(producto),
+      priceHistory: (id) => catalogo.priceHistory(id),
       get: (id) => catalogo.get(id),
       list: () => catalogo.list(),
     },
@@ -100,6 +102,21 @@ catalogContract('Supabase', async () => {
     codigoNuevo: () => {
       contador += 1;
       return `T-${sufijo}-${String(contador)}`;
+    },
+    bitacoraDeProducto: async (id) => {
+      const { data, error } = await servicio
+        .from('audit_log')
+        .select('action, old_value, new_value, recorded_at')
+        .eq('entity_id', id)
+        .order('recorded_at');
+      expect(error).toBeNull();
+      return (data ?? []).map(
+        (fila: { action: string; old_value: unknown; new_value: unknown }) => ({
+          action: fila.action,
+          oldValue: fila.old_value,
+          newValue: fila.new_value,
+        }),
+      );
     },
   };
 });
@@ -147,6 +164,49 @@ describe('catálogo con Supabase y sus permisos', () => {
     expect(lista.ok && lista.value).toEqual([]);
     const categorias = await comoTablet.listCategories();
     expect(categorias.ok && categorias.value.length).toBeGreaterThanOrEqual(11);
+  });
+
+  it('un cajero no puede editar productos ni precios: el producto queda igual', async () => {
+    const comoAdmin = await catalogoComo(admin);
+    const id = asId<'Product'>(crypto.randomUUID());
+    productosCreados.push(id);
+    const original = productoDePrueba(id, await primeraCategoria());
+    await comoAdmin.create(original);
+
+    const comoCajero = await catalogoComo(cajero);
+    const intento = await comoCajero.update({ ...original, name: 'Hackeado' });
+    expect(intento.ok).toBe(false);
+    const sigue = await comoAdmin.get(id);
+    expect(sigue.ok && sigue.value.name).toBe(original.name);
+  });
+
+  it('una tablet no puede editar productos', async () => {
+    const comoAdmin = await catalogoComo(admin);
+    const id = asId<'Product'>(crypto.randomUUID());
+    productosCreados.push(id);
+    const original = productoDePrueba(id, await primeraCategoria());
+    await comoAdmin.create(original);
+
+    const clienteTablet = crearCliente(ANON);
+    await supabaseAdminAuth(clienteTablet).signIn(tablet.email, tablet.password);
+    const intento = await supabaseCatalog(clienteTablet).update({ ...original, name: 'Hackeado' });
+    expect(intento.ok).toBe(false);
+    const sigue = await comoAdmin.get(id);
+    expect(sigue.ok && sigue.value.name).toBe(original.name);
+  });
+
+  it('nadie puede borrar un producto, ni siquiera un administrador', async () => {
+    const comoAdmin = await catalogoComo(admin);
+    const id = asId<'Product'>(crypto.randomUUID());
+    productosCreados.push(id);
+    await comoAdmin.create(productoDePrueba(id, await primeraCategoria()));
+
+    const cliente = crearCliente(ANON);
+    await supabaseAdminAuth(cliente).signIn(admin.email, admin.password);
+    const borrado = await cliente.from('products').delete().eq('id', id);
+    expect(borrado.error?.code).toBe('42501');
+    const sigue = await comoAdmin.get(id);
+    expect(sigue.ok).toBe(true);
   });
 
   it('una tablet no puede dar de alta productos', async () => {

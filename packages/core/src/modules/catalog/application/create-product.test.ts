@@ -22,6 +22,8 @@ function admin() {
   const create = vi.fn((p: Parameters<ProductAdmin['create']>[0]) => Promise.resolve(ok(p)));
   const productos: ProductAdmin = {
     create,
+    update: vi.fn(),
+    priceHistory: vi.fn(),
     get: vi.fn(),
     list: vi.fn(),
   };

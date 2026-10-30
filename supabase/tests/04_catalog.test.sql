@@ -1,6 +1,6 @@
 -- Pruebas del catálogo [S1-05]: categorías iniciales, productos y quién ve qué.
 begin;
-select plan(25);
+select plan(24);
 
 select has_table('public', 'product_categories', 'existen las categorías');
 select has_table('public', 'products', 'existen los productos');
@@ -66,10 +66,6 @@ select throws_ok(
   $$ insert into public.products (name, category_id, kind, charge_unit, list_price_cents, rule_id)
      values ('Sin categoría', '99999999-9999-9999-9999-999999999999', 'CUSTOM', 'SQUARE_METER', 100, 'AREA') $$,
   '23503', null, 'la categoría debe existir'
-);
-select throws_ok(
-  $$ update public.products set name = 'Otro' where id = '10000000-0000-0000-0000-000000000001' $$,
-  '42501', null, 'por ahora los productos no se editan por la API (llega con S1-06)'
 );
 select throws_ok(
   $$ delete from public.products where id = '10000000-0000-0000-0000-000000000001' $$,
