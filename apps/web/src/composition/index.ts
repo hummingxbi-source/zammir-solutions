@@ -7,9 +7,12 @@ import type {
   LegalDeps,
   ManageCustomersDeps,
   ManageUsersDeps,
+  RegisterTabletDeps,
   UserPolicy,
 } from '@zammir/core';
 
+import { functionDeviceRegistrar } from '../modules/devices/infra/function-device-registrar';
+import { localCredentialsStore } from '../modules/devices/infra/local-credentials-store';
 import { supabaseDeviceRepository } from '../modules/devices/infra/supabase-device-repository';
 import {
   adminAuthNoConfigurada,
@@ -41,6 +44,8 @@ export interface Composition {
   readonly legal: LegalDeps | null;
   /** Altas y correcciones de clientes; `null` si no hay servidor configurado. */
   readonly clientes: ManageCustomersDeps | null;
+  /** Conexión de esta tablet con un código de registro; `null` si no hay servidor configurado. */
+  readonly conectarTablet: RegisterTabletDeps | null;
   /** Altas, PIN y desactivación de personas; `null` si no hay servidor configurado. */
   readonly usuarios: ManageUsersDeps | null;
   /** Mínimo de dígitos del PIN de un administrador y vueltas de PBKDF2, de la configuración. */
@@ -91,6 +96,14 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
             users: supabaseUsers(cliente),
             hasher: webCryptoPinHasher,
             idGenerator: uuidIdGenerator,
+          },
+    conectarTablet:
+      cliente === null || entorno.url === undefined || entorno.anonKey === undefined
+        ? null
+        : {
+            registrar: functionDeviceRegistrar({ url: entorno.url, anonKey: entorno.anonKey }),
+            store: localCredentialsStore(window.localStorage),
+            clock: systemClock,
           },
     cargarPoliticaDeUsuarios: async () => {
       if (ajustes === null) {

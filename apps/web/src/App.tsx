@@ -1,10 +1,16 @@
 import type { ReactElement } from 'react';
 import { Route, Routes } from 'react-router';
-import type { DeviceRepository, LegalDeps, ManageCustomersDeps } from '@zammir/core';
+import type {
+  DeviceRepository,
+  LegalDeps,
+  ManageCustomersDeps,
+  RegisterTabletDeps,
+} from '@zammir/core';
 
 import { Bitacora, type BitacoraProps } from './modules/audit/ui/Bitacora';
 import { Clientes } from './modules/customers/ui/Clientes';
 import { AvisoDePrivacidad } from './modules/legal/ui/AvisoDePrivacidad';
+import { ConectarTablet } from './modules/devices/ui/ConectarTablet';
 import { Dispositivos } from './modules/devices/ui/Dispositivos';
 import { Usuarios, type UsuariosProps } from './modules/identity/ui/Usuarios';
 import { ProtegidaAdmin } from './modules/identity/ui/ProtegidaAdmin';
@@ -25,6 +31,8 @@ export interface AppProps {
   readonly legal?: LegalDeps | null;
   /** Bitácora consultable; aparece en Usuarios. */
   readonly bitacora?: BitacoraProps | null;
+  /** Conexión de esta tablet con un código de registro; abre en `/conectar`. */
+  readonly conectarTablet?: RegisterTabletDeps | null;
   /** Vigencia sugerida del código de registro; sin ella la persona escribe los minutos. */
   readonly cargarVigenciaDeCodigo?: (() => Promise<number | null>) | undefined;
 }
@@ -38,6 +46,7 @@ export function App({
   clientes = null,
   legal = null,
   bitacora = null,
+  conectarTablet = null,
   cargarVigenciaDeCodigo,
 }: AppProps): ReactElement {
   const secciones = [
@@ -48,7 +57,15 @@ export function App({
   return (
     <Layout interruptores={interruptores}>
       <Routes>
-        <Route index element={<PanelDeInicio interruptores={interruptores} />} />
+        <Route
+          index
+          element={
+            <PanelDeInicio interruptores={interruptores} conectar={conectarTablet !== null} />
+          }
+        />
+        {conectarTablet !== null ? (
+          <Route path="/conectar" element={<ConectarTablet deps={conectarTablet} />} />
+        ) : null}
         {secciones.map((seccion) => (
           <Route
             key={seccion.id}
@@ -88,7 +105,12 @@ export function App({
             }
           />
         ))}
-        <Route path="*" element={<PanelDeInicio interruptores={interruptores} />} />
+        <Route
+          path="*"
+          element={
+            <PanelDeInicio interruptores={interruptores} conectar={conectarTablet !== null} />
+          }
+        />
       </Routes>
     </Layout>
   );
