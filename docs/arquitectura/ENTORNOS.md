@@ -22,6 +22,8 @@ Desarrollo y pruebas pueden usar los planes gratuitos; producción usa planes de
 - Requisitos: Node, pnpm y Docker (para Supabase local). El README de arranque los detalla y se prueba desde cero [S0-19].
 - `pnpm install` → levantar Supabase local → aplicar migraciones → `pnpm dev`.
 - Las migraciones se aplican **desde cero** en cada corrida de integración continua.
+- **Puertos de Supabase local:** Zammir usa la serie **553xx** (API 55321, base de datos 55322, Studio 55323) para no chocar con otros proyectos de Supabase en la misma máquina, que usan 543xx por defecto. Se definen en `supabase/config.toml`.
+- Comandos: `pnpm db:start`, `pnpm db:reset` (aplica las migraciones desde cero) y `pnpm exec supabase test db` (pruebas pgTAP de `supabase/tests/`). La primera vez descarga varios GB de imágenes de Docker.
 
 ## 3. Variables de entorno
 
