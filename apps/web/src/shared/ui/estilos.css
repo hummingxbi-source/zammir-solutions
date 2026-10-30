@@ -275,3 +275,24 @@ h3 {
   color: var(--color-acento);
   cursor: pointer;
 }
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-superficie);
+  margin-block: var(--espacio);
+}
+
+.tabla th,
+.tabla td {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--color-borde);
+  text-align: left;
+}
+
+.codigo-registro {
+  font-family: var(--fuente-etiqueta);
+  font-size: 2rem;
+  letter-spacing: 0.15em;
+  margin-block: 0.5rem;
+}
