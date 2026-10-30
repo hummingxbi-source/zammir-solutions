@@ -1,8 +1,8 @@
 # Fase 7 — Sprint 3: Órdenes de trabajo y mostrador
 
 - **Tipo:** código
-- **Fechas:** 16 – 22 de noviembre de 2026
-- **Lee antes:** [`00-principios-de-ingenieria.md`](00-principios-de-ingenieria.md), `REQUERIMIENTOS.md` M3, M4 y M5, RN-08 a RN-11, RN-14, RN-18, ADR de impresión (Sprint 0)
+- **Fechas:** 16 – 22 de noviembre de 2026. **El lunes 16 es feriado** [DC §13]: el sprint tiene un día hábil menos y es el más cargado
+- **Lee antes:** [`00-principios-de-ingenieria.md`](00-principios-de-ingenieria.md), `REQUERIMIENTOS.md` M3, M4 y M5, RN-08 a RN-11, RN-14, RN-18, [ADR-0018] y el ADR con el resultado de la prueba de impresión (Sprint 0)
 
 ## Objetivo
 
@@ -22,6 +22,7 @@ Seguir cada trabajo desde el anticipo hasta la entrega con su garantía por escr
 - Estados: en espera → en proceso → listo para entrega o instalación → entregado; cancelado con motivo. Botón "Avanzar" [RF-M3-02].
 - Responsables: quién mide, quién fabrica, quién instala.
 - Fotos opcionales de la medición, guardadas en la tablet y enviadas al sincronizar. Límite de tamaño y compresión definidos en la historia.
+- Datos editables de la orden (responsables, fecha estimada, notas): si dos personas los cambian a la vez, gana el último cambio **por campo** y queda en bitácora [RNF-05].
 - Anticipo sugerido desde configuración (50%), editable; método de pago y quién cobró [RF-M3-03, RN-08].
 - Saldo = total − pagos recibidos, siempre visible.
 - Entrega con saldo mayor a cero: solo con autorización de administrador y motivo; el saldo pasa a cuentas por cobrar [RF-M3-04].
@@ -44,8 +45,13 @@ Seguir cada trabajo desde el anticipo hasta la entrega con su garantía por escr
   - Qué pasa con operaciones de la tablet todavía no sincronizadas al cerrar el corte: según `SINCRONIZACION.md`.
 - Cancelar venta: solo administrador, con motivo y bitácora [RF-M4-07].
 
-### 7.3 Impresión
-- Puerto `TicketPrinter` con el adaptador del método elegido en el Sprint 0, y un adaptador falso para pruebas.
+### 7.3 Impresión [ADR-0018]
+- Puerto `TicketPrinter` con **tres adaptadores** y uno falso para pruebas:
+  - Capa 1: Web Bluetooth + ESC/POS, con los parámetros validados en el Sprint 0 (servicio, característica, tamaño de fragmento, página de códigos). Logo y QR como imagen raster; corte automático.
+  - Capa 2: ticket de 80 mm en HTML o PDF con `window.print()`.
+  - Capa 3: compartir el ticket como PDF o imagen por WhatsApp.
+- Emparejar con un gesto del usuario; reconectar sin selector cuando el navegador lo permita.
+- Estado de la impresora siempre visible ("Impresora conectada" / "Desconectada") y botón "Prueba de impresión" en la configuración [RF-UX-06].
 - Plantillas de ticket (venta, cobro de orden, corte) separadas del adaptador: generan el contenido; el adaptador solo lo envía.
 - Manejo de errores visibles: impresora apagada, sin papel, desconectada; la venta queda guardada aunque el ticket no salga, y se puede reimprimir.
 
@@ -131,6 +137,20 @@ Seguir cada trabajo desde el anticipo hasta la entrega con su garantía por escr
 - [ ] Venta de mostrador mixta sin conexión → ticket → reconectar → aparece en el corte del cajero correcto.
 - [ ] Dos cajeros con cambio de usuario por PIN en la misma tablet: cada uno ve solo sus cobros en su corte.
 
+**Conflictos de órdenes**
+- [ ] Dos tablets editan campos distintos de la misma orden sin conexión: se conservan ambos cambios.
+- [ ] Dos tablets editan el mismo campo: gana el último que llega y el valor anterior queda en bitácora [RNF-05].
+
+**Impresión** (contrato de `TicketPrinter` con el adaptador falso; manual con los reales)
+- [ ] Si la capa 1 no está disponible, se ofrece la capa 2, y si tampoco, la capa 3.
+- [ ] Ticket impreso en menos de 5 segundos tras cobrar [RNF-26].
+
+**Aceptación**
+- [ ] E1 completo, de la medición al comprobante con garantía y QR.
+- [ ] E2 completo, con la impresora real.
+- [ ] E3 (parte de ventas): 10 ventas en modo avión, sin duplicados al reconectar.
+- [ ] E4 (parte de cobros): tres usuarios por PIN cobrando en la misma tablet.
+
 **Manual en tablet con la impresora real**
 - [ ] Imprimir ticket de venta, de cobro de orden y de corte.
 - [ ] Apagar la impresora a mitad de una venta y reimprimir.
@@ -145,5 +165,5 @@ Seguir cada trabajo desde el anticipo hasta la entrega con su garantía por escr
 
 ## Riesgos y pendientes
 
-- Es el sprint con más módulos. Si no cabe, se mueve primero P2, después las fotos de medición; nunca el corte ni los pagos.
+- Es el sprint con más módulos y con un día feriado. Si no cabe, Juanito decide qué se mueve; la propuesta es mover primero P2, después las fotos de medición; nunca el corte, los pagos ni la impresión.
 - PD-06 (garantía), PD-07 (anticipo al cancelar), PD-09 (leyenda del plazo), PD-14 (P2).

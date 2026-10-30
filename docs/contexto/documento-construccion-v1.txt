@@ -38,7 +38,7 @@ Soluciones en Vidrio y Aluminio ZAMMIR es una vidriería con un solo local en Ot
 - El cliente respondió un cuestionario diagnóstico, vio una demo en video de su panel y aceptó avanzar.
 - El contrato se está redactando. El arranque está previsto para el 23 de octubre de 2026.
 - La ventana de entrega comprometida es del 23 de noviembre al 1 de diciembre de 2026. Esa fecha depende de tres cosas: que llegue el anticipo (finales de octubre), que el cliente apruebe los requerimientos y que entregue sus insumos (sobre todo el catálogo de materiales y precios). Si alguna llega tarde, la fecha se recorre.
-- Ya existen: la especificación de 10 módulos, la demo interactiva, el guion del video, el cuestionario diagnóstico y un cuestionario de acuerdos que el cliente está respondiendo (datos fiscales, firmantes, fechas, preferencias).
+- Ya existen: la especificación de 10 módulos, la demo interactiva, el guion del video, el cuestionario diagnóstico y un cuestionario de acuerdos que se le envía al cliente para obtener sus datos fiscales, firmantes, fechas y preferencias.
 
 1.3.1 Lo que todavía no se sabe
 Los datos fiscales de ZAMMIR (RFC, régimen, e.firma, Certificado de Sello Digital), el dominio, las duraciones de garantía, el catálogo real y varias decisiones de alcance están pendientes. Se listan en la sección 15.
@@ -90,7 +90,7 @@ M10 Facturación CFDI y portal de autofacturación para los clientes de ZAMMIR
 Más: aplicación web instalable (PWA) para tablets Android, que funciona sin internet para capturar cotizaciones y ventas.
 
 3.2 Pendiente de confirmar con el cliente (constrúyelo detrás de un interruptor de configuración)
-P1  Portal de seguimiento para el cliente final de ZAMMIR (aceptar cotización en línea, línea de tiempo del trabajo, comprobante con QR). El cliente respondió que "quiere verlo antes de decidir". El comprobante imprimible con folio y QR de autofacturación SÍ es obligatorio, porque lo necesita la facturación.
+P1  Portal de seguimiento para el cliente final de ZAMMIR (aceptar cotización en línea, línea de tiempo del trabajo, comprobante con QR). Se le pregunta al cliente en el cuestionario de acuerdos y, además, el responsable del proyecto todavía no aprueba el diseño del portal de la demo. El comprobante imprimible con folio y QR de autofacturación SÍ es obligatorio, porque lo necesita la facturación.
 P2  Control sencillo de existencias de piezas estándar (puertas y ventanas) con alerta de mínimo. Es una propuesta de HummingX; el demo lo mostró.
 
 3.3 Fuera del alcance (no construir, aunque parezca natural)
@@ -112,7 +112,7 @@ P2  Control sencillo de existencias de piezas estándar (puertas y ventanas) con
 
 Roles del sistema:
 - DUEÑO (Luis) y SOCIO (Ricardo): ambos son administradores con los mismos permisos. [Supuesto de HummingX, ajustable por configuración.]
-- CAJERO/VENDEDOR: los empleados que cobran, cotizan y avanzan trabajos. Hoy son 3 personas, y uno de ellos también instala.
+- CAJERO/VENDEDOR: los empleados que cobran, cotizan y avanzan trabajos. Hoy son 3 personas que cobran en el mostrador, y ellos mismos instalan.
 - CLIENTE FINAL de ZAMMIR: no tiene cuenta ni contraseña. Accede solo a enlaces públicos con código (autofacturación y, si se aprueba P1, seguimiento).
 
 Matriz de permisos (sí / no / condicionado):
@@ -258,3 +258,316 @@ RF-M9-02 Términos del servicio de ZAMMIR (anticipo, garantía, cancelación, ti
 RF-M9-03 Al capturar datos de un cliente, registrar que se le informó el aviso de privacidad.
 RF-M9-04 Canal visible para ejercer derechos sobre sus datos (correo o WhatsApp del negocio).
 RF-M9-05 En el aviso debe quedar declarada la transferencia de datos fiscales al proveedor de timbrado (PAC) cuando se factura.
+
+======================================================================
+7. M10 — FACTURACIÓN Y PORTAL DE AUTOFACTURACIÓN
+======================================================================
+
+7.1 Qué debe lograr
+Hoy ZAMMIR factura solo cuando el cliente lo pide, y para eso depende de un contador que cobra cada vez. El sistema debe resolverlo por dos caminos:
+A) Un administrador genera la factura desde el sistema en segundos.
+B) El propio cliente de ZAMMIR genera su factura en un portal público, usando el folio y el código impresos en su ticket o comprobante, sin que el negocio capture nada. Este camino ya fue confirmado como parte del alcance.
+
+7.2 Marco fiscal (resumen para el constructor)
+- La factura válida en México es el CFDI versión 4.0, timbrado por un PAC (Proveedor Autorizado de Certificación). Este documento no sustituye la asesoría de un contador; toda decisión fiscal dudosa se valida con el contador de ZAMMIR.
+- ZAMMIR necesita: RFC activo, régimen fiscal, e.firma vigente y Certificado de Sello Digital (CSD: archivo .cer, archivo .key y contraseña). El CSD lo tramita ZAMMIR en el SAT, es gratuito y se hace con la e.firma. A la fecha de este documento, el estado de esos datos es [POR DEFINIR]; se están pidiendo al cliente.
+- Lo que el CSD hace: firma cada CFDI en nombre de ZAMMIR. El PAC valida, asigna el folio fiscal (UUID), timbra y reporta al SAT.
+
+7.3 Selección y contratación del PAC
+- PAC elegido: [POR DEFINIR]. Quién lo contrata (HummingX o ZAMMIR): [POR DEFINIR]. HummingX prefiere contratarlo e incluir el costo en la anualidad; eso exige que el PAC permita operar varios emisores y que HummingX pueda contratar con su situación fiscal actual. Se resuelve antes de la fase de facturación.
+- Criterios para evaluar candidatos (por ejemplo Facturama, SW Sapien, Facturapi; sin preferencia fija): API REST documentada, ambiente de pruebas (sandbox), CFDI 4.0, cancelación con motivos, entrega de PDF y XML, soporte de varios emisores, custodia del CSD dentro del PAC, y precio por timbre o paquete.
+- Principio de seguridad: el archivo .key y su contraseña se suben directamente al PAC. No se guardan en la base de datos ni en el código de HummingX.
+- Construye una capa de abstracción (por ejemplo "ProveedorTimbrado") con operaciones: timbrar, cancelar, consultar estatus y descargar XML y PDF. La primera implementación usa el PAC elegido; cambiar de PAC no debe tocar el resto del sistema.
+
+7.4 Datos fiscales del catálogo
+Para que cada concepto pueda facturarse, cada producto lleva clave de producto o servicio del SAT, clave de unidad y objeto de impuesto. Ejemplos de unidades: pieza (H87), metro cuadrado (MTK), unidad de servicio (E48), metro (MTR); objeto de impuesto normalmente "02" (sí objeto de impuesto). Todos estos valores se validan con el contador o el PAC antes de cargar el catálogo real.
+
+7.5 Camino A: facturar desde el sistema
+1. Elegir una venta de mostrador o una orden de trabajo liquidada.
+2. Elegir o capturar al receptor con: RFC, nombre o razón social tal como aparece en su constancia de situación fiscal, código postal fiscal, régimen fiscal del receptor y uso de CFDI.
+3. Forma de pago: 01 efectivo, 03 transferencia; para pagos mixtos, la regla se define con el contador. Método de pago PUE (una sola exhibición).
+4. Timbrar. Guardar UUID, XML y PDF; poder reenviarlos por correo o WhatsApp.
+Permisos: administradores; cajero solo con autorización.
+
+7.6 Camino B: portal público de autofacturación
+- Entrada: un QR en el ticket y en el comprobante lleva a /factura con el folio y un código de verificación aleatorio (por ejemplo 6 caracteres). También debe poderse teclear el folio y el código a mano.
+- Validaciones antes de mostrar nada: el folio existe; el código coincide; la operación está liquidada (saldo cero); no está ya facturada; está dentro del plazo. Plazo: hasta el último día del mes en que se hizo la compra o se liquidó el trabajo. La práctica de los portales de autofacturación en México sigue esa regla por la forma en que se emiten los CFDI de pago en una sola exhibición; confírmala con el contador y deja la regla en un solo lugar de configuración. Pasado el plazo, el portal explica con amabilidad que debe pedirse directamente al negocio.
+- Protección: límite de intentos por IP y por folio, y una verificación ligera contra automatización. Nunca revelar si un folio existe cuando falle el código.
+- Pantalla: mostrar solo lo necesario de la operación (conceptos y total). Formulario con los campos fiscales del receptor, validación de formato del RFC (12 o 13 caracteres) y del código postal (5 dígitos), listas de régimen y uso de CFDI, y casilla de aceptación del aviso de privacidad que menciona la transferencia al PAC.
+- Resultado: factura timbrada con descarga de PDF y XML, y envío por correo si el cliente lo captura.
+- Idempotencia: una operación solo puede generar una factura. Si el PAC falla o tarda, la solicitud queda "en proceso" con reintentos automáticos y se muestra en el panel de un administrador. Nunca se duplica un timbre.
+- Los errores de captura del cliente (RFC o nombre incorrectos) no se corrigen solos; un administrador cancela y vuelve a emitir con el motivo que corresponda.
+- Diseño: pensado para personas mayores y poco familiarizadas con tecnología: pocos pasos, botones grandes, instrucciones simples.
+
+7.7 Anticipos: decisión fiscal pendiente
+ZAMMIR cobra un anticipo y el saldo en fechas distintas, y a veces en meses distintos. Hay dos tratamientos posibles: (a) facturar una sola vez cuando la orden queda liquidada, con un CFDI por el total; o (b) emitir un CFDI por el anticipo y otro final relacionado con el primero. La opción (b) es más compleja. Decisión: [POR DEFINIR con el contador de ZAMMIR]. Construye un ajuste "tratamiento de anticipos" y arranca con la opción (a).
+
+7.8 Cancelaciones y fuera de alcance
+- Cancelación de CFDI solo por administradores, con los motivos que pide el SAT.
+- Fuera de alcance: factura global, complemento de pago, notas de crédito complejas y cualquier otro complemento.
+
+7.9 Timbres y costos
+El PAC cobra por timbre o por paquete. El paquete incluido en la anualidad tiene un límite anual [POR DEFINIR]. El panel de un administrador muestra los timbres usados y avisa al llegar al 80%.
+
+======================================================================
+8. HARDWARE E IMPRESIÓN (EL RIESGO TÉCNICO PRINCIPAL)
+======================================================================
+
+8.1 Equipo acordado
+El cliente compra el equipo directamente; HummingX recomienda modelos y configura.
+- 2 tablets Android: una fija en el mostrador y otra para visitas a domicilio. Candidata: Samsung Galaxy Tab A11+ 5G (modelo SM-X236B, 11 pulgadas, Bluetooth 5, chip con datos 5G). Requisito general: Android con Google Play y Chrome actualizado; nunca iPad.
+- 1 impresora térmica de 80 mm con Bluetooth para tickets. Candidata: Epson de la serie TM-m30. Modelo exacto [POR DEFINIR].
+- 1 impresora tamaño carta para cotizaciones y comprobantes. Candidata: Epson EcoTank L3250 (WiFi, compatible con Mopria). Puede que ZAMMIR ya tenga una [POR DEFINIR].
+- Quedan fuera: cajón de dinero, escáner de código de barras, terminal de tarjeta, monitor táctil y computadora.
+La idea de negocio detrás de esto: evitar que ZAMMIR compre CPU y monitor por cada estación; si abren otro mostrador, solo añaden una tablet y una impresora térmica.
+
+8.2 Por qué Android y no iPad
+La conexión directa de una página web con una impresora por Bluetooth usa la tecnología Web Bluetooth. Funciona en Chrome para Android; no existe en ningún navegador de iOS ni iPadOS porque Apple no la permite. Por eso las tablets deben ser Android.
+
+8.3 Impresión de tickets: estrategia en capas
+Construye un servicio de impresión con una interfaz única y tres implementaciones, para poder cambiar de estrategia sin tocar el resto de la aplicación:
+Capa 1 (preferida): Web Bluetooth con comandos ESC/POS generados en el navegador.
+- Solo funciona con impresoras que exponen Bluetooth de baja energía (BLE) con un servicio GATT accesible. Muchas impresoras baratas solo traen Bluetooth clásico (SPP) aunque la caja diga simplemente "Bluetooth", y esas no sirven con Web Bluetooth.
+- Requiere HTTPS y un gesto del usuario para emparejar. Intenta reconectar sin selector cuando el navegador lo permita; si no, un toque para elegir la impresora.
+- Escribe los datos en fragmentos pequeños con pausas, respetando el tamaño máximo de escritura del dispositivo.
+- Resuelve acentos y la letra ñ con la página de códigos que la impresora soporte (por ejemplo CP858). Logo y QR se envían como imagen raster ESC/POS. Ancho de 80 mm; corte automático al final.
+- Muestra siempre el estado ("Impresora conectada" o "Desconectada") y un botón "Prueba de impresión" en la configuración, para soporte.
+Capa 2 (respaldo): vista de ticket en HTML o PDF de 80 mm, enviada al servicio de impresión de Android con window.print(). Funciona si el fabricante ofrece su servicio de impresión; muestra un diálogo y es menos fluida.
+Capa 3 (último recurso): compartir el ticket como PDF o imagen por WhatsApp al cliente.
+
+8.4 Prueba de concepto obligatoria (primera semana)
+Antes de construir el módulo de Mostrador, valida con la impresora real (o una de prueba equivalente):
+1. Descubrir los servicios y características GATT (con una app tipo nRF Connect o con una página de prueba). Algunas impresoras genéricas usan el servicio 18F0 con característica de escritura 2AF1; es una pista, no una garantía. Otras usan servicios propios del fabricante.
+2. Confirmar la característica de escritura y el tamaño de fragmento estable.
+3. Imprimir texto con acentos y ñ, un logo y un QR legible.
+4. Imprimir 30 tickets seguidos sin pérdidas ni desincronización.
+5. Reconectar tras apagar y encender la impresora y tras bloquear la tablet.
+6. Repetir con la tablet sin internet.
+Documenta el resultado en DECISIONES.md. Si el modelo no expone BLE utilizable, avisa de inmediato: el cliente no debe comprar más equipo hasta cambiar de modelo. Los fabricantes económicos a veces cambian el chip interno sin cambiar el nombre del modelo, así que la prueba se hace con el lote que se va a comprar.
+
+8.5 Impresión tamaño carta
+Cotizaciones y comprobantes se imprimen como PDF de tamaño carta, vertical, a la impresora WiFi mediante el servicio de impresión de Android (Mopria) o compartiendo el PDF a la app del fabricante. Prueba márgenes y que el QR salga nítido.
+
+8.6 Tablet de campo
+Debe funcionar instalada como aplicación (PWA), con datos móviles, en modo sin conexión y con buena duración de batería. El pago del plan de datos corre por cuenta de ZAMMIR.
+
+======================================================================
+9. FUNCIONAMIENTO SIN INTERNET
+======================================================================
+
+El internet de Telmex es el único proveedor y la tablet de campo trabaja en casas de clientes. Por eso lo esencial debe funcionar sin conexión.
+- Funciona sin internet: cotizador completo (incluido el PDF), consulta del catálogo, ventas de mostrador, cobros y anticipos, avanzar estatus de órdenes, imprimir por Bluetooth.
+- Requiere internet: primer inicio de sesión, reportes, facturación y portal de autofacturación, sincronización, importaciones y administración de usuarios.
+Implementación recomendada:
+- Aplicación instalable (PWA) con service worker que guarda la aplicación en el dispositivo, y almacén local (IndexedDB) con una copia del catálogo y una cola de operaciones pendientes.
+- Toda operación nace en el dispositivo con un identificador único (UUID) para que reenviarla no produzca duplicados.
+- La sincronización reintenta con espera creciente. Muestra en pantalla un indicador claro: en línea, sin conexión, o N operaciones pendientes.
+- Conflictos: las ventas y los pagos solo se agregan, nunca se pisan. El catálogo lo manda el servidor. Si dos personas editan la misma orden a la vez, gana el último cambio por campo y queda en bitácora.
+- Folios temporales por dispositivo que se reemplazan por el definitivo al sincronizar (sección 5.5).
+- Seguridad: los datos locales pertenecen a dispositivos registrados; limita lo que se guarda (no almacenes datos fiscales de todos los clientes) y depura lo antiguo ya sincronizado.
+Prueba obligatoria: poner la tablet en modo avión, capturar 3 cotizaciones y 10 ventas, reconectar y comprobar que no hay duplicados, que los folios son correctos y que los totales cuadran.
+
+======================================================================
+10. REQUERIMIENTOS NO FUNCIONALES
+======================================================================
+
+10.1 Seguridad
+- HTTPS siempre. Contraseñas con hash mediante el servicio de autenticación; PIN con hash y sal, con límite de intentos.
+- Seguridad a nivel de fila (RLS) en todas las tablas, con políticas por rol. Las claves de servicio solo viven en el servidor.
+- Todas las reglas que importan (precios, totales, permisos, plazos) se validan en el servidor, no solo en la pantalla.
+- Endpoints públicos (autofacturación) con límite de solicitudes y verificación contra automatización.
+- Prácticas de desarrollo seguro (OWASP Top 10), dependencias actualizadas y separación de entornos: desarrollo, pruebas (con el ambiente de pruebas del PAC) y producción.
+
+10.2 Protección de datos personales
+- ZAMMIR es el responsable; HummingX es el encargado del tratamiento, bajo confidencialidad. Aplica la Ley Federal de Protección de Datos Personales en Posesión de los Particulares vigente desde marzo de 2025 (la autoridad pasó a ser la Secretaría Anticorrupción y Buen Gobierno).
+- Datos que se tratan: nombre, teléfono, correo, domicilio de obra, datos fiscales (RFC, razón social, código postal y régimen), medidas y trabajos. No se prevén datos sensibles; no captures datos que el negocio no necesite.
+- Finalidades: cotizar, ejecutar trabajos, garantía y facturación.
+- No se venden, ceden ni usan los datos para publicidad, perfilamiento ni para entrenar sistemas de inteligencia artificial.
+- Proveedores técnicos: Vercel, Supabase y Cloudflare, y el PAC cuando se factura; Render solo si se llega a usar. Deben quedar declarados.
+- Los incidentes que afecten datos se avisan a ZAMMIR a más tardar en 72 horas.
+- Ningún agente de IA debe tener acceso a datos reales de producción.
+
+10.3 Disponibilidad, soporte y respaldos
+- HummingX no compromete disponibilidad de 24 horas. El soporte es por WhatsApp o correo en horario hábil, con esfuerzo razonable de continuidad. Las fallas de terceros (internet, nube, SAT, PAC) quedan fuera, pero el sistema debe degradar con elegancia: captura sin internet, mensajes claros y reintentos.
+- Respaldos automáticos diarios con historial de al menos 30 días. Verifica la retención que incluye el plan de Supabase; si es menor, programa una exportación nocturna a un almacenamiento externo con retención de 30 días. Prueba una restauración completa antes de la entrega.
+- El cliente puede exportar sus datos en formatos estándar (CSV, JSON, PDF) al terminar la relación.
+
+10.4 Rendimiento (volúmenes pequeños: cientos de operaciones por mes)
+- Carga inicial en menos de 3 segundos en 4G y en la tablet objetivo; interacciones sin retrasos perceptibles.
+- PDF de cotización en menos de 3 segundos; ticket impreso en menos de 5 segundos tras cobrar; reportes en menos de 3 segundos con 12 meses de datos.
+
+10.5 Usabilidad y accesibilidad
+- Usuarios sin experiencia con sistemas. Botones y objetivos táctiles de al menos 44 px; texto de al menos 16 px; buen contraste.
+- Confirmación en toda acción destructiva; mensajes de error humanos que digan qué hacer.
+- Navegación en el orden real del trabajo (sección 12) y ayuda contextual.
+- Operación con una mano en campo.
+
+10.6 Compatibilidad
+Chrome actual en Android 13 o superior (tablet objetivo) para toda la operación. Chrome en computadora y celular para consulta y reportes. iOS puede consultar reportes pero no imprime por Bluetooth.
+
+10.7 Mantenibilidad y observabilidad
+- README con pasos de despliegue, variables de entorno documentadas y migraciones versionadas.
+- Pruebas automáticas de las reglas críticas: cálculo de precios y totales, redondeo, cortes de caja, folios, plazo de autofactura, permisos.
+- Registro de errores de cliente y servidor sin datos personales, monitoreo simple de disponibilidad y aviso al responsable.
+
+10.8 Alcance técnico
+Un negocio, un local, sin multi-sucursal. Sin sobreingeniería, pero tolerante a más usuarios y dispositivos sin rediseño. La configuración del negocio (nombre, logo, textos legales, folios, porcentajes) vive en una tabla de configuración, para facilitar reutilizar el sistema más adelante.
+
+======================================================================
+11. ARQUITECTURA Y MODELO DE DATOS RECOMENDADOS
+======================================================================
+
+11.1 Stack recomendado (puedes proponer alternativas si las justificas en DECISIONES.md)
+- Aplicación web instalable (PWA) en React con Next.js y TypeScript, desplegada en Vercel.
+- Base de datos, autenticación, almacenamiento de archivos y seguridad por fila en Supabase (PostgreSQL).
+- Funciones de servidor para lo que no puede vivir en el navegador: llamadas al PAC, endpoints públicos de autofacturación, tareas de reintento y respaldos.
+- Cloudflare para el dominio y el DNS. Render solo si se necesita un proceso aparte que Vercel no cubra.
+- Generación de PDF y de QR en el navegador (para que funcionen sin internet). Almacén local con IndexedDB. Validación de datos con esquemas.
+- Estilos con variables (tokens) de diseño reutilizables, tomados de la demo.
+
+11.2 Dominio y direcciones
+El sistema se publica en HTTPS con un dominio de ZAMMIR [POR DEFINIR], administrado por HummingX y transferible a ZAMMIR si lo pide. Los QR de los tickets y comprobantes impresos apuntan a esa dirección, así que el dominio no puede cambiar después de empezar a imprimir; usa rutas estables.
+
+11.3 Entidades principales (todas con id UUID, creado_en, actualizado_en y creado_por; borrado lógico)
+- negocio_config: nombre, logo, domicilio, teléfono, correo, condiciones de cotización, vigencia, porcentaje de anticipo, umbral de antigüedad, ajustes de IVA y de anticipos, series de folios, textos legales vigentes.
+- perfiles (usuarios): nombre, rol, hash del PIN, activo. dispositivos: nombre, tipo, registrado por, activo.
+- clientes: nombre, WhatsApp, correo, domicilios, datos fiscales opcionales, notas, consentimiento de privacidad.
+- categorias y productos: tipo, unidad, precio de lista, activo, garantía sugerida, claves fiscales, existencias y mínimo (si P2).
+- cotizaciones y cotizacion_lineas: folio, cliente, estado, vigencia, totales, condiciones usadas; por línea producto, medidas, cantidad, precio congelado e importe.
+- ordenes_trabajo, orden_lineas, orden_estatus_historial: folio, cliente, estatus, responsables, fecha estimada, totales, anticipo y saldo calculados desde los pagos.
+- garantias: orden, fecha de inicio, duración, cobertura, exclusiones.
+- ventas_mostrador y venta_lineas.
+- pagos: tipo (anticipo, saldo o venta), método (efectivo o transferencia), monto, referencia, orden o venta ligada, usuario, dispositivo, fecha y hora.
+- cortes_caja: nivel (cajero o día), usuario, periodo, fondo inicial, esperado por método, efectivo contado, diferencia, estado (abierto o cerrado), quién cerró.
+- facturas: operación ligada, datos del receptor, UUID fiscal, rutas de XML y PDF, estado, referencia del PAC, quién la pidió (administrador o público), fecha. solicitudes_autofactura: folio, intentos, resultado.
+- folios (series y siguiente número), auditoria (acción, usuario, antes y después), aceptaciones_privacidad, documentos_legales (tipo, versión, texto, vigente desde).
+Reglas: los saldos y los totales se derivan de las líneas y los pagos, no se capturan a mano; los importes son numéricos con 2 decimales; ninguna fila contable se borra.
+
+======================================================================
+12. EXPERIENCIA DE USUARIO Y DISEÑO (LO QUE APRENDIÓ LA DEMO)
+======================================================================
+
+12.1 Qué es la demo
+Es un prototipo en React con datos inventados y sin servidor, construido para convencer al cliente. Muestra: un panel de inicio con saludo y frase por rol, ventas del día por método de pago, cuentas por cobrar, tendencia de ingresos de 10 días y pipeline de producción; el catálogo; el cotizador en dos paneles con documento en vivo; órdenes de trabajo en tablero y lista; Mostrador con selector de cajero y pestañas "Venta" y "Corte de caja"; y reportes. También tiene un portal de cliente que el responsable del proyecto todavía no aprobó. Pide a Juanito el repositorio de la demo y reutiliza de ahí los tokens de diseño exactos y los componentes; este documento no fija colores ni tipografías. En general: fondo cálido claro, tarjetas blancas, acento azul marino, títulos en serifa y etiquetas pequeñas en monoespaciada.
+Todo lo que aparece en la demo es ficticio: nombres de personas y clientes, precios, SKUs, folios "OT-2024-xxx" y la garantía de 6 meses.
+
+12.2 Lecciones obligatorias
+1. Orden de navegación según el trabajo real: Catálogo, Cotizador, Órdenes de trabajo, Mostrador y Reportes, con el panel de inicio aparte, accesible desde el logo. Numeración discreta y marca de las secciones ya visitadas. Los usuarios no deben preguntarse qué hacer primero.
+2. Orientación para novatos: pantalla de "Primeros pasos" en el primer ingreso (cinco tarjetas en ese orden), botón fijo "¿Por dónde empiezo?", recorrido guiado opcional con globos de ayuda, y avisos contextuales cerrables cuando una sección depende de otra.
+3. Nombres: "Mostrador" y no "Punto de Venta". "Reportes" y no "Inteligencia de negocio".
+4. Cara al cliente final: nada de tarjetas genéricas de panel; diseño sobrio y editorial, con iconografía propia del oficio, botones grandes y pocos pasos.
+5. Nunca mostrar ceros, "Cliente 1" ni datos de relleno; usar estados vacíos que enseñen qué hacer ("Crea tu primera cotización").
+6. Vocabulario del oficio en toda la interfaz.
+7. Estados siempre visibles: conexión a internet, sincronización pendiente e impresora.
+8. Animaciones sobrias y respetando la preferencia de reducir movimiento.
+9. Formatos: $1,234.50; fechas "27 oct 2026"; teléfonos de 10 dígitos.
+
+12.3 Documentos
+Las cotizaciones, comprobantes y tickets llevan la identidad de ZAMMIR (logo y datos del negocio), no la de HummingX. La leyenda "Powered by HummingX BI" se limita al pie de la aplicación y solo si el cliente lo acepta [POR DEFINIR].
+
+======================================================================
+13. PLAN DE CONSTRUCCIÓN Y FECHAS
+======================================================================
+
+Meta: entrega entre el 23 de noviembre y el 1 de diciembre de 2026. El lunes 16 de noviembre es feriado. Orden pensado para atacar primero el riesgo.
+
+Fase 0 — Fundación y riesgos (28 oct – 1 nov)
+Repositorio, entornos, Supabase y Vercel, autenticación, roles y seguridad por fila, esquema inicial. Prueba de concepto de impresión Bluetooth (sección 8.4). Evaluación del PAC y pruebas en su ambiente de pruebas.
+Salida: acceso por rol funcionando, tablas creadas, resultado documentado de la impresión y del PAC.
+
+Fase 1 — Catálogo y cotizador (2 – 8 nov)
+Catálogo con importación, clientes, cotizador con PDF y compartir, base de aplicación instalable y modo sin internet del cotizador.
+Salida: una cotización completa desde la tablet, sin internet, enviada por WhatsApp.
+
+Fase 2 — Operación del negocio (9 – 15 nov)
+Órdenes de trabajo, pagos, garantía y comprobante con QR; Mostrador con ticket y corte de caja; cambio de usuario por PIN.
+Salida: el flujo completo medir, cotizar, aceptar, orden, anticipo, entrega y saldo; y una venta de mostrador con su corte.
+
+Fase 3 — Control y facturación (16 – 22 nov)
+Cuentas por cobrar y reportes; facturación por administrador y portal de autofacturación en ambiente de pruebas; textos legales; sincronización robusta; respaldos con restauración probada.
+Salida: facturación de punta a punta en pruebas y reportes que cuadran con los datos.
+
+Fase 4 — Estabilización y entrega (23 nov – 1 dic)
+Pruebas con el hardware real, carga del catálogo real, paso a producción con el PAC real (cuando el CSD del cliente esté listo), documentación y manuales, capacitación presencial de 3 horas (una con Luis, una con Ricardo y una con el equipo de mostrador) y acta de entrega.
+
+Dependencias que pueden mover las fechas: el anticipo, la aprobación de requerimientos por el cliente, el catálogo y precios reales, la llegada del hardware, el CSD y el PAC, y las decisiones P1 y P2.
+
+Entregables finales: sistema en producción; repositorio y documentación técnica; bitácora de decisiones; manual de usuario y manual de soporte (Juanito los edita); plan de respaldo; accesos entregados a Juanito por un canal seguro.
+
+======================================================================
+14. PRUEBAS Y CRITERIOS DE ACEPTACIÓN
+======================================================================
+
+Recorridos completos que deben pasar antes de entregar (con datos de prueba, nunca reales):
+E1  Medir a domicilio, cotizar con medidas, generar PDF, compartirlo por WhatsApp, aceptarlo, crear la orden, cobrar anticipo, avanzar estatus, entregar, cobrar saldo, imprimir el comprobante con garantía y QR.
+E2  Venta de mostrador en efectivo y en transferencia (y mixta), ticket térmico con QR, y corte de caja por cajero y consolidado, con diferencia calculada.
+E3  Sin internet: 3 cotizaciones y 10 ventas en modo avión; al reconectar, cero duplicados, folios correctos y totales exactos.
+E4  Tres usuarios por PIN en la misma tablet: cada acción atribuida a quien la hizo; bloqueo por inactividad.
+E5  Autofacturación: un folio liquidado genera su factura de prueba; un folio ya facturado, uno fuera de plazo y uno con código incorrecto se rechazan con mensajes claros; sin duplicar timbres.
+E6  Facturación por administrador: cajero sin permiso no puede; con autorización, sí.
+E7  Reportes coinciden al centavo con los datos de ventas y pagos, en hora de México y con día, semana y mes bien delimitados.
+E8  Permisos: el cajero no ve reportes, precios ni cortes ajenos; los administradores sí.
+E9  Respaldo: restaurar una copia completa en un entorno limpio y verificar los datos.
+E10 Impresión: 30 tickets seguidos sin error; cotización y comprobante en tamaño carta legibles, con QR escaneable.
+Criterios generales: sin errores en consola en los recorridos; tiempos de la sección 10.4; interfaz sin textos en inglés ni datos de relleno; todos los [POR DEFINIR] resueltos o convertidos en ajustes de configuración documentados.
+
+======================================================================
+15. PENDIENTES Y DECISIONES ABIERTAS ([POR DEFINIR])
+======================================================================
+
+Para cada punto se indica qué hacer mientras tanto.
+1. Datos fiscales de ZAMMIR (RFC, régimen, e.firma, CSD): los entrega el cliente. Bloquean pasar la facturación a producción; mientras tanto, usa el ambiente de pruebas del PAC.
+2. PAC elegido, quién lo contrata y límite anual de timbres: Juanito decide. Mientras tanto, usa la capa de abstracción.
+3. Si los precios incluyen IVA: ajuste global configurable.
+4. Tratamiento de anticipos en el CFDI: arranca con un solo CFDI al liquidar; configurable.
+5. Duración y texto de la garantía: configurable por producto y por orden.
+6. Portal de seguimiento del cliente final (P1): detrás de un interruptor de configuración.
+7. Control de existencias de piezas estándar (P2): detrás de un interruptor de configuración.
+8. Reglas de precio específicas (área mínima, cargos adicionales, redondeo de medidas): llegan con el catálogo real; el diseño debe admitirlas.
+9. Modelos finales de hardware y si ZAMMIR ya tiene impresora tamaño carta.
+10. Dominio del sistema.
+11. Textos legales finales (aviso de privacidad y términos): borrador base de HummingX, texto final del cliente.
+12. Tratamiento del anticipo al cancelar un trabajo: lo define el contrato.
+13. Base de cálculo de "ventas" en reportes: efectivo recibido por defecto.
+14. Leyenda "Powered by HummingX BI".
+15. Nombres reales, roles y datos del negocio (domicilio, teléfono, logo, colores).
+16. Confirmación del plazo mensual de autofacturación con el contador.
+17. Retención de respaldos de 30 días según el plan de Supabase.
+18. Umbral de antigüedad de cuentas por cobrar: 10 días por defecto.
+Si algo de este documento contradice el contrato firmado o su anexo técnico, manda lo firmado; avisa a Juanito.
+
+======================================================================
+16. RIESGOS PRINCIPALES Y CÓMO ATENDERLOS
+======================================================================
+
+R1  La impresora Bluetooth no expone BLE y no imprime desde el navegador. Mitigación: prueba de concepto en la primera semana, capas 2 y 3 de impresión, cambio de modelo antes de que el cliente compre más equipo.
+R2  Datos fiscales, CSD o PAC no están a tiempo. Mitigación: ambiente de pruebas y activación en producción al final; avisar pronto.
+R3  Plazo corto de cinco semanas. Mitigación: orden por riesgo, alcance cerrado, nada fuera de lo listado.
+R4  El cliente tarda en entregar su catálogo. Mitigación: importador y plantilla desde la fase 1; fecha comprometida por el cliente.
+R5  Duplicados o folios mal asignados al sincronizar. Mitigación: UUID por operación, folios temporales, pruebas E3.
+R6  Tratamiento fiscal de anticipos. Mitigación: configuración y validación del contador.
+R7  Seguridad con tablet compartida y PIN. Mitigación: dispositivo registrado, bloqueo por inactividad, atribución por usuario, límites de intentos.
+R8  Respaldos con menos retención de la prometida. Mitigación: exportación nocturna externa y prueba de restauración.
+R9  Confusión entre demo y sistema real. Mitigación: las secciones 12.1 y 15; nada de datos de la demo en producción.
+R10 Fallas de terceros (internet, nube, PAC, SAT). Mitigación: modo sin internet, reintentos y mensajes claros.
+R11 Usuarios mayores o poco familiarizados con tecnología. Mitigación: diseño simple y pruebas con personas reales.
+
+======================================================================
+17. GLOSARIO
+======================================================================
+
+Anticipo: pago inicial (por defecto 50%) para empezar un trabajo.
+Saldo contra entrega: el resto, que se paga al entregar o instalar.
+A medida / pieza estándar: vidrio o cancelería cortado según el cliente, frente a una pieza ya armada de catálogo.
+Cancelería: puertas, ventanas y divisiones de aluminio con vidrio.
+Termopanel (cristal doble): dos vidrios con cámara de aire.
+Templado: vidrio tratado térmicamente, mucho más resistente al impacto.
+Esmerilado/satinado: vidrio con acabado opaco. Emplomado/decorado: vidrio con diseño en plomo o decoración.
+Medición a domicilio: visita para tomar medidas antes de cotizar o fabricar.
+Orden de trabajo: trabajo en curso desde que el cliente acepta hasta que se entrega.
+Corte de caja: cierre que suma lo cobrado en un turno o día por método de pago. Arqueo: contar el efectivo real y compararlo con lo esperado.
+CFDI: factura electrónica. PAC: proveedor autorizado que la timbra. CSD: certificado con el que se firma. e.firma: firma electrónica del contribuyente. RFC: registro fiscal. UUID: folio fiscal. PUE: pago en una sola exhibición.
+Derechos ARCO: acceso, rectificación, cancelación y oposición sobre datos personales.
+PWA: aplicación web que se instala. BLE: Bluetooth de baja energía. ESC/POS: lenguaje de comandos de las impresoras de tickets. RLS: seguridad a nivel de fila en la base de datos. Mopria: estándar de impresión de Android.
+
+FIN DEL DOCUMENTO

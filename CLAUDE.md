@@ -15,8 +15,11 @@ El corazón del sistema es un **cotizador en tablet que funciona sin internet**.
 | Qué se construye y qué no | `docs/producto/ALCANCE.md` |
 | Reglas de dinero, folios, fechas, auditoría | `docs/producto/REGLAS_DE_NEGOCIO.md` |
 | Qué hace cada módulo | `docs/producto/REQUERIMIENTOS.md` |
+| Sin internet, seguridad, rendimiento, accesibilidad | `docs/producto/REQUERIMIENTOS_NO_FUNCIONALES.md` |
 | Cómo se llama cada cosa | `docs/producto/GLOSARIO.md` |
 | Qué no está definido todavía | `docs/producto/PENDIENTES.md` |
+| Riesgos del proyecto | `docs/producto/RIESGOS.md` |
+| Recorridos que deben pasar antes de entregar (E1 a E10) | `docs/calidad/PRUEBAS_DE_ACEPTACION.md` |
 | Qué ya se decidió | `DECISIONES.md` |
 | **Qué construir en cada fase, con sus pruebas y compuertas** | `docs/plan/` — empieza por su README y `00-principios-de-ingenieria.md` |
 | Fases y sprints (resumen) | `docs/ROADMAP.md` |
@@ -31,11 +34,12 @@ El corazón del sistema es un **cotizador en tablet que funciona sin internet**.
 4. **Nada contable se borra.** Ventas, órdenes, pagos y facturas solo se cancelan con motivo y rastro [RN-18].
 5. **Fechas en UTC, se muestran en `America/Mexico_City`.** Semana de lunes a domingo [RN-17].
 6. **Interfaz en español de México** con el vocabulario del oficio. Nada de "checkout", "carrito" ni "Punto de Venta". Ver palabras prohibidas en el glosario.
-7. **Sin secretos ni datos reales.** Nunca subas claves (usa variables de entorno). Nunca uses ni escribas datos reales de clientes de ZAMMIR en código, pruebas o documentación [ADR-0010].
+7. **Sin secretos ni datos reales.** Nunca subas claves (usa variables de entorno). Nunca uses ni escribas datos reales de clientes de ZAMMIR en código, pruebas o documentación [ADR-0010]. Ningún agente de IA tiene acceso a datos de producción [RNF-19]. El CSD de ZAMMIR se sube directo al PAC; nunca pasa por el código [RF-M10-02].
 8. **Las decisiones se registran.** Si tomas una decisión técnica o de negocio, escribe su ADR en `docs/decisiones/` y agrégala al índice de `DECISIONES.md`.
 9. **No reutilices código de la demo** (`HummingX-BI/formularios`) [ADR-0002].
 10. **Antes de una tarea grande, presenta un plan breve** (qué, en qué orden, qué riesgos) y espera aprobación.
 11. **No se avanza con algo en rojo.** Una fase no se cierra hasta que su compuerta de calidad está en verde. Nunca se desactivan pruebas ni se bajan umbrales para que pase. Si no alcanza el tiempo, se recorta alcance con aprobación de Juanito, nunca calidad (`docs/plan/README.md`).
+12. **Si el documento fuente contradice un ADR, manda el ADR** ([ADR-0017]). Si crees que el ADR está mal, propónlo en `PENDIENTES.md`; no lo cambies por tu cuenta.
 
 ## Cómo citar
 

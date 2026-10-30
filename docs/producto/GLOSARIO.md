@@ -17,6 +17,7 @@
 | Corte de caja | Cierre del turno de un cajero: esperado, contado y diferencia [DC RF-M4-06] | `CashClosing` |
 | Fondo inicial | Efectivo con el que abre la caja un cajero | `openingFloat` |
 | Sobrante / faltante | Diferencia positiva o negativa entre efectivo contado y esperado | `cashDifference` |
+| Arqueo | Contar el efectivo real y compararlo con lo esperado [DC §17] | `cashCount` |
 | Cuentas por cobrar | Lista de trabajos con saldo mayor a cero. No es crédito [RN-09] | `receivables` |
 | Garantía | Registro escrito de duración, cobertura y exclusiones de un trabajo entregado [RN-14] | `Warranty` |
 | Comprobante de trabajo | PDF con folio, saldo, garantía y QR de autofacturación [DC RF-M3-06] | `WorkReceipt` |
@@ -27,6 +28,9 @@
 | Folio | Identificador consecutivo de un documento [RN-15] | `folio` |
 | Folio temporal | Folio provisional de un dispositivo sin conexión, como `T1-0001` [RN-16] | `tempFolio` |
 | Autofacturación | Portal donde el cliente final genera su factura con el código del comprobante | `selfInvoicing` |
+| Código de verificación | Código aleatorio impreso en ticket y comprobante (por ejemplo, de 6 caracteres) que, junto con el folio, permite autofacturar [DC §7.6] | `publicCode` |
+| Panel de inicio | Pantalla aparte, accesible desde el logo; contenido por rol por definir (PD-31) [DC §12.2] | `home` |
+| Primeros pasos | Pantalla del primer ingreso con cinco tarjetas en el orden del trabajo [DC §12.2] | `gettingStarted` |
 | Cliente recurrente | Cliente con dos o más trabajos entregados [DC RF-M5-03] | `isRecurring` |
 
 ## Productos
@@ -41,6 +45,8 @@
 | Cancelería | Estructuras de aluminio para puertas, ventanas y canceles | categoría |
 | Termopanel | Cristal doble con cámara de aire | categoría |
 | Templado | Vidrio tratado térmicamente, más resistente | categoría |
+| Esmerilado / satinado | Vidrio con acabado opaco | categoría |
+| Emplomado / decorado | Vidrio con diseño en plomo o decoración | categoría |
 | Flotado | Vidrio claro común | categoría |
 | Herrajes | Bisagras, jaladores, chapas | categoría |
 
@@ -64,6 +70,23 @@
 | CSD | Certificado de Sello Digital del emisor, necesario para firmar facturas |
 | e.firma | Firma electrónica del contribuyente; con ella se tramita el CSD |
 | RFC, régimen fiscal, uso de CFDI | Datos fiscales del emisor y del receptor |
+| UUID (folio fiscal) | Identificador que asigna el PAC a cada CFDI timbrado |
+| PUE | Pago en una sola exhibición: el método de pago que usa el sistema [RN-28] |
+| Forma de pago | `01` efectivo, `03` transferencia [RN-28] |
+| Constancia de situación fiscal | Documento del SAT con el nombre o razón social, régimen y código postal exactos del receptor |
+| Timbre | Cada CFDI timbrado; el PAC los cobra por unidad o por paquete [DC §7.9] |
+
+## Datos personales y técnica
+
+| Término | Significado |
+|---|---|
+| Derechos ARCO | Acceso, rectificación, cancelación y oposición sobre datos personales [RF-M5-05] |
+| PWA | Aplicación web que se instala en el dispositivo |
+| BLE | Bluetooth de baja energía; la impresora debe tenerlo para imprimir desde el navegador [DC §8.3] |
+| Web Bluetooth | Tecnología con la que una página web habla con un dispositivo Bluetooth; existe en Chrome para Android y no en iOS [DC §8.2] |
+| ESC/POS | Lenguaje de comandos de las impresoras de tickets |
+| Mopria | Estándar de impresión de Android |
+| RLS | Seguridad a nivel de fila en la base de datos |
 
 ## Palabras prohibidas en la interfaz
 

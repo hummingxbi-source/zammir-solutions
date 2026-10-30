@@ -1,15 +1,15 @@
 # Requerimientos funcionales
 
-> Fuente: [DC §4 y §6]. Los cambios respecto al documento fuente se marcan con **[Cambio]** y su ADR.
-> Cada requerimiento conserva su identificador `RF-Mx-yy` para citarlo en historias de usuario, código y pruebas.
+> Fuente: [DC §4, §6, §7 y §12]. Los requerimientos no funcionales están en `REQUERIMIENTOS_NO_FUNCIONALES.md`. Los cambios respecto al documento fuente se marcan con **[Cambio]** y su ADR.
+> Cada requerimiento conserva su identificador `RF-Mx-yy` para citarlo en historias de usuario, código y pruebas. El documento fuente no numera los de M10 ni los de experiencia de usuario: los identificadores `RF-M10-yy` y `RF-UX-yy` se asignaron aquí y cada uno cita su sección de origen.
 > Los criterios de aceptación detallados se escriben en el backlog (Fase 3), historia por historia.
 
 ## Roles y permisos
 
 **Roles** [DC §4]:
 - **Administrador:** Luis (dueño) y Ricardo (socio), con los mismos permisos. Supuesto de HummingX, ajustable por configuración.
-- **Cajero / vendedor:** los empleados que cobran, cotizan y avanzan trabajos. Hoy son 3; uno también instala.
-- **Cliente final:** sin cuenta ni contraseña. Solo enlaces públicos con código.
+- **Cajero / vendedor:** los empleados que cobran, cotizan y avanzan trabajos. Hoy son 3; cobran en el mostrador y ellos mismos instalan.
+- **Cliente final:** sin cuenta ni contraseña. Solo enlaces públicos con código: autofacturación y, si se activa P1, seguimiento.
 
 **Matriz de permisos** [DC §4]:
 
@@ -137,13 +137,53 @@ La sección se llama "Reportes": sin predicciones ni periodos de calibración.
 - **RF-M9-04** Canal visible para ejercer derechos sobre sus datos (correo o WhatsApp del negocio).
 - **RF-M9-05** El aviso declara la transferencia de datos fiscales al PAC cuando se factura.
 
+
 ## M10. Facturación CFDI y autofacturación
 
-> **Incompleto.** El detalle viene en la §7 del documento fuente, que no ha llegado. Lo que sí se sabe por otras secciones:
+**Propósito:** que ZAMMIR deje de depender de un contador que cobra cada vez que un cliente pide factura, por dos caminos: un administrador factura desde el sistema en segundos, o el propio cliente se factura en un portal público con los datos de su ticket [DC §7.1]. Reglas: [RN-24] a [RN-28].
 
-- Se factura solo cuando el cliente lo pide [DC §2]. No hay factura global [DC §3.3].
-- Folio de factura `F-AAAA-0001` [RN-15].
-- Tickets y comprobantes llevan QR y código para autofacturación, con leyenda de plazo [DC RF-M4-04, RF-M3-06].
-- Un cajero solo genera factura con autorización de un administrador [DC §4].
-- Cada producto lleva clave de producto o servicio, clave de unidad y objeto de impuesto [DC RF-M1-01]; el cliente, sus datos fiscales opcionales [DC RF-M5-01].
-- La integración con el PAC va detrás de una interfaz con un adaptador simulado; el PAC real se conecta al final [ADR-0007].
+### Proveedor de timbrado
+- **RF-M10-01** Capa de abstracción `BillingProvider` ("ProveedorTimbrado") con cuatro operaciones: timbrar, cancelar, consultar estatus y descargar XML y PDF. Cambiar de PAC no debe tocar el resto del sistema [DC §7.3], [ADR-0007].
+- **RF-M10-02** El archivo `.key` del CSD y su contraseña se suben **directamente al PAC**. Nunca se guardan en la base de datos ni en el código [DC §7.3].
+- **RF-M10-03** El PAC se elige con estos criterios: API REST documentada, entorno de pruebas, CFDI 4.0, cancelación con motivos, entrega de PDF y XML, soporte de varios emisores, custodia del CSD dentro del PAC, y precio por timbre o paquete. Candidatos sin preferencia fija: Facturama, SW Sapien, Facturapi [DC §7.3] (PD-05).
+
+### Camino A: facturar desde el sistema
+- **RF-M10-04** Elegir una venta de mostrador o una orden de trabajo liquidada [RN-25], [DC §7.5].
+- **RF-M10-05** Elegir al receptor desde la ficha del cliente o capturarlo: RFC, nombre o razón social tal como aparece en su constancia de situación fiscal, código postal fiscal, régimen fiscal y uso de CFDI [DC §7.5].
+- **RF-M10-06** Forma y método de pago según [RN-28] [DC §7.5].
+- **RF-M10-07** Timbrar; guardar UUID, XML y PDF; poder reenviarlos por correo o WhatsApp [DC §7.5].
+- **RF-M10-08** Permisos: administradores; un cajero solo con autorización de un administrador por PIN [DC §4, §7.5].
+
+### Camino B: portal público de autofacturación
+- **RF-M10-09** Entrada: el QR del ticket y del comprobante abre la ruta `/factura` con el folio y un código de verificación aleatorio (por ejemplo, de 6 caracteres). También se puede teclear el folio y el código a mano [DC §7.6].
+- **RF-M10-10** Antes de mostrar cualquier dato se valida, en el servidor: el folio existe, el código coincide, la operación está liquidada, no está ya facturada y está dentro del plazo [RN-25], [RN-26], [DC §7.6].
+- **RF-M10-11** Protección: límite de intentos por IP y por folio, y una verificación ligera contra automatización. **Nunca revelar si un folio existe cuando falla el código** [DC §7.6, §10.1].
+- **RF-M10-12** La pantalla muestra solo lo necesario: conceptos y total [DC §7.6].
+- **RF-M10-13** Formulario del receptor con validación de formato del RFC (12 o 13 caracteres) y del código postal (5 dígitos), listas de régimen fiscal y uso de CFDI, y casilla de aceptación del aviso de privacidad que menciona la transferencia de datos al PAC [DC §7.6], [RF-M9-05].
+- **RF-M10-14** Resultado: factura timbrada con descarga de PDF y XML, y envío por correo si el cliente lo captura [DC §7.6].
+- **RF-M10-15** Idempotencia: si el PAC falla o tarda, la solicitud queda "en proceso" con reintentos automáticos y aparece en el panel de un administrador [RN-24], [DC §7.6].
+- **RF-M10-16** Diseño para personas mayores y poco familiarizadas con la tecnología: pocos pasos, botones grandes, instrucciones simples [DC §7.6].
+- **RF-M10-17** Si el documento se emitió sin conexión y todavía no llega al servidor, el portal explica que aún no está disponible y que intente más tarde. *Derivado de [DC §5.5] en `docs/arquitectura/SINCRONIZACION.md`; el texto exacto lo aprueba Juanito.*
+
+### Anticipos, cancelaciones y timbres
+- **RF-M10-18** Ajuste "tratamiento de anticipos", con la opción (a) por defecto [RN-27], [DC §7.7].
+- **RF-M10-19** Cancelación de CFDI solo por administradores, con los motivos del SAT y bitácora [RN-28], [DC §7.8].
+- **RF-M10-20** El panel de un administrador muestra los timbres usados contra el límite del paquete y avisa al llegar al 80%. El límite es configurable (PD-26) [DC §7.9].
+- **RF-M10-21** La factura aparece en el historial del cliente [RF-M5-02].
+
+---
+
+## Experiencia de usuario
+
+> Lecciones obligatorias que dejó la demo [DC §12.2]. Aplican a todos los módulos.
+
+- **RF-UX-01** Navegación en el orden real del trabajo: Catálogo, Cotizador, Órdenes de trabajo, Mostrador y Reportes, con numeración discreta y marca de las secciones ya visitadas. El panel de inicio va aparte, accesible desde el logo. Su contenido por rol está por definir (PD-31) [DC §12.2 punto 1].
+- **RF-UX-02** Pantalla de "Primeros pasos" en el primer ingreso, con cinco tarjetas en el orden de la navegación [DC §12.2 punto 2].
+- **RF-UX-03** Botón fijo "¿Por dónde empiezo?" [DC §12.2 punto 2].
+- **RF-UX-04** Recorrido guiado opcional con globos de ayuda [DC §12.2 punto 2].
+- **RF-UX-05** Avisos contextuales que se pueden cerrar cuando una sección depende de otra (por ejemplo, "revisa primero tu catálogo") [DC §12.2 punto 2].
+- **RF-UX-06** Estados siempre visibles: conexión a internet, operaciones pendientes de enviar ("N pendientes") e impresora conectada o desconectada [DC §9, §12.2 punto 7, §8.3].
+- **RF-UX-07** Estados vacíos que enseñan qué hacer; nunca datos de relleno [RN-23].
+- **RF-UX-08** Confirmación en toda acción destructiva y mensajes de error humanos que digan qué hacer [DC §10.5].
+- **RF-UX-09** Animaciones sobrias que respetan la preferencia de reducir movimiento [DC §12.2 punto 8].
+- **RF-UX-10** Pantallas para el cliente final (autofacturación y, con P1, seguimiento): diseño sobrio y editorial, iconografía del oficio, botones grandes y pocos pasos; nada de tarjetas genéricas de panel [DC §12.2 punto 4].
