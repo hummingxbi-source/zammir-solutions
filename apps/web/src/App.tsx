@@ -1,7 +1,8 @@
 import type { ReactElement } from 'react';
 import { Route, Routes } from 'react-router';
-import type { DeviceRepository } from '@zammir/core';
+import type { DeviceRepository, ManageCustomersDeps } from '@zammir/core';
 
+import { Clientes } from './modules/customers/ui/Clientes';
 import { Dispositivos } from './modules/devices/ui/Dispositivos';
 import { Usuarios, type UsuariosProps } from './modules/identity/ui/Usuarios';
 import { ProtegidaAdmin } from './modules/identity/ui/ProtegidaAdmin';
@@ -16,6 +17,8 @@ export interface AppProps {
   readonly dispositivos?: DeviceRepository | null;
   /** Personas del mostrador (alta, PIN, desactivar); sin esto no aparece esa parte de Usuarios. */
   readonly usuarios?: UsuariosProps | null;
+  /** Clientes; por ahora solo con sesión de administrador (la persona con PIN llega con S1-15). */
+  readonly clientes?: ManageCustomersDeps | null;
   /** Vigencia sugerida del código de registro; sin ella la persona escribe los minutos. */
   readonly cargarVigenciaDeCodigo?: (() => Promise<number | null>) | undefined;
 }
@@ -26,6 +29,7 @@ export function App({
   interruptores = SIN_INTERRUPTORES,
   dispositivos = null,
   usuarios = null,
+  clientes = null,
   cargarVigenciaDeCodigo,
 }: AppProps): ReactElement {
   const secciones = [
@@ -58,6 +62,10 @@ export function App({
                   ) : (
                     <SeccionVacia titulo={seccion.texto} />
                   )}
+                </ProtegidaAdmin>
+              ) : seccion.id === 'clientes' && clientes !== null ? (
+                <ProtegidaAdmin>
+                  <Clientes deps={clientes} />
                 </ProtegidaAdmin>
               ) : (
                 <SeccionVacia titulo={seccion.texto} />

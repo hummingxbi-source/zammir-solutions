@@ -3,6 +3,7 @@ import type {
   Clock,
   DeviceRepository,
   IdGenerator,
+  ManageCustomersDeps,
   ManageUsersDeps,
   UserPolicy,
 } from '@zammir/core';
@@ -12,6 +13,7 @@ import {
   adminAuthNoConfigurada,
   supabaseAdminAuth,
 } from '../modules/identity/infra/supabase-admin-auth';
+import { supabaseCustomers } from '../modules/customers/infra/supabase-customers';
 import { supabaseUsers } from '../modules/identity/infra/supabase-users';
 import { supabaseSettingsRepository } from '../modules/settings/infra/supabase-settings-repository';
 import { createSupabaseClient } from '../shared/infra/supabase-client';
@@ -27,6 +29,8 @@ export interface Composition {
   readonly adminAuth: AdminAuth;
   /** `null` si no hay servidor configurado. */
   readonly dispositivos: DeviceRepository | null;
+  /** Altas y correcciones de clientes; `null` si no hay servidor configurado. */
+  readonly clientes: ManageCustomersDeps | null;
   /** Altas, PIN y desactivación de personas; `null` si no hay servidor configurado. */
   readonly usuarios: ManageUsersDeps | null;
   /** Mínimo de dígitos del PIN de un administrador y vueltas de PBKDF2, de la configuración. */
@@ -51,6 +55,13 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
     idGenerator: uuidIdGenerator,
     adminAuth: cliente === null ? adminAuthNoConfigurada : supabaseAdminAuth(cliente),
     dispositivos: cliente === null ? null : supabaseDeviceRepository(cliente),
+    clientes:
+      cliente === null
+        ? null
+        : {
+            customers: supabaseCustomers(cliente, { conDatosFiscales: true }),
+            idGenerator: uuidIdGenerator,
+          },
     usuarios:
       cliente === null
         ? null

@@ -31,6 +31,7 @@ createRoot(root).render(
       <BrowserRouter>
         <App
           dispositivos={composition.dispositivos}
+          clientes={composition.clientes}
           usuarios={
             composition.usuarios === null
               ? null

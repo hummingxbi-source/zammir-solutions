@@ -38,3 +38,8 @@ export * from './modules/identity/domain/permissions';
 export * from './modules/identity/application/authorize-with-admin-pin';
 export * from './modules/identity/application/pin-attempt-guard';
 export * from './modules/identity/domain/pin-lockout';
+export * from './shared-kernel/phone';
+export * from './modules/customers/application/in-memory-customers';
+export * from './modules/customers/application/manage-customers';
+export * from './modules/customers/application/ports';
+export * from './modules/customers/domain/customer';
