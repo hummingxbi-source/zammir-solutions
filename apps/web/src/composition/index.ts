@@ -3,6 +3,7 @@ import type {
   Clock,
   DeviceRepository,
   IdGenerator,
+  LegalDeps,
   ManageCustomersDeps,
   ManageUsersDeps,
   UserPolicy,
@@ -14,6 +15,7 @@ import {
   supabaseAdminAuth,
 } from '../modules/identity/infra/supabase-admin-auth';
 import { supabaseCustomers } from '../modules/customers/infra/supabase-customers';
+import { supabaseLegal } from '../modules/legal/infra/supabase-legal';
 import { supabaseUsers } from '../modules/identity/infra/supabase-users';
 import { supabaseSettingsRepository } from '../modules/settings/infra/supabase-settings-repository';
 import { createSupabaseClient } from '../shared/infra/supabase-client';
@@ -29,6 +31,8 @@ export interface Composition {
   readonly adminAuth: AdminAuth;
   /** `null` si no hay servidor configurado. */
   readonly dispositivos: DeviceRepository | null;
+  /** Aviso de privacidad versionado; `null` si no hay servidor configurado. */
+  readonly legal: LegalDeps | null;
   /** Altas y correcciones de clientes; `null` si no hay servidor configurado. */
   readonly clientes: ManageCustomersDeps | null;
   /** Altas, PIN y desactivación de personas; `null` si no hay servidor configurado. */
@@ -49,18 +53,22 @@ export interface EntornoSupabase {
 export function createComposition(entorno: EntornoSupabase = {}): Composition {
   const cliente = createSupabaseClient(entorno.url, entorno.anonKey);
   const ajustes = cliente === null ? null : supabaseSettingsRepository(cliente);
+  const legal: LegalDeps | null =
+    cliente === null ? null : { legal: supabaseLegal(cliente), clock: systemClock };
 
   return {
     clock: systemClock,
     idGenerator: uuidIdGenerator,
     adminAuth: cliente === null ? adminAuthNoConfigurada : supabaseAdminAuth(cliente),
     dispositivos: cliente === null ? null : supabaseDeviceRepository(cliente),
+    legal,
     clientes:
       cliente === null
         ? null
         : {
             customers: supabaseCustomers(cliente, { conDatosFiscales: true }),
             idGenerator: uuidIdGenerator,
+            ...(legal === null ? {} : { privacy: legal }),
           },
     usuarios:
       cliente === null

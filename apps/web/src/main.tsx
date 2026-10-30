@@ -32,6 +32,7 @@ createRoot(root).render(
         <App
           dispositivos={composition.dispositivos}
           clientes={composition.clientes}
+          legal={composition.legal}
           usuarios={
             composition.usuarios === null
               ? null

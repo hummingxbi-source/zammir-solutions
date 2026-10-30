@@ -60,6 +60,41 @@ export const textos = {
       },
     },
   },
+  legal: {
+    titulo: 'Aviso de privacidad',
+    descripcion:
+      'Es el texto que se le informa a cada cliente al registrarlo. Editarlo crea una versión nueva; las anteriores se conservan.',
+    cargando: 'Cargando aviso…',
+    vigente: 'Versión vigente',
+    versionN: 'Versión',
+    desde: 'rige desde',
+    sinAviso: 'Todavía no hay aviso de privacidad publicado. Escribe el texto y publícalo.',
+    borradorAviso: 'Este texto es un borrador y falta que lo revise el asesor de ZAMMIR.',
+    nuevaVersion: 'Publicar una versión nueva',
+    texto: 'Texto del aviso',
+    publicar: 'Publicar versión nueva',
+    publicando: 'Publicando…',
+    publicado: 'Versión publicada.',
+    historial: 'Versiones anteriores',
+    errores: {
+      BODY_REQUIRED: {
+        mensaje: 'Falta el texto del aviso.',
+        queHacer: 'Escríbelo antes de publicar.',
+      },
+      NOT_FOUND: {
+        mensaje: 'Todavía no hay aviso publicado.',
+        queHacer: 'Publica el primero.',
+      },
+      NOT_AUTHORIZED: {
+        mensaje: 'Tu cuenta no puede editar el aviso de privacidad.',
+        queHacer: 'Entra con una cuenta de administrador.',
+      },
+      LEGAL_UNAVAILABLE: {
+        mensaje: 'No hay conexión con el servidor.',
+        queHacer: 'Conéctate a internet e intenta de nuevo.',
+      },
+    },
+  },
   clientes: {
     titulo: 'Clientes',
     descripcion:
@@ -98,6 +133,8 @@ export const textos = {
       cancelar: 'No, dejarlo',
     },
     anonimizado_ok: 'Cliente anonimizado.',
+    avisoVigente: 'Aviso de privacidad que se le informa (versión',
+    verAviso: 'Ver el aviso',
     anonimizado: 'Datos anonimizados',
     errores: {
       NAME_REQUIRED: {
