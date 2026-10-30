@@ -27,6 +27,7 @@
 | S1-06 | #38 | `feat/s1-06-editar-catalogo` | Editar/desactivar, historial de precios, bitácora |
 | S1-07 | #39 | `feat/s1-07-busqueda` | Búsqueda tolerante |
 | (valores) | #32 | `feat/valores-iniciales` | PD-21 = 30 min, PD-48 = 15 min (propuestos), modelos de impresora y tablet |
+| S1-18 | #42 | `feat/s1-18-permisos` | `PermissionPolicy` (`defaultPermissionPolicy.check(role, permission)`), `PERMISSION_MATRIX`, `createPermissionPolicy(overrides)`, `isPermitted`; prueba de paridad con la base en `apps/web/src/modules/identity/paridad-de-permisos.integracion.test.ts` (al agregar una tabla nueva con permiso, **sacar su permiso de la lista "pendiente" y agregar sondas**) |
 | S1-14 | #41 | `feat/s1-14-usuarios` | Usuarios con PIN: `validatePin`, `PinHasher`, casos de uso, `app_users`, vista `login_users`, `webCryptoPinHasher`, pantalla |
 
 Las ramas están apiladas (#33 → #34 → #37 → #38 → #39). **La siguiente rama de trabajo sale de la última rama apilada que siga abierta** (hoy `feat/s1-07-busqueda`) o de `origin/main` si ya se fusionó todo. Fusionar de abajo hacia arriba; **nunca** `push --force`.
@@ -116,7 +117,7 @@ Orden recomendado (por dependencias): **S1-14 → S1-18 → S1-17 → S1-10 → 
 | Historia | Estimado | Estado | Bloqueo |
 |---|---|---|---|
 | S1-14 Usuarios y PIN | 4 h | **hecha** (PR #41) | — |
-| S1-18 Matriz de permisos | 8 h | pendiente | PD-17 (configurable) |
+| S1-18 Matriz de permisos | 8 h | **hecha** (PR #42) | PD-17 (configurable) |
 | S1-17 Autorización por PIN | 2 h | pendiente | S1-14 |
 | S1-10 Clientes: ficha | 4 h | pendiente | adaptador IndexedDB espera S1-09 |
 | S1-11 Clientes: búsqueda y duplicados | 2 h | pendiente | S1-10 |
@@ -144,7 +145,7 @@ Orden recomendado (por dependencias): **S1-14 → S1-18 → S1-17 → S1-10 → 
 **Pruebas:** el PIN no se guarda en claro (inspeccionar la fila); triviales rechazados; desactivar impide entrar y no borra; reset solo admin; 2 admins + 5 empleados sin límite; contrato de repositorio (memoria + Supabase); pgTAP de permisos.
 **Cuidado:** administradores en la tablet usan **PIN** también (el rol `ADMIN` de `app_users`); su cuenta de Supabase Auth (correo/contraseña) es otra cosa y se enlaza con `authUserId` opcional.
 
-### S1-18 · Matriz de permisos completa (8 h)
+### S1-18 · Matriz de permisos completa (8 h) — HECHA (PR #42)
 **Fuente:** tabla "Matriz de permisos" de `docs/producto/REQUERIMIENTOS.md` (13 filas × 2 roles).
 **Diseño:** `modules/identity/domain/permissions.ts`: `Permission` (una constante por fila: `QUOTE_CREATE`, `PRICE_OVERRIDE`, `CATALOG_EDIT`, `SALE_REGISTER`, `ORDER_ADVANCE`, `ORDER_DELIVER_WITH_BALANCE`, `CANCEL_SALE_OR_ORDER`, `OWN_CASH_CLOSE`, `OTHERS_CASH_VIEW`, `REPORTS_AND_RECEIVABLES`, `INVOICE_GENERATE`, `USERS_AND_DEVICES`, `PRIVACY_NOTICE_EDIT`); `PermissionPolicy.check(role, permission): 'ALLOW' | 'DENY' | 'NEEDS_ADMIN_AUTHORIZATION' | 'ALLOW_WITH_REASON'`. Es **dominio puro**; los casos de uso la consultan. La matriz es una tabla de datos; se sustituye por lectura de configuración si PD-17 cambia (hoy Luis y Ricardo: mismos permisos).
 **Pruebas:** una prueba por fila y por rol (`it.each` sobre la matriz copiada de `REQUERIMIENTOS.md` + una prueba que falla si se agrega una fila sin probar). **Paridad con la base:** para cada tabla que exista con datos sensibles (`products`, `product_price_history`, `audit_log`, `devices`, `business_settings`, `app_users`, `customers`, `legal_documents`), una prueba de integración que consulta/escribe con cada rol y verifica que coincide con la política del dominio. Las filas de funciones aún inexistentes (cotizar, ventas, cortes, reportes, facturas) se prueban solo en el dominio y quedan listadas como "pendiente de paridad RLS" para los sprints 2 a 4.
