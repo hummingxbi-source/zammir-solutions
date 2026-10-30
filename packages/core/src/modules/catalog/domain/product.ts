@@ -47,6 +47,14 @@ export interface Product {
 /** Lo que se captura para dar de alta un producto: todo menos el identificador. */
 export type ProductDraft = Omit<Product, 'id'>;
 
+/** Un cambio en el precio de lista: el historial no se modifica ni se borra [RF-M1-06, RN-19]. */
+export interface PriceChange {
+  readonly productId: ProductId;
+  readonly oldPrice: Money;
+  readonly newPrice: Money;
+  readonly changedAt: Date;
+}
+
 export type ProductErrorCode =
   | 'NAME_REQUIRED'
   | 'PRICE_NEGATIVE'

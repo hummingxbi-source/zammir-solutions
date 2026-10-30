@@ -6,6 +6,7 @@ import {
   ok,
   type CatalogError,
   type Category,
+  type PriceChange,
   type CategoryReader,
   type FiscalData,
   type Product,
@@ -48,6 +49,13 @@ interface FilaDeProducto extends FilaParaVender {
   readonly fiscal_tax_object: string | null;
   readonly warranty_months: number | null;
   readonly warranty_text: string | null;
+}
+
+interface FilaDeCambio {
+  readonly product_id: string;
+  readonly old_price_cents: number;
+  readonly new_price_cents: number;
+  readonly changed_at: string;
 }
 
 const NO_DISPONIBLE: CatalogError = { code: 'CATALOG_UNAVAILABLE' };
@@ -119,6 +127,20 @@ function aProducto(fila: FilaDeProducto): Result<Product, CatalogError> {
   });
 }
 
+function aCambio(fila: FilaDeCambio): Result<PriceChange, CatalogError> {
+  const anterior = money(fila.old_price_cents);
+  const nuevo = money(fila.new_price_cents);
+  if (!anterior.ok || !nuevo.ok) {
+    return err(NO_DISPONIBLE);
+  }
+  return ok({
+    productId: asId<'Product'>(fila.product_id),
+    oldPrice: anterior.value,
+    newPrice: nuevo.value,
+    changedAt: new Date(fila.changed_at),
+  });
+}
+
 function aFila(p: Product) {
   return {
     id: p.id,
@@ -178,6 +200,35 @@ export function supabaseCatalog(cliente: SupabaseClient): SupabaseCatalog {
         return err(aError(respuesta.error));
       }
       return aProducto(datos as FilaDeProducto);
+    },
+
+    async update(producto) {
+      const { id, ...cambios } = aFila(producto);
+      const respuesta = await cliente
+        .from('products')
+        .update(cambios)
+        .eq('id', id)
+        .select()
+        .maybeSingle();
+      const datos: unknown = respuesta.data;
+      if (respuesta.error !== null) {
+        return err(aError(respuesta.error));
+      }
+      // Sin renglón: no existe, o la base no dejó verlo ni cambiarlo (RLS).
+      return datos === null ? err({ code: 'NOT_FOUND' }) : aProducto(datos as FilaDeProducto);
+    },
+
+    async priceHistory(id) {
+      const respuesta = await cliente
+        .from('product_price_history')
+        .select('*')
+        .eq('product_id', id)
+        .order('changed_at');
+      const datos: unknown = respuesta.data;
+      if (respuesta.error !== null) {
+        return err(aError(respuesta.error));
+      }
+      return aLista(datos as FilaDeCambio[], aCambio);
     },
 
     async get(id) {

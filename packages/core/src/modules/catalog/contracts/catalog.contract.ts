@@ -15,6 +15,14 @@ export interface CatalogDelContrato {
   readonly idDeCategoriaInexistente: CategoryId;
   /** Un código que no se ha usado en esta ejecución. */
   readonly codigoNuevo: () => string;
+  /** Entradas de bitácora de un producto, leídas por un camino independiente del puerto. */
+  readonly bitacoraDeProducto: (id: ProductId) => Promise<readonly EntradaDeBitacora[]>;
+}
+
+export interface EntradaDeBitacora {
+  readonly action: string;
+  readonly oldValue: unknown;
+  readonly newValue: unknown;
 }
 
 function precio(centavos: number) {
@@ -184,6 +192,124 @@ export function catalogContract(
         expect(r.value.listPrice).toBe(producto.listPrice);
         expect(r.value.ruleId).toBe('AREA');
       }
+    });
+
+    describe('edición y desactivación', () => {
+      async function conProducto(h: CatalogDelContrato, cambios: Partial<Product> = {}) {
+        const producto = productoDePrueba(
+          h.nuevoIdDeProducto(),
+          await primeraCategoria(h),
+          cambios,
+        );
+        await h.admin.create(producto);
+        return producto;
+      }
+
+      it('guarda los cambios y los devuelve', async () => {
+        const h = await crear();
+        const original = await conProducto(h);
+        const cambiado = { ...original, name: 'Vidrio claro de 6 mm (nuevo)', isTaxExempt: true };
+        const r = await h.admin.update(cambiado);
+        expect(r.ok && r.value).toEqual(cambiado);
+        const leido = await h.admin.get(original.id);
+        expect(leido.ok && leido.value).toEqual(cambiado);
+      });
+
+      it('un producto que no existe no se puede editar', async () => {
+        const h = await crear();
+        const fantasma = productoDePrueba(h.nuevoIdDeProducto(), await primeraCategoria(h));
+        const r = await h.admin.update(fantasma);
+        expect(!r.ok && r.error.code).toBe('NOT_FOUND');
+      });
+
+      it('no deja usar el código de otro producto, pero sí conservar el propio', async () => {
+        const h = await crear();
+        const a = await conProducto(h, { code: h.codigoNuevo() });
+        const b = await conProducto(h, { code: h.codigoNuevo() });
+        const choque = await h.admin.update({ ...b, code: a.code });
+        expect(!choque.ok && choque.error.code).toBe('CODE_TAKEN');
+        const igual = await h.admin.update({ ...a, name: 'Mismo código' });
+        expect(igual.ok).toBe(true);
+      });
+
+      it('rechaza pasar el producto a una categoría que no existe', async () => {
+        const h = await crear();
+        const original = await conProducto(h);
+        const r = await h.admin.update({ ...original, categoryId: h.idDeCategoriaInexistente });
+        expect(!r.ok && r.error.code).toBe('CATEGORY_NOT_FOUND');
+      });
+
+      it('un cambio de precio queda en el historial y en la bitácora con el valor anterior y el nuevo', async () => {
+        const h = await crear();
+        const original = await conProducto(h);
+        const nuevoPrecio = precio(31_500);
+        await h.admin.update({ ...original, listPrice: nuevoPrecio });
+        const siguiente = precio(33_000);
+        await h.admin.update({ ...original, listPrice: siguiente });
+
+        const historial = await h.admin.priceHistory(original.id);
+        expect(historial.ok).toBe(true);
+        if (historial.ok) {
+          expect(historial.value.map((c) => [c.oldPrice, c.newPrice])).toEqual([
+            [28_000, 31_500],
+            [31_500, 33_000],
+          ]);
+          expect(historial.value[0]?.productId).toBe(original.id);
+        }
+        expect(await h.bitacoraDeProducto(original.id)).toEqual([
+          {
+            action: 'PRODUCT_PRICE_CHANGED',
+            oldValue: { precio_centavos: 28_000 },
+            newValue: { precio_centavos: 31_500 },
+          },
+          {
+            action: 'PRODUCT_PRICE_CHANGED',
+            oldValue: { precio_centavos: 31_500 },
+            newValue: { precio_centavos: 33_000 },
+          },
+        ]);
+      });
+
+      it('guardar sin cambiar el precio no deja historial ni bitácora', async () => {
+        const h = await crear();
+        const original = await conProducto(h);
+        await h.admin.update({ ...original, name: 'Solo cambia el nombre' });
+        const historial = await h.admin.priceHistory(original.id);
+        expect(historial.ok && historial.value).toEqual([]);
+        expect(await h.bitacoraDeProducto(original.id)).toEqual([]);
+      });
+
+      it('desactivar quita el producto de la venta, lo conserva y deja bitácora; reactivarlo también', async () => {
+        const h = await crear();
+        const original = await conProducto(h);
+        await h.admin.update({ ...original, isActive: false });
+
+        const vendible = await h.reader.findSellable(original.id);
+        expect(!vendible.ok && vendible.error.code).toBe('NOT_FOUND');
+        const guardado = await h.admin.get(original.id);
+        expect(guardado.ok && guardado.value.isActive).toBe(false);
+        const lista = await h.admin.list();
+        expect(lista.ok && lista.value.some((p) => p.id === original.id)).toBe(true);
+
+        await h.admin.update({ ...original, isActive: true });
+        const devuelto = await h.reader.findSellable(original.id);
+        expect(devuelto.ok).toBe(true);
+        expect(await h.bitacoraDeProducto(original.id)).toEqual([
+          {
+            action: 'PRODUCT_DEACTIVATED',
+            oldValue: { activo: true },
+            newValue: { activo: false },
+          },
+          { action: 'PRODUCT_ACTIVATED', oldValue: { activo: false }, newValue: { activo: true } },
+        ]);
+      });
+
+      it('el puerto de administración no tiene operación de borrado', async () => {
+        const h = await crear();
+        for (const operacion of ['delete', 'remove', 'destroy']) {
+          expect(operacion in h.admin).toBe(false);
+        }
+      });
     });
   });
 }
