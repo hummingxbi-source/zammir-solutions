@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
+import { fixedClock } from '../../../shared-kernel/clock';
 import { asId, sequentialIdGenerator } from '../../../shared-kernel/id';
+import { inMemoryAuditLog } from '../../audit/application/in-memory-audit-log';
+import { inMemoryLegal } from '../../legal/application/in-memory-legal';
 import {
   clienteDePrueba,
   clientesEnMemoriaDePrueba,
@@ -49,6 +52,70 @@ describe('createCustomer', () => {
     expect(!r.ok && r.error.code).toBe(codigo);
     const lista = await deps.customers.list();
     expect(lista.ok && lista.value).toEqual([]);
+  });
+});
+
+describe('createCustomer con el aviso de privacidad', () => {
+  function conAviso() {
+    const { customers } = clientesEnMemoriaDePrueba();
+    const clock = fixedClock(new Date('2026-10-30T12:00:00.000Z'));
+    const legal = inMemoryLegal({
+      clock,
+      idGenerator: sequentialIdGenerator('l'),
+      auditLog: inMemoryAuditLog(),
+    });
+    return { customers, legal, clock, idGenerator: sequentialIdGenerator('c') };
+  }
+
+  it('anota la versión vigente del aviso que se le informó', async () => {
+    const { customers, legal, clock, idGenerator } = conAviso();
+    await legal.publish({ type: 'PRIVACY_NOTICE', body: 'V1', effectiveFrom: new Date(0) });
+    await legal.publish({ type: 'PRIVACY_NOTICE', body: 'V2', effectiveFrom: new Date(0) });
+    const r = await createCustomer(
+      { customers, idGenerator, privacy: { legal, clock } },
+      { role: 'STAFF' },
+      borrador,
+    );
+    expect(r.ok && r.value.privacyNoticeVersion).toBe(2);
+  });
+
+  it('una versión con vigencia futura no es la que se informa', async () => {
+    const { customers, legal, clock, idGenerator } = conAviso();
+    await legal.publish({ type: 'PRIVACY_NOTICE', body: 'V1', effectiveFrom: new Date(0) });
+    await legal.publish({
+      type: 'PRIVACY_NOTICE',
+      body: 'V2 futura',
+      effectiveFrom: new Date('2099-01-01T00:00:00.000Z'),
+    });
+    const r = await createCustomer(
+      { customers, idGenerator, privacy: { legal, clock } },
+      { role: 'STAFF' },
+      borrador,
+    );
+    expect(r.ok && r.value.privacyNoticeVersion).toBe(1);
+  });
+
+  it('sin aviso publicado el cliente se guarda sin versión', async () => {
+    const { customers, legal, clock, idGenerator } = conAviso();
+    const r = await createCustomer(
+      { customers, idGenerator, privacy: { legal, clock } },
+      { role: 'STAFF' },
+      borrador,
+    );
+    expect(r.ok && r.value.privacyNoticeVersion).toBeNull();
+  });
+
+  it('sin configurar el aviso, respeta la versión que ya traía el borrador', async () => {
+    const { customers, idGenerator } = conAviso();
+    const r = await createCustomer(
+      { customers, idGenerator },
+      { role: 'STAFF' },
+      {
+        ...borrador,
+        privacyNoticeVersion: 3,
+      },
+    );
+    expect(r.ok && r.value.privacyNoticeVersion).toBe(3);
   });
 });
 

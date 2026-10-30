@@ -1,6 +1,7 @@
 import type { CustomerId, IdGenerator } from '../../../shared-kernel/id';
 import { err, type Result } from '../../../shared-kernel/result';
 import type { Actor } from '../../identity/domain/auth';
+import { getCurrentLegalDocument, type LegalDeps } from '../../legal/application/legal-use-cases';
 import {
   buildCustomer,
   type Customer,
@@ -12,6 +13,9 @@ import type { CustomerRepository } from './ports';
 export interface ManageCustomersDeps {
   readonly customers: CustomerRepository;
   readonly idGenerator: IdGenerator;
+  /** Si se da, al dar de alta a un cliente se anota la versión VIGENTE del aviso de privacidad que se le
+   *  informó [RF-M9-03]. Sin aviso publicado todavía, queda sin versión. */
+  readonly privacy?: LegalDeps;
 }
 
 /** Cualquier persona del mostrador (administrador o cajero) captura y corrige clientes; la sesión de la
@@ -29,8 +33,23 @@ export function createCustomer(
   if (sinPersona(actor)) {
     return Promise.resolve(err({ code: 'NOT_AUTHORIZED' }));
   }
-  const cliente = buildCustomer(deps.idGenerator.newId<'Customer'>(), borrador);
-  return cliente.ok ? deps.customers.create(cliente.value) : Promise.resolve(cliente);
+  return crearConAviso(deps, borrador);
+}
+
+async function crearConAviso(
+  deps: ManageCustomersDeps,
+  borrador: CustomerDraft,
+): Promise<Result<Customer, CustomerError>> {
+  let privacyNoticeVersion = borrador.privacyNoticeVersion;
+  if (deps.privacy !== undefined && privacyNoticeVersion === null) {
+    const vigente = await getCurrentLegalDocument(deps.privacy, 'PRIVACY_NOTICE');
+    privacyNoticeVersion = vigente.ok ? vigente.value.version : null;
+  }
+  const cliente = buildCustomer(deps.idGenerator.newId<'Customer'>(), {
+    ...borrador,
+    privacyNoticeVersion,
+  });
+  return cliente.ok ? deps.customers.create(cliente.value) : cliente;
 }
 
 /** Anonimiza a un cliente que pide que se borren sus datos personales: solo administradores [RF-M5-05].

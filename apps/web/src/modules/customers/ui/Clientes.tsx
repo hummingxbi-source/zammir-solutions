@@ -4,6 +4,8 @@ import {
   anonymizeCustomer,
   createCustomer,
   findPossibleDuplicates,
+  getCurrentLegalDocument,
+  type LegalDocument,
   NO_FISCAL_PROFILE,
   searchCustomers,
   type Customer,
@@ -43,6 +45,7 @@ export function Clientes({ deps }: ClientesProps): ReactElement {
   const [guardando, setGuardando] = useState(false);
   const [busqueda, setBusqueda] = useState('');
   const [porAnonimizar, setPorAnonimizar] = useState<Customer | null>(null);
+  const [avisoVigente, setAvisoVigente] = useState<LegalDocument | null>(null);
   const [repetidos, setRepetidos] = useState<readonly Customer[]>([]);
 
   const cargar = useCallback(async () => {
@@ -57,6 +60,17 @@ export function Clientes({ deps }: ClientesProps): ReactElement {
   useEffect(() => {
     void cargar();
   }, [cargar]);
+
+  // El aviso de privacidad vigente se muestra al capturar: es el que se le informa al cliente.
+  const privacidad = deps.privacy;
+  useEffect(() => {
+    if (privacidad === undefined) {
+      return;
+    }
+    void getCurrentLegalDocument(privacidad, 'PRIVACY_NOTICE').then((r) => {
+      setAvisoVigente(r.ok ? r.value : null);
+    });
+  }, [privacidad]);
 
   // Al completar el teléfono (en cualquier formato) se avisa si ya lo tiene otro cliente; no bloquea.
   useEffect(() => {
@@ -167,6 +181,14 @@ export function Clientes({ deps }: ClientesProps): ReactElement {
             setNotas(e.target.value);
           }}
         />
+        {avisoVigente !== null ? (
+          <details>
+            <summary>
+              {t.avisoVigente} {String(avisoVigente.version)}): {t.verAviso}
+            </summary>
+            <p style={{ whiteSpace: 'pre-wrap' }}>{avisoVigente.body}</p>
+          </details>
+        ) : null}
         <details>
           <summary>{t.alta.fiscalTitulo}</summary>
           <Campo

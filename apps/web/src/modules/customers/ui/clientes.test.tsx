@@ -3,6 +3,8 @@ import { MemoryRouter } from 'react-router';
 import {
   fixedClock,
   inMemoryAdminAuth,
+  inMemoryAuditLog,
+  inMemoryLegal,
   sequentialIdGenerator,
   type ManageCustomersDeps,
 } from '@zammir/core';
@@ -205,6 +207,33 @@ describe('pantalla de clientes', () => {
     expect(screen.queryByRole('rowheader', { name: 'Ana López' })).toBeNull();
     expect(screen.getByRole('rowheader', { name: /Cliente anonimizado/ })).toBeTruthy();
     expect(screen.queryByRole('button', { name: /Anonimizar/ })).toBeNull();
+  });
+
+  it('muestra el aviso de privacidad vigente y guarda su versión en el cliente nuevo', async () => {
+    const clock = fixedClock(instante);
+    const legal = inMemoryLegal({
+      clock,
+      idGenerator: sequentialIdGenerator('l'),
+      auditLog: inMemoryAuditLog(),
+    });
+    await legal.publish({ type: 'PRIVACY_NOTICE', body: 'Texto uno', effectiveFrom: new Date(0) });
+    await legal.publish({
+      type: 'PRIVACY_NOTICE',
+      body: 'Texto del aviso vigente',
+      effectiveFrom: new Date(0),
+    });
+    const deps = { ...entorno(), privacy: { legal, clock } };
+    mostrar(deps);
+    await entrar();
+    expect(
+      await screen.findByText(/Aviso de privacidad que se le informa \(versión 2\)/),
+    ).toBeTruthy();
+    expect(screen.getByText('Texto del aviso vigente')).toBeTruthy();
+
+    await capturar('Ana López', '5512345678');
+    await screen.findByRole('rowheader', { name: 'Ana López' });
+    const lista = await deps.customers.list();
+    expect(lista.ok && lista.value[0]?.privacyNoticeVersion).toBe(2);
   });
 
   it('una cuenta que no es de administrador no ve la pantalla', async () => {

@@ -4,6 +4,7 @@ import { productoDePrueba, usuarioDePrueba } from '@zammir/core/testing';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { supabaseCatalog } from '../catalog/infra/supabase-catalog';
+import { supabaseLegal } from '../legal/infra/supabase-legal';
 import { supabaseDeviceRepository } from '../devices/infra/supabase-device-repository';
 import { supabaseAdminAuth } from './infra/supabase-admin-auth';
 import { supabaseUsers } from './infra/supabase-users';
@@ -33,7 +34,7 @@ const PARIDAD: Readonly<Record<Permission, string>> = {
   REPORTS_AND_RECEIVABLES: 'pendiente: reportes (Sprint 4)',
   INVOICE_GENERATE: 'pendiente: facturas (Sprint 4)',
   USERS_AND_DEVICES: 'probada',
-  PRIVACY_NOTICE_EDIT: 'pendiente: legal_documents (S1-13)',
+  PRIVACY_NOTICE_EDIT: 'probada',
 };
 
 const sufijo = Math.random().toString(36).slice(2, 10);
@@ -142,6 +143,24 @@ const SONDAS: Partial<Record<Permission, Record<string, Sonda>>> = {
       const r = await supabaseCatalog(cliente).update({ ...base, name: `Cambiado ${sufijo}` });
       return r.ok;
     },
+  },
+  PRIVACY_NOTICE_EDIT: {
+    'publicar una versión del aviso de privacidad': async (cliente) =>
+      (
+        await supabaseLegal(cliente).publish({
+          type: 'PRIVACY_NOTICE',
+          body: `Versión de paridad ${sufijo}`,
+          effectiveFrom: new Date('2026-10-31T00:00:00.000Z'),
+        })
+      ).ok,
+    'publicar una versión de los términos': async (cliente) =>
+      (
+        await supabaseLegal(cliente).publish({
+          type: 'TERMS',
+          body: `Términos de paridad ${sufijo}`,
+          effectiveFrom: new Date('2026-10-31T00:00:00.000Z'),
+        })
+      ).ok,
   },
   USERS_AND_DEVICES: {
     'dar de alta una persona': async (cliente) => {

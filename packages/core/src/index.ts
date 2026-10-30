@@ -45,3 +45,7 @@ export * from './modules/customers/application/ports';
 export * from './modules/customers/domain/customer';
 export * from './modules/customers/application/find-duplicates';
 export * from './modules/customers/domain/search';
+export * from './modules/legal/application/in-memory-legal';
+export * from './modules/legal/application/legal-use-cases';
+export * from './modules/legal/application/ports';
+export * from './modules/legal/domain/legal-document';
