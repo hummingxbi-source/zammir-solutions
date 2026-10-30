@@ -16,6 +16,15 @@ const composition = createComposition({
   anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
 });
 
+// Pone al día el catálogo guardado en la tablet al abrir y cada vez que vuelve la conexión.
+if (composition.catalogoLocal !== null) {
+  const actualizar = composition.catalogoLocal.actualizar;
+  void actualizar();
+  window.addEventListener('online', () => {
+    void actualizar();
+  });
+}
+
 const root = document.getElementById('root');
 if (root === null) {
   throw new Error('No existe el elemento #root en index.html');

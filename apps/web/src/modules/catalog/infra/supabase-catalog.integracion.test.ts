@@ -1,10 +1,18 @@
 import { createClient } from '@supabase/supabase-js';
-import { asId, type CategoryId, type ProductId } from '@zammir/core';
+import {
+  asId,
+  inMemoryCatalogLocalStore,
+  localProductReader,
+  money,
+  refreshCatalog,
+  type CategoryId,
+  type ProductId,
+} from '@zammir/core';
 import { catalogContract, productoDePrueba } from '@zammir/core/testing';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { supabaseAdminAuth } from '../../identity/infra/supabase-admin-auth';
-import { supabaseCatalog } from './supabase-catalog';
+import { supabaseCatalog, supabaseCatalogReplica } from './supabase-catalog';
 
 // Pruebas contra Supabase local real. Corren con `pnpm test:integracion`.
 const URL = process.env.ZAMMIR_TEST_SUPABASE_URL ?? '';
@@ -232,5 +240,80 @@ describe('catálogo con Supabase y sus permisos', () => {
       .from('devices')
       .update({ status: 'ACTIVE', revoked_at: null })
       .eq('id', tabletId);
+  });
+});
+
+describe('réplica del catálogo en la tablet con Supabase', () => {
+  async function categoria(): Promise<CategoryId> {
+    const r = await (await catalogoComo(admin)).listCategories();
+    if (!r.ok || r.value[0] === undefined) {
+      throw new Error('sin categorías');
+    }
+    return r.value[0].id;
+  }
+
+  async function clienteDeTablet() {
+    const cliente = crearCliente(ANON);
+    await supabaseAdminAuth(cliente).signIn(tablet.email, tablet.password);
+    return cliente;
+  }
+
+  it('baja el catálogo; un cambio de precio llega sin duplicar y un desactivado deja de ofrecerse', async () => {
+    const comoAdmin = await catalogoComo(admin);
+    const id = asId<'Product'>(crypto.randomUUID());
+    productosCreados.push(id);
+    const base = productoDePrueba(id, await categoria());
+    expect((await comoAdmin.create(base)).ok).toBe(true);
+
+    const fuente = supabaseCatalogReplica(await clienteDeTablet());
+    const store = inMemoryCatalogLocalStore();
+    const primera = await refreshCatalog({ source: fuente, store });
+    expect(primera.ok).toBe(true);
+    const lector = localProductReader(store);
+    const antes = await lector.findSellable(id);
+    expect(antes.ok && antes.value.listPrice).toBe(base.listPrice);
+    expect((await store.categories()).length).toBeGreaterThanOrEqual(11);
+
+    const precio = money(base.listPrice + 5_000);
+    if (!precio.ok) {
+      throw new Error('precio inválido');
+    }
+    const nuevoPrecio = { ...base, listPrice: precio.value };
+    expect((await comoAdmin.update(nuevoPrecio)).ok).toBe(true);
+    const segunda = await refreshCatalog({ source: fuente, store });
+    expect(segunda.ok && segunda.value.received).toBe(1);
+    const despues = await lector.findSellable(id);
+    expect(despues.ok && despues.value.listPrice).toBe(nuevoPrecio.listPrice);
+    expect((await store.products()).filter((p) => p.id === id)).toHaveLength(1);
+
+    expect((await comoAdmin.update({ ...nuevoPrecio, isActive: false })).ok).toBe(true);
+    await refreshCatalog({ source: fuente, store });
+    const fuera = await lector.findSellable(id);
+    expect(!fuera.ok && fuera.error.code).toBe('NOT_FOUND');
+  });
+
+  it('un cajero sin dispositivo no baja nada', async () => {
+    const cliente = crearCliente(ANON);
+    await supabaseAdminAuth(cliente).signIn(cajero.email, cajero.password);
+    const r = await supabaseCatalogReplica(cliente).productsChangedAfter(0, 10);
+    expect(r.ok && r.value).toEqual([]);
+  });
+
+  it('pide por tandas: con límite 1 devuelve un solo producto y en orden de cambio', async () => {
+    const comoAdmin = await catalogoComo(admin);
+    for (let i = 0; i < 2; i += 1) {
+      const id = asId<'Product'>(crypto.randomUUID());
+      productosCreados.push(id);
+      await comoAdmin.create(
+        productoDePrueba(id, await categoria(), { code: `R-${sufijo}-${String(i)}` }),
+      );
+    }
+    const fuente = supabaseCatalogReplica(await clienteDeTablet());
+    const uno = await fuente.productsChangedAfter(0, 1);
+    expect(uno.ok && uno.value).toHaveLength(1);
+    const dos = await fuente.productsChangedAfter(uno.ok ? (uno.value[0]?.changeSeq ?? 0) : 0, 5);
+    expect(
+      dos.ok && dos.value.every((p) => uno.ok && p.changeSeq > (uno.value[0]?.changeSeq ?? 0)),
+    ).toBe(true);
   });
 });

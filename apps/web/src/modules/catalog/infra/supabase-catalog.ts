@@ -5,6 +5,8 @@ import {
   money,
   ok,
   type CatalogError,
+  type CatalogReplicaSource,
+  type ReplicatedProduct,
   type Category,
   type PriceChange,
   type CategoryReader,
@@ -40,6 +42,11 @@ interface FilaParaVender {
   readonly is_tax_exempt: boolean;
   readonly rule_id: string;
   readonly rule_params: unknown;
+}
+
+interface FilaReplicada extends FilaParaVender {
+  readonly is_active: boolean;
+  readonly change_seq: number;
 }
 
 interface FilaDeProducto extends FilaParaVender {
@@ -270,5 +277,33 @@ export function supabaseCatalog(cliente: SupabaseClient): SupabaseCatalog {
       }
       return datos === null ? err({ code: 'NOT_FOUND' }) : aParaVender(datos as FilaParaVender);
     },
+  };
+}
+
+function aReplicado(fila: FilaReplicada): Result<ReplicatedProduct, CatalogError> {
+  const basico = aParaVender(fila);
+  return basico.ok
+    ? ok({ ...basico.value, isActive: fila.is_active, changeSeq: fila.change_seq })
+    : basico;
+}
+
+/** Fuente de la réplica del catálogo: la vista `catalog_products_for_device` (productos activos o no,
+ *  con su número de cambio) y las categorías. Solo la leen administradores y tablets activas. */
+export function supabaseCatalogReplica(cliente: SupabaseClient): CatalogReplicaSource {
+  return {
+    async productsChangedAfter(seq, limit) {
+      const respuesta = await cliente
+        .from('catalog_products_for_device')
+        .select('*')
+        .gt('change_seq', seq)
+        .order('change_seq')
+        .limit(limit);
+      const datos: unknown = respuesta.data;
+      if (respuesta.error !== null) {
+        return err(aError(respuesta.error));
+      }
+      return aLista(datos as FilaReplicada[], aReplicado);
+    },
+    categories: () => supabaseCatalog(cliente).listCategories(),
   };
 }

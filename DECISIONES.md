@@ -25,5 +25,6 @@
 | [0017](docs/decisiones/0017-reconciliacion-con-el-documento-completo.md) | Reconciliación con el documento de construcción completo: qué decisión manda | Aceptada (calendario abierto: PD-34) | 2026-10-27 |
 | [0018](docs/decisiones/0018-impresion-de-tickets-en-tres-capas.md) | Impresión de tickets en tres capas (Web Bluetooth, impresión de Android, compartir) | Aceptada como estrategia | 2026-10-27 |
 | [0019](docs/decisiones/0019-calendario-plan-actual-con-recortes.md) | Calendario: se mantiene el plan actual de sprints, con recortes desde ahora | Aceptada | 2026-10-27 |
+| [0022](docs/decisiones/0022-catalogo-en-la-tablet-indexeddb.md) | Catálogo en la tablet: IndexedDB con Dexie y cambios por número | Aceptada (propuesta) | 2026-10-30 |
 
 Plantilla para una nueva decisión: [`docs/decisiones/0000-plantilla.md`](docs/decisiones/0000-plantilla.md).
