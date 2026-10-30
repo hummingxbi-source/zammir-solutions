@@ -27,3 +27,7 @@ supabase/.branches/
 .DS_Store
 Thumbs.db
 *.log
+.stryker-tmp/
+reports/
+test-results/
+playwright-report/
