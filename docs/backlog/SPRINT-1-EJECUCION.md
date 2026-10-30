@@ -27,6 +27,7 @@
 | S1-06 | #38 | `feat/s1-06-editar-catalogo` | Editar/desactivar, historial de precios, bitácora |
 | S1-07 | #39 | `feat/s1-07-busqueda` | Búsqueda tolerante |
 | (valores) | #32 | `feat/valores-iniciales` | PD-21 = 30 min, PD-48 = 15 min (propuestos), modelos de impresora y tablet |
+| S1-14 | #41 | `feat/s1-14-usuarios` | Usuarios con PIN: `validatePin`, `PinHasher`, casos de uso, `app_users`, vista `login_users`, `webCryptoPinHasher`, pantalla |
 
 Las ramas están apiladas (#33 → #34 → #37 → #38 → #39). **La siguiente rama de trabajo sale de la última rama apilada que siga abierta** (hoy `feat/s1-07-busqueda`) o de `origin/main` si ya se fusionó todo. Fusionar de abajo hacia arriba; **nunca** `push --force`.
 
@@ -45,15 +46,16 @@ Las ramas están apiladas (#33 → #34 → #37 → #38 → #39). **La siguiente 
 | Dispositivos | `modules/devices/*` | `DeviceRepository`, casos `issueRegistrationCode`/`listDevices`/`revokeDevice`/`redeemRegistrationCode`, `inMemoryDeviceRepository` |
 | Identidad | `modules/identity/*` | `UserRole = 'ADMIN'\|'STAFF'\|'DEVICE'`, `AdminAuth`, `signInAdmin`, `hasIdleExpired`, `inMemoryAdminAuth` |
 | Bitácora | `modules/audit/*` | `AuditEntry`, `AuditAction` (unión: agregar aquí las acciones nuevas), `AuditLog.append`, `recordAuditEntry(deps,{userId,deviceId,action,entityType,entityId,oldValue,newValue})`, `inMemoryAuditLog` |
-| Configuración | `modules/settings/*` | `parseBusinessSettings` (Zod, claves en inglés), `SettingsRepository`, `FeatureFlags`. Claves ya sembradas: `tax_rate_bps`, `deposit_percent_bps`, `quote_validity_days`, `idle_lock_minutes`(5), `admin_idle_logout_minutes`(30), `device_code_validity_minutes`(15), `pin_max_failed_attempts`(null), `pin_lock_seconds`(null)… |
+| Usuarios y PIN | `modules/identity/{domain/pin.ts,domain/user.ts,application/manage-users.ts,application/user-ports.ts,application/in-memory-users.ts}` | `validatePin(pin, role, {adminMinDigits})`, `PinVerifier`, `AppUser`, `PinHasher` (puerto; `fakePinHasher()` para pruebas, `webCryptoPinHasher` real en `apps/web/src/shared/infra/`), `sameTextConstantTime`, casos `createUser/updateUser/resetPin/setUserActive` (`ManageUsersDeps`, `UserPolicy {adminMinDigits, pbkdf2Iterations}`), `UserRepository` (sin borrar), `inMemoryUsers`. Baterías `pinHasherContract` y `userRepositoryContract`. Tipo `Actor` único en `identity/domain/auth.ts` |
+| Configuración | `modules/settings/*` | `parseBusinessSettings` (Zod, claves en inglés), `SettingsRepository`, `FeatureFlags`. Claves ya sembradas: `tax_rate_bps`, `deposit_percent_bps`, `quote_validity_days`, `idle_lock_minutes`(5), `admin_idle_logout_minutes`(30), `device_code_validity_minutes`(15), `admin_pin_min_digits`(6), `pin_pbkdf2_iterations`(600000), `pin_max_failed_attempts`(null), `pin_lock_seconds`(null)… |
 
 `index.ts` exporta lo público; `testing.ts` exporta las **baterías de contrato** y datos de prueba (`@zammir/core/testing`).
 
 ### 2.3 Inventario de la aplicación y la base
 
 - **Web (`apps/web/src`)**: `App.tsx` (rutas; secciones de administrador envueltas en `ProtegidaAdmin`), `main.tsx`, `composition/index.ts` (**único** lugar donde se eligen adaptadores reales), `shell/` (Layout, `secciones.ts` con `soloAdministrador`, `IndicadorDeConexion`), `shared/ui/` (`Boton`, `Campo`/`CampoNumerico`, `Aviso`, `Confirmacion`, `formatos.ts`, `estilos.css`), `shared/i18n/textos.ts` y `vocabulario.ts`, `modules/<x>/infra|ui/`. Ya hay UI de entrada de administradores y de tablets (`modules/devices/ui/Dispositivos.tsx`, dentro de la sección Usuarios).
-- **Supabase**: migraciones en `supabase/migrations/` (base, settings, audit_log, devices, catalog, catalog_edit), pruebas pgTAP en `supabase/tests/NN_*.test.sql`, funciones de servidor en `supabase/functions/` (`registrar-dispositivo`; el núcleo se empaqueta con `pnpm funciones:empaquetar`).
-- **Funciones SQL de ayuda**: `private.is_admin()` y `private.is_device()` (la segunda exige un dispositivo **activo**). Tablas con RLS por rol; `audit_log` y `product_price_history` son inmutables (disparador que lo impide incluso al dueño).
+- **Supabase**: migraciones en `supabase/migrations/` (base, settings, audit_log, devices, valores_iniciales, catalog, catalog_edit, users), pruebas pgTAP en `supabase/tests/NN_*.test.sql`, funciones de servidor en `supabase/functions/` (`registrar-dispositivo`; el núcleo se empaqueta con `pnpm funciones:empaquetar`).
+- **Funciones SQL de ayuda**: `private.is_admin()` y `private.is_device()` (la segunda exige un dispositivo **activo**). Tablas con RLS por rol (vistas `sellable_products` y `login_users` para lo que lee la tablet); `audit_log` y `product_price_history` son inmutables (disparador que lo impide incluso al dueño).
 - **Local de pruebas**: Supabase local en puertos 553xx; `pnpm test:integracion` enciende las funciones si hace falta.
 
 ## 3. Cómo trabajar (entorno y comandos)
@@ -113,7 +115,7 @@ Orden recomendado (por dependencias): **S1-14 → S1-18 → S1-17 → S1-10 → 
 
 | Historia | Estimado | Estado | Bloqueo |
 |---|---|---|---|
-| S1-14 Usuarios y PIN | 4 h | pendiente | — |
+| S1-14 Usuarios y PIN | 4 h | **hecha** (PR #41) | — |
 | S1-18 Matriz de permisos | 8 h | pendiente | PD-17 (configurable) |
 | S1-17 Autorización por PIN | 2 h | pendiente | S1-14 |
 | S1-10 Clientes: ficha | 4 h | pendiente | adaptador IndexedDB espera S1-09 |
@@ -130,7 +132,7 @@ Orden recomendado (por dependencias): **S1-14 → S1-18 → S1-17 → S1-10 → 
 
 ---
 
-### S1-14 · Usuarios: alta, edición, desactivación y PIN (4 h)
+### S1-14 · Usuarios: alta, edición, desactivación y PIN (4 h) — HECHA (PR #41)
 **Criterios:** ver `SPRINT-1.md`. **Requerimientos:** RF-M8-01, RF-M8-04.
 **Diseño:**
 - Dominio `modules/identity/domain/user.ts`: `AppUser { id: UserId, name, role: 'ADMIN'|'STAFF', isActive, pin: PinVerifier | null, authUserId? }`; `PinVerifier { salt, iterations, hash, version }` (base64).
