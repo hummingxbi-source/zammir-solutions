@@ -33,6 +33,7 @@ createRoot(root).render(
           dispositivos={composition.dispositivos}
           clientes={composition.clientes}
           legal={composition.legal}
+          catalogo={composition.catalogo}
           bitacora={
             composition.bitacora === null
               ? null
