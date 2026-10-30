@@ -49,3 +49,4 @@ export * from './modules/legal/application/in-memory-legal';
 export * from './modules/legal/application/legal-use-cases';
 export * from './modules/legal/application/ports';
 export * from './modules/legal/domain/legal-document';
+export * from './modules/audit/application/reader';

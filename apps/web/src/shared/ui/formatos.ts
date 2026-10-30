@@ -56,3 +56,14 @@ export function normalizarTelefono(texto: string): Result<string, ErrorTelefono>
   const telefono = normalizePhone(texto);
   return telefono.ok ? ok(telefono.value) : err('TELEFONO_DEBE_TENER_10_DIGITOS');
 }
+
+/** Fecha y hora en hora de México: `30 oct 2026, 13:45` [RN-17]. */
+export function formatearFechaHora(instante: Date): string {
+  const hora = new Intl.DateTimeFormat('es-MX', {
+    timeZone: ZONA_NEGOCIO,
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).format(instante);
+  return `${formatearFecha(instante)}, ${hora}`;
+}
