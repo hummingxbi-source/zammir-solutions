@@ -43,3 +43,5 @@ export * from './modules/customers/application/in-memory-customers';
 export * from './modules/customers/application/manage-customers';
 export * from './modules/customers/application/ports';
 export * from './modules/customers/domain/customer';
+export * from './modules/customers/application/find-duplicates';
+export * from './modules/customers/domain/search';

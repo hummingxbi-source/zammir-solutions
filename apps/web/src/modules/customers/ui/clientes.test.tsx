@@ -133,6 +133,59 @@ describe('pantalla de clientes', () => {
     });
   });
 
+  it('avisa si el teléfono ya está registrado, escrito en otro formato, y deja guardar de todos modos', async () => {
+    const deps = entorno();
+    mostrar(deps);
+    await entrar();
+    await capturar('Ana López', '5512345678');
+    await screen.findByRole('rowheader', { name: 'Ana López' });
+
+    fireEvent.change(screen.getByLabelText('Nombre'), { target: { value: 'Ana (esposo)' } });
+    fireEvent.change(screen.getByLabelText('WhatsApp o teléfono (10 dígitos)'), {
+      target: { value: '+52 55 1234-5678' },
+    });
+    expect(await screen.findByText(/Ya hay un cliente con este teléfono: Ana López/)).toBeTruthy();
+    expect(screen.getByText(/guarda de todos modos/)).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar cliente' }));
+    expect(await screen.findByRole('rowheader', { name: 'Ana (esposo)' })).toBeTruthy();
+  });
+
+  it('no avisa cuando el teléfono todavía está incompleto o nadie lo tiene', async () => {
+    mostrar(entorno());
+    await entrar();
+    await capturar('Ana López', '5512345678');
+    await screen.findByRole('rowheader', { name: 'Ana López' });
+    fireEvent.change(screen.getByLabelText('WhatsApp o teléfono (10 dígitos)'), {
+      target: { value: '55123' },
+    });
+    fireEvent.change(screen.getByLabelText('WhatsApp o teléfono (10 dígitos)'), {
+      target: { value: '5500000000' },
+    });
+    expect(screen.queryByText(/Ya hay un cliente con este teléfono/)).toBeNull();
+  });
+
+  it('busca por nombre parcial sin acentos y por teléfono, y dice cuando no hay resultados', async () => {
+    mostrar(entorno());
+    await entrar();
+    await capturar('Ana López', '5512345678');
+    await screen.findByRole('rowheader', { name: 'Ana López' });
+    await capturar('Juan Pérez', '5598765432');
+    await screen.findByRole('rowheader', { name: 'Juan Pérez' });
+
+    const buscador = screen.getByLabelText('Buscar cliente por nombre, teléfono o correo');
+    fireEvent.change(buscador, { target: { value: 'perez' } });
+    expect(screen.queryByRole('rowheader', { name: 'Ana López' })).toBeNull();
+    expect(screen.getByRole('rowheader', { name: 'Juan Pérez' })).toBeTruthy();
+
+    fireEvent.change(buscador, { target: { value: '55 1234' } });
+    expect(screen.getByRole('rowheader', { name: 'Ana López' })).toBeTruthy();
+    expect(screen.queryByRole('rowheader', { name: 'Juan Pérez' })).toBeNull();
+
+    fireEvent.change(buscador, { target: { value: 'zzzz' } });
+    expect(screen.getByText('Ningún cliente coincide con la búsqueda.')).toBeTruthy();
+  });
+
   it('una cuenta que no es de administrador no ve la pantalla', async () => {
     mostrar(entorno(), 'STAFF');
     await entrar();

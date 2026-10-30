@@ -81,6 +81,12 @@ export const textos = {
       guardando: 'Guardando…',
       listo: 'Cliente guardado.',
     },
+    buscar: 'Buscar cliente por nombre, teléfono o correo',
+    sinResultados: 'Ningún cliente coincide con la búsqueda.',
+    duplicado: {
+      aviso: 'Ya hay un cliente con este teléfono:',
+      ayuda: 'Puede ser la misma persona. Si no lo es, guarda de todos modos.',
+    },
     columnas: { nombre: 'Nombre', whatsapp: 'WhatsApp', correo: 'Correo' },
     sinCorreo: 'Sin correo',
     anonimizado: 'Datos anonimizados',

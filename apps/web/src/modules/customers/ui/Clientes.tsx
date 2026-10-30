@@ -2,7 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import type { ReactElement, SyntheticEvent } from 'react';
 import {
   createCustomer,
+  findPossibleDuplicates,
   NO_FISCAL_PROFILE,
+  searchCustomers,
   type Customer,
   type CustomerError,
   type ManageCustomersDeps,
@@ -37,6 +39,8 @@ export function Clientes({ deps }: ClientesProps): ReactElement {
   const [razonSocial, setRazonSocial] = useState('');
   const [codigoPostal, setCodigoPostal] = useState('');
   const [guardando, setGuardando] = useState(false);
+  const [busqueda, setBusqueda] = useState('');
+  const [repetidos, setRepetidos] = useState<readonly Customer[]>([]);
 
   const cargar = useCallback(async () => {
     const resultado = await deps.customers.list();
@@ -50,6 +54,21 @@ export function Clientes({ deps }: ClientesProps): ReactElement {
   useEffect(() => {
     void cargar();
   }, [cargar]);
+
+  // Al completar el teléfono (en cualquier formato) se avisa si ya lo tiene otro cliente; no bloquea.
+  useEffect(() => {
+    let vigente = true;
+    void findPossibleDuplicates(deps, telefono).then((r) => {
+      if (vigente) {
+        setRepetidos(r.ok ? r.value : []);
+      }
+    });
+    return () => {
+      vigente = false;
+    };
+  }, [deps, telefono]);
+
+  const visibles = lista === null ? [] : searchCustomers(lista, busqueda);
 
   async function guardar(evento: SyntheticEvent): Promise<void> {
     evento.preventDefault();
@@ -110,6 +129,11 @@ export function Clientes({ deps }: ClientesProps): ReactElement {
             setTelefono(e.target.value);
           }}
         />
+        {repetidos.length > 0 ? (
+          <Aviso tipo="error" queHacer={t.duplicado.ayuda}>
+            {t.duplicado.aviso} {repetidos.map((r) => r.name).join(', ')}
+          </Aviso>
+        ) : null}
         <Campo
           etiqueta={t.alta.correo}
           type="email"
@@ -159,12 +183,26 @@ export function Clientes({ deps }: ClientesProps): ReactElement {
         </Boton>
       </form>
 
+      {lista !== null && lista.length > 0 ? (
+        <Campo
+          etiqueta={t.buscar}
+          type="search"
+          autoComplete="off"
+          value={busqueda}
+          onChange={(e) => {
+            setBusqueda(e.target.value);
+          }}
+        />
+      ) : null}
+
       {lista === null ? (
         error === null ? (
           <p role="status">{t.cargando}</p>
         ) : null
       ) : lista.length === 0 ? (
         <p>{t.sinClientes}</p>
+      ) : visibles.length === 0 ? (
+        <p>{t.sinResultados}</p>
       ) : (
         <table className="tabla">
           <thead>
@@ -175,7 +213,7 @@ export function Clientes({ deps }: ClientesProps): ReactElement {
             </tr>
           </thead>
           <tbody>
-            {lista.map((cliente) => (
+            {visibles.map((cliente) => (
               <tr key={cliente.id}>
                 <th scope="row">
                   {cliente.name}
