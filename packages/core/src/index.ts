@@ -28,3 +28,4 @@ export * from './modules/catalog/application/ports';
 export * from './modules/catalog/domain/initial-categories';
 export * from './modules/catalog/domain/product';
 export * from './modules/catalog/application/update-product';
+export * from './modules/catalog/domain/search';
