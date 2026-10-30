@@ -96,6 +96,43 @@ export const textos = {
       },
     },
   },
+  personas: {
+    titulo: '¿Quién va a usar la tablet?',
+    acceso: 'Entrar con PIN',
+    descripcion: 'Toca tu nombre y escribe tu PIN.',
+    cargando: 'Cargando personas…',
+    sinPersonas: 'Todavía no hay personas dadas de alta para esta tablet.',
+    pin: 'PIN',
+    teclado: 'Teclado numérico',
+    borrar: 'Borrar',
+    entrar: 'Entrar',
+    verificando: 'Revisando…',
+    cambiarDePersona: 'Elegir otra persona',
+    activa: 'Está usando la tablet:',
+    cambiarDeUsuario: 'Cambiar de usuario',
+    bloqueadaPorInactividad: 'La tablet se bloqueó por no usarse. Elige tu nombre para seguir.',
+    errores: {
+      DEVICE_NOT_READY: {
+        mensaje: 'Esta tablet no está conectada o ya no tiene permiso.',
+        queHacer: 'Pide a un administrador un código de registro y conéctala.',
+      },
+      NO_USERS_YET: {
+        mensaje: 'Esta tablet todavía no tiene la lista de personas.',
+        queHacer: 'Conéctala a internet una vez para que la reciba.',
+      },
+      AUTH_FAILED: {
+        mensaje: 'El PIN no es correcto.',
+        queHacer:
+          'Revisa el PIN e intenta de nuevo. Si lo olvidaste, pide a un administrador que lo restablezca.',
+      },
+      LOCKED: {
+        mensaje: 'Demasiados intentos con el PIN.',
+        queHacer: 'Espera antes de volver a intentar.',
+      },
+    },
+    esperaSegundos: (segundos: number): string =>
+      `Intenta de nuevo en ${String(segundos)} segundos.`,
+  },
   importar: {
     titulo: 'Importar el catálogo',
     descripcion:

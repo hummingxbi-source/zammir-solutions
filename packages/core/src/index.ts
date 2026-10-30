@@ -58,3 +58,6 @@ export * from './modules/audit/application/reader';
 export * from './modules/devices/application/register-tablet';
 export * from './modules/catalog/application/replica';
 export * from './modules/catalog/application/in-memory-catalog-local-store';
+export * from './modules/identity/application/sign-in-with-pin';
+export * from './modules/identity/application/in-memory-login-store';
+export * from './modules/identity/application/active-user-session';
