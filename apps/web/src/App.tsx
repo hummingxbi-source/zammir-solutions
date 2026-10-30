@@ -3,6 +3,7 @@ import { Route, Routes } from 'react-router';
 import type {
   ActiveUserSession,
   DeviceRepository,
+  ImportCatalogDeps,
   LegalDeps,
   ManageCustomersDeps,
   RegisterTabletDeps,
@@ -10,6 +11,7 @@ import type {
 } from '@zammir/core';
 
 import { Bitacora, type BitacoraProps } from './modules/audit/ui/Bitacora';
+import { ImportarCatalogo } from './modules/catalog/ui/ImportarCatalogo';
 import { Clientes } from './modules/customers/ui/Clientes';
 import { AvisoDePrivacidad } from './modules/legal/ui/AvisoDePrivacidad';
 import { EntrarConPin } from './modules/identity/ui/EntrarConPin';
@@ -42,6 +44,8 @@ export interface AppProps {
     readonly deps: SignInWithPinDeps;
     readonly session: ActiveUserSession;
   } | null;
+  /** Importación del catálogo desde archivo; aparece en Catálogo (solo administradores). */
+  readonly catalogo?: ImportCatalogDeps | null;
   /** Vigencia sugerida del código de registro; sin ella la persona escribe los minutos. */
   readonly cargarVigenciaDeCodigo?: (() => Promise<number | null>) | undefined;
 }
@@ -57,6 +61,7 @@ export function App({
   bitacora = null,
   conectarTablet = null,
   entradaConPin = null,
+  catalogo = null,
   cargarVigenciaDeCodigo,
 }: AppProps): ReactElement {
   const secciones = [
@@ -115,6 +120,13 @@ export function App({
                   ) : (
                     <SeccionVacia titulo={seccion.texto} />
                   )}
+                </ProtegidaAdmin>
+              ) : seccion.id === 'catalogo' && catalogo !== null ? (
+                <ProtegidaAdmin>
+                  <section>
+                    <h1>{seccion.texto}</h1>
+                    <ImportarCatalogo deps={catalogo} />
+                  </section>
                 </ProtegidaAdmin>
               ) : seccion.id === 'clientes' && clientes !== null ? (
                 <ProtegidaAdmin>

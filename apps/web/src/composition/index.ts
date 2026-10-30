@@ -1,20 +1,24 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { createActiveUserSession, refreshLogin } from '@zammir/core';
-import type {
-  ActiveUserSession,
-  SignInWithPinDeps,
-  AdminAuth,
-  AuditReader,
-  CatalogLocalStore,
-  Clock,
-  DeviceRepository,
-  IdGenerator,
-  LegalDeps,
-  ManageCustomersDeps,
-  ManageUsersDeps,
-  RegisterTabletDeps,
-  UserPolicy,
-  DeviceCredentials,
+import {
+  createActiveUserSession,
+  createPriceRegistry,
+  defaultRules,
+  refreshLogin,
+  type ActiveUserSession,
+  type AdminAuth,
+  type AuditReader,
+  type CatalogLocalStore,
+  type Clock,
+  type DeviceCredentials,
+  type DeviceRepository,
+  type IdGenerator,
+  type ImportCatalogDeps,
+  type LegalDeps,
+  type ManageCustomersDeps,
+  type ManageUsersDeps,
+  type RegisterTabletDeps,
+  type SignInWithPinDeps,
+  type UserPolicy,
 } from '@zammir/core';
 
 import {
@@ -31,6 +35,7 @@ import {
   supabaseAdminAuth,
 } from '../modules/identity/infra/supabase-admin-auth';
 import { supabaseAuditReader } from '../modules/audit/infra/supabase-audit-reader';
+import { supabaseCatalog } from '../modules/catalog/infra/supabase-catalog';
 import { supabaseCustomers } from '../modules/customers/infra/supabase-customers';
 import { supabaseLegal } from '../modules/legal/infra/supabase-legal';
 import { dexieIdentity } from '../modules/identity/infra/dexie-identity-store';
@@ -50,6 +55,8 @@ export interface Composition {
   readonly adminAuth: AdminAuth;
   /** `null` si no hay servidor configurado. */
   readonly dispositivos: DeviceRepository | null;
+  /** Importación del catálogo; `null` si no hay servidor configurado. */
+  readonly catalogo: ImportCatalogDeps | null;
   /** Lector de la bitácora; `null` si no hay servidor configurado. */
   readonly bitacora: AuditReader | null;
   /** Nombres de las personas, para mostrarlos en la bitácora en lugar de su identificador. */
@@ -85,6 +92,9 @@ export interface EntornoSupabase {
   readonly url?: string | undefined;
   readonly anonKey?: string | undefined;
 }
+
+const registroDeReglas = createPriceRegistry(defaultRules);
+const reglas = registroDeReglas.ok ? registroDeReglas.value : null;
 
 type CredencialesDeLaTablet = ReturnType<typeof localCredentialsStore>;
 
@@ -202,6 +212,15 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
     idGenerator: uuidIdGenerator,
     adminAuth: cliente === null ? adminAuthNoConfigurada : supabaseAdminAuth(cliente),
     dispositivos: cliente === null ? null : supabaseDeviceRepository(cliente),
+    catalogo:
+      cliente === null || reglas === null
+        ? null
+        : {
+            products: supabaseCatalog(cliente),
+            categories: supabaseCatalog(cliente),
+            idGenerator: uuidIdGenerator,
+            priceRules: reglas,
+          },
     bitacora: cliente === null ? null : supabaseAuditReader(cliente),
     cargarNombres: async () => {
       if (cliente === null) {

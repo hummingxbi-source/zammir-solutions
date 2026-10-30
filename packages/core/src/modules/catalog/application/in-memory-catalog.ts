@@ -86,6 +86,26 @@ export function inMemoryCatalog(deps: InMemoryCatalogDeps): InMemoryCatalog {
       return Promise.resolve(ok(producto));
     },
 
+    createMany(lote) {
+      const codigos = new Set<string>();
+      for (const producto of lote) {
+        if (!categorias.some((cat) => cat.id === producto.categoryId)) {
+          return Promise.resolve(err({ code: 'CATEGORY_NOT_FOUND' }));
+        }
+        const clave = producto.code?.toLowerCase();
+        if (codigoOcupado(producto) || (clave !== undefined && codigos.has(clave))) {
+          return Promise.resolve(err({ code: 'CODE_TAKEN' }));
+        }
+        if (clave !== undefined) {
+          codigos.add(clave);
+        }
+      }
+      for (const producto of lote) {
+        productos.set(producto.id, producto);
+      }
+      return Promise.resolve(ok([...lote]));
+    },
+
     async update(producto) {
       const anterior = productos.get(producto.id);
       if (anterior === undefined) {

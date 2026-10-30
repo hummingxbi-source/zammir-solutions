@@ -209,6 +209,19 @@ export function supabaseCatalog(cliente: SupabaseClient): SupabaseCatalog {
       return aProducto(datos as FilaDeProducto);
     },
 
+    async createMany(lote) {
+      if (lote.length === 0) {
+        return ok([]);
+      }
+      // Una sola instrucción: la base guarda todos los productos o ninguno.
+      const respuesta = await cliente.from('products').insert(lote.map(aFila)).select();
+      const datos: unknown = respuesta.data;
+      if (respuesta.error !== null) {
+        return err(aError(respuesta.error));
+      }
+      return aLista(datos as FilaDeProducto[], aProducto);
+    },
+
     async update(producto) {
       const { id, ...cambios } = aFila(producto);
       const respuesta = await cliente

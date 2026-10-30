@@ -43,6 +43,7 @@ createRoot(root).render(
           legal={composition.legal}
           conectarTablet={composition.conectarTablet}
           entradaConPin={composition.entradaConPin}
+          catalogo={composition.catalogo}
           bitacora={
             composition.bitacora === null
               ? null

@@ -194,6 +194,74 @@ export function catalogContract(
       }
     });
 
+    describe('alta en lote', () => {
+      it('guarda todos los productos del lote', async () => {
+        const h = await crear();
+        const categoria = await primeraCategoria(h);
+        const lote = [1, 2, 3].map((n) =>
+          productoDePrueba(h.nuevoIdDeProducto(), categoria, {
+            name: `Lote ${String(n)}`,
+            code: h.codigoNuevo(),
+          }),
+        );
+        const r = await h.admin.createMany(lote);
+        expect(r.ok && r.value.map((p) => p.id)).toEqual(lote.map((p) => p.id));
+        for (const producto of lote) {
+          const leido = await h.admin.get(producto.id);
+          expect(leido.ok && leido.value).toEqual(producto);
+        }
+      });
+
+      it('un lote vacío no hace nada y no falla', async () => {
+        const h = await crear();
+        const r = await h.admin.createMany([]);
+        expect(r.ok && r.value).toEqual([]);
+      });
+
+      it('todo o nada: un código repetido dentro del lote no deja guardar ninguno', async () => {
+        const h = await crear();
+        const categoria = await primeraCategoria(h);
+        const repetido = h.codigoNuevo();
+        const lote = [
+          productoDePrueba(h.nuevoIdDeProducto(), categoria, { code: h.codigoNuevo() }),
+          productoDePrueba(h.nuevoIdDeProducto(), categoria, { code: repetido }),
+          productoDePrueba(h.nuevoIdDeProducto(), categoria, { code: repetido.toUpperCase() }),
+        ];
+        const r = await h.admin.createMany(lote);
+        expect(!r.ok && r.error.code).toBe('CODE_TAKEN');
+        for (const producto of lote) {
+          const leido = await h.admin.get(producto.id);
+          expect(!leido.ok && leido.error.code).toBe('NOT_FOUND');
+        }
+      });
+
+      it('todo o nada: un código que ya existe en el catálogo no deja guardar ninguno', async () => {
+        const h = await crear();
+        const categoria = await primeraCategoria(h);
+        const existente = productoDePrueba(h.nuevoIdDeProducto(), categoria, {
+          code: h.codigoNuevo(),
+        });
+        await h.admin.create(existente);
+        const nuevo = productoDePrueba(h.nuevoIdDeProducto(), categoria, { code: h.codigoNuevo() });
+        const choque = productoDePrueba(h.nuevoIdDeProducto(), categoria, { code: existente.code });
+        const r = await h.admin.createMany([nuevo, choque]);
+        expect(!r.ok && r.error.code).toBe('CODE_TAKEN');
+        const leido = await h.admin.get(nuevo.id);
+        expect(!leido.ok && leido.error.code).toBe('NOT_FOUND');
+      });
+
+      it('todo o nada: una categoría que no existe no deja guardar ninguno', async () => {
+        const h = await crear();
+        const categoria = await primeraCategoria(h);
+        const bueno = productoDePrueba(h.nuevoIdDeProducto(), categoria);
+        const malo = productoDePrueba(h.nuevoIdDeProducto(), h.idDeCategoriaInexistente);
+        const r = await h.admin.createMany([bueno, malo]);
+        expect(!r.ok && r.error.code).toBe('CATEGORY_NOT_FOUND');
+        const leido = await h.admin.get(bueno.id);
+        expect(!leido.ok && leido.error.code).toBe('NOT_FOUND');
+      });
+    });
+
     describe('edición y desactivación', () => {
       async function conProducto(h: CatalogDelContrato, cambios: Partial<Product> = {}) {
         const producto = productoDePrueba(
