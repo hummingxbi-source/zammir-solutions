@@ -90,6 +90,10 @@ catalogContract('Supabase', async () => {
         productosCreados.push(producto.id);
         return catalogo.create(producto);
       },
+      createMany: (lote) => {
+        productosCreados.push(...lote.map((p) => p.id));
+        return catalogo.createMany(lote);
+      },
       update: (producto) => catalogo.update(producto),
       priceHistory: (id) => catalogo.priceHistory(id),
       get: (id) => catalogo.get(id),
