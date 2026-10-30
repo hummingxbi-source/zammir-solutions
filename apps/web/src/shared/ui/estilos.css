@@ -175,3 +175,103 @@ h3 {
     transition: none !important;
   }
 }
+
+/* Marco y navegación [S0-12] */
+.solo-lectores {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.marco__encabezado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.5rem;
+  padding: 0.5rem var(--espacio);
+  border-bottom: 1px solid var(--color-borde);
+  background: var(--color-superficie);
+}
+
+.marco__logo {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tactil-minimo);
+  font-family: var(--fuente-titulo);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-acento);
+  text-decoration: none;
+}
+
+.marco__contenido {
+  padding: var(--espacio);
+}
+
+.nav,
+.nav-mas__lista,
+.accesos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nav__enlace,
+.acceso {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: var(--tactil-minimo);
+  padding: 0.5rem 0.75rem;
+  border: 1px solid transparent;
+  border-radius: var(--radio);
+  color: var(--color-acento);
+  font-size: var(--texto-base);
+  text-decoration: none;
+}
+
+.acceso {
+  border-color: var(--color-borde);
+  background: var(--color-superficie);
+}
+
+.nav__enlace[aria-current='page'] {
+  border-color: var(--color-acento);
+  background: var(--color-fondo);
+  font-weight: 700;
+}
+
+.nav__enlace:focus-visible,
+.acceso:focus-visible,
+.marco__logo:focus-visible,
+.nav-mas__resumen:focus-visible {
+  outline: 3px solid var(--color-acento);
+  outline-offset: 2px;
+}
+
+.nav__numero {
+  font-family: var(--fuente-etiqueta);
+  font-size: var(--texto-base);
+  color: var(--color-texto-suave);
+}
+
+.nav__visitada {
+  color: var(--color-exito);
+}
+
+.nav-mas__resumen {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tactil-minimo);
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+  color: var(--color-acento);
+  cursor: pointer;
+}
