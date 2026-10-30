@@ -69,14 +69,18 @@ export function Usuarios({ deps, cargarPolitica }: UsuariosProps): ReactElement 
 
   async function darDeAlta(evento: SyntheticEvent): Promise<void> {
     evento.preventDefault();
-    if (politica === null) {
-      setError({ code: 'USERS_UNAVAILABLE' });
-      return;
-    }
     setError(null);
     setAviso(null);
     setGuardando(true);
-    const resultado = await createUser(deps, politica, actor, { name: nombre, role: rol, pin });
+    // Si la configuración aún no terminó de cargar, se pide en este momento en lugar de fallar.
+    const vigente = politica ?? (await cargarPolitica());
+    if (vigente === null) {
+      setGuardando(false);
+      setError({ code: 'USERS_UNAVAILABLE' });
+      return;
+    }
+    setPolitica(vigente);
+    const resultado = await createUser(deps, vigente, actor, { name: nombre, role: rol, pin });
     setGuardando(false);
     if (resultado.ok) {
       setNombre('');
@@ -102,12 +106,18 @@ export function Usuarios({ deps, cargarPolitica }: UsuariosProps): ReactElement 
 
   async function guardarPin(evento: SyntheticEvent): Promise<void> {
     evento.preventDefault();
-    if (restableciendo === null || politica === null) {
+    if (restableciendo === null) {
       return;
     }
     setError(null);
     setAviso(null);
-    const resultado = await resetPin(deps, politica, actor, restableciendo.id, pinNuevo);
+    const vigente = politica ?? (await cargarPolitica());
+    if (vigente === null) {
+      setError({ code: 'USERS_UNAVAILABLE' });
+      return;
+    }
+    setPolitica(vigente);
+    const resultado = await resetPin(deps, vigente, actor, restableciendo.id, pinNuevo);
     if (resultado.ok) {
       setRestableciendo(null);
       setPinNuevo('');

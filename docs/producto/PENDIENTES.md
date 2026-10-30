@@ -51,6 +51,7 @@
 | PD-45 | Descuentos: ¿hay un máximo y quién puede darlo? | Luis | No | Antes de Sprint 2 | Cualquier descuento exige PIN de administrador [RF-M2-03] |
 | PD-46 | ¿Se entregan trabajos por partes? (estatus por orden o por línea) | Luis | No, pero cambia el modelo | **Antes de Sprint 3** | Estatus por orden |
 | PD-47 | ¿Se quiere control de existencias de hojas o material, o solo de piezas estándar (P2)? | Luis | No | Antes de pruebas con el cliente | Fuera de alcance; P2 apagado. Relacionado con PD-14 (piezas estándar) |
+| PD-49 | Categorías del catálogo: validar con Luis la propuesta de `docs/producto/CATEGORIAS_CATALOGO.md` (laminado, plásticos, canceles y mamparas, herrajes juntos o separados, cargos de canto y perforación) | Luis | No | Antes de S1-05 con datos reales | Las 11 categorías de RF-M1-02 más las propuestas, editables desde el catálogo |
 
 ## Resueltos
 
