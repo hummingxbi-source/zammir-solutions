@@ -27,6 +27,7 @@
 | S1-06 | #38 | `feat/s1-06-editar-catalogo` | Editar/desactivar, historial de precios, bitácora |
 | S1-07 | #39 | `feat/s1-07-busqueda` | Búsqueda tolerante |
 | (valores) | #32 | `feat/valores-iniciales` | PD-21 = 30 min, PD-48 = 15 min (propuestos), modelos de impresora y tablet |
+| S1-17 | #43 | `feat/s1-17-autorizacion` | `authorizeWithAdminPin(deps,{adminId,pin})` → `Authorization`; `PinAttemptGuard` (`inMemoryPinAttemptGuard(clock, politica\|null)`) y `lockDurationSeconds`; `AuditEntry.authorizedBy?` (+ columna `audit_log.authorized_by`); ajustes `pin_max_failed_attempts`=5, `pin_lock_seconds`=30, `pin_lock_max_seconds`=900 |
 | S1-18 | #42 | `feat/s1-18-permisos` | `PermissionPolicy` (`defaultPermissionPolicy.check(role, permission)`), `PERMISSION_MATRIX`, `createPermissionPolicy(overrides)`, `isPermitted`; prueba de paridad con la base en `apps/web/src/modules/identity/paridad-de-permisos.integracion.test.ts` (al agregar una tabla nueva con permiso, **sacar su permiso de la lista "pendiente" y agregar sondas**) |
 | S1-14 | #41 | `feat/s1-14-usuarios` | Usuarios con PIN: `validatePin`, `PinHasher`, casos de uso, `app_users`, vista `login_users`, `webCryptoPinHasher`, pantalla |
 
@@ -118,7 +119,7 @@ Orden recomendado (por dependencias): **S1-14 → S1-18 → S1-17 → S1-10 → 
 |---|---|---|---|
 | S1-14 Usuarios y PIN | 4 h | **hecha** (PR #41) | — |
 | S1-18 Matriz de permisos | 8 h | **hecha** (PR #42) | PD-17 (configurable) |
-| S1-17 Autorización por PIN | 2 h | pendiente | S1-14 |
+| S1-17 Autorización por PIN | 2 h | **hecha** (PR #43) | — |
 | S1-10 Clientes: ficha | 4 h | pendiente | adaptador IndexedDB espera S1-09 |
 | S1-11 Clientes: búsqueda y duplicados | 2 h | pendiente | S1-10 |
 | S1-12 Clientes: anonimización | 2 h | pendiente | S1-10, S1-18 |
@@ -151,7 +152,7 @@ Orden recomendado (por dependencias): **S1-14 → S1-18 → S1-17 → S1-10 → 
 **Pruebas:** una prueba por fila y por rol (`it.each` sobre la matriz copiada de `REQUERIMIENTOS.md` + una prueba que falla si se agrega una fila sin probar). **Paridad con la base:** para cada tabla que exista con datos sensibles (`products`, `product_price_history`, `audit_log`, `devices`, `business_settings`, `app_users`, `customers`, `legal_documents`), una prueba de integración que consulta/escribe con cada rol y verifica que coincide con la política del dominio. Las filas de funciones aún inexistentes (cotizar, ventas, cortes, reportes, facturas) se prueban solo en el dominio y quedan listadas como "pendiente de paridad RLS" para los sprints 2 a 4.
 **Bitácora:** revisar que cada acción sensible de este sprint deje entrada (usuarios, dispositivos, precios, aviso de privacidad, anonimización).
 
-### S1-17 · Autorización de administrador por PIN (2 h)
+### S1-17 · Autorización de administrador por PIN (2 h) — HECHA (PR #43)
 **Diseño:** caso de uso `authorizeWithAdminPin(deps, { pin, deviceId, action })` → busca administradores **activos** cuyo verificador coincida (se elige el administrador en pantalla y luego PIN, no se adivina entre todos) → `Authorization { adminId, at }`; PIN de cajero, de administrador inactivo o incorrecto: error `AUTH_FAILED` sin decir cuál. Cuenta intentos fallidos igual que la entrada (comparte contador). La acción restringida recibe la `Authorization` y la bitácora guarda `authorizedBy` (agregar campo opcional `authorizedBy` a `AuditEntry` y a la columna `audit_log.authorized_by uuid` con migración).
 **Pruebas:** administrador activo correcto; incorrecto; cajero; administrador desactivado; deja `authorizedBy`.
 
@@ -191,7 +192,7 @@ Puerto `AuditReader { list({ desde?, hasta?, action?, userId?, entityType?, limi
 
 ### S1-15 · Entrada con PIN en la tablet registrada (8 h, requiere tablet para lo manual)
 **Diseño:** réplica de `login_users` (S1-14) a IndexedDB junto con el catálogo. Pantalla de usuarios (lista de nombres) → teclado numérico grande → verificación local con `PinHasher.verify` (tiempo constante). Solo si el dispositivo está **registrado y activo** (sesión de dispositivo vigente; si fue revocado, al conectarse se borran verificadores locales). Usuario desactivado → no entra.
-**Intentos fallidos (PD-22) [PROPUESTA mía, ya que PD-22 es de Juanito]:** valores en `business_settings`: `pin_max_failed_attempts` = **5** y `pin_lock_seconds` = **30**; el bloqueo **crece al doble** en cada ciclo (30 s, 60 s, 120 s…) con tope de 15 min, contador por usuario guardado en IndexedDB; se reinicia con un acierto. Agregar la migración que fija esos valores y moverlos de "por definir" a "propuestos".
+**Intentos fallidos (PD-22):** **ya hecho en S1-17**: usar el puerto `PinAttemptGuard` (valores 5 / 30 s / tope 900 s en `business_settings`; desde el intento 5 cada fallo duplica el bloqueo). Aquí solo falta su **adaptador de IndexedDB** (el contador debe sobrevivir a cerrar la aplicación) con la misma batería de contrato que el de memoria (crear `pinAttemptGuardContract`).
 **Iteraciones de PBKDF2:** medir en la tablet real y fijar el valor en configuración (`pin_pbkdf2_iterations`), con meta de ~250 ms por verificación; mientras no se mida, usar el valor recomendado actual de OWASP para PBKDF2-HMAC-SHA256 y dejarlo configurable.
 **Pruebas:** PIN correcto entra; incorrecto no; dispositivo no registrado/revocado no; usuario desactivado no; bloqueo creciente con reloj fijo; lo guardado en la tablet no contiene el PIN. *(Manual)* entrar sin internet en la tablet.
 
