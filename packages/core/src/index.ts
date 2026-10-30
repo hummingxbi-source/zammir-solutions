@@ -34,3 +34,4 @@ export * from './modules/identity/application/manage-users';
 export * from './modules/identity/application/user-ports';
 export * from './modules/identity/domain/pin';
 export * from './modules/identity/domain/user';
+export * from './modules/identity/domain/permissions';
