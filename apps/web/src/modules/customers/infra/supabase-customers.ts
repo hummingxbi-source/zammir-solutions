@@ -28,10 +28,17 @@ interface FilaDeCliente {
   readonly fiscal_cfdi_use?: string | null;
 }
 
-function aError(error: { readonly code?: string }): CustomerError {
-  return error.code === SIN_PERMISO
-    ? { code: 'NOT_AUTHORIZED' }
-    : { code: 'CUSTOMERS_UNAVAILABLE' };
+function aError(error: { readonly code?: string; readonly message?: string }): CustomerError {
+  if (error.code === SIN_PERMISO) {
+    return { code: 'NOT_AUTHORIZED' };
+  }
+  if (error.message === 'ANONYMIZED') {
+    return { code: 'ANONYMIZED' };
+  }
+  if (error.message === 'NOT_FOUND') {
+    return { code: 'NOT_FOUND' };
+  }
+  return { code: 'CUSTOMERS_UNAVAILABLE' };
 }
 
 function aCliente(fila: FilaDeCliente): Customer {
@@ -116,6 +123,15 @@ export function supabaseCustomers(
       }
       // Sin renglón: no existe, o la base no dejó verlo ni cambiarlo (RLS).
       return datos === null ? err({ code: 'NOT_FOUND' }) : ok(aCliente(datos as FilaDeCliente));
+    },
+
+    async anonymize(id) {
+      const respuesta = await cliente.rpc('anonymize_customer', { p_id: id });
+      const datos: unknown = respuesta.data;
+      if (respuesta.error !== null) {
+        return err(aError(respuesta.error));
+      }
+      return ok(aCliente(datos as FilaDeCliente));
     },
 
     async get(id) {

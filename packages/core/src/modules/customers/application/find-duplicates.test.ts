@@ -2,12 +2,14 @@ import { describe, expect, it } from 'vitest';
 
 import { asId } from '../../../shared-kernel/id';
 import { err } from '../../../shared-kernel/result';
-import { clienteDePrueba } from '../contracts/customer-repository.contract';
+import {
+  clienteDePrueba,
+  clientesEnMemoriaDePrueba,
+} from '../contracts/customer-repository.contract';
 import { findPossibleDuplicates } from './find-duplicates';
-import { inMemoryCustomers } from './in-memory-customers';
 
 async function conAna() {
-  const customers = inMemoryCustomers();
+  const { customers } = clientesEnMemoriaDePrueba();
   const ana = clienteDePrueba(asId<'Customer'>('c-ana'), '5512345678', { name: 'Ana' });
   await customers.create(ana);
   return { customers, ana };

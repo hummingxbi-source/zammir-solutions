@@ -94,12 +94,28 @@ customerRepositoryContract('Supabase', async () => {
         return repo.create(c);
       },
       update: (c) => repo.update(c),
+      anonymize: (id) => repo.anonymize(id),
       get: (id) => repo.get(id),
       list: () => repo.list(),
       findByPhone: (t) => repo.findByPhone(t),
     },
     nuevoId: () => asId<'Customer'>(crypto.randomUUID()),
     telefonoNuevo,
+    bitacoraDe: async (id) => {
+      const { data, error } = await servicio
+        .from('audit_log')
+        .select('action, old_value, new_value, recorded_at')
+        .eq('entity_id', id)
+        .order('recorded_at');
+      expect(error).toBeNull();
+      return (data ?? []).map(
+        (fila: { action: string; old_value: unknown; new_value: unknown }) => ({
+          action: fila.action,
+          oldValue: fila.old_value,
+          newValue: fila.new_value,
+        }),
+      );
+    },
   };
 });
 
@@ -165,6 +181,21 @@ describe('clientes con Supabase y sus permisos', () => {
       clienteDePrueba(id, telefonoNuevo(), { fiscal: NO_FISCAL_PROFILE }),
     );
     expect(!alta.ok && alta.error.code).toBe('NOT_AUTHORIZED');
+  });
+
+  it('un cajero sin dispositivo y la tablet no pueden anonimizar', async () => {
+    const comoAdmin = supabaseCustomers(await clienteComo(admin), { conDatosFiscales: true });
+    const id = asId<'Customer'>(crypto.randomUUID());
+    clientesCreados.push(id);
+    const original = clienteDePrueba(id, telefonoNuevo());
+    await comoAdmin.create(original);
+
+    for (const cuenta of [cajero, tablet]) {
+      const r = await supabaseCustomers(await clienteComo(cuenta)).anonymize(id);
+      expect(!r.ok && r.error.code).toBe('NOT_AUTHORIZED');
+    }
+    const sigue = await comoAdmin.get(id);
+    expect(sigue.ok && sigue.value.name).toBe(original.name);
   });
 
   it('nadie puede borrar un cliente, ni un administrador', async () => {

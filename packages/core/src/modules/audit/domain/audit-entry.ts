@@ -15,7 +15,8 @@ export type AuditAction =
   | 'USER_UPDATED'
   | 'USER_ACTIVATED'
   | 'USER_DEACTIVATED'
-  | 'USER_PIN_RESET';
+  | 'USER_PIN_RESET'
+  | 'CUSTOMER_ANONYMIZED';
 
 export type AuditEntryId = Id<'AuditEntry'>;
 

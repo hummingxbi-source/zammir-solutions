@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import { asId, sequentialIdGenerator } from '../../../shared-kernel/id';
-import { clienteDePrueba } from '../contracts/customer-repository.contract';
+import {
+  clienteDePrueba,
+  clientesEnMemoriaDePrueba,
+} from '../contracts/customer-repository.contract';
 import { NO_FISCAL_PROFILE, type CustomerDraft } from '../domain/customer';
-import { inMemoryCustomers } from './in-memory-customers';
 import { createCustomer, updateCustomer } from './manage-customers';
 
 const borrador: CustomerDraft = {
@@ -16,7 +18,7 @@ const borrador: CustomerDraft = {
 };
 
 function entorno() {
-  const customers = inMemoryCustomers();
+  const { customers } = clientesEnMemoriaDePrueba();
   return { customers, idGenerator: sequentialIdGenerator('c') };
 }
 
