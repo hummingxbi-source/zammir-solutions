@@ -1,5 +1,6 @@
 # Hoja de ruta
 
+> **Resumen.** El detalle de cada fase (alcance, diseño, pruebas obligatorias y compuerta de salida) está en [`docs/plan/`](plan/README.md).
 > **Borrador.** Se afina en la Fase 3, al armar el backlog. Fechas en hora de México.
 > Metodología: Scrum en solitario, por fases y sprints de **1 semana**. Al cerrar cada sprint, el sistema queda desplegado en pruebas y funcionando, nunca a medias [DC §0 regla 2].
 

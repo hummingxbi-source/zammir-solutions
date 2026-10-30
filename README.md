@@ -18,7 +18,8 @@ Desarrollado por **HummingX BI**. Repositorio privado y confidencial.
 ├── SECURITY.md            Secretos, datos personales y permisos
 ├── CHANGELOG.md           Cambios por versión
 └── docs/
-    ├── ROADMAP.md         Fases y sprints
+    ├── ROADMAP.md         Fases y sprints (resumen)
+    ├── plan/              Plan de construcción: principios, pruebas y una guía por fase
     ├── contexto/          Documentos fuente originales (no se editan)
     ├── producto/          Alcance, reglas de negocio, requerimientos, glosario, pendientes
     ├── decisiones/        Un archivo por decisión (ADR)
