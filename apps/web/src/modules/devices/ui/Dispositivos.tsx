@@ -23,10 +23,15 @@ const t = textos.dispositivos;
 
 export interface DispositivosProps {
   readonly dispositivos: DeviceRepository;
+  /** Minutos que se sugieren al generar un código (PD-48); se pueden cambiar. */
+  readonly cargarVigenciaDeCodigo?: (() => Promise<number | null>) | undefined;
 }
 
 /** Tablets registradas: ver, generar el código de registro de una nueva y revocar [RF-M8-02]. */
-export function Dispositivos({ dispositivos }: DispositivosProps): ReactElement {
+export function Dispositivos({
+  dispositivos,
+  cargarVigenciaDeCodigo,
+}: DispositivosProps): ReactElement {
   const { usuario } = useSesionAdmin();
   const actor = { role: usuario?.role ?? null };
 
@@ -46,6 +51,18 @@ export function Dispositivos({ dispositivos }: DispositivosProps): ReactElement 
       setError(resultado.error);
     }
   }, [dispositivos, rol]);
+
+  useEffect(() => {
+    if (cargarVigenciaDeCodigo === undefined) {
+      return;
+    }
+    void cargarVigenciaDeCodigo().then((sugerida) => {
+      // Solo rellena si la persona todavía no escribió nada.
+      if (sugerida !== null) {
+        setMinutos((actual) => (actual === '' ? String(sugerida) : actual));
+      }
+    });
+  }, [cargarVigenciaDeCodigo]);
 
   useEffect(() => {
     // Carga inicial de la lista; el estado se llena cuando responde el servidor.
