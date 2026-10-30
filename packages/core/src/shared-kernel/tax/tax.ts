@@ -90,6 +90,45 @@ export function areaLineTotal(
   return aMoney(dividirMitadArriba(numerador, 1_000_000n));
 }
 
+/** Importe por área ya conocida: `precio_m² × área_mm² × cantidad / 1 000 000`, mitad hacia arriba.
+ *  Sirve cuando el área no es ancho × alto (área mínima cobrable, medidas redondeadas). */
+export function areaAmount(
+  precioPorM2: Money,
+  areaMm2: number,
+  cantidad: number,
+): Result<Money, TaxError> {
+  if (
+    !Number.isSafeInteger(areaMm2) ||
+    areaMm2 <= 0 ||
+    !Number.isInteger(cantidad) ||
+    cantidad <= 0 ||
+    precioPorM2 < 0
+  ) {
+    return err({ code: 'INVALID_INPUT' });
+  }
+  const numerador = BigInt(precioPorM2) * BigInt(areaMm2) * BigInt(cantidad);
+  return aMoney(dividirMitadArriba(numerador, 1_000_000n));
+}
+
+/** Importe por metro lineal: `precio_m × largo_mm × cantidad / 1 000`, mitad hacia arriba. */
+export function linearAmount(
+  precioPorMetro: Money,
+  largoMm: number,
+  cantidad: number,
+): Result<Money, TaxError> {
+  if (
+    !Number.isSafeInteger(largoMm) ||
+    largoMm <= 0 ||
+    !Number.isInteger(cantidad) ||
+    cantidad <= 0 ||
+    precioPorMetro < 0
+  ) {
+    return err({ code: 'INVALID_INPUT' });
+  }
+  const numerador = BigInt(precioPorMetro) * BigInt(largoMm) * BigInt(cantidad);
+  return aMoney(dividirMitadArriba(numerador, 1_000n));
+}
+
 /** Desglosa el total de una línea (precio con IVA incluido) en base e IVA [RN-06]:
  *  `base = redondear(total × 10 000 / (10 000 + tasa))` e `iva = total − base`. */
 export function splitTax(

@@ -2,7 +2,14 @@ import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 
 import { money, multiply, type Money } from '../money/money';
-import { areaLineTotal, computeDeposit, splitDocumentTax, splitTax } from './tax';
+import {
+  areaAmount,
+  areaLineTotal,
+  computeDeposit,
+  linearAmount,
+  splitDocumentTax,
+  splitTax,
+} from './tax';
 
 const TASA = 1600; // 16 %, como la deja la migración de configuración
 const ANTICIPO = 5000; // 50 %
@@ -355,5 +362,65 @@ describe('propiedades', () => {
         },
       ),
     );
+  });
+});
+
+describe('areaAmount e linearAmount', () => {
+  it('importe por área ya conocida, con la mitad hacia arriba', () => {
+    const r = areaAmount(m(10_001), 500_000, 1);
+    expect(r.ok && r.value).toBe(5001);
+    const dos = areaAmount(m(10_000), 250_000, 2);
+    expect(dos.ok && dos.value).toBe(5000);
+  });
+
+  it('importe por metro lineal, con la mitad hacia arriba', () => {
+    const r = linearAmount(m(1), 500, 1);
+    expect(r.ok && r.value).toBe(1);
+    const abajo = linearAmount(m(1), 499, 1);
+    expect(abajo.ok && abajo.value).toBe(0);
+    const piezas = linearAmount(m(9000), 2500, 2);
+    expect(piezas.ok && piezas.value).toBe(45_000);
+  });
+
+  it.each([
+    ['área en cero', 0, 1, 100],
+    ['área negativa', -5, 1, 100],
+    ['área con fracción', 10.5, 1, 100],
+    ['área fuera de rango seguro', 2 ** 60, 1, 100],
+    ['cantidad cero', 1000, 0, 100],
+    ['cantidad negativa', 1000, -1, 100],
+    ['cantidad con fracción', 1000, 1.5, 100],
+    ['precio negativo', 1000, 1, -1],
+  ])('areaAmount rechaza %s', (_caso, area, cantidad, precio) => {
+    const r = areaAmount(m(precio), area, cantidad);
+    expect(!r.ok && r.error.code).toBe('INVALID_INPUT');
+  });
+
+  it.each([
+    ['largo en cero', 0, 1, 100],
+    ['largo negativo', -5, 1, 100],
+    ['largo con fracción', 10.5, 1, 100],
+    ['largo fuera de rango seguro', 2 ** 60, 1, 100],
+    ['cantidad cero', 1000, 0, 100],
+    ['cantidad negativa', 1000, -1, 100],
+    ['cantidad con fracción', 1000, 1.5, 100],
+    ['precio negativo', 1000, 1, -1],
+  ])('linearAmount rechaza %s', (_caso, largo, cantidad, precio) => {
+    const r = linearAmount(m(precio), largo, cantidad);
+    expect(!r.ok && r.error.code).toBe('INVALID_INPUT');
+  });
+
+  it('un precio en cero da cero', () => {
+    const l = linearAmount(m(0), 1000, 1);
+    expect(l.ok && l.value).toBe(0);
+    const a = areaAmount(m(0), 1000, 1);
+    expect(a.ok && a.value).toBe(0);
+  });
+
+  it('avisa cuando el importe no cabe en un entero seguro', () => {
+    const a = areaAmount(m(Number.MAX_SAFE_INTEGER), 1_000_000, 2);
+    expect(!a.ok && a.error.code).toBe('OUT_OF_RANGE');
+    const l = linearAmount(m(Number.MAX_SAFE_INTEGER), 1000, 2);
+    expect(!l.ok && l.error.code).toBe('OUT_OF_RANGE');
   });
 });
