@@ -1,10 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 import type { AuditEntry } from '@zammir/core';
-import { auditLogContract, entradaDePrueba } from '@zammir/core/testing';
+import { auditLogContract, auditReaderContract, entradaDePrueba } from '@zammir/core/testing';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { supabaseAdminAuth } from '../../identity/infra/supabase-admin-auth';
 import { supabaseAuditLog } from './supabase-audit-log';
+import { supabaseAuditReader } from './supabase-audit-reader';
 
 // Pruebas contra Supabase local real. Corren con `pnpm test:integracion`.
 const URL = process.env.ZAMMIR_TEST_SUPABASE_URL ?? '';
@@ -89,7 +90,35 @@ auditLogContract(
   uuid,
 );
 
+// El lector (S1-19) con la sesión de un administrador: filtros, orden y paginación.
+auditReaderContract(
+  'Supabase',
+  async () => {
+    const cliente = crearCliente(ANON);
+    await supabaseAdminAuth(cliente).signIn(admin.email, admin.password);
+    return { log: supabaseAuditLog(cliente), reader: supabaseAuditReader(cliente) };
+  },
+  uuid,
+);
+
 describe('bitácora con Supabase y sus permisos', () => {
+  it('un cajero sin dispositivo ve una bitácora vacía', async () => {
+    const admin1 = crearCliente(ANON);
+    await supabaseAdminAuth(admin1).signIn(admin.email, admin.password);
+    const entidad = `visible-${uuid()}`;
+    await supabaseAuditLog(admin1).append(entradaDePrueba(uuid(), { entityType: entidad }));
+
+    const cliente = crearCliente(ANON);
+    await supabaseAdminAuth(cliente).signIn(cajero.email, cajero.password);
+    const r = await supabaseAuditReader(cliente).query({ entityType: entidad });
+    expect(r.ok && r.value.entries).toEqual([]);
+  });
+
+  it('sin sesión no se lee la bitácora', async () => {
+    const r = await supabaseAuditReader(crearCliente(ANON)).query({});
+    expect(r.ok).toBe(false);
+  });
+
   it('una cuenta de cajero sin sesión de dispositivo no puede agregar entradas', async () => {
     const cliente = crearCliente(ANON);
     await supabaseAdminAuth(cliente).signIn(cajero.email, cajero.password);

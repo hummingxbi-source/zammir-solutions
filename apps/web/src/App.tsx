@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import { Route, Routes } from 'react-router';
 import type { DeviceRepository, LegalDeps, ManageCustomersDeps } from '@zammir/core';
 
+import { Bitacora, type BitacoraProps } from './modules/audit/ui/Bitacora';
 import { Clientes } from './modules/customers/ui/Clientes';
 import { AvisoDePrivacidad } from './modules/legal/ui/AvisoDePrivacidad';
 import { Dispositivos } from './modules/devices/ui/Dispositivos';
@@ -22,6 +23,8 @@ export interface AppProps {
   readonly clientes?: ManageCustomersDeps | null;
   /** Aviso de privacidad versionado; aparece en Configuración. */
   readonly legal?: LegalDeps | null;
+  /** Bitácora consultable; aparece en Usuarios. */
+  readonly bitacora?: BitacoraProps | null;
   /** Vigencia sugerida del código de registro; sin ella la persona escribe los minutos. */
   readonly cargarVigenciaDeCodigo?: (() => Promise<number | null>) | undefined;
 }
@@ -34,6 +37,7 @@ export function App({
   usuarios = null,
   clientes = null,
   legal = null,
+  bitacora = null,
   cargarVigenciaDeCodigo,
 }: AppProps): ReactElement {
   const secciones = [
@@ -57,10 +61,12 @@ export function App({
                       <h1>{seccion.texto}</h1>
                       <AvisoDePrivacidad deps={legal} />
                     </section>
-                  ) : seccion.id === 'usuarios' && (dispositivos !== null || usuarios !== null) ? (
+                  ) : seccion.id === 'usuarios' &&
+                    (dispositivos !== null || usuarios !== null || bitacora !== null) ? (
                     <section>
                       <h1>{seccion.texto}</h1>
                       {usuarios !== null ? <Usuarios {...usuarios} /> : null}
+                      {bitacora !== null ? <Bitacora {...bitacora} /> : null}
                       {dispositivos !== null ? (
                         <Dispositivos
                           dispositivos={dispositivos}

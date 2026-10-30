@@ -33,6 +33,11 @@ createRoot(root).render(
           dispositivos={composition.dispositivos}
           clientes={composition.clientes}
           legal={composition.legal}
+          bitacora={
+            composition.bitacora === null
+              ? null
+              : { reader: composition.bitacora, cargarNombres: composition.cargarNombres }
+          }
           usuarios={
             composition.usuarios === null
               ? null

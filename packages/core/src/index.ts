@@ -54,3 +54,4 @@ export * from './modules/catalog/application/import-catalog';
 export * from './modules/catalog/domain/import/analyze';
 export * from './modules/catalog/domain/import/csv';
 export * from './modules/catalog/domain/import/template';
+export * from './modules/audit/application/reader';
