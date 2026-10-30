@@ -24,6 +24,17 @@
 | T5 exento | 10 000 | 10 000 | 0 | 10 000 |
 | T6 mínimo | 1 | 1 | 0 | 1 |
 
+## Metro lineal y servicio (propuestos por el desarrollador, por validar con Luis)
+
+> La tabla original no traía casos de metro lineal ni de servicio. Estos los agregó el desarrollador con datos inventados al construir S1-04; la base del metro lineal (largo capturado o perímetro) sigue pendiente en PD-25. Si Luis define otra cosa, gana lo que él diga.
+
+| # | Caso | Precio (c) | Medidas (mm) | Cant. | Total línea (c) | Detalle |
+|---|---|---|---|---|---|---|
+| L5 | Metro lineal, largo capturado | 9 000 por m | 2 500 | 1 | 22 500 | `2.50 m × $90.00 = $225.00` |
+| L6 | Metro lineal, perímetro | 9 000 por m | 1 000 × 500 | 1 | 27 000 | `2 × (1.00 m + 0.50 m) = 3.00 m × $90.00 = $270.00` |
+| L7 | Mitad exacta de centavo en metro lineal | 1 por m | 500 | 1 | 1 | — |
+| L8 | Servicio, 2 visitas | 35 000 por visita | — | 2 | 70 000 | `2 × $350.00 = $700.00` |
+
 ## Documentos completos (por qué desglosar por línea)
 
 | # | Líneas (c) | Total | Σ bases por línea | IVA por línea | Base si se desglosara por documento | Diferencia |

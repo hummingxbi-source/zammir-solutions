@@ -21,3 +21,4 @@ export * from './modules/devices/domain/device';
 export * from './shared-kernel/money/money';
 export * from './shared-kernel/measure/length';
 export * from './shared-kernel/tax/tax';
+export * from './modules/catalog/domain/pricing';
