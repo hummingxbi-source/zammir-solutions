@@ -55,3 +55,4 @@ export * from './modules/catalog/domain/import/analyze';
 export * from './modules/catalog/domain/import/csv';
 export * from './modules/catalog/domain/import/template';
 export * from './modules/audit/application/reader';
+export * from './modules/devices/application/register-tablet';

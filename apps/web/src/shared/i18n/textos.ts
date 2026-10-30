@@ -60,6 +60,42 @@ export const textos = {
       },
     },
   },
+  conectar: {
+    titulo: 'Conectar esta tablet',
+    descripcion:
+      'Pídele a un administrador el código de registro (lo genera en Usuarios) y escríbelo aquí. Sirve una sola vez.',
+    codigo: 'Código de registro',
+    nombre: 'Nombre de esta tablet (por ejemplo, Mostrador)',
+    boton: 'Conectar',
+    conectando: 'Conectando…',
+    listo: 'Listo: esta tablet quedó conectada como',
+    irAlInicio: 'Ir al inicio',
+    yaConectada: 'Esta tablet ya está conectada como',
+    olvidar: 'Olvidar el registro de esta tablet',
+    olvidada: 'Se olvidó el registro. Pide un código nuevo para conectarla otra vez.',
+    errores: {
+      INVALID_INPUT: {
+        mensaje: 'Faltan datos.',
+        queHacer: 'Escribe el código y un nombre para la tablet.',
+      },
+      CODE_INVALID: {
+        mensaje: 'El código no sirve: no existe, ya se usó o ya venció.',
+        queHacer: 'Pide un código nuevo a un administrador.',
+      },
+      ALREADY_REGISTERED: {
+        mensaje: 'Esta tablet ya está conectada.',
+        queHacer: 'Si necesitas conectarla otra vez, primero olvida el registro.',
+      },
+      NETWORK_UNAVAILABLE: {
+        mensaje: 'No hay conexión con el servidor.',
+        queHacer: 'Conéctate a internet e intenta de nuevo.',
+      },
+      DEVICES_UNAVAILABLE: {
+        mensaje: 'El servidor no pudo conectar la tablet.',
+        queHacer: 'Intenta de nuevo en unos minutos.',
+      },
+    },
+  },
   importar: {
     titulo: 'Importar el catálogo',
     descripcion:
