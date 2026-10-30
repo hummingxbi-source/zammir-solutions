@@ -148,3 +148,4 @@ Construir la base de la que depende todo lo demás: **el dinero que nunca se equ
 
 - PD-02 (reglas reales), PD-03 (catálogo real), PD-17 (permisos de administradores), PD-25 (metro lineal).
 - El manejo del PIN sin conexión sigue lo decidido en `AUTENTICACION.md`; si en pruebas resulta inseguro o incómodo, se detiene y se replantea con Juanito.
+- Detalle de la demo que afecta al catálogo [Juanito, 2026-10-27]: descripción del producto (PP-04), código generado por el sistema (PP-05), gráfica de distribución (PP-06). Ver `docs/producto/DEMO_REFERENCIA.md` §4.

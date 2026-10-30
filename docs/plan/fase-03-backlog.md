@@ -10,7 +10,7 @@ Convertir los requerimientos en historias de usuario listas para construir, orde
 ## Entra si
 
 - Fase 2 aprobada.
-- Calendario decidido (PD-34).
+- Calendario decidido (PD-34): opción A [ADR-0019].
 
 ## Alcance
 
@@ -50,4 +50,4 @@ Convertir los requerimientos en historias de usuario listas para construir, orde
 ## Riesgos y pendientes
 
 - El calendario tiene como mucho un sprint de colchón (ver `docs/ROADMAP.md`). Esta fase es el momento de detectar si no cabe.
-- PD-34: el calendario que elija Juanito define en qué sprint cae cada historia; se decide antes de esta fase.
+- El calendario decidido (opción A, [ADR-0019]) define en qué sprint cae cada historia. P1, P2 y el recorrido guiado no entran al backlog de la entrega salvo que Luis los active.

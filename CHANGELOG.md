@@ -18,8 +18,10 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). L
 - `REQUERIMIENTOS_NO_FUNCIONALES.md` (RNF-01 a RNF-37), `RIESGOS.md` (R1 a R15) y `docs/calidad/PRUEBAS_DE_ACEPTACION.md` (E1 a E10).
 - ADR-0017 (reconciliación con el documento completo) y ADR-0018 (impresión de tickets en tres capas).
 - Pendientes PD-26 a PD-35, incluido el calendario (PD-34).
+- Referencia de la demo (`docs/producto/DEMO_REFERENCIA.md`) y revisión de negocio con reglas propuestas (`docs/producto/REVISION_DE_NEGOCIO.md`), con lo que Juanito contó el 27 de octubre. Preguntas para Luis PD-36 a PD-47 y propuestas PP-01 a PP-19 en `PENDIENTES.md`. Riesgos R16 y R17.
 
 ### Cambiado
+- Calendario decidido (PD-34): se mantiene el plan actual de sprints con recortes desde ahora [ADR-0019]. ADR-0014 actualizada: la impresión de tickets ya no está "sin elegir" [ADR-0018].
 - ADR-0009 (idioma del código) aceptada; PD-18 resuelto.
 - Plan de fases actualizado con el documento completo: prueba de concepto de impresión, M10 en el Sprint 4, entrega en el Sprint 5, feriado del 16 de noviembre y lista de lo que la arquitectura debe absorber (Fase 2).
 - `ALCANCE.md`, `GLOSARIO.md`, `PENDIENTES.md` y `SECURITY.md` al día con el documento completo.

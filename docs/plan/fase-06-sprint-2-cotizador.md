@@ -140,3 +140,4 @@ Resolver el problema número uno del cliente [DC §2]: **una cotización profesi
 
 - Este sprint es el de mayor carga técnica: si el motor de sincronización se atrasa, se recortan funciones de comodidad (duplicar, historial por cliente) antes que tocar folios o totales.
 - PD-02 (reglas reales), PD-06 (garantía, no aplica aún), PD-11 (datos del negocio en el PDF), PD-12 (texto del aviso).
+- Preguntas para Luis que afectan al cotizador: descuentos y su máximo (PD-45), medición a domicilio y flete (PD-42). Seguimiento de cotizaciones: PP-19. Ver `docs/producto/REVISION_DE_NEGOCIO.md` §3.

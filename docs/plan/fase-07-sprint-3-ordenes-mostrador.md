@@ -59,7 +59,7 @@ Seguir cada trabajo desde el anticipo hasta la entrega con su garantía por escr
 - RF-M5-02: historial completo del cliente (cotizaciones, órdenes, ventas, pagos, garantías; facturas en el Sprint 4).
 - RF-M5-03: marca de cliente recurrente con dos o más trabajos entregados.
 
-### 7.5 Existencias — P2, detrás del interruptor (último del sprint)
+### 7.5 Existencias — P2, detrás del interruptor (fuera de la entrega salvo que Luis lo active [ADR-0019])
 - RF-M1-07: existencias de piezas estándar, mínimo configurable, alerta de existencia baja, descuento automático al vender o entregar.
 - Si no cabe en el sprint, Juanito decide moverlo a después de la entrega.
 
@@ -167,3 +167,4 @@ Seguir cada trabajo desde el anticipo hasta la entrega con su garantía por escr
 
 - Es el sprint con más módulos y con un día feriado. Si no cabe, Juanito decide qué se mueve; la propuesta es mover primero P2, después las fotos de medición; nunca el corte, los pagos ni la impresión.
 - PD-06 (garantía), PD-07 (anticipo al cancelar), PD-09 (leyenda del plazo), PD-14 (P2).
+- **Antes de empezar este sprint** se necesitan respuestas de Luis: caja compartida y unidad del corte (PD-36, **bloquea el corte**), medición final (PD-38), inicio de fabricación sin anticipo (PD-39), entregas parciales (PD-46), tiempos de entrega (PD-41), salidas de efectivo (PD-37), transferencias (PD-43). Propuestas relacionadas: PP-08 a PP-12, PP-14 y PP-16. Definición propuesta de los estatus en `docs/producto/REVISION_DE_NEGOCIO.md` §2.
