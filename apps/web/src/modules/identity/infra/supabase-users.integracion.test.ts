@@ -1,9 +1,17 @@
 import { createClient } from '@supabase/supabase-js';
-import { asId } from '@zammir/core';
+import {
+  asId,
+  inMemoryLoginStore,
+  inMemoryPinAttemptGuard,
+  refreshLogin,
+  signInWithPin,
+} from '@zammir/core';
 import { userRepositoryContract, usuarioDePrueba } from '@zammir/core/testing';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
+import { webCryptoPinHasher } from '../../../shared/infra/web-crypto-pin-hasher';
 import { supabaseAdminAuth } from './supabase-admin-auth';
+import { supabaseLoginSource } from './supabase-login-source';
 import { supabaseUsers } from './supabase-users';
 
 // Pruebas contra Supabase local real. Corren con `pnpm test:integracion`.
@@ -167,5 +175,47 @@ describe('usuarios con Supabase y sus permisos', () => {
       .from('devices')
       .update({ status: 'ACTIVE', revoked_at: null })
       .eq('id', tabletId);
+  });
+});
+
+describe('entrada con PIN en la tablet, con Supabase real', () => {
+  it('baja las personas, deja entrar con el PIN correcto y saca a quien se desactivó', async () => {
+    const comoAdmin = supabaseUsers(await clienteComo(admin));
+    const persona = {
+      ...usuarioDePrueba(asId<'User'>(crypto.randomUUID()), `Entrada ${sufijo}`),
+      pin: await webCryptoPinHasher.hash('482915', 1000),
+    };
+    expect((await comoAdmin.create(persona)).ok).toBe(true);
+
+    const store = inMemoryLoginStore();
+    const fuente = supabaseLoginSource(await clienteComo(tablet));
+    const bajada = await refreshLogin({ source: fuente, store });
+    expect(bajada.ok).toBe(true);
+    const copia = await store.load();
+    expect(copia?.users.some((u) => u.id === persona.id)).toBe(true);
+    expect(copia?.lockout).toEqual({ maxAttempts: 5, baseSeconds: 30, capSeconds: 900 });
+    expect(copia?.idleLockMinutes).toBe(5);
+
+    const deps = {
+      store,
+      hasher: webCryptoPinHasher,
+      guard: inMemoryPinAttemptGuard({ now: () => new Date() }, copia?.lockout ?? null),
+      deviceReady: () => Promise.resolve(true),
+    };
+    const bien = await signInWithPin(deps, { userId: persona.id, pin: '482915' });
+    expect(bien.ok && bien.value.name).toBe(persona.name);
+    const mal = await signInWithPin(deps, { userId: persona.id, pin: '482916' });
+    expect(!mal.ok && mal.error.code).toBe('AUTH_FAILED');
+
+    expect((await comoAdmin.update({ ...persona, isActive: false })).ok).toBe(true);
+    await refreshLogin({ source: fuente, store });
+    const fuera = await signInWithPin(deps, { userId: persona.id, pin: '482915' });
+    expect(!fuera.ok && fuera.error.code).toBe('AUTH_FAILED');
+  });
+
+  it('un cajero sin tablet no baja las personas', async () => {
+    const r = await supabaseLoginSource(await clienteComo(cajero)).load();
+    // Sin tablet activa la base no entrega ni las personas ni los ajustes: no hay nada que guardar.
+    expect(r.ok).toBe(false);
   });
 });

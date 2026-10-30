@@ -17,13 +17,12 @@ const composition = createComposition({
 });
 
 // Pone al día el catálogo guardado en la tablet al abrir y cada vez que vuelve la conexión.
-if (composition.catalogoLocal !== null) {
-  const actualizar = composition.catalogoLocal.actualizar;
-  void actualizar();
-  window.addEventListener('online', () => {
-    void actualizar();
-  });
+function ponerAlDia(): void {
+  void composition.catalogoLocal?.actualizar();
+  void composition.entradaConPin?.actualizar();
 }
+ponerAlDia();
+window.addEventListener('online', ponerAlDia);
 
 const root = document.getElementById('root');
 if (root === null) {
@@ -43,6 +42,7 @@ createRoot(root).render(
           clientes={composition.clientes}
           legal={composition.legal}
           conectarTablet={composition.conectarTablet}
+          entradaConPin={composition.entradaConPin}
           bitacora={
             composition.bitacora === null
               ? null

@@ -1,15 +1,19 @@
 import type { ReactElement } from 'react';
 import { Route, Routes } from 'react-router';
 import type {
+  ActiveUserSession,
   DeviceRepository,
   LegalDeps,
   ManageCustomersDeps,
   RegisterTabletDeps,
+  SignInWithPinDeps,
 } from '@zammir/core';
 
 import { Bitacora, type BitacoraProps } from './modules/audit/ui/Bitacora';
 import { Clientes } from './modules/customers/ui/Clientes';
 import { AvisoDePrivacidad } from './modules/legal/ui/AvisoDePrivacidad';
+import { EntrarConPin } from './modules/identity/ui/EntrarConPin';
+import { PersonaActiva } from './modules/identity/ui/PersonaActiva';
 import { ConectarTablet } from './modules/devices/ui/ConectarTablet';
 import { Dispositivos } from './modules/devices/ui/Dispositivos';
 import { Usuarios, type UsuariosProps } from './modules/identity/ui/Usuarios';
@@ -33,6 +37,11 @@ export interface AppProps {
   readonly bitacora?: BitacoraProps | null;
   /** Conexión de esta tablet con un código de registro; abre en `/conectar`. */
   readonly conectarTablet?: RegisterTabletDeps | null;
+  /** Entrada con PIN en la tablet y quién está usándola; abre en `/entrar`. */
+  readonly entradaConPin?: {
+    readonly deps: SignInWithPinDeps;
+    readonly session: ActiveUserSession;
+  } | null;
   /** Vigencia sugerida del código de registro; sin ella la persona escribe los minutos. */
   readonly cargarVigenciaDeCodigo?: (() => Promise<number | null>) | undefined;
 }
@@ -47,6 +56,7 @@ export function App({
   legal = null,
   bitacora = null,
   conectarTablet = null,
+  entradaConPin = null,
   cargarVigenciaDeCodigo,
 }: AppProps): ReactElement {
   const secciones = [
@@ -56,13 +66,24 @@ export function App({
 
   return (
     <Layout interruptores={interruptores}>
+      {entradaConPin !== null ? <PersonaActiva session={entradaConPin.session} /> : null}
       <Routes>
         <Route
           index
           element={
-            <PanelDeInicio interruptores={interruptores} conectar={conectarTablet !== null} />
+            <PanelDeInicio
+              interruptores={interruptores}
+              conectar={conectarTablet !== null}
+              entrar={entradaConPin !== null}
+            />
           }
         />
+        {entradaConPin !== null ? (
+          <Route
+            path="/entrar"
+            element={<EntrarConPin deps={entradaConPin.deps} session={entradaConPin.session} />}
+          />
+        ) : null}
         {conectarTablet !== null ? (
           <Route path="/conectar" element={<ConectarTablet deps={conectarTablet} />} />
         ) : null}
@@ -108,7 +129,11 @@ export function App({
         <Route
           path="*"
           element={
-            <PanelDeInicio interruptores={interruptores} conectar={conectarTablet !== null} />
+            <PanelDeInicio
+              interruptores={interruptores}
+              conectar={conectarTablet !== null}
+              entrar={entradaConPin !== null}
+            />
           }
         />
       </Routes>

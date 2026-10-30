@@ -1,5 +1,8 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { createActiveUserSession, refreshLogin } from '@zammir/core';
 import type {
+  ActiveUserSession,
+  SignInWithPinDeps,
   AdminAuth,
   AuditReader,
   CatalogLocalStore,
@@ -30,6 +33,8 @@ import {
 import { supabaseAuditReader } from '../modules/audit/infra/supabase-audit-reader';
 import { supabaseCustomers } from '../modules/customers/infra/supabase-customers';
 import { supabaseLegal } from '../modules/legal/infra/supabase-legal';
+import { dexieIdentity } from '../modules/identity/infra/dexie-identity-store';
+import { supabaseLoginSource } from '../modules/identity/infra/supabase-login-source';
 import { supabaseUsers } from '../modules/identity/infra/supabase-users';
 import { supabaseSettingsRepository } from '../modules/settings/infra/supabase-settings-repository';
 import { createSupabaseClient } from '../shared/infra/supabase-client';
@@ -60,6 +65,12 @@ export interface Composition {
     readonly store: CatalogLocalStore;
     readonly actualizar: () => Promise<ResultadoDeActualizar>;
   } | null;
+  /** Entrada con PIN en la tablet: personas guardadas, quién está activo y cómo ponerlas al día. */
+  readonly entradaConPin: {
+    readonly deps: SignInWithPinDeps;
+    readonly session: ActiveUserSession;
+    readonly actualizar: () => Promise<boolean>;
+  } | null;
   /** Altas, PIN y desactivación de personas; `null` si no hay servidor configurado. */
   readonly usuarios: ManageUsersDeps | null;
   /** Mínimo de dígitos del PIN de un administrador y vueltas de PBKDF2, de la configuración. */
@@ -75,39 +86,98 @@ export interface EntornoSupabase {
   readonly anonKey?: string | undefined;
 }
 
+type CredencialesDeLaTablet = ReturnType<typeof localCredentialsStore>;
+
+/** Abre la sesión de la tablet en un cliente aparte, para no mezclarla con la de un administrador.
+ *  Si la sesión se renovó, guarda la nueva: la anterior ya no sirve. */
+async function abrirSesionDeLaTablet(
+  url: string,
+  anonKey: string,
+  credenciales: CredencialesDeLaTablet,
+  c: DeviceCredentials,
+): Promise<SupabaseClient | null> {
+  const cliente = createClient(url, anonKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const { data, error } = await cliente.auth.setSession({
+    access_token: c.session.accessToken,
+    refresh_token: c.session.refreshToken,
+  });
+  if (error !== null || data.session === null) {
+    return null;
+  }
+  if (data.session.refresh_token !== c.session.refreshToken) {
+    await credenciales.save({
+      ...c,
+      session: {
+        accessToken: data.session.access_token,
+        refreshToken: data.session.refresh_token,
+      },
+    });
+  }
+  return cliente;
+}
+
 function crearCatalogoLocal(
   url: string,
   anonKey: string,
-  credenciales: ReturnType<typeof localCredentialsStore>,
+  credenciales: CredencialesDeLaTablet,
 ): NonNullable<Composition['catalogoLocal']> {
   const store = dexieCatalogStore();
-  // La sesión de la tablet va en un cliente aparte, para no mezclarla con la de un administrador.
   async function fuenteConSesion(c: DeviceCredentials) {
-    const cliente = createClient(url, anonKey, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
-    const { data, error } = await cliente.auth.setSession({
-      access_token: c.session.accessToken,
-      refresh_token: c.session.refreshToken,
-    });
-    if (error !== null || data.session === null) {
-      return null;
-    }
-    // Si la sesión se renovó, se guarda la nueva: la anterior ya no sirve.
-    if (data.session.refresh_token !== c.session.refreshToken) {
-      await credenciales.save({
-        ...c,
-        session: {
-          accessToken: data.session.access_token,
-          refreshToken: data.session.refresh_token,
-        },
-      });
-    }
-    return supabaseCatalogReplica(cliente);
+    const cliente = await abrirSesionDeLaTablet(url, anonKey, credenciales, c);
+    return cliente === null ? null : supabaseCatalogReplica(cliente);
   }
   return {
     store,
     actualizar: () => actualizarCatalogoLocal({ credenciales, fuenteConSesion, store }),
+  };
+}
+
+/** Minutos de bloqueo por inactividad cuando la tablet todavía no ha bajado la configuración. */
+const MINUTOS_DE_BLOQUEO_INICIALES = 5;
+
+function crearEntradaConPin(
+  url: string,
+  anonKey: string,
+  credenciales: CredencialesDeLaTablet,
+): NonNullable<Composition['entradaConPin']> {
+  const identidad = dexieIdentity();
+  let minutosDeBloqueo: number | null = MINUTOS_DE_BLOQUEO_INICIALES;
+  void identidad.store.load().then((copia) => {
+    if (copia !== null) {
+      minutosDeBloqueo = copia.idleLockMinutes;
+    }
+  });
+  return {
+    deps: {
+      store: identidad.store,
+      hasher: webCryptoPinHasher,
+      guard: identidad.guard(
+        systemClock,
+        async () => (await identidad.store.load())?.lockout ?? null,
+      ),
+      deviceReady: async () => (await credenciales.load()) !== null,
+    },
+    session: createActiveUserSession(systemClock, () => minutosDeBloqueo),
+    actualizar: async () => {
+      const c = await credenciales.load();
+      if (c === null) {
+        return false;
+      }
+      const cliente = await abrirSesionDeLaTablet(url, anonKey, credenciales, c);
+      if (cliente === null) {
+        return false;
+      }
+      const r = await refreshLogin({
+        source: supabaseLoginSource(cliente),
+        store: identidad.store,
+      });
+      if (r.ok) {
+        minutosDeBloqueo = (await identidad.store.load())?.idleLockMinutes ?? minutosDeBloqueo;
+      }
+      return r.ok;
+    },
   };
 }
 
@@ -122,6 +192,10 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
     entorno.url === undefined || entorno.anonKey === undefined
       ? null
       : crearCatalogoLocal(entorno.url, entorno.anonKey, credencialesDeLaTablet);
+  const entradaConPin =
+    entorno.url === undefined || entorno.anonKey === undefined
+      ? null
+      : crearEntradaConPin(entorno.url, entorno.anonKey, credencialesDeLaTablet);
 
   return {
     clock: systemClock,
@@ -162,6 +236,7 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
             clock: systemClock,
           },
     catalogoLocal,
+    entradaConPin,
     cargarPoliticaDeUsuarios: async () => {
       if (ajustes === null) {
         return null;
