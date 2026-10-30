@@ -13,6 +13,8 @@ export interface RecordAuditEntryDeps {
 export interface RecordAuditEntryInput {
   readonly userId: UserId | null;
   readonly deviceId: DeviceId | null;
+  /** Quién autorizó la acción con su PIN, si hizo falta. */
+  readonly authorizedBy?: UserId | null;
   readonly action: AuditAction;
   readonly entityType: string;
   readonly entityId: string;
@@ -37,6 +39,7 @@ export async function recordAuditEntry(
     occurredAt: deps.clock.now(),
     userId: entrada.userId,
     deviceId: entrada.deviceId,
+    ...(entrada.authorizedBy === undefined ? {} : { authorizedBy: entrada.authorizedBy }),
     action: entrada.action,
     entityType: entrada.entityType,
     entityId: entrada.entityId,

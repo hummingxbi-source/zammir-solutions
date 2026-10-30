@@ -45,6 +45,9 @@ async function leerComoServicio(): Promise<readonly AuditEntry[]> {
     occurredAt: new Date(String(fila.occurred_at)),
     userId: fila.user_id as AuditEntry['userId'],
     deviceId: fila.device_id as AuditEntry['deviceId'],
+    ...(fila.authorized_by === null
+      ? {}
+      : { authorizedBy: fila.authorized_by as AuditEntry['userId'] }),
     action: fila.action as AuditEntry['action'],
     entityType: String(fila.entity_type),
     entityId: String(fila.entity_id),

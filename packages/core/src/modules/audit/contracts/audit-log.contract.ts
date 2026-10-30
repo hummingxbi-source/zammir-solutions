@@ -61,6 +61,15 @@ export function auditLogContract(
       expect(guardada?.deviceId).toBe(dispositivo);
     });
 
+    it('guarda quién autorizó la acción con su PIN', async () => {
+      const { log, leer } = await crear();
+      const id = nuevoId();
+      const autorizo = '00000000-0000-4000-8000-0000000000cc' as AuditEntry['userId'];
+      await log.append(entradaDePrueba(id, { authorizedBy: autorizo }));
+      const guardada = (await leer()).find((e) => e.id === id);
+      expect(guardada?.authorizedBy).toBe(autorizo);
+    });
+
     it('una entrada ya guardada no se cambia: otra con el mismo identificador no la sustituye', async () => {
       const { log, leer } = await crear();
       const id = nuevoId();

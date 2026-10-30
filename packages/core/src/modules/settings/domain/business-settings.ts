@@ -24,6 +24,7 @@ const esquema = z.object({
   device_code_validity_minutes: enteroPositivo,
   admin_pin_min_digits: enteroPositivo,
   pin_pbkdf2_iterations: enteroPositivo,
+  pin_lock_max_seconds: enteroPositivo,
   pin_max_failed_attempts: enteroPositivo.nullable(),
   pin_lock_seconds: enteroPositivo.nullable(),
   warranty_months_default: enteroPositivo.nullable(),

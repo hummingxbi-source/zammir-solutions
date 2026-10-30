@@ -35,3 +35,6 @@ export * from './modules/identity/application/user-ports';
 export * from './modules/identity/domain/pin';
 export * from './modules/identity/domain/user';
 export * from './modules/identity/domain/permissions';
+export * from './modules/identity/application/authorize-with-admin-pin';
+export * from './modules/identity/application/pin-attempt-guard';
+export * from './modules/identity/domain/pin-lockout';
