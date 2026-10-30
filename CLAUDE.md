@@ -18,6 +18,7 @@ El corazón del sistema es un **cotizador en tablet que funciona sin internet**.
 | Sin internet, seguridad, rendimiento, accesibilidad | `docs/producto/REQUERIMIENTOS_NO_FUNCIONALES.md` |
 | Cómo se llama cada cosa | `docs/producto/GLOSARIO.md` |
 | Qué no está definido todavía | `docs/producto/PENDIENTES.md` |
+| **Dudas para Luis (una sola ronda)** | `docs/producto/CUESTIONARIO_LUIS.md`: cada duda de negocio nueva se agrega ahí con su referencia a `PENDIENTES.md`; no se le pregunta a Luis por separado |
 | Riesgos del proyecto | `docs/producto/RIESGOS.md` |
 | Recorridos que deben pasar antes de entregar (E1 a E10) | `docs/calidad/PRUEBAS_DE_ACEPTACION.md` |
 | Qué ya se decidió | `DECISIONES.md` |
