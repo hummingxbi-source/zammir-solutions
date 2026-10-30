@@ -46,6 +46,15 @@ describe('recordAuditEntry', () => {
     ]);
   });
 
+  it('guarda quién autorizó la acción cuando se indica, y nada cuando no', async () => {
+    const bitacora = inMemoryAuditLog();
+    const admin = asId<'User'>('administrador-1');
+    await recordAuditEntry(dependencias(bitacora), { ...entrada, authorizedBy: admin });
+    await recordAuditEntry(dependencias(bitacora), entrada);
+    expect(bitacora.entries()[0]?.authorizedBy).toBe(admin);
+    expect('authorizedBy' in (bitacora.entries()[1] ?? {})).toBe(false);
+  });
+
   it('la hora sale del reloj y el identificador del generador, nunca del sistema', async () => {
     const resultado = await recordAuditEntry(dependencias(), entrada);
     expect(resultado.ok && resultado.value.occurredAt.toISOString()).toBe(

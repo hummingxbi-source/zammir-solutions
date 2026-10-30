@@ -14,6 +14,7 @@ export function supabaseAuditLog(cliente: SupabaseClient): AuditLog {
           occurred_at: entrada.occurredAt.toISOString(),
           user_id: entrada.userId,
           device_id: entrada.deviceId,
+          authorized_by: entrada.authorizedBy ?? null,
           action: entrada.action,
           entity_type: entrada.entityType,
           entity_id: entrada.entityId,

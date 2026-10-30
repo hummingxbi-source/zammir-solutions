@@ -27,6 +27,8 @@ export interface AuditEntry {
   /** La persona que actuó; `null` si fue una acción del sistema o aún no hay persona identificada. */
   readonly userId: UserId | null;
   readonly deviceId: DeviceId | null;
+  /** El administrador que autorizó con su PIN una acción restringida de un cajero [RN-19, ADR-0013]. */
+  readonly authorizedBy?: UserId | null;
   readonly action: AuditAction;
   readonly entityType: string;
   readonly entityId: string;

@@ -12,7 +12,7 @@ describe('parseBusinessSettings', () => {
       expect(resultado.value.feature_p1).toBe(false);
       expect(resultado.value.admin_idle_logout_minutes).toBe(30);
       expect(resultado.value.device_code_validity_minutes).toBe(15);
-      expect(resultado.value.pin_max_failed_attempts).toBeNull();
+      expect(resultado.value.pin_max_failed_attempts).toBe(5);
       expect(resultado.value.warranty_months_default).toBeNull();
     }
   });
