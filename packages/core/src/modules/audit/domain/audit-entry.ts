@@ -4,7 +4,7 @@ import type { DeviceId, Id, UserId } from '../../../shared-kernel/id';
 export type Json = string | number | boolean | null | Json[] | { [clave: string]: Json };
 
 /** Acciones sensibles que se registran [RN-19]. La lista crece con cada historia que agrega una. */
-export type AuditAction = 'DEVICE_REGISTERED' | 'DEVICE_REVOKED';
+export type AuditAction = 'DEVICE_REGISTERED' | 'DEVICE_REVOKED' | 'DEVICES_LISTED';
 
 export type AuditEntryId = Id<'AuditEntry'>;
 

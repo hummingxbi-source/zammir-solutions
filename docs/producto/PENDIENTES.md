@@ -54,6 +54,7 @@
 | PD-45 | Descuentos: ¿hay un máximo y quién puede darlo? | Luis | No | Antes de Sprint 2 | Cualquier descuento exige PIN de administrador [RF-M2-03] |
 | PD-46 | ¿Se entregan trabajos por partes? (estatus por orden o por línea) | Luis | No, pero cambia el modelo | **Antes de Sprint 3** | Estatus por orden |
 | PD-47 | ¿Se quiere control de existencias de hojas o material, o solo de piezas estándar (P2)? | Luis | No | Antes de pruebas con el cliente | Fuera de alcance; P2 apagado. Relacionado con PD-14 (piezas estándar) |
+| PD-48 | Vigencia del código de registro de una tablet (ADR-0013 dice "vida corta" sin dar el tiempo) | Luis / Juanito | No | Antes de S0-16b | El administrador escribe los minutos al generar el código; no hay valor por omisión [S0-16] |
 
 ## Resueltos
 

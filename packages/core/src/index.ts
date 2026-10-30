@@ -14,3 +14,7 @@ export * from './modules/audit/application/in-memory-audit-log';
 export * from './modules/audit/application/ports';
 export * from './modules/audit/application/record-audit-entry';
 export * from './modules/audit/domain/audit-entry';
+export * from './modules/devices/application/device-use-cases';
+export * from './modules/devices/application/in-memory-device-repository';
+export * from './modules/devices/application/ports';
+export * from './modules/devices/domain/device';

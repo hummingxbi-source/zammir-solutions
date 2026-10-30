@@ -47,6 +47,8 @@ select throws_ok(
 
 -- Un dispositivo: lee, pero no cambia
 reset role;
+insert into public.devices (name, temp_series, auth_user_id)
+values ('Tablet de prueba', 1, '00000000-0000-0000-0000-0000000000d1');
 select set_config('request.jwt.claims',
   '{"sub":"00000000-0000-0000-0000-0000000000d1","role":"authenticated","app_metadata":{"rol":"DEVICE"}}', true);
 set local role authenticated;
