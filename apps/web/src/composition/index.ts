@@ -1,5 +1,6 @@
 import type {
   AdminAuth,
+  AuditReader,
   Clock,
   DeviceRepository,
   IdGenerator,
@@ -14,6 +15,7 @@ import {
   adminAuthNoConfigurada,
   supabaseAdminAuth,
 } from '../modules/identity/infra/supabase-admin-auth';
+import { supabaseAuditReader } from '../modules/audit/infra/supabase-audit-reader';
 import { supabaseCustomers } from '../modules/customers/infra/supabase-customers';
 import { supabaseLegal } from '../modules/legal/infra/supabase-legal';
 import { supabaseUsers } from '../modules/identity/infra/supabase-users';
@@ -31,6 +33,10 @@ export interface Composition {
   readonly adminAuth: AdminAuth;
   /** `null` si no hay servidor configurado. */
   readonly dispositivos: DeviceRepository | null;
+  /** Lector de la bitácora; `null` si no hay servidor configurado. */
+  readonly bitacora: AuditReader | null;
+  /** Nombres de las personas, para mostrarlos en la bitácora en lugar de su identificador. */
+  readonly cargarNombres: () => Promise<ReadonlyMap<string, string>>;
   /** Aviso de privacidad versionado; `null` si no hay servidor configurado. */
   readonly legal: LegalDeps | null;
   /** Altas y correcciones de clientes; `null` si no hay servidor configurado. */
@@ -61,6 +67,14 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
     idGenerator: uuidIdGenerator,
     adminAuth: cliente === null ? adminAuthNoConfigurada : supabaseAdminAuth(cliente),
     dispositivos: cliente === null ? null : supabaseDeviceRepository(cliente),
+    bitacora: cliente === null ? null : supabaseAuditReader(cliente),
+    cargarNombres: async () => {
+      if (cliente === null) {
+        return new Map();
+      }
+      const personas = await supabaseUsers(cliente).list();
+      return new Map(personas.ok ? personas.value.map((p) => [p.id, p.name]) : []);
+    },
     legal,
     clientes:
       cliente === null
