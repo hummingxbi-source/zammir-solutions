@@ -35,6 +35,9 @@ export interface ProductReader {
  *  por eso este puerto no tiene una operación de borrado. */
 export interface ProductAdmin {
   create(producto: Product): Promise<Result<Product, CatalogError>>;
+  /** Da de alta varios productos de golpe, **todo o nada**: si uno falla (código repetido, categoría que
+   *  no existe…), no se guarda ninguno. Es lo que usa la importación del catálogo [RF-M1-05]. */
+  createMany(productos: readonly Product[]): Promise<Result<readonly Product[], CatalogError>>;
   /** Cambia un producto existente. Un cambio de precio deja su historial y su entrada de bitácora
    *  con el valor anterior y el nuevo, en el mismo paso [RF-M1-06, RN-19]. Activar o desactivar
    *  también deja su entrada. */

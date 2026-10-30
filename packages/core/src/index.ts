@@ -49,3 +49,8 @@ export * from './modules/legal/application/in-memory-legal';
 export * from './modules/legal/application/legal-use-cases';
 export * from './modules/legal/application/ports';
 export * from './modules/legal/domain/legal-document';
+export * from './shared-kernel/money/parse-money';
+export * from './modules/catalog/application/import-catalog';
+export * from './modules/catalog/domain/import/analyze';
+export * from './modules/catalog/domain/import/csv';
+export * from './modules/catalog/domain/import/template';
