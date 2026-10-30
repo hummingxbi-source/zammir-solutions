@@ -3,10 +3,10 @@ import { MemoryRouter } from 'react-router';
 import {
   fixedClock,
   inMemoryAdminAuth,
-  inMemoryCustomers,
   sequentialIdGenerator,
   type ManageCustomersDeps,
 } from '@zammir/core';
+import { clientesEnMemoriaDePrueba } from '@zammir/core/testing';
 import { describe, expect, it } from 'vitest';
 
 import { App } from '../../../App';
@@ -15,7 +15,10 @@ import { ProveedorSesionAdmin } from '../../identity/ui/SesionAdmin';
 const instante = new Date('2026-10-30T18:00:00.000Z');
 
 function entorno(): ManageCustomersDeps {
-  return { customers: inMemoryCustomers(), idGenerator: sequentialIdGenerator('c') };
+  return {
+    customers: clientesEnMemoriaDePrueba().customers,
+    idGenerator: sequentialIdGenerator('c'),
+  };
 }
 
 function mostrar(deps: ManageCustomersDeps, rol: 'ADMIN' | 'STAFF' = 'ADMIN'): void {
@@ -184,6 +187,24 @@ describe('pantalla de clientes', () => {
 
     fireEvent.change(buscador, { target: { value: 'zzzz' } });
     expect(screen.getByText('Ningún cliente coincide con la búsqueda.')).toBeTruthy();
+  });
+
+  it('anonimiza con confirmación: se vacían los datos personales y la fila se conserva', async () => {
+    mostrar(entorno());
+    await entrar();
+    await capturar('Ana López', '5512345678');
+    fireEvent.click(await screen.findByRole('button', { name: 'Anonimizar Ana López' }));
+    expect(screen.getByRole('alertdialog')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'No, dejarlo' }));
+    expect(screen.queryByRole('alertdialog')).toBeNull();
+    expect(screen.getByRole('rowheader', { name: 'Ana López' })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Anonimizar Ana López' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Sí, anonimizar' }));
+    expect(await screen.findByText('Cliente anonimizado.')).toBeTruthy();
+    expect(screen.queryByRole('rowheader', { name: 'Ana López' })).toBeNull();
+    expect(screen.getByRole('rowheader', { name: /Cliente anonimizado/ })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /Anonimizar/ })).toBeNull();
   });
 
   it('una cuenta que no es de administrador no ve la pantalla', async () => {

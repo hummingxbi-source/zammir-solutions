@@ -33,6 +33,20 @@ export function createCustomer(
   return cliente.ok ? deps.customers.create(cliente.value) : Promise.resolve(cliente);
 }
 
+/** Anonimiza a un cliente que pide que se borren sus datos personales: solo administradores [RF-M5-05].
+ *  Se conservan su identificador y los registros contables y fiscales; la bitácora lo anota sin datos
+ *  personales. No se puede deshacer. */
+export function anonymizeCustomer(
+  deps: Pick<ManageCustomersDeps, 'customers'>,
+  actor: Actor,
+  id: CustomerId,
+): Promise<Result<Customer, CustomerError>> {
+  if (actor.role !== 'ADMIN') {
+    return Promise.resolve(err({ code: 'NOT_AUTHORIZED' }));
+  }
+  return deps.customers.anonymize(id);
+}
+
 /** Corrige los datos de un cliente. Uno anonimizado ya no se edita [RF-M5-05]. */
 export async function updateCustomer(
   deps: Pick<ManageCustomersDeps, 'customers'>,

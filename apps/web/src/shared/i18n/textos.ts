@@ -87,8 +87,17 @@ export const textos = {
       aviso: 'Ya hay un cliente con este teléfono:',
       ayuda: 'Puede ser la misma persona. Si no lo es, guarda de todos modos.',
     },
-    columnas: { nombre: 'Nombre', whatsapp: 'WhatsApp', correo: 'Correo' },
+    columnas: { nombre: 'Nombre', whatsapp: 'WhatsApp', correo: 'Correo', acciones: 'Acciones' },
     sinCorreo: 'Sin correo',
+    anonimizar: 'Anonimizar',
+    confirmarAnonimizar: {
+      titulo: 'Anonimizar a',
+      mensaje:
+        'Se borrarán su nombre, teléfono, correo, notas y datos fiscales. Sus cotizaciones, ventas y facturas se conservan. No se puede deshacer. ¿Quieres anonimizarlo?',
+      confirmar: 'Sí, anonimizar',
+      cancelar: 'No, dejarlo',
+    },
+    anonimizado_ok: 'Cliente anonimizado.',
     anonimizado: 'Datos anonimizados',
     errores: {
       NAME_REQUIRED: {

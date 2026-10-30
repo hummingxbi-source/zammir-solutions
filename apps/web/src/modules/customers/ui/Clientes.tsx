@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { ReactElement, SyntheticEvent } from 'react';
 import {
+  anonymizeCustomer,
   createCustomer,
   findPossibleDuplicates,
   NO_FISCAL_PROFILE,
@@ -14,6 +15,7 @@ import { textos } from '../../../shared/i18n/textos';
 import { Aviso } from '../../../shared/ui/Aviso';
 import { Boton } from '../../../shared/ui/Boton';
 import { Campo, CampoNumerico } from '../../../shared/ui/Campo';
+import { Confirmacion } from '../../../shared/ui/Confirmacion';
 import { useSesionAdmin } from '../../identity/ui/SesionAdmin';
 
 const t = textos.clientes;
@@ -40,6 +42,7 @@ export function Clientes({ deps }: ClientesProps): ReactElement {
   const [codigoPostal, setCodigoPostal] = useState('');
   const [guardando, setGuardando] = useState(false);
   const [busqueda, setBusqueda] = useState('');
+  const [porAnonimizar, setPorAnonimizar] = useState<Customer | null>(null);
   const [repetidos, setRepetidos] = useState<readonly Customer[]>([]);
 
   const cargar = useCallback(async () => {
@@ -67,6 +70,19 @@ export function Clientes({ deps }: ClientesProps): ReactElement {
       vigente = false;
     };
   }, [deps, telefono]);
+
+  async function anonimizar(cliente: Customer): Promise<void> {
+    setPorAnonimizar(null);
+    setError(null);
+    setAviso(null);
+    const resultado = await anonymizeCustomer(deps, actor, cliente.id);
+    if (resultado.ok) {
+      setAviso(t.anonimizado_ok);
+    } else {
+      setError(resultado.error);
+    }
+    await cargar();
+  }
 
   const visibles = lista === null ? [] : searchCustomers(lista, busqueda);
 
@@ -210,6 +226,7 @@ export function Clientes({ deps }: ClientesProps): ReactElement {
               <th scope="col">{t.columnas.nombre}</th>
               <th scope="col">{t.columnas.whatsapp}</th>
               <th scope="col">{t.columnas.correo}</th>
+              <th scope="col">{t.columnas.acciones}</th>
             </tr>
           </thead>
           <tbody>
@@ -221,11 +238,38 @@ export function Clientes({ deps }: ClientesProps): ReactElement {
                 </th>
                 <td>{cliente.phone}</td>
                 <td>{cliente.email ?? t.sinCorreo}</td>
+                <td>
+                  {cliente.anonymizedAt === null ? (
+                    <Boton
+                      variante="peligro"
+                      aria-label={`${t.anonimizar} ${cliente.name}`}
+                      onClick={() => {
+                        setPorAnonimizar(cliente);
+                      }}
+                    >
+                      {t.anonimizar}
+                    </Boton>
+                  ) : null}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       )}
+
+      {porAnonimizar !== null ? (
+        <Confirmacion
+          peligrosa
+          titulo={`${t.confirmarAnonimizar.titulo} ${porAnonimizar.name}`}
+          mensaje={t.confirmarAnonimizar.mensaje}
+          textoConfirmar={t.confirmarAnonimizar.confirmar}
+          textoCancelar={t.confirmarAnonimizar.cancelar}
+          onConfirmar={() => void anonimizar(porAnonimizar)}
+          onCancelar={() => {
+            setPorAnonimizar(null);
+          }}
+        />
+      ) : null}
     </section>
   );
 }
