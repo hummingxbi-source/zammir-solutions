@@ -2,12 +2,14 @@ import type { ReactElement } from 'react';
 import { Route, Routes } from 'react-router';
 import type {
   DeviceRepository,
+  ImportCatalogDeps,
   LegalDeps,
   ManageCustomersDeps,
   RegisterTabletDeps,
 } from '@zammir/core';
 
 import { Bitacora, type BitacoraProps } from './modules/audit/ui/Bitacora';
+import { ImportarCatalogo } from './modules/catalog/ui/ImportarCatalogo';
 import { Clientes } from './modules/customers/ui/Clientes';
 import { AvisoDePrivacidad } from './modules/legal/ui/AvisoDePrivacidad';
 import { ConectarTablet } from './modules/devices/ui/ConectarTablet';
@@ -33,6 +35,8 @@ export interface AppProps {
   readonly bitacora?: BitacoraProps | null;
   /** Conexión de esta tablet con un código de registro; abre en `/conectar`. */
   readonly conectarTablet?: RegisterTabletDeps | null;
+  /** Importación del catálogo desde archivo; aparece en Catálogo (solo administradores). */
+  readonly catalogo?: ImportCatalogDeps | null;
   /** Vigencia sugerida del código de registro; sin ella la persona escribe los minutos. */
   readonly cargarVigenciaDeCodigo?: (() => Promise<number | null>) | undefined;
 }
@@ -47,6 +51,7 @@ export function App({
   legal = null,
   bitacora = null,
   conectarTablet = null,
+  catalogo = null,
   cargarVigenciaDeCodigo,
 }: AppProps): ReactElement {
   const secciones = [
@@ -94,6 +99,13 @@ export function App({
                   ) : (
                     <SeccionVacia titulo={seccion.texto} />
                   )}
+                </ProtegidaAdmin>
+              ) : seccion.id === 'catalogo' && catalogo !== null ? (
+                <ProtegidaAdmin>
+                  <section>
+                    <h1>{seccion.texto}</h1>
+                    <ImportarCatalogo deps={catalogo} />
+                  </section>
                 </ProtegidaAdmin>
               ) : seccion.id === 'clientes' && clientes !== null ? (
                 <ProtegidaAdmin>
