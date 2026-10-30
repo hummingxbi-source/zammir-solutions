@@ -10,3 +10,7 @@ export * from './modules/identity/application/in-memory-admin-auth';
 export * from './modules/identity/application/ports';
 export * from './modules/identity/application/sign-in-admin';
 export * from './modules/identity/domain/auth';
+export * from './modules/audit/application/in-memory-audit-log';
+export * from './modules/audit/application/ports';
+export * from './modules/audit/application/record-audit-entry';
+export * from './modules/audit/domain/audit-entry';
