@@ -16,6 +16,8 @@ export function filasValidas(cambios: Record<string, unknown> = {}): SettingRow[
     feature_p2: false,
     admin_idle_logout_minutes: 30,
     device_code_validity_minutes: 15,
+    admin_pin_min_digits: 6,
+    pin_pbkdf2_iterations: 600000,
     pin_max_failed_attempts: null,
     pin_lock_seconds: null,
     warranty_months_default: null,

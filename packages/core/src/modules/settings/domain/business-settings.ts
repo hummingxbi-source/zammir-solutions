@@ -22,6 +22,8 @@ const esquema = z.object({
   feature_p2: z.boolean(),
   admin_idle_logout_minutes: enteroPositivo.nullable(),
   device_code_validity_minutes: enteroPositivo,
+  admin_pin_min_digits: enteroPositivo,
+  pin_pbkdf2_iterations: enteroPositivo,
   pin_max_failed_attempts: enteroPositivo.nullable(),
   pin_lock_seconds: enteroPositivo.nullable(),
   warranty_months_default: enteroPositivo.nullable(),

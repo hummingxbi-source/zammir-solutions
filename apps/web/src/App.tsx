@@ -3,6 +3,7 @@ import { Route, Routes } from 'react-router';
 import type { DeviceRepository } from '@zammir/core';
 
 import { Dispositivos } from './modules/devices/ui/Dispositivos';
+import { Usuarios, type UsuariosProps } from './modules/identity/ui/Usuarios';
 import { ProtegidaAdmin } from './modules/identity/ui/ProtegidaAdmin';
 import { Layout } from './shell/Layout';
 import { PanelDeInicio, SeccionVacia } from './shell/Paginas';
@@ -13,6 +14,8 @@ export interface AppProps {
   readonly interruptores?: ReadonlySet<Interruptor>;
   /** Dispositivos registrados; sin esto la sección Usuarios queda vacía. */
   readonly dispositivos?: DeviceRepository | null;
+  /** Personas del mostrador (alta, PIN, desactivar); sin esto no aparece esa parte de Usuarios. */
+  readonly usuarios?: UsuariosProps | null;
   /** Vigencia sugerida del código de registro; sin ella la persona escribe los minutos. */
   readonly cargarVigenciaDeCodigo?: (() => Promise<number | null>) | undefined;
 }
@@ -22,6 +25,7 @@ const SIN_INTERRUPTORES: ReadonlySet<Interruptor> = new Set();
 export function App({
   interruptores = SIN_INTERRUPTORES,
   dispositivos = null,
+  usuarios = null,
   cargarVigenciaDeCodigo,
 }: AppProps): ReactElement {
   const secciones = [
@@ -40,13 +44,16 @@ export function App({
             element={
               seccion.soloAdministrador === true ? (
                 <ProtegidaAdmin>
-                  {seccion.id === 'usuarios' && dispositivos !== null ? (
+                  {seccion.id === 'usuarios' && (dispositivos !== null || usuarios !== null) ? (
                     <section>
                       <h1>{seccion.texto}</h1>
-                      <Dispositivos
-                        dispositivos={dispositivos}
-                        cargarVigenciaDeCodigo={cargarVigenciaDeCodigo}
-                      />
+                      {usuarios !== null ? <Usuarios {...usuarios} /> : null}
+                      {dispositivos !== null ? (
+                        <Dispositivos
+                          dispositivos={dispositivos}
+                          cargarVigenciaDeCodigo={cargarVigenciaDeCodigo}
+                        />
+                      ) : null}
                     </section>
                   ) : (
                     <SeccionVacia titulo={seccion.texto} />

@@ -31,6 +31,14 @@ createRoot(root).render(
       <BrowserRouter>
         <App
           dispositivos={composition.dispositivos}
+          usuarios={
+            composition.usuarios === null
+              ? null
+              : {
+                  deps: composition.usuarios,
+                  cargarPolitica: composition.cargarPoliticaDeUsuarios,
+                }
+          }
           cargarVigenciaDeCodigo={composition.cargarVigenciaDeCodigo}
         />
       </BrowserRouter>
