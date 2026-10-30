@@ -1,7 +1,7 @@
 // Corre las pruebas de integración contra Supabase local (debe estar encendido: `pnpm db:start`).
 // Las llaves salen de `supabase status` y viven solo en el entorno de este proceso; no se
 // escriben en ningún archivo ni se imprimen.
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 
 const estado = spawnSync('pnpm', ['exec', 'supabase', 'status', '-o', 'env'], {
   shell: true,
@@ -28,6 +28,48 @@ if (url === undefined || anon === undefined || servicio === undefined) {
   process.exit(1);
 }
 
+// Las funciones de servidor se prueban de verdad: si no están sirviéndose, se encienden aquí
+// (con el núcleo recién empaquetado) y se apagan al terminar.
+async function responde() {
+  try {
+    await fetch(`${url}/functions/v1/registrar-dispositivo`, { method: 'OPTIONS' });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+let servidor;
+if (!(await responde())) {
+  const empaquetado = spawnSync('pnpm', ['funciones:empaquetar'], {
+    shell: true,
+    stdio: 'inherit',
+  });
+  if (empaquetado.status !== 0) process.exit(1);
+  servidor = spawn('pnpm', ['exec', 'supabase', 'functions', 'serve', '--no-verify-jwt'], {
+    shell: true,
+    stdio: 'ignore',
+    detached: process.platform !== 'win32',
+  });
+  const limite = Date.now() + 120_000;
+  while (!(await responde())) {
+    if (Date.now() > limite) {
+      process.stderr.write('Las funciones de servidor no encendieron a tiempo.\n');
+      process.exit(1);
+    }
+    await new Promise((r) => setTimeout(r, 1000));
+  }
+}
+
+function apagar() {
+  if (servidor?.pid === undefined) return;
+  if (process.platform === 'win32') {
+    spawnSync('taskkill', ['/PID', String(servidor.pid), '/T', '/F'], { stdio: 'ignore' });
+  } else {
+    process.kill(-servidor.pid);
+  }
+}
+
 const resultado = spawnSync(
   'pnpm',
   ['exec', 'vitest', 'run', '--project', 'integracion', ...process.argv.slice(2)],
@@ -42,4 +84,5 @@ const resultado = spawnSync(
     },
   },
 );
+apagar();
 process.exit(resultado.status ?? 1);
