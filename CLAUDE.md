@@ -24,6 +24,7 @@ El corazón del sistema es un **cotizador en tablet que funciona sin internet**.
 | Qué ya se decidió | `DECISIONES.md` |
 | **Qué construir en cada fase, con sus pruebas y compuertas** | `docs/plan/` — empieza por su README y `00-principios-de-ingenieria.md` |
 | Historias por sprint y su trazabilidad | `docs/backlog/` (borrador hasta que Juanito lo apruebe) |
+| **Cómo construir el sprint en curso** (estado, recetas, diseño de cada historia que falta) | `docs/backlog/SPRINT-1-EJECUCION.md`: léelo **en lugar de** recorrer todo el repositorio, junto con la historia que toque en `SPRINT-1.md` |
 | Fases y sprints (resumen) | `docs/ROADMAP.md` |
 | Cómo se trabaja en el repositorio | `CONTRIBUTING.md` |
 | Arquitectura | `docs/arquitectura/` (en construcción, Fase 2) |
