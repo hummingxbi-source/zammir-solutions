@@ -8,6 +8,7 @@ export type CustomerId = Id<'Customer'>;
 export type QuoteId = Id<'Quote'>;
 export type WorkOrderId = Id<'WorkOrder'>;
 export type ProductId = Id<'Product'>;
+export type CategoryId = Id<'Category'>;
 export type UserId = Id<'User'>;
 export type DeviceId = Id<'Device'>;
 
