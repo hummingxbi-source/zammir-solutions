@@ -8,3 +8,4 @@ export * from './modules/devices/contracts/device-repository.contract';
 export * from './modules/catalog/contracts/catalog.contract';
 export * from './modules/identity/contracts/pin-hasher.contract';
 export * from './modules/identity/contracts/user-repository.contract';
+export * from './modules/customers/contracts/customer-repository.contract';

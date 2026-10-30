@@ -1,4 +1,4 @@
-import { err, ok, type Result } from '@zammir/core';
+import { err, normalizePhone, ok, type Result } from '@zammir/core';
 
 /** Formatos de pantalla y documentos [RN-22]: dinero `$1,234.50`, fecha `27 oct 2026`, teléfono de 10 dígitos. */
 
@@ -50,8 +50,9 @@ export function formatearFecha(instante: Date): string {
 
 export type ErrorTelefono = 'TELEFONO_DEBE_TENER_10_DIGITOS';
 
-/** Teléfono de 10 dígitos: quita espacios, guiones y paréntesis y exige exactamente 10 dígitos. */
+/** Teléfono de 10 dígitos: quita espacios, guiones y paréntesis (y la clave de país +52) y exige
+ *  exactamente 10 dígitos. La regla vive en el núcleo; aquí solo se conserva el nombre de error de la interfaz. */
 export function normalizarTelefono(texto: string): Result<string, ErrorTelefono> {
-  const digitos = texto.replace(/[\s\-().]/g, '');
-  return /^\d{10}$/.test(digitos) ? ok(digitos) : err('TELEFONO_DEBE_TENER_10_DIGITOS');
+  const telefono = normalizePhone(texto);
+  return telefono.ok ? ok(telefono.value) : err('TELEFONO_DEBE_TENER_10_DIGITOS');
 }
