@@ -13,6 +13,8 @@ export interface AppProps {
   readonly interruptores?: ReadonlySet<Interruptor>;
   /** Dispositivos registrados; sin esto la sección Usuarios queda vacía. */
   readonly dispositivos?: DeviceRepository | null;
+  /** Vigencia sugerida del código de registro; sin ella la persona escribe los minutos. */
+  readonly cargarVigenciaDeCodigo?: (() => Promise<number | null>) | undefined;
 }
 
 const SIN_INTERRUPTORES: ReadonlySet<Interruptor> = new Set();
@@ -20,6 +22,7 @@ const SIN_INTERRUPTORES: ReadonlySet<Interruptor> = new Set();
 export function App({
   interruptores = SIN_INTERRUPTORES,
   dispositivos = null,
+  cargarVigenciaDeCodigo,
 }: AppProps): ReactElement {
   const secciones = [
     ...seccionesVisibles('principal', interruptores),
@@ -40,7 +43,10 @@ export function App({
                   {seccion.id === 'usuarios' && dispositivos !== null ? (
                     <section>
                       <h1>{seccion.texto}</h1>
-                      <Dispositivos dispositivos={dispositivos} />
+                      <Dispositivos
+                        dispositivos={dispositivos}
+                        cargarVigenciaDeCodigo={cargarVigenciaDeCodigo}
+                      />
                     </section>
                   ) : (
                     <SeccionVacia titulo={seccion.texto} />
