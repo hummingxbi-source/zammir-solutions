@@ -18,11 +18,13 @@ El corazón del sistema es un **cotizador en tablet que funciona sin internet**.
 | Sin internet, seguridad, rendimiento, accesibilidad | `docs/producto/REQUERIMIENTOS_NO_FUNCIONALES.md` |
 | Cómo se llama cada cosa | `docs/producto/GLOSARIO.md` |
 | Qué no está definido todavía | `docs/producto/PENDIENTES.md` |
+| **Dudas para Luis (una sola ronda)** | `docs/producto/CUESTIONARIO_LUIS.md`: cada duda de negocio nueva se agrega ahí con su referencia a `PENDIENTES.md`; no se le pregunta a Luis por separado |
 | Riesgos del proyecto | `docs/producto/RIESGOS.md` |
 | Recorridos que deben pasar antes de entregar (E1 a E10) | `docs/calidad/PRUEBAS_DE_ACEPTACION.md` |
 | Qué ya se decidió | `DECISIONES.md` |
 | **Qué construir en cada fase, con sus pruebas y compuertas** | `docs/plan/` — empieza por su README y `00-principios-de-ingenieria.md` |
 | Historias por sprint y su trazabilidad | `docs/backlog/` (borrador hasta que Juanito lo apruebe) |
+| **Cómo construir el sprint en curso** (estado, recetas, diseño de cada historia que falta) | `docs/backlog/SPRINT-1-EJECUCION.md`: léelo **en lugar de** recorrer todo el repositorio, junto con la historia que toque en `SPRINT-1.md` |
 | Fases y sprints (resumen) | `docs/ROADMAP.md` |
 | Cómo se trabaja en el repositorio | `CONTRIBUTING.md` |
 | Arquitectura | `docs/arquitectura/` (en construcción, Fase 2) |

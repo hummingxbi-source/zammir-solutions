@@ -30,7 +30,11 @@ function entorno(): ManageUsersDeps {
   };
 }
 
-function mostrar(deps: ManageUsersDeps, rol: 'ADMIN' | 'STAFF' = 'ADMIN'): void {
+function mostrar(
+  deps: ManageUsersDeps,
+  rol: 'ADMIN' | 'STAFF' = 'ADMIN',
+  cargarPolitica: () => Promise<UserPolicy | null> = () => Promise.resolve(politica),
+): void {
   const auth = inMemoryAdminAuth([
     { userId: 'a-1', email: 'a@ejemplo.invalid', password: 'clave-de-prueba-1', role: rol },
   ]);
@@ -41,7 +45,7 @@ function mostrar(deps: ManageUsersDeps, rol: 'ADMIN' | 'STAFF' = 'ADMIN'): void 
       cargarLimiteInactividad={() => Promise.resolve(null)}
     >
       <MemoryRouter initialEntries={['/usuarios']}>
-        <App usuarios={{ deps, cargarPolitica: () => Promise.resolve(politica) }} />
+        <App usuarios={{ deps, cargarPolitica }} />
       </MemoryRouter>
     </ProveedorSesionAdmin>,
   );
@@ -154,6 +158,31 @@ describe('pantalla de personas del mostrador', () => {
     expect(await screen.findByText('PIN restablecido.')).toBeTruthy();
     const despues = await deps.users.list();
     expect(despues.ok && despues.value[0]?.pin.hash).not.toBe(hashAntes);
+  });
+
+  it('si la configuración tarda en cargar, al enviar la pide y valida el PIN igual', async () => {
+    let nunca = true;
+    const tardia = () =>
+      new Promise<UserPolicy | null>((resolver) => {
+        // Responde solo a partir de la segunda vez que se la pide: la primera (al abrir) no termina.
+        if (nunca) {
+          nunca = false;
+          return;
+        }
+        resolver(politica);
+      });
+    mostrar(entorno(), 'ADMIN', tardia);
+    await entrar();
+    await darDeAlta('Ana', '0000');
+    expect(await screen.findByText('Ese PIN es muy fácil de adivinar.')).toBeTruthy();
+    expect(screen.queryByText('No hay conexión con el servidor.')).toBeNull();
+  });
+
+  it('si la configuración no se puede leer, dice que no hay conexión', async () => {
+    mostrar(entorno(), 'ADMIN', () => Promise.resolve(null));
+    await entrar();
+    await darDeAlta('Ana', '4829');
+    expect(await screen.findByText('No hay conexión con el servidor.')).toBeTruthy();
   });
 
   it('una cuenta que no es de administrador no ve la pantalla', async () => {
