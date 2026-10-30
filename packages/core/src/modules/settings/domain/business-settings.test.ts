@@ -10,7 +10,9 @@ describe('parseBusinessSettings', () => {
     if (resultado.ok) {
       expect(resultado.value.tax_rate_bps).toBe(1600);
       expect(resultado.value.feature_p1).toBe(false);
-      expect(resultado.value.admin_idle_logout_minutes).toBeNull();
+      expect(resultado.value.admin_idle_logout_minutes).toBe(30);
+      expect(resultado.value.device_code_validity_minutes).toBe(15);
+      expect(resultado.value.pin_max_failed_attempts).toBeNull();
       expect(resultado.value.warranty_months_default).toBeNull();
     }
   });
@@ -70,7 +72,7 @@ describe('parseBusinessSettings', () => {
         pin_lock_seconds: 30,
         stamps_yearly_limit: 1200,
         local_retention_days: 90,
-        admin_idle_logout_minutes: 30,
+        admin_idle_logout_minutes: 45,
       }),
     );
     expect(resultado.ok).toBe(true);
