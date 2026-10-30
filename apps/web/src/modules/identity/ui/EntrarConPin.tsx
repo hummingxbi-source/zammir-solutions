@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
+import { useNavigate } from 'react-router';
 import {
   signInWithPin,
   type ActiveUser,
@@ -40,6 +41,7 @@ export function EntrarConPin({
   const [pin, setPin] = useState('');
   const [error, setError] = useState<SignInError | null>(null);
   const [revisando, setRevisando] = useState(false);
+  const navegar = useNavigate();
 
   useEffect(() => {
     void deps.store.load().then((copia) => {
@@ -60,6 +62,9 @@ export function EntrarConPin({
     if (resultado.ok) {
       session.enter(resultado.value);
       onEntrar?.(resultado.value);
+      // La pantalla queda limpia para la siguiente persona y quien entró pasa al inicio.
+      setElegida(null);
+      void navegar('/');
     } else {
       setError(resultado.error);
     }
