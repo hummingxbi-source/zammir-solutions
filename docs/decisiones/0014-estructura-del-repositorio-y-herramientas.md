@@ -1,6 +1,6 @@
 # ADR-0014: Estructura del repositorio y herramientas
 
-- **Estado:** Propuesta — Juanito la aprueba con la arquitectura
+- **Estado:** Aceptada el 2026-10-27 (Juanito la aprobó al iniciar el Sprint 0). Las versiones concretas se fijan al crear el repositorio
 - **Fecha:** 2026-10-26
 - **Decide:** Juanito
 - **Detalle en:** `docs/arquitectura/ARCHITECTURE.md`

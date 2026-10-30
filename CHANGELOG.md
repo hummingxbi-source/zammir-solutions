@@ -22,7 +22,10 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). L
 
 - Backlog de la Fase 3 en `docs/backlog/` (143 historias en los sprints S0 a S5, trazabilidad y análisis de capacidad). Borrador a la espera de la aprobación de Juanito.
 
+- Borradores de `docs/arquitectura/ENTORNOS.md` y `docs/calidad/TESTING.md` (Fase 2), necesarios para el Sprint 0.
+
 ### Cambiado
+- ADR-0014 (estructura y herramientas) aceptada.
 - Calendario decidido (PD-34): se mantiene el plan actual de sprints con recortes desde ahora [ADR-0019]. ADR-0014 actualizada: la impresión de tickets ya no está "sin elegir" [ADR-0018].
 - ADR-0009 (idioma del código) aceptada; PD-18 resuelto.
 - Plan de fases actualizado con el documento completo: prueba de concepto de impresión, M10 en el Sprint 4, entrega en el Sprint 5, feriado del 16 de noviembre y lista de lo que la arquitectura debe absorber (Fase 2).
