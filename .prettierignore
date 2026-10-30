@@ -1,0 +1,7 @@
+# La documentación tiene tablas y formato propio; no se reformatea.
+docs/
+*.md
+pnpm-lock.yaml
+dist/
+coverage/
+.vercel/
