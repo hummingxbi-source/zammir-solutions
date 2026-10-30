@@ -21,7 +21,7 @@
     "test:db": "supabase test db",
     "test:e2e": "playwright test",
     "test:mutacion": "stryker run",
-    "test:mutacion:critico": "stryker run stryker.critico.config.mjs",
+    "test:mutacion:critico": "node scripts/mutacion-critica.mjs",
     "test:zonas": "node scripts/test-zonas.mjs",
     "typecheck": "pnpm -r typecheck && tsc -p tsconfig.json"
   },
