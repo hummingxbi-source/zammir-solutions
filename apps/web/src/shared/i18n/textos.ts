@@ -60,6 +60,69 @@ export const textos = {
       },
     },
   },
+  clientes: {
+    titulo: 'Clientes',
+    descripcion:
+      'Registra a quien te pide una cotización. Solo hacen falta el nombre y el WhatsApp.',
+    cargando: 'Cargando clientes…',
+    sinClientes:
+      'Todavía no hay clientes. Escribe el nombre y el WhatsApp de la persona y toca "Guardar cliente" para registrar al primero.',
+    alta: {
+      titulo: 'Nuevo cliente',
+      nombre: 'Nombre',
+      whatsapp: 'WhatsApp o teléfono (10 dígitos)',
+      correo: 'Correo (opcional)',
+      notas: 'Notas (opcional)',
+      fiscalTitulo: 'Datos para factura (opcional)',
+      rfc: 'RFC',
+      razonSocial: 'Razón social',
+      codigoPostalFiscal: 'Código postal fiscal (5 dígitos)',
+      guardar: 'Guardar cliente',
+      guardando: 'Guardando…',
+      listo: 'Cliente guardado.',
+    },
+    columnas: { nombre: 'Nombre', whatsapp: 'WhatsApp', correo: 'Correo' },
+    sinCorreo: 'Sin correo',
+    anonimizado: 'Datos anonimizados',
+    errores: {
+      NAME_REQUIRED: {
+        mensaje: 'Falta el nombre.',
+        queHacer: 'Escribe el nombre del cliente.',
+      },
+      PHONE_INVALID: {
+        mensaje: 'El WhatsApp no es válido.',
+        queHacer: 'Escribe los 10 dígitos, por ejemplo 55 1234 5678.',
+      },
+      EMAIL_INVALID: {
+        mensaje: 'El correo no es válido.',
+        queHacer: 'Revísalo o déjalo vacío.',
+      },
+      RFC_INVALID: {
+        mensaje: 'El RFC no es válido.',
+        queHacer: 'Debe tener 12 o 13 caracteres, o déjalo vacío.',
+      },
+      FISCAL_ZIP_INVALID: {
+        mensaje: 'El código postal fiscal no es válido.',
+        queHacer: 'Escribe 5 dígitos, o déjalo vacío.',
+      },
+      NOT_FOUND: {
+        mensaje: 'Ese cliente ya no aparece.',
+        queHacer: 'Actualiza la lista.',
+      },
+      NOT_AUTHORIZED: {
+        mensaje: 'Tu cuenta no puede guardar clientes.',
+        queHacer: 'Entra con una cuenta de administrador.',
+      },
+      ANONYMIZED: {
+        mensaje: 'Este cliente ya se anonimizó y no se puede editar.',
+        queHacer: 'Crea un cliente nuevo si vuelve a comprar.',
+      },
+      CUSTOMERS_UNAVAILABLE: {
+        mensaje: 'No hay conexión con el servidor.',
+        queHacer: 'Conéctate a internet e intenta de nuevo.',
+      },
+    },
+  },
   usuarios: {
     titulo: 'Personas del mostrador',
     descripcion:
