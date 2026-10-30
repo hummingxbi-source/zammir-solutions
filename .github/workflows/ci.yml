@@ -64,6 +64,9 @@ jobs:
       - name: 7b. Pruebas de base de datos y de RLS por rol
         run: pnpm test:db
 
+      - name: 7c. Pruebas de integración con Supabase local (entrada de administradores y ajustes)
+        run: pnpm test:integracion
+
       - name: 8. Construcción de producción
         run: pnpm build
 

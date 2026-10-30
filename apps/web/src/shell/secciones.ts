@@ -13,6 +13,8 @@ export interface Seccion {
   readonly grupo: GrupoSeccion;
   /** Si existe, la sección solo se muestra con ese interruptor encendido. */
   readonly interruptor?: Interruptor;
+  /** Solo la ven los administradores con sesión (matriz de permisos). */
+  readonly soloAdministrador?: boolean;
 }
 
 const s = textos.navegacion.secciones;
@@ -25,16 +27,35 @@ export const SECCIONES: readonly Seccion[] = [
   { id: 'cotizador', ruta: '/cotizador', texto: s.cotizador, grupo: 'principal' },
   { id: 'ordenes', ruta: '/ordenes', texto: s.ordenes, grupo: 'principal' },
   { id: 'mostrador', ruta: '/mostrador', texto: s.mostrador, grupo: 'principal' },
-  { id: 'reportes', ruta: '/reportes', texto: s.reportes, grupo: 'principal' },
+  {
+    id: 'reportes',
+    ruta: '/reportes',
+    texto: s.reportes,
+    grupo: 'principal',
+    soloAdministrador: true,
+  },
   { id: 'clientes', ruta: '/clientes', texto: s.clientes, grupo: 'secundaria' },
   {
     id: 'cuentas-por-cobrar',
     ruta: '/cuentas-por-cobrar',
     texto: s.cuentasPorCobrar,
     grupo: 'secundaria',
+    soloAdministrador: true,
   },
-  { id: 'usuarios', ruta: '/usuarios', texto: s.usuarios, grupo: 'secundaria' },
-  { id: 'configuracion', ruta: '/configuracion', texto: s.configuracion, grupo: 'secundaria' },
+  {
+    id: 'usuarios',
+    ruta: '/usuarios',
+    texto: s.usuarios,
+    grupo: 'secundaria',
+    soloAdministrador: true,
+  },
+  {
+    id: 'configuracion',
+    ruta: '/configuracion',
+    texto: s.configuracion,
+    grupo: 'secundaria',
+    soloAdministrador: true,
+  },
 ];
 
 /** Secciones de un grupo que se deben mostrar con los interruptores actuales. */
