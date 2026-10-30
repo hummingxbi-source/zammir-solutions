@@ -27,6 +27,10 @@
 | S1-06 | #38 | `feat/s1-06-editar-catalogo` | Editar/desactivar, historial de precios, bitácora |
 | S1-07 | #39 | `feat/s1-07-busqueda` | Búsqueda tolerante |
 | (valores) | #32 | `feat/valores-iniciales` | PD-21 = 30 min, PD-48 = 15 min (propuestos), modelos de impresora y tablet |
+| S1-10 | #44 | `feat/s1-10-clientes` | `normalizePhone` (core/shared-kernel), `Customer`, `buildCustomer`, `CustomerRepository` (create/update/get/list/findByPhone/anonymize), `createCustomer`/`updateCustomer` (`ManageCustomersDeps`, con `privacy?` opcional), tabla `customers` (+ vista `customers_for_device` sin datos fiscales), `supabaseCustomers(cliente,{conDatosFiscales})`, pantalla Clientes. Contrato `customerRepositoryContract` + `clientesEnMemoriaDePrueba()` |
+| S1-11 | #45 | `feat/s1-11-clientes-busqueda` | `searchCustomers`, `findPossibleDuplicates` (avisa, no bloquea), buscador y aviso en la pantalla |
+| S1-12 | #46 | `feat/s1-12-anonimizar` | `anonymizeCustomer`, función SQL `anonymize_customer` (nombre `Cliente anonimizado`, teléfono `0000000000`), disparador que impide editar anonimizados, `CUSTOMER_ANONYMIZED` sin datos personales |
+| S1-13 | #47 | `feat/s1-13-aviso-de-privacidad` | módulo `legal`: `LegalDocumentRepository` (solo agrega versiones; la base asigna `version`), `publishLegalDocument` (permiso `PRIVACY_NOTICE_EDIT`), `getCurrentLegalDocument`, `currentVersion`, borrador v1 sembrado, pantalla en Configuración; `createCustomer` anota la versión vigente. No se creó `privacy_acknowledgments` (basta `customers.privacy_notice_version`) |
 | S1-17 | #43 | `feat/s1-17-autorizacion` | `authorizeWithAdminPin(deps,{adminId,pin})` → `Authorization`; `PinAttemptGuard` (`inMemoryPinAttemptGuard(clock, politica\|null)`) y `lockDurationSeconds`; `AuditEntry.authorizedBy?` (+ columna `audit_log.authorized_by`); ajustes `pin_max_failed_attempts`=5, `pin_lock_seconds`=30, `pin_lock_max_seconds`=900 |
 | S1-18 | #42 | `feat/s1-18-permisos` | `PermissionPolicy` (`defaultPermissionPolicy.check(role, permission)`), `PERMISSION_MATRIX`, `createPermissionPolicy(overrides)`, `isPermitted`; prueba de paridad con la base en `apps/web/src/modules/identity/paridad-de-permisos.integracion.test.ts` (al agregar una tabla nueva con permiso, **sacar su permiso de la lista "pendiente" y agregar sondas**) |
 | S1-14 | #41 | `feat/s1-14-usuarios` | Usuarios con PIN: `validatePin`, `PinHasher`, casos de uso, `app_users`, vista `login_users`, `webCryptoPinHasher`, pantalla |
@@ -120,10 +124,10 @@ Orden recomendado (por dependencias): **S1-14 → S1-18 → S1-17 → S1-10 → 
 | S1-14 Usuarios y PIN | 4 h | **hecha** (PR #41) | — |
 | S1-18 Matriz de permisos | 8 h | **hecha** (PR #42) | PD-17 (configurable) |
 | S1-17 Autorización por PIN | 2 h | **hecha** (PR #43) | — |
-| S1-10 Clientes: ficha | 4 h | pendiente | adaptador IndexedDB espera S1-09 |
-| S1-11 Clientes: búsqueda y duplicados | 2 h | pendiente | S1-10 |
-| S1-12 Clientes: anonimización | 2 h | pendiente | S1-10, S1-18 |
-| S1-13 Aviso de privacidad | 4 h | pendiente | PD-12 (borrador propio) |
+| S1-10 Clientes: ficha | 4 h | **hecha** (PR #44) | adaptador IndexedDB espera S1-09 |
+| S1-11 Clientes: búsqueda y duplicados | 2 h | **hecha** (PR #45) | S1-10 |
+| S1-12 Clientes: anonimización | 2 h | **hecha** (PR #46) | S1-10, S1-18 |
+| S1-13 Aviso de privacidad | 4 h | **hecha** (PR #47) | PD-12 (borrador propio) |
 | S1-08 Importación del catálogo | 8 h | pendiente | PD-03 (catálogo de prueba) |
 | S1-19 Pantalla de bitácora | 2 h | pendiente | — |
 | S1-09 Catálogo sin conexión | 4 h | pendiente | prueba manual en tablet |
@@ -186,6 +190,8 @@ Función SQL `anonymize_customer(p_id)` (`security definer`, solo `private.is_ad
 Puerto `AuditReader { list({ desde?, hasta?, action?, userId?, entityType?, limit, after }) }` + adaptador Supabase sobre `audit_log` (solo ADMIN lo lee; ya hay RLS). Pantalla en la sección de administrador: filtros (fecha, acción, usuario), columnas usuario, dispositivo, fecha **en hora de México** (`formatearFecha` + hora), acción en español (mapa `AuditAction → texto` en `textos.ts`), valores anterior y nuevo legibles, paginación. Cajero: sin acceso (ruta protegida + base). Pruebas de componente y de integración.
 
 ### S1-09 · Catálogo disponible sin conexión (4 h, requiere tablet para lo manual)
+
+> **Nota de S1-10 a S1-13 para esta historia:** la batería `customerRepositoryContract` incluye pruebas de `anonymize` y de bitácora que **solo aplican a administrador/servidor**. El adaptador de IndexedDB de la tablet (lectura de `customers_for_device` y altas pendientes) debe pasar solo las pruebas de lectura/alta: separar la batería en dos (`customerRepositoryContract` base + `customerAdminContract`) antes de agregar el adaptador local. Lo mismo vale para `legal_documents` (la tablet solo lee la versión vigente) y `login_users`.
 **Dependencia nueva:** `dexie` (IndexedDB) y `fake-indexeddb` (pruebas) → ADR corto de herramientas (ya previstas en ADR-0014).
 **Réplica por cursor [ADR-0012, SINCRONIZACION §7]:** migración que agrega `change_seq bigint` (secuencia global + disparador `before insert or update`) a `products` y `product_categories`; vista para dispositivos `catalog_changes` (incluye `is_active`, para que la tablet oculte lo desactivado sin borrar) con `where change_seq > :cursor order by change_seq limit :n`. Puerto `CatalogReplica { pullSince(cursor, pageSize) }` y `CatalogLocalStore` (IndexedDB, tablas `products`, `categories`, `meta` con el cursor). Caso de uso `refreshCatalog`: pide páginas hasta alcanzar al servidor, hace `bulkPut` por `id` (**sin duplicar**), guarda el cursor al final de cada página (reanudable). Lectura local para vender: `ProductReader` sobre IndexedDB + `searchProducts` (ya hecho). Registrar `navigator.storage.persist()` y avisar si no se concede.
 **Pruebas:** descarga inicial; cambio de precio en servidor → reconexión trae la versión nueva sin duplicar (misma `id`); producto desactivado deja de verse en venta; contrato `ProductReader` para IndexedDB (con `fake-indexeddb`); **e2e Playwright** con `context.setOffline(true)`: el catálogo se consulta y busca. *(Manual)* modo avión en la tablet real (Samsung Galaxy Tab A9+).
