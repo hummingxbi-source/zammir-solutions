@@ -399,4 +399,23 @@ describe('Cotizador', () => {
     expect(within(tabla).getByText('Enviada')).toBeTruthy();
     expect(within(tabla).getByText('$537.60')).toBeTruthy();
   });
+
+  it('el historial se acota por cliente, por nombre o por WhatsApp', async () => {
+    montar();
+    await empezarConClienteNuevo();
+    await agregarVidrio();
+    fireEvent.click(screen.getByRole('button', { name: 'Emitir cotización' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Volver a las cotizaciones' }));
+    const filtro = await screen.findByLabelText('Buscar por cliente (nombre o WhatsApp)');
+
+    fireEvent.change(filtro, { target: { value: 'Beto' } });
+    expect(await screen.findByText('Ninguna cotización coincide con esa búsqueda.')).toBeTruthy();
+    expect(screen.queryByRole('table')).toBeNull();
+
+    fireEvent.change(filtro, { target: { value: 'ana' } });
+    expect(within(await screen.findByRole('table')).getByText('T1-0001')).toBeTruthy();
+
+    fireEvent.change(filtro, { target: { value: '5512345678' } });
+    expect(within(await screen.findByRole('table')).getByText('T1-0001')).toBeTruthy();
+  });
 });

@@ -1,7 +1,12 @@
 import type { Clock } from '../../../shared-kernel/clock';
 import { formatFolio } from '../../../shared-kernel/folio/folio';
 import { folioYear } from '../../../shared-kernel/folio/folio';
-import { issueQuotePayloadSchema, parseEnvelope, type OperationResult } from '../domain/operation';
+import {
+  issueQuotePayloadSchema,
+  parseEnvelope,
+  upsertCustomerPayloadSchema,
+  type OperationResult,
+} from '../domain/operation';
 import type { FolioAllocator } from './folio-allocator';
 
 /** Puerto del servidor: recibe una operación de una tablet y la aplica UNA sola vez [RNF-03, ADR-0016].
@@ -25,6 +30,8 @@ export interface InMemoryReceiver extends OperationReceiver {
   operationCount(): number;
   /** Folio definitivo de una cotización, si ya se aplicó. */
   folioOf(documentId: string): string | undefined;
+  /** Nombre y teléfono con que quedó un cliente en el servidor. */
+  customerOf(id: string): { readonly name: string; readonly phone: string } | undefined;
 }
 
 interface Guardada {
@@ -49,6 +56,7 @@ export function inMemoryOperationReceiver(deps: {
     quoteCount: () => compartido.cotizaciones.size,
     operationCount: () => compartido.operaciones.size,
     folioOf: (id) => compartido.cotizaciones.get(id),
+    customerOf: (id) => compartido.clientes.get(id),
     async receive(crudo) {
       const sobre = parseEnvelope(crudo);
       if (!sobre.ok) {
@@ -89,9 +97,35 @@ export function inMemoryOperationReceiver(deps: {
           }
           return resultado;
         }
-        if (op.type !== 'IssueQuote') {
-          // Los demás tipos del sprint se implementan en sus historias; hasta entonces no hay efecto.
-          return { ok: false, code: 'UNKNOWN_TYPE' } as const;
+        if (op.type === 'UpsertCustomer') {
+          const cliente = upsertCustomerPayloadSchema.safeParse(op.payload);
+          if (!cliente.success) {
+            return { ok: false, code: 'INVALID_PAYLOAD' } as const;
+          }
+          const actual = compartido.clientes.get(cliente.data.id);
+          // Un cliente anonimizado ya no se corrige: se conserva y la operación queda por revisar.
+          const anonimo = actual?.anonymized === true;
+          if (!anonimo) {
+            compartido.clientes.set(cliente.data.id, {
+              name: cliente.data.name,
+              phone: cliente.data.phone,
+              anonymized: false,
+            });
+            state.knownCustomers.add(cliente.data.id);
+          }
+          const resultado: OperationResult = {
+            ok: true,
+            status: anonimo ? 'TO_REVIEW' : estado,
+            documentId: cliente.data.id,
+            ...(anonimo
+              ? { reason: 'CUSTOMER_ANONYMIZED' }
+              : motivo === undefined
+                ? {}
+                : { reason: motivo }),
+          };
+          compartido.operaciones.set(op.opId, { resultado });
+          compartido.ultimaSeq.set(op.deviceId, op.seq);
+          return resultado;
         }
         const carga = issueQuotePayloadSchema.safeParse(op.payload);
         if (!carga.success) {
@@ -187,6 +221,7 @@ export interface SharedStore {
   /** Estado de cada cotización en el servidor. */
   readonly estados: Map<string, 'SENT' | 'ACCEPTED' | 'REJECTED'>;
   readonly codigos: Set<string>;
+  readonly clientes: Map<string, { name: string; phone: string; anonymized: boolean }>;
   readonly ultimaSeq: Map<string, number>;
   porDispositivo<T>(deviceId: string, trabajo: () => Promise<T>): Promise<T>;
 }
@@ -203,6 +238,7 @@ export function crearAlmacen(): SharedStore {
     cotizaciones: new Map(),
     estados: new Map(),
     codigos: new Set(),
+    clientes: new Map(),
     ultimaSeq: new Map(),
     porDispositivo<T>(deviceId: string, trabajo: () => Promise<T>): Promise<T> {
       const turno = (colas.get(deviceId) ?? Promise.resolve()).then(trabajo);

@@ -42,7 +42,7 @@ function temporizadorManual() {
   };
 }
 
-function motor(opciones: { conectado: () => boolean }) {
+function motor(opciones: { conectado: () => boolean; afterPass?: () => Promise<void> }) {
   const outbox = inMemorySyncOutbox({ clock: reloj });
   const temporizador = temporizadorManual();
   const enviadas: number[] = [];
@@ -66,6 +66,7 @@ function motor(opciones: { conectado: () => boolean }) {
     backoff: exponentialBackoff({ baseMs: 1000, factor: 2, capMs: 8000, jitter: 0 }),
     random: seededRandom(1),
     timer: temporizador.timer,
+    ...(opciones.afterPass === undefined ? {} : { afterPass: opciones.afterPass }),
     clock: reloj,
   });
   const guardar = () =>
@@ -201,5 +202,36 @@ describe('isStale', () => {
   it('un segundo antes del límite no, en el límite sí', () => {
     expect(isStale('2026-10-30T12:00:01.000Z', ahora, 6)).toBe(false);
     expect(isStale('2026-10-30T12:00:00.000Z', ahora, 6)).toBe(true);
+  });
+});
+
+describe('createSyncEngine · después de cada pasada', () => {
+  it('llama al gancho tras enviar, también cuando no hay red', async () => {
+    let llamadas = 0;
+    let hayRed = false;
+    const { engine, guardar } = motor({
+      conectado: () => hayRed,
+      afterPass: () => {
+        llamadas += 1;
+        return Promise.resolve();
+      },
+    });
+    await guardar();
+    await engine.trigger();
+    expect(llamadas).toBe(1);
+    hayRed = true;
+    await engine.trigger();
+    expect(llamadas).toBe(2);
+    expect(engine.status()).toMatchObject({ state: 'IDLE', pending: 0 });
+  });
+
+  it('si el gancho falla, el envío sigue como si nada', async () => {
+    const { engine, guardar } = motor({
+      conectado: () => true,
+      afterPass: () => Promise.reject(new Error('falló')),
+    });
+    await guardar();
+    await engine.trigger();
+    expect(engine.status()).toMatchObject({ state: 'IDLE', pending: 0, lastError: null });
   });
 });

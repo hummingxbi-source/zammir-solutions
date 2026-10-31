@@ -3,7 +3,10 @@ import {
   authorizeWithAdminPin,
   createActiveUserSession,
   localProductReader,
+  outboxCustomers,
   outboxQuoteStore,
+  reconcileQuotes,
+  refreshCustomers,
   err,
   ok,
   createSyncEngine,
@@ -23,6 +26,7 @@ import {
   type LegalDeps,
   type ManageCustomersDeps,
   type ManageUsersDeps,
+  type QuoteConditionsStore,
   type RegisterTabletDeps,
   type SignInWithPinDeps,
   type SyncEngine,
@@ -47,8 +51,10 @@ import {
 } from '../modules/identity/infra/supabase-admin-auth';
 import { supabaseAuditReader } from '../modules/audit/infra/supabase-audit-reader';
 import { supabaseCatalog } from '../modules/catalog/infra/supabase-catalog';
+import { supabaseCustomerReplica } from '../modules/customers/infra/supabase-customer-replica';
 import { supabaseCustomers } from '../modules/customers/infra/supabase-customers';
 import { supabaseLegal } from '../modules/legal/infra/supabase-legal';
+import { supabaseQuoteConditions } from '../modules/settings/infra/supabase-quote-conditions';
 import { pdfLibRenderer } from '../modules/documents/infra/pdf-lib-renderer';
 import { entornoDelNavegador, webShareService } from '../modules/documents/infra/web-share-service';
 import type { PrepararCotizador } from '../modules/quotes/ui/CotizadorEnLaTablet';
@@ -82,6 +88,8 @@ export interface Composition {
   readonly cargarNombres: () => Promise<ReadonlyMap<string, string>>;
   /** Aviso de privacidad versionado; `null` si no hay servidor configurado. */
   readonly legal: LegalDeps | null;
+  /** Condiciones de la cotización; `null` si no hay servidor configurado. */
+  readonly condiciones: QuoteConditionsStore | null;
   /** Altas y correcciones de clientes; `null` si no hay servidor configurado. */
   readonly clientes: ManageCustomersDeps | null;
   /** Conexión de esta tablet con un código de registro; `null` si no hay servidor configurado. */
@@ -101,6 +109,8 @@ export interface Composition {
   readonly envio: {
     readonly outbox: SyncOutbox;
     readonly engine: SyncEngine;
+    /** Baja los clientes nuevos o corregidos desde otras tablets (sin datos fiscales). */
+    readonly actualizarClientes: () => Promise<void>;
     /** Para el indicador de estado: horas sin enviar antes de avisar (de la configuración bajada). */
     readonly visible: {
       readonly engine: SyncEngine;
@@ -201,6 +211,9 @@ function crearEnvio(
     random: cryptoRandom,
     timer: browserTimer,
     clock: systemClock,
+    afterPass: async () => {
+      await reconcileQuotes(outbox);
+    },
   });
   const identidad = dexieIdentity();
   let horas: number | null = null;
@@ -214,6 +227,13 @@ function crearEnvio(
   return {
     outbox,
     engine,
+    async actualizarClientes() {
+      const c = await credenciales.load();
+      const sesion = c === null ? null : await abrirSesionDeLaTablet(url, anonKey, credenciales, c);
+      if (sesion !== null) {
+        await refreshCustomers({ source: supabaseCustomerReplica(sesion), outbox });
+      }
+    },
     visible: {
       engine,
       get staleHours() {
@@ -277,7 +297,6 @@ function crearPreparadorDelCotizador(d: {
   readonly catalogoLocal: NonNullable<Composition['catalogoLocal']>;
   readonly entradaConPin: NonNullable<Composition['entradaConPin']>;
   readonly credenciales: CredencialesDeLaTablet;
-  readonly clientes: ManageCustomersDeps;
   readonly reglas: NonNullable<typeof reglas>;
 }): PrepararCotizador {
   const identidad = dexieIdentity();
@@ -312,7 +331,20 @@ function crearPreparadorDelCotizador(d: {
         },
       },
       catalogo: localProductReader(d.catalogoLocal.store),
-      clientes: d.clientes,
+      // Los clientes viven en la tablet y cada alta o corrección sale como operación [S2-10].
+      clientes: {
+        customers: outboxCustomers({
+          outbox: d.envio.outbox,
+          clock: systemClock,
+          idGenerator: uuidIdGenerator,
+          device: { id: credenciales.device.id },
+          currentUserId: () => {
+            const estado = d.entradaConPin.session.state();
+            return estado.kind === 'ACTIVE' ? estado.user.id : null;
+          },
+        }),
+        idGenerator: uuidIdGenerator,
+      },
       renderer: pdfLibRenderer(),
       share: webShareService(entornoDelNavegador()),
       negocio: {
@@ -339,6 +371,7 @@ function crearPreparadorDelCotizador(d: {
             { adminId: adminId as UserId, pin },
           ),
       },
+      alCambiarElEnvio: (aviso: () => void) => d.envio.engine.subscribe(aviso),
       onPorEnviar: () => {
         void d.envio.engine.trigger();
       },
@@ -367,26 +400,14 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
       ? null
       : crearEnvio(entorno.url, entorno.anonKey, credencialesDeLaTablet);
 
-  const clientesDelCotizador: ManageCustomersDeps | null =
-    cliente === null
-      ? null
-      : {
-          customers: supabaseCustomers(cliente, { conDatosFiscales: false }),
-          idGenerator: uuidIdGenerator,
-        };
   const prepararCotizador: PrepararCotizador | null =
-    envio === null ||
-    catalogoLocal === null ||
-    entradaConPin === null ||
-    clientesDelCotizador === null ||
-    reglas === null
+    envio === null || catalogoLocal === null || entradaConPin === null || reglas === null
       ? null
       : crearPreparadorDelCotizador({
           envio,
           catalogoLocal,
           entradaConPin,
           credenciales: credencialesDeLaTablet,
-          clientes: clientesDelCotizador,
           reglas,
         });
 
@@ -414,6 +435,7 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
       return new Map(personas.ok ? personas.value.map((p) => [p.id, p.name]) : []);
     },
     legal,
+    condiciones: cliente === null ? null : supabaseQuoteConditions(cliente),
     clientes:
       cliente === null
         ? null

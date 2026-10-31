@@ -50,6 +50,9 @@ export function createSyncEngine(deps: {
   readonly random: Random;
   readonly timer: Timer;
   readonly clock: Clock;
+  /** Se llama al terminar cada pasada de envío (con o sin éxito), por ejemplo para poner el folio
+   *  definitivo en lo que ya se confirmó. Un fallo aquí no detiene el envío. */
+  readonly afterPass?: () => Promise<void>;
 }): SyncEngine {
   let state: SyncEngineState = 'IDLE';
   let pending = 0;
@@ -114,6 +117,11 @@ export function createSyncEngine(deps: {
       lastError = error instanceof Error ? error.message : 'UNEXPECTED';
       state = 'WAITING';
       programar(deps.backoff.delayMs(failures, deps.random));
+    }
+    try {
+      await deps.afterPass?.();
+    } catch {
+      // Se vuelve a intentar en la siguiente pasada: lo que ya se confirmó no se pierde.
     }
     await refrescarConteo();
     publicar();

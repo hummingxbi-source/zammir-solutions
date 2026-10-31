@@ -96,3 +96,6 @@ Funciones que alguien cree que faltan o sobran. **No se construyen** hasta que J
 | PP-17 | Mostrar el valor contratado del periodo junto a lo cobrado | Claude | Por aprobar; ver PD-08 |
 | PP-18 | Metros cuadrados vendidos en productos más vendidos | Claude | Por aprobar; modifica RF-M7-02 |
 | PP-19 | Seguimiento de cotizaciones por vencer y tasa de aceptación | Claude | Por aprobar |
+| PP-20 | Bajar a la tablet las cotizaciones propias desde el servidor por número de cambio (reinstalar una tablet, ver lo que hizo otra). Hoy lo emitido ya está en la base local de cada tablet; falta la vista `quotes_for_device` y la descarga. Ver [ADR-0024] | Claude, al cerrar el Sprint 2 | Por aprobar; depende de 19.3 y 19.5 |
+| PP-21 | Que el aviso de privacidad vigente viaje en la configuración que baja la tablet, para anotar su versión en el cliente que se da de alta sin internet (hoy queda sin versión) [RF-M9-03] | Claude, al cerrar el Sprint 2 | Por aprobar |
+| PP-22 | Pantalla de "por revisar" para administradores: operaciones que el servidor aplicó pero dejó con motivo (descuento sin autorización, persona desactivada, cliente anonimizado, transición inválida). El servidor ya las guarda; falta la lista | Claude, al cerrar el Sprint 2 | Por aprobar; queda para el Sprint 8 (bitácora) o antes si Juanito lo pide |

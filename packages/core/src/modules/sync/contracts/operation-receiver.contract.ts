@@ -14,6 +14,8 @@ export interface ReceptorDelContrato {
   /** Una persona (con PIN) de la tablet; `activa = false` simula a alguien ya desactivado. */
   newUser(activa: boolean): Promise<string>;
   newCustomer(): Promise<string>;
+  /** Nombre con que quedó un cliente en el servidor (lectura independiente); `undefined` si no existe. */
+  customerName(id: string): Promise<string | undefined>;
   revokeDevice(id: string): Promise<void>;
   newUuid(): string;
   /** Un código público de 8 caracteres que nadie haya usado antes (el servidor real los conserva). */
@@ -408,5 +410,136 @@ export function operationReceiverContract(
         expect(!r.ok && r.code).toBe('INVALID_PAYLOAD');
       });
     });
+
+    describe('clientes (UpsertCustomer)', () => {
+      it('un cliente capturado sin conexión se aplica y luego se le puede cotizar', async () => {
+        const { h, dispositivo, usuario, year } = await entorno();
+        const clienteNuevo = h.newUuid();
+        const alta = await dispositivo.receiver.receive(
+          upsertCustomerOperation({
+            opId: h.newUuid(),
+            deviceId: dispositivo.id,
+            seq: 1,
+            userId: usuario,
+            customerId: clienteNuevo,
+            name: 'Obra capturada en la tablet',
+          }),
+        );
+        expect(alta.ok && alta.status).toBe('APPLIED');
+        const cotizacion = await dispositivo.receiver.receive(
+          issueQuoteOperation({
+            opId: h.newUuid(),
+            deviceId: dispositivo.id,
+            seq: 2,
+            userId: usuario,
+            customerId: clienteNuevo,
+            year,
+            newUuid: () => h.newUuid(),
+            publicCode: h.newPublicCode(),
+          }),
+        );
+        expect(cotizacion.ok && cotizacion.status).toBe('APPLIED');
+      });
+
+      it('reenviar el alta no la duplica y corregirla deja el último valor que llega', async () => {
+        const { h, dispositivo, usuario } = await entorno();
+        const id = h.newUuid();
+        const alta = upsertCustomerOperation({
+          opId: h.newUuid(),
+          deviceId: dispositivo.id,
+          seq: 1,
+          userId: usuario,
+          customerId: id,
+          name: 'Primer nombre',
+        });
+        const primero = await dispositivo.receiver.receive(alta);
+        expect(await dispositivo.receiver.receive(alta)).toEqual(primero);
+        const correccion = await dispositivo.receiver.receive(
+          upsertCustomerOperation({
+            opId: h.newUuid(),
+            deviceId: dispositivo.id,
+            seq: 2,
+            userId: usuario,
+            customerId: id,
+            name: 'Nombre corregido',
+          }),
+        );
+        expect(correccion.ok && correccion.status).toBe('APPLIED');
+        expect(await h.customerName(id)).toBe('Nombre corregido');
+      });
+
+      it('dos tablets corrigen al mismo cliente: gana la que llega al final', async () => {
+        const { h, dispositivo, usuario } = await entorno();
+        const otra = await h.newDevice();
+        const id = h.newUuid();
+        await dispositivo.receiver.receive(
+          upsertCustomerOperation({
+            opId: h.newUuid(),
+            deviceId: dispositivo.id,
+            seq: 1,
+            userId: usuario,
+            customerId: id,
+            name: 'Nombre A',
+          }),
+        );
+        await otra.receiver.receive(
+          upsertCustomerOperation({
+            opId: h.newUuid(),
+            deviceId: otra.id,
+            seq: 1,
+            userId: usuario,
+            customerId: id,
+            name: 'Nombre B',
+          }),
+        );
+        expect(await h.customerName(id)).toBe('Nombre B');
+      });
+
+      it('un teléfono que no son 10 dígitos se rechaza sin guardar nada', async () => {
+        const { h, dispositivo, usuario } = await entorno();
+        const r = await dispositivo.receiver.receive(
+          upsertCustomerOperation({
+            opId: h.newUuid(),
+            deviceId: dispositivo.id,
+            seq: 1,
+            userId: usuario,
+            customerId: h.newUuid(),
+            name: 'Sin teléfono',
+            phone: '55-12',
+          }),
+        );
+        expect(r.ok).toBe(false);
+        expect(await h.countsFor([dispositivo.id])).toEqual({ quotes: 0, operations: 0 });
+      });
+    });
   });
+}
+
+/** Operación para dar de alta o corregir a un cliente desde la tablet. */
+export function upsertCustomerOperation(o: {
+  readonly opId: string;
+  readonly deviceId: string;
+  readonly seq: number;
+  readonly userId: string;
+  readonly customerId: string;
+  readonly name: string;
+  readonly phone?: string;
+}): Record<string, unknown> {
+  return {
+    opId: o.opId,
+    deviceId: o.deviceId,
+    seq: o.seq,
+    type: 'UpsertCustomer',
+    schemaVersion: 1,
+    userId: o.userId,
+    clientCreatedAt: '2090-06-16T18:00:00.000Z',
+    payload: {
+      id: o.customerId,
+      name: o.name,
+      phone: o.phone ?? '5512345678',
+      email: null,
+      notes: null,
+      privacyNoticeVersion: 1,
+    },
+  };
 }
