@@ -336,6 +336,103 @@ export const textos = {
       },
     },
   },
+  mostrador: {
+    titulo: 'Mostrador',
+    descripcion:
+      'Vende piezas, servicios y vidrio a medida y cobra al momento. Todo se guarda en la tablet y sale solo al volver la conexión.',
+    sinPersona: 'Para vender, elige quién eres.',
+    elegirPersona: 'Entrar con PIN',
+    cargando: 'Cargando el mostrador…',
+    venta: {
+      titulo: 'Venta rápida',
+      buscar: 'Buscar producto o servicio',
+      sinResultados: 'No hay productos con ese nombre.',
+      catalogoVacio: 'Revisa primero tu catálogo: todavía no hay productos para vender.',
+      unidad: 'Medidas en',
+      cm: 'centímetros',
+      m: 'metros',
+      ancho: 'Ancho',
+      alto: 'Alto',
+      cantidad: 'Cantidad',
+      agregar: 'Agregar al ticket',
+      cancelar: 'Cancelar',
+    },
+    ticket: {
+      titulo: 'Ticket actual',
+      vacio: 'Busca un producto para empezar el ticket.',
+      quitar: 'Quitar',
+      menos: 'Una menos',
+      mas: 'Una más',
+      subtotal: 'Subtotal',
+      iva: 'IVA',
+      total: 'Total',
+      cobrar: 'Cobrar',
+      vaciar: 'Vaciar el ticket',
+    },
+    cobrada: {
+      titulo: 'Venta registrada',
+      folioProvisional: 'Folio provisional',
+      cambio: 'Cambio',
+      guardada: 'Guardada en la tablet',
+      nueva: 'Nueva venta',
+    },
+    saldos: {
+      titulo: 'Cobrar el saldo de una orden',
+      vacio: 'No hay órdenes con saldo por cobrar.',
+      cobrar: 'Cobrar saldo',
+    },
+    hoy: {
+      titulo: 'Ventas de hoy',
+      vacio: 'Todavía no hay ventas hoy.',
+      folio: 'Folio',
+      hora: 'Hora',
+      cobro: 'Cobró',
+      total: 'Total',
+      estado: 'Estado',
+      cancelar: 'Cancelar venta',
+      completada: 'Completada',
+      cancelada: 'Cancelada',
+      motivoCancelar: 'Cancelar una venta necesita el PIN de un administrador y un motivo.',
+    },
+    errores: {
+      EMPTY_TICKET: {
+        mensaje: 'El ticket está vacío.',
+        queHacer: 'Agrega al menos un producto.',
+      },
+      LINE_NOT_FOUND: {
+        mensaje: 'Esa línea ya no está en el ticket.',
+        queHacer: 'Revisa el ticket.',
+      },
+      QUANTITY_INVALID: {
+        mensaje: 'La cantidad no es válida.',
+        queHacer: 'Escribe un número entero de 1 en adelante.',
+      },
+      MEASURE_INVALID: {
+        mensaje: 'Las medidas no son válidas.',
+        queHacer: 'Escribe ancho y alto mayores a cero.',
+      },
+      INPUT_INVALID: {
+        mensaje: 'Falta información para calcular el precio.',
+        queHacer: 'Revisa las medidas y la cantidad.',
+      },
+      AMOUNT_INVALID: {
+        mensaje: 'El importe no es válido.',
+        queHacer: 'Revisa las medidas y la cantidad.',
+      },
+      RULE_NOT_REGISTERED: {
+        mensaje: 'Este producto no tiene una regla de precio.',
+        queHacer: 'Avisa a soporte.',
+      },
+      PARAMS_INVALID: {
+        mensaje: 'La regla de precio de este producto está mal configurada.',
+        queHacer: 'Avisa a soporte.',
+      },
+      PRICE_INVALID: {
+        mensaje: 'El precio no es válido.',
+        queHacer: 'Avisa a soporte.',
+      },
+    },
+  },
   ordenes: {
     titulo: 'Órdenes de trabajo',
     descripcion:

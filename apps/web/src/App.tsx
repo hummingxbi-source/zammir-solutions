@@ -23,6 +23,10 @@ import {
   CotizadorEnLaTablet,
   type PrepararCotizador,
 } from './modules/quotes/ui/CotizadorEnLaTablet';
+import {
+  MostradorEnLaTablet,
+  type PrepararMostrador,
+} from './modules/counter/ui/MostradorEnLaTablet';
 import { OrdenesEnLaTablet, type PrepararOrdenes } from './modules/orders/ui/OrdenesEnLaTablet';
 import { Dispositivos } from './modules/devices/ui/Dispositivos';
 import { Usuarios, type UsuariosProps } from './modules/identity/ui/Usuarios';
@@ -58,6 +62,8 @@ export interface AppProps {
   readonly catalogo?: ImportCatalogDeps | null;
   /** Cotizador de la tablet: cómo reunir lo que necesita; sin esto la sección queda vacía. */
   readonly prepararCotizador?: PrepararCotizador | null;
+  /** Mostrador de la tablet: cómo reunir lo que necesita; sin esto la sección queda vacía. */
+  readonly prepararMostrador?: PrepararMostrador | null;
   /** Órdenes de trabajo de la tablet: cómo reunir lo que necesita; sin esto la sección queda vacía. */
   readonly prepararOrdenes?: PrepararOrdenes | null;
   /** Estado del envío de lo guardado en la tablet ("N pendientes"). */
@@ -82,6 +88,7 @@ export function App({
   sincronizacion,
   prepararCotizador = null,
   prepararOrdenes = null,
+  prepararMostrador = null,
   cargarVigenciaDeCodigo,
 }: AppProps): ReactElement {
   const secciones = [
@@ -148,6 +155,10 @@ export function App({
                 prepararCotizador !== null &&
                 entradaConPin !== null ? (
                 <CotizadorEnLaTablet preparar={prepararCotizador} session={entradaConPin.session} />
+              ) : seccion.id === 'mostrador' &&
+                prepararMostrador !== null &&
+                entradaConPin !== null ? (
+                <MostradorEnLaTablet preparar={prepararMostrador} session={entradaConPin.session} />
               ) : seccion.id === 'ordenes' && prepararOrdenes !== null && entradaConPin !== null ? (
                 <OrdenesEnLaTablet preparar={prepararOrdenes} session={entradaConPin.session} />
               ) : seccion.id === 'catalogo' && catalogo !== null ? (

@@ -3,6 +3,7 @@ import {
   authorizeWithAdminPin,
   createActiveUserSession,
   localProductReader,
+  outboxCounterSaleStore,
   outboxCustomers,
   attachOrderPhoto,
   outboxPaymentStore,
@@ -73,6 +74,7 @@ import { dexiePhotoStore } from '../modules/orders/infra/dexie-photo-store';
 import { supabasePhotoUploader } from '../modules/orders/infra/supabase-photo-uploader';
 import { compartirComprobante } from '../modules/orders/ui/comprobante';
 import { qrMatrix } from '../modules/documents/infra/qr-matrix';
+import type { PrepararMostrador } from '../modules/counter/ui/MostradorEnLaTablet';
 import type { PrepararOrdenes } from '../modules/orders/ui/OrdenesEnLaTablet';
 import { cryptoRandom } from '../shared/infra/crypto-random';
 import { browserTimer } from '../shared/infra/sync/browser-timer';
@@ -142,6 +144,8 @@ export interface Composition {
   } | null;
   /** Cómo reunir lo que el cotizador necesita; `null` si no hay servidor configurado. */
   readonly prepararCotizador: PrepararCotizador | null;
+  /** Cómo reunir lo que el mostrador necesita; `null` si no hay servidor configurado. */
+  readonly prepararMostrador: PrepararMostrador | null;
   /** Cómo reunir lo que las órdenes de trabajo necesitan; `null` si no hay servidor configurado. */
   readonly prepararOrdenes: PrepararOrdenes | null;
   /** Altas, PIN y desactivación de personas; `null` si no hay servidor configurado. */
@@ -544,6 +548,98 @@ function crearPreparadorDeOrdenes(d: {
   };
 }
 
+/** Lo que el mostrador toma de la tablet: catálogo local, configuración y personas bajadas, cola de salida
+ *  y lo ya guardado de ventas, órdenes y pagos [S3-11 a S3-15]. */
+function crearPreparadorDelMostrador(d: {
+  readonly envio: NonNullable<Composition['envio']>;
+  readonly catalogoLocal: NonNullable<Composition['catalogoLocal']>;
+  readonly entradaConPin: NonNullable<Composition['entradaConPin']>;
+  readonly credenciales: CredencialesDeLaTablet;
+  readonly reglas: NonNullable<typeof reglas>;
+}): PrepararMostrador {
+  const identidad = dexieIdentity();
+  return async () => {
+    const credenciales = await d.credenciales.load();
+    const copia = await identidad.store.load();
+    if (credenciales === null || copia?.orders === undefined || copia.quote === undefined) {
+      return null;
+    }
+    const personas = copia.users;
+    const usuarios = {
+      get: (id: UserId) => {
+        const p = personas.find((u: AppUser) => u.id === id);
+        return Promise.resolve(p === undefined ? err({ code: 'NOT_FOUND' as const }) : ok(p));
+      },
+    };
+    const dispositivo = { id: credenciales.device.id, series: credenciales.device.tempSeries };
+    const orderDeps: OrderDeps = {
+      orders: outboxWorkOrderStore(d.envio.outbox),
+      payments: outboxPaymentStore(d.envio.outbox),
+      quotes: outboxQuoteStore(d.envio.outbox),
+      outbox: d.envio.outbox,
+      idGenerator: uuidIdGenerator,
+      clock: systemClock,
+      random: cryptoRandom,
+      device: dispositivo,
+      settings: {
+        depositPercentBps: copia.orders.depositPercentBps,
+        requireDepositToStart: copia.orders.requireDepositToStart,
+        warrantyMonthsDefault: copia.orders.warrantyMonthsDefault,
+      },
+    };
+    return {
+      deps: {
+        sales: outboxCounterSaleStore(d.envio.outbox),
+        payments: outboxPaymentStore(d.envio.outbox),
+        outbox: d.envio.outbox,
+        idGenerator: uuidIdGenerator,
+        clock: systemClock,
+        random: cryptoRandom,
+        device: dispositivo,
+      },
+      orderDeps,
+      catalogo: localProductReader(d.catalogoLocal.store),
+      clientes: {
+        customers: outboxCustomers({
+          outbox: d.envio.outbox,
+          clock: systemClock,
+          idGenerator: uuidIdGenerator,
+          device: { id: credenciales.device.id },
+          currentUserId: () => {
+            const estado = d.entradaConPin.session.state();
+            return estado.kind === 'ACTIVE' ? estado.user.id : null;
+          },
+        }),
+        idGenerator: uuidIdGenerator,
+      },
+      registry: d.reglas,
+      taxRateBps: copia.quote.taxRateBps,
+      autorizacion: {
+        administradores: () =>
+          Promise.resolve(
+            personas
+              .filter((u: AppUser) => u.role === 'ADMIN' && u.isActive)
+              .map((u: AppUser) => ({ id: u.id, name: u.name })),
+          ),
+        autorizar: (adminId: string, pin: string) =>
+          authorizeWithAdminPin(
+            {
+              users: usuarios,
+              hasher: d.entradaConPin.deps.hasher,
+              guard: d.entradaConPin.deps.guard,
+              clock: systemClock,
+            },
+            { adminId: adminId as UserId, pin },
+          ),
+      },
+      alCambiarElEnvio: (aviso: () => void) => d.envio.engine.subscribe(aviso),
+      onPorEnviar: () => {
+        void d.envio.engine.trigger();
+      },
+    };
+  };
+}
+
 export function createComposition(entorno: EntornoSupabase = {}): Composition {
   const cliente = createSupabaseClient(entorno.url, entorno.anonKey);
   const ajustes = cliente === null ? null : supabaseSettingsRepository(cliente);
@@ -585,10 +681,22 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
           credenciales: credencialesDeLaTablet,
         });
 
+  const prepararMostrador: PrepararMostrador | null =
+    envio === null || catalogoLocal === null || entradaConPin === null || reglas === null
+      ? null
+      : crearPreparadorDelMostrador({
+          envio,
+          catalogoLocal,
+          entradaConPin,
+          credenciales: credencialesDeLaTablet,
+          reglas,
+        });
+
   return {
     clock: systemClock,
     idGenerator: uuidIdGenerator,
     prepararCotizador,
+    prepararMostrador,
     prepararOrdenes,
     adminAuth: cliente === null ? adminAuthNoConfigurada : supabaseAdminAuth(cliente),
     dispositivos: cliente === null ? null : supabaseDeviceRepository(cliente),
