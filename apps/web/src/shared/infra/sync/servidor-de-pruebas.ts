@@ -133,6 +133,10 @@ export const harness: ReceptorDelContrato & {
     expect(r.ok).toBe(true);
     return id;
   },
+  async customerName(id) {
+    const { data } = await servicio.from('customers').select('name').eq('id', id).limit(1);
+    return (data?.[0] as { readonly name: string } | undefined)?.name;
+  },
   async revokeDevice(id) {
     await servicio
       .from('devices')

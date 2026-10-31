@@ -44,6 +44,7 @@ operationReceiverContract('memoria', () => {
       almacen.state.knownCustomers.add(id);
       return Promise.resolve(id);
     },
+    customerName: (id) => Promise.resolve(almacen.clientes.get(id)?.name),
     revokeDevice: (id) => {
       almacen.state.activeDevices.delete(id);
       return Promise.resolve();

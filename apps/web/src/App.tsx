@@ -6,6 +6,7 @@ import type {
   ImportCatalogDeps,
   LegalDeps,
   ManageCustomersDeps,
+  QuoteConditionsStore,
   RegisterTabletDeps,
   SignInWithPinDeps,
 } from '@zammir/core';
@@ -13,6 +14,7 @@ import type {
 import { Bitacora, type BitacoraProps } from './modules/audit/ui/Bitacora';
 import { ImportarCatalogo } from './modules/catalog/ui/ImportarCatalogo';
 import { Clientes } from './modules/customers/ui/Clientes';
+import { CondicionesDeCotizacion } from './modules/quotes/ui/CondicionesDeCotizacion';
 import { AvisoDePrivacidad } from './modules/legal/ui/AvisoDePrivacidad';
 import { EntrarConPin } from './modules/identity/ui/EntrarConPin';
 import { PersonaActiva } from './modules/identity/ui/PersonaActiva';
@@ -40,6 +42,8 @@ export interface AppProps {
   readonly clientes?: ManageCustomersDeps | null;
   /** Aviso de privacidad versionado; aparece en Configuración. */
   readonly legal?: LegalDeps | null;
+  /** Condiciones que salen en cada cotización; aparecen en Configuración. */
+  readonly condiciones?: QuoteConditionsStore | null;
   /** Bitácora consultable; aparece en Usuarios. */
   readonly bitacora?: BitacoraProps | null;
   /** Conexión de esta tablet con un código de registro; abre en `/conectar`. */
@@ -67,6 +71,7 @@ export function App({
   usuarios = null,
   clientes = null,
   legal = null,
+  condiciones = null,
   bitacora = null,
   conectarTablet = null,
   entradaConPin = null,
@@ -114,6 +119,7 @@ export function App({
                     <section>
                       <h1>{seccion.texto}</h1>
                       <AvisoDePrivacidad deps={legal} />
+                      {condiciones !== null ? <CondicionesDeCotizacion store={condiciones} /> : null}
                     </section>
                   ) : seccion.id === 'usuarios' &&
                     (dispositivos !== null || usuarios !== null || bitacora !== null) ? (

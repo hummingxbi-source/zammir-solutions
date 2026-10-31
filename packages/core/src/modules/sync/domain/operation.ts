@@ -118,6 +118,19 @@ export const issueQuotePayloadSchema = z
 
 export type IssueQuotePayload = z.infer<typeof issueQuotePayloadSchema>;
 
+/** Carga de `UpsertCustomer`: alta o corrección de un cliente hecha en la tablet. Nunca lleva datos
+ *  fiscales: esos solo los captura un administrador en línea [RNF-06]. */
+export const upsertCustomerPayloadSchema = z.object({
+  id: uuid,
+  name: z.string().trim().min(1),
+  phone: z.string().regex(/^\d{10}$/),
+  email: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  privacyNoticeVersion: entero.min(1).nullable().optional(),
+});
+
+export type UpsertCustomerPayload = z.infer<typeof upsertCustomerPayloadSchema>;
+
 export type OperationStatus = 'APPLIED' | 'TO_REVIEW';
 
 /** Respuesta del servidor a una operación aplicada (o a su reenvío: el mismo resultado). */
@@ -161,8 +174,14 @@ export function parseOperation(crudo: unknown): Result<OperationEnvelope, Envelo
   if (!sobre.ok) {
     return sobre;
   }
-  if (sobre.value.type === 'IssueQuote') {
-    const carga = issueQuotePayloadSchema.safeParse(sobre.value.payload);
+  const esquema =
+    sobre.value.type === 'IssueQuote'
+      ? issueQuotePayloadSchema
+      : sobre.value.type === 'UpsertCustomer'
+        ? upsertCustomerPayloadSchema
+        : null;
+  if (esquema !== null) {
+    const carga = esquema.safeParse(sobre.value.payload);
     if (!carga.success) {
       return err({
         code: 'INVALID_ENVELOPE',

@@ -48,16 +48,19 @@ select throws_ok(
   $$ delete from public.customers where id = '40000000-0000-0000-0000-000000000001' $$,
   '42501', null, 'los clientes no se borran'
 );
+insert into public.customers (id, name, phone)
+values ('40000000-0000-0000-0000-000000000003', 'Cliente de la tablet', '5598765432');
 reset role;
 
--- ---------- Un dispositivo da de alta sin datos fiscales y lee la vista ----------
+-- ---------- Un dispositivo lee la vista (sin datos fiscales) y no escribe en la tabla ----------
 select set_config('request.jwt.claims',
   '{"sub":"00000000-0000-0000-0000-0000000000d1","role":"authenticated","app_metadata":{"rol":"DEVICE"}}', true);
 set local role authenticated;
 
-select lives_ok(
+-- Desde el Sprint 2 la tablet no escribe en la tabla: manda una operación (ver 13_upsert_customer).
+select throws_ok(
   $$ insert into public.customers (id, name, phone) values ('40000000-0000-0000-0000-000000000003', 'Cliente de la tablet', '5598765432') $$,
-  'la tablet da de alta un cliente nuevo'
+  '42501', null, 'la tablet ya no da de alta clientes directo: lo hace con una operación'
 );
 select throws_ok(
   $$ insert into public.customers (name, phone, fiscal_rfc) values ('Con RFC', '5511112222', 'XAXX010101000') $$,

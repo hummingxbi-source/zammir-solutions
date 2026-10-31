@@ -41,6 +41,8 @@ export interface CotizadorProps {
   readonly autorizacion: AutorizacionDeAdministrador;
   /** Pide que se envíe lo guardado (al emitir o marcar una cotización). */
   readonly onPorEnviar?: () => void;
+  /** Avisa cuando el envío cambia (llegó un folio definitivo, salió una operación); devuelve cómo dejar de avisar. */
+  readonly alCambiarElEnvio?: (aviso: () => void) => () => void;
 }
 
 function cobra(centavos: number): string {
@@ -62,6 +64,12 @@ export function Cotizador(props: CotizadorProps): ReactElement {
   const refrescar = useCallback(async () => {
     const todas = await deps.store.list();
     setLista([...todas].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)));
+    // Una cotización ya emitida que está abierta recibe su folio definitivo en cuanto llega.
+    setAbierta((actual) =>
+      actual === null || actual.status === 'DRAFT'
+        ? actual
+        : (todas.find((q) => q.id === actual.id) ?? actual),
+    );
     const r = await clientes.customers.list();
     setNombres(new Map((r.ok ? r.value : []).map((c) => [c.id, c])));
   }, [deps.store, clientes]);
@@ -69,6 +77,9 @@ export function Cotizador(props: CotizadorProps): ReactElement {
   useEffect(() => {
     void refrescar();
   }, [refrescar]);
+
+  const { alCambiarElEnvio } = props;
+  useEffect(() => alCambiarElEnvio?.(() => void refrescar()), [alCambiarElEnvio, refrescar]);
 
   if (actor === null) {
     return (

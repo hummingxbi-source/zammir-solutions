@@ -4,6 +4,7 @@ import { clienteDePrueba, customerRepositoryContract } from '@zammir/core/testin
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { supabaseAdminAuth } from '../../identity/infra/supabase-admin-auth';
+import { supabaseCustomerReplica } from './supabase-customer-replica';
 import { supabaseCustomers } from './supabase-customers';
 
 // Pruebas contra Supabase local real. Corren con `pnpm test:integracion`.
@@ -120,19 +121,33 @@ customerRepositoryContract('Supabase', async () => {
 });
 
 describe('clientes con Supabase y sus permisos', () => {
-  it('la tablet da de alta clientes sin datos fiscales y los ve sin datos fiscales', async () => {
+  it('la tablet ya no escribe en la tabla (los clientes entran por operación)', async () => {
     const comoTablet = supabaseCustomers(await clienteComo(tablet));
     const id = asId<'Customer'>(crypto.randomUUID());
     clientesCreados.push(id);
-    const cliente = clienteDePrueba(id, telefonoNuevo(), {
-      fiscal: NO_FISCAL_PROFILE,
-      name: `Cliente de tablet ${sufijo}`,
-    });
-    const alta = await comoTablet.create(cliente);
-    expect(alta.ok).toBe(true);
+    const alta = await comoTablet.create(
+      clienteDePrueba(id, telefonoNuevo(), {
+        fiscal: NO_FISCAL_PROFILE,
+        name: `Cliente de tablet ${sufijo}`,
+      }),
+    );
+    expect(!alta.ok && alta.error.code).toBe('NOT_AUTHORIZED');
+  });
 
-    const leido = await comoTablet.get(id);
-    expect(leido.ok && leido.value).toEqual(cliente);
+  it('la réplica baja lo que cambió después del último número y no trae datos fiscales', async () => {
+    const comoAdmin = supabaseCustomers(await clienteComo(admin), { conDatosFiscales: true });
+    const id = asId<'Customer'>(crypto.randomUUID());
+    clientesCreados.push(id);
+    await comoAdmin.create(clienteDePrueba(id, telefonoNuevo()));
+
+    const replica = supabaseCustomerReplica(await clienteComo(tablet));
+    const primera = await replica.changedAfter(0, 5000);
+    const mio = primera.ok ? primera.value.find((c) => c.id === id) : undefined;
+    expect(mio).toBeDefined();
+    expect(Object.keys(mio ?? {}).some((k) => k.startsWith('fiscal'))).toBe(false);
+
+    const despues = await replica.changedAfter(mio?.changeSeq ?? 0, 5000);
+    expect(despues.ok && despues.value.some((c) => c.id === id)).toBe(false);
   });
 
   it('la tablet no puede guardar datos fiscales', async () => {
