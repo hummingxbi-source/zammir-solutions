@@ -17,16 +17,17 @@
 | [0009](docs/decisiones/0009-idioma-del-codigo.md) | Idioma del código | Aceptada | 2026-10-26 |
 | [0010](docs/decisiones/0010-repositorios-privados.md) | Repositorios privados y sin datos reales | Aceptada | 2026-10-26 |
 | [0011](docs/decisiones/0011-redondeo-y-desglose-de-iva.md) | Redondeo y desglose de IVA | Aceptada | 2026-10-26 |
-| [0012](docs/decisiones/0012-motor-de-sincronizacion.md) | Motor de sincronización sin conexión | Aceptada (sujeta a `spike/sync`) | 2026-10-26 |
+| [0012](docs/decisiones/0012-motor-de-sincronizacion.md) | Motor de sincronización sin conexión | **Aceptada** (validada por ADR-0023) | 2026-10-26 |
 | [0013](docs/decisiones/0013-autenticacion-por-dispositivo-y-pin.md) | Autenticación por dispositivo y PIN (PIN sin conexión) | Aceptada | 2026-10-26 |
 | [0014](docs/decisiones/0014-estructura-del-repositorio-y-herramientas.md) | Estructura del repositorio y herramientas | Aceptada | 2026-10-26 |
 | [0015](docs/decisiones/0015-convenciones-del-modelo-de-datos.md) | Convenciones del modelo de datos | **Propuesta** | 2026-10-26 |
-| [0016](docs/decisiones/0016-protocolo-de-operaciones-y-folios.md) | Protocolo de operaciones y asignación de folios | **Propuesta** (se cierra con `spike/sync`) | 2026-10-26 |
+| [0016](docs/decisiones/0016-protocolo-de-operaciones-y-folios.md) | Protocolo de operaciones y asignación de folios | **Aceptada** (validada por ADR-0023) | 2026-10-26 |
 | [0017](docs/decisiones/0017-reconciliacion-con-el-documento-completo.md) | Reconciliación con el documento de construcción completo: qué decisión manda | Aceptada (calendario abierto: PD-34) | 2026-10-27 |
 | [0018](docs/decisiones/0018-impresion-de-tickets-en-tres-capas.md) | Impresión de tickets en tres capas (Web Bluetooth, impresión de Android, compartir) | Aceptada como estrategia | 2026-10-27 |
 | [0019](docs/decisiones/0019-calendario-plan-actual-con-recortes.md) | Calendario: se mantiene el plan actual de sprints, con recortes desde ahora | Aceptada | 2026-10-27 |
 | [0020](docs/decisiones/0020-importacion-del-catalogo-todo-o-nada.md) | Importación del catálogo: todo o nada, primero CSV | Aceptada | 2026-10-30 |
 | [0021](docs/decisiones/0021-clientes-alta-directa-desde-la-tablet-transitoria.md) | La tablet da de alta clientes directo en la base (transitorio hasta el Sprint 2) | Aceptada (transitoria) | 2026-10-30 |
 | [0022](docs/decisiones/0022-catalogo-en-la-tablet-indexeddb.md) | Catálogo en la tablet: IndexedDB con Dexie y cambios por número | Aceptada (propuesta) | 2026-10-30 |
+| [0023](docs/decisiones/0023-receptor-de-operaciones-en-dos-capas.md) | Receptor de operaciones en dos capas y validación de la sincronización | Aceptada (propuesta) | 2026-10-30 |
 
 Plantilla para una nueva decisión: [`docs/decisiones/0000-plantilla.md`](docs/decisiones/0000-plantilla.md).

@@ -272,7 +272,7 @@ Compuerta común en verde; concurrencia de folios 10 veces seguidas; totales del
 |---|---|---|---|
 | S2-04 Folio definitivo | M | **hecha** (PR #56) | `feat/s2-04-folio` |
 | S2-03 Receptor idempotente | L | **hecha** (PR #57) | `feat/s2-03-receptor` |
-| S2-01 Validación de sincronización | L | pendiente | |
+| S2-01 Validación de sincronización | L | **hecha** (ADR-0023, PR #58) | `feat/s2-01-validacion-sync` |
 | S2-05 Folio temporal | S | pendiente | |
 | S2-02 Cola de salida | L | pendiente | |
 | S2-06 Envío automático y estado | M | pendiente | |

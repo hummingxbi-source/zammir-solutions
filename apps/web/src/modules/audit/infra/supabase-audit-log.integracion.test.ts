@@ -38,9 +38,23 @@ async function bitacoraDeAdministrador() {
 }
 
 async function leerComoServicio(): Promise<readonly AuditEntry[]> {
-  const { data, error } = await servicio.from('audit_log').select('*');
-  expect(error).toBeNull();
-  const filas = (data ?? []) as Record<string, unknown>[];
+  // La bitácora crece con las demás pruebas de integración y la API entrega 1000 filas por página:
+  // se leen todas las páginas.
+  const filas: Record<string, unknown>[] = [];
+  for (let desde = 0; ; desde += 1000) {
+    const { data, error } = await servicio
+      .from('audit_log')
+      .select('*')
+      .order('recorded_at')
+      .order('id')
+      .range(desde, desde + 999);
+    expect(error).toBeNull();
+    const pagina = (data ?? []) as Record<string, unknown>[];
+    filas.push(...pagina);
+    if (pagina.length < 1000) {
+      break;
+    }
+  }
   return filas.map((fila) => ({
     id: fila.id as AuditEntry['id'],
     occurredAt: new Date(String(fila.occurred_at)),

@@ -19,6 +19,7 @@
     "funciones:empaquetar": "node scripts/empaquetar-core.mjs",
     "lint": "eslint . --max-warnings 0",
     "test": "vitest run",
+    "test:concurrencia": "node scripts/repetir-concurrencia.mjs",
     "test:cobertura": "vitest run --coverage",
     "test:db": "supabase test db",
     "test:e2e": "playwright test",

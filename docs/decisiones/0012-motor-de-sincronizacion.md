@@ -1,6 +1,6 @@
 # ADR-0012: Motor de sincronización sin conexión
 
-- **Estado:** Aceptada el 2026-10-26 (opción A). Condicionada al resultado del `spike/sync`: si falla, se reevalúa
+- **Estado:** Aceptada el 2026-10-26 (opción A). Validada el 2026-10-30 con el `spike/sync` hecho como pruebas de integración ([ADR-0023])
 - **Fecha:** 2026-10-26
 - **Decide:** Juanito
 - **Completa:** [ADR-0003] (librería de sincronización "a decidir en Fase 2")
