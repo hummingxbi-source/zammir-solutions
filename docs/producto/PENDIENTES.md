@@ -88,6 +88,7 @@ Funciones que alguien cree que faltan o sobran. **No se construyen** hasta que J
 | PP-10 | Marca "detenida" con motivo en una orden, en lugar de más estatus | Claude | Por aprobar |
 | PP-11 | Aviso de "trabajo listo" por WhatsApp (mensaje prellenado) | Claude | Por aprobar |
 | PP-12 | Reposición: orden ligada a la original con causa, sin cobro | Claude | Por aprobar; depende de PD-40 |
+| PP-13 | Atribuir en la base de datos las acciones de la tablet a la persona que entró con PIN. Hoy la base solo ve la sesión de la tablet (`auth.uid()`), no a la persona; la bitácora de esas acciones queda a nombre de la tablet. Diseño por decidir (por ejemplo, que cada alta o cambio mande el identificador de la persona activa y la base lo valide contra las personas activas). Hace falta antes de S3 (cobros) para que E4 cubra la atribución completa [E4] | Claude, al construir S1-20 | **Por decidir; bloquea la parte de atribución de E4** |
 | PP-13 | Comparar periodos equivalentes en reportes (mismo tramo del periodo anterior) | Claude | Por aprobar; modifica RF-M7-01 |
 | PP-14 | Reimpresión de ticket marcada "COPIA", con rastro | Claude | Por aprobar |
 | PP-15 | Convertir solo algunas líneas de una cotización en orden | Claude | Por aprobar; modifica RF-M2-08 |
