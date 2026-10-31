@@ -10,6 +10,8 @@ const CARPETAS_CRITICAS = [
   'packages/core/src/shared-kernel/folio',
   'packages/core/src/modules/catalog/domain/pricing',
   'packages/core/src/modules/quotes/domain',
+  'packages/core/src/modules/orders/domain',
+  'packages/core/src/modules/payments/domain',
 ];
 
 const existentes = CARPETAS_CRITICAS.filter((carpeta) => existsSync(carpeta));

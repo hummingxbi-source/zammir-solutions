@@ -119,16 +119,16 @@ export function DetalleDeOrden(props: DetalleDeOrdenProps): ReactElement {
     setError(t.errores[clave]);
   }
 
-  async function terminado(codigo: string | null, mensaje?: string): Promise<string | null> {
+  function terminado(codigo: string | null, mensaje?: string): Promise<string | null> {
     if (codigo !== null) {
-      return codigo;
+      return Promise.resolve(codigo);
     }
     setDialogo(null);
     setError(null);
     setAviso(mensaje ?? null);
     props.onCambio();
     props.onPorEnviar();
-    return null;
+    return Promise.resolve(null);
   }
 
   async function guardarDatos(evento: SyntheticEvent): Promise<void> {

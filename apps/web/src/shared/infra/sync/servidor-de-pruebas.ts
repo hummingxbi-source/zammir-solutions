@@ -154,7 +154,7 @@ export const harness: ReceptorDelContrato & {
     }
     const pagos = await servicio.from('payments').select('amount_cents').eq('work_order_id', id);
     const pagado = ((pagos.data ?? []) as { readonly amount_cents: number }[]).reduce(
-      (suma, p) => suma + Number(p.amount_cents),
+      (suma, p) => suma + p.amount_cents,
       0,
     );
     return { status: fila.status, folio: fila.folio, paidCents: pagado };

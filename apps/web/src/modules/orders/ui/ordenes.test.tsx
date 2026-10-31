@@ -183,9 +183,7 @@ describe('Órdenes de trabajo', () => {
   });
 
   it('una lista vacía enseña qué hacer', async () => {
-    const { deps, cotizacion } = await montar();
-    void deps;
-    void cotizacion;
+    await montar();
     expect(await screen.findByText(/Cuando un cliente acepte una cotización/)).toBeTruthy();
   });
 

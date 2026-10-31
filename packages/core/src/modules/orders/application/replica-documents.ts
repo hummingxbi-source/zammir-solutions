@@ -7,7 +7,9 @@ import { PAYMENTS_COLLECTION, WORK_ORDERS_COLLECTION } from './work-order-store'
 
 const META = 'documents-meta';
 
-export type ReplicaDocumentsError = { readonly code: 'DOCUMENTS_UNAVAILABLE' };
+export interface ReplicaDocumentsError {
+  readonly code: 'DOCUMENTS_UNAVAILABLE';
+}
 
 /** Una orden o un pago tal como baja del servidor, con su número de cambio. Sin datos fiscales [RNF-06]. */
 export type ReplicatedWorkOrder = Omit<WorkOrder, 'updatedAt'> & { readonly changeSeq: number };

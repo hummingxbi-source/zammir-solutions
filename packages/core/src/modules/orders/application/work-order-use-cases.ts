@@ -1,6 +1,11 @@
 import type { Clock } from '../../../shared-kernel/clock';
-import type { CustomerId, IdGenerator, UserId, WorkOrderId } from '../../../shared-kernel/id';
-import { asId } from '../../../shared-kernel/id';
+import type {
+  CustomerId,
+  IdGenerator,
+  QuoteId,
+  UserId,
+  WorkOrderId,
+} from '../../../shared-kernel/id';
 import { money } from '../../../shared-kernel/money/money';
 import { err, ok, type Result } from '../../../shared-kernel/result';
 import type { Random } from '../../../shared-kernel/random';
@@ -116,7 +121,7 @@ function anticipoExigido(totalCents: number, bps: number): number | null {
     return null;
   }
   const a = computeDeposit(total.value, bps);
-  return a.ok ? (a.value.deposit as number) : null;
+  return a.ok ? a.value.deposit : null;
 }
 
 interface NuevaOrden {
@@ -238,7 +243,7 @@ export async function convertQuoteToWorkOrder(
   if (!puedeTrabajarOrdenes(deps, actor)) {
     return err({ code: 'NOT_AUTHORIZED' });
   }
-  const q = await deps.quotes.get(quoteId as ReturnType<typeof asId<'Quote'>>);
+  const q = await deps.quotes.get(quoteId as QuoteId);
   if (q === null) {
     return err({ code: 'NOT_FOUND' });
   }
@@ -508,7 +513,7 @@ export async function cancelWorkOrder(
   authorization?: Authorization,
 ): Promise<Result<WorkOrder, OrderError>> {
   const decision = permisos(deps).check(actor.role, 'CANCEL_SALE_OR_ORDER');
-  let autorizo: string | null = null;
+  let autorizo: string;
   if (decision === 'DENY') {
     if (authorization === undefined) {
       return err({ code: 'NOT_AUTHORIZED' });

@@ -93,7 +93,10 @@ describe('réplica de órdenes y pagos con el servidor real', () => {
   it('las vistas de la tablet no traen columnas fiscales ni de relleno', async () => {
     const tablet = await nuevoDispositivo();
     const { data } = await tablet.session.from('work_orders_for_device').select('*').limit(1);
-    const claves = Object.keys((data ?? [])[0] ?? {});
+    const fila = (data as Record<string, unknown>[] | null)?.[0] ?? {};
+    const claves = Object.keys(fila);
+    // La prueba anterior dejó una orden: hay una fila que revisar.
+    expect(claves.length).toBeGreaterThan(0);
     expect(claves.some((k) => k.startsWith('fiscal'))).toBe(false);
   });
 });

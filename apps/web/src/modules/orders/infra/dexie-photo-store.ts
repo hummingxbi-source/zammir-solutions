@@ -11,8 +11,18 @@ class BaseDeFotos extends Dexie {
   }
 }
 
-function sinBytes({ bytes: _bytes, ...foto }: Fila): OrderPhoto {
-  return foto;
+function sinBytes(fila: Fila): OrderPhoto {
+  return {
+    id: fila.id,
+    orderId: fila.orderId,
+    mimeType: fila.mimeType,
+    sizeBytes: fila.sizeBytes,
+    width: fila.width,
+    height: fila.height,
+    takenAt: fila.takenAt,
+    userId: fila.userId,
+    status: fila.status,
+  };
 }
 
 /** Fotos de la medición guardadas en la tablet (IndexedDB), con sus bytes, hasta que se suben. */

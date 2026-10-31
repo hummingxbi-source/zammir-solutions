@@ -53,7 +53,9 @@ export interface PhotoStore {
   markUploaded(id: string): Promise<void>;
 }
 
-export type PhotoUploadError = { readonly code: 'UPLOAD_UNAVAILABLE' };
+export interface PhotoUploadError {
+  readonly code: 'UPLOAD_UNAVAILABLE';
+}
 
 /** A dónde sube la tablet las fotos cuando hay conexión (el servidor). */
 export interface PhotoUploader {

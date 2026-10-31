@@ -30,7 +30,7 @@ function aCentavos(texto: string): number | null {
     return 0;
   }
   const r = parseMoney(texto);
-  return r.ok ? (r.value as number) : null;
+  return r.ok ? r.value : null;
 }
 
 /** Cobro de una orden: efectivo con cambio, transferencia con referencia, o las dos [RN-10, RF-M3-03].
