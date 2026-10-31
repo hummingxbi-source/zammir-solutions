@@ -15,6 +15,8 @@ export const OPERATION_TYPES = [
   'DeliverWorkOrder',
   'CancelWorkOrder',
   'RegisterPayment',
+  'CreateCounterSale',
+  'CancelCounterSale',
 ] as const;
 
 export type OperationType = (typeof OPERATION_TYPES)[number];
@@ -244,6 +246,40 @@ export const registerPaymentPayloadSchema = z.object({
 
 export type RegisterPaymentPayload = z.infer<typeof registerPaymentPayloadSchema>;
 
+/** Carga de `CreateCounterSale`: la venta de mostrador completa con su cobro. Se paga completa: no hay
+ *  anticipo ni saldo [RF-M4-02]. El servidor guarda el cobro aunque no cuadre y lo deja por revisar. */
+export const createCounterSalePayloadSchema = z
+  .object({
+    id: uuid,
+    tempFolio: z.string().regex(/^T[0-9]+-[0-9]+$/),
+    publicCode: z.string().regex(/^[A-HJKMNP-Z2-9]{8}$/),
+    customerId: uuid.nullable().optional(),
+    issuedAt: z.iso.datetime(),
+    subtotalCents: centavos,
+    taxCents: centavos,
+    totalCents: centavos,
+    lines: z.array(quoteLineSchema).min(1),
+    payment: z.object({ groupId: uuid, rows: z.array(paymentRowSchema).min(1) }),
+  })
+  .superRefine((v, ctx) => {
+    if (v.totalCents !== v.subtotalCents + v.taxCents) {
+      ctx.addIssue({ code: 'custom', message: 'el total no es subtotal + IVA' });
+    }
+    const base = v.lines.reduce((suma, l) => suma + l.baseCents, 0);
+    const iva = v.lines.reduce((suma, l) => suma + l.taxCents, 0);
+    if (base !== v.subtotalCents || iva !== v.taxCents) {
+      ctx.addIssue({ code: 'custom', message: 'los totales no son la suma de las líneas' });
+    }
+  });
+
+export type CreateCounterSalePayload = z.infer<typeof createCounterSalePayloadSchema>;
+
+/** Carga de `CancelCounterSale`: cancelar una venta con motivo; solo un administrador [S3-15]. */
+export const cancelCounterSalePayloadSchema = z.object({
+  id: uuid,
+  reason: z.string().trim().min(1),
+});
+
 export type OperationStatus = 'APPLIED' | 'TO_REVIEW';
 
 /** Respuesta del servidor a una operación aplicada (o a su reenvío: el mismo resultado). */
@@ -289,6 +325,8 @@ const ESQUEMAS_DE_CARGA: Partial<Record<OperationType, z.ZodType>> = {
   DeliverWorkOrder: deliverWorkOrderPayloadSchema,
   CancelWorkOrder: cancelWorkOrderPayloadSchema,
   RegisterPayment: registerPaymentPayloadSchema,
+  CreateCounterSale: createCounterSalePayloadSchema,
+  CancelCounterSale: cancelCounterSalePayloadSchema,
 };
 
 /** Valida una operación completa: el sobre y, según el tipo, su carga. Es la comprobación que hace la

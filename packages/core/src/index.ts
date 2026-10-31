@@ -90,3 +90,4 @@ export * from './modules/orders/application/reconcile-orders';
 export * from './modules/orders/application/replica-documents';
 export * from './modules/documents/domain/work-order-document';
 export * from './modules/orders/application/order-photos';
+export * from './modules/orders/domain/order-board';

@@ -14,6 +14,12 @@ export interface ReceptorDelContrato {
   /** Una persona (con PIN) de la tablet; `activa = false` simula a alguien ya desactivado. */
   newUser(activa: boolean, administrador?: boolean): Promise<string>;
   newCustomer(): Promise<string>;
+  /** Estado de una venta de mostrador en el servidor y lo cobrado; `undefined` si no existe. */
+  saleState(
+    id: string,
+  ): Promise<
+    { readonly status: string; readonly paidCents: number; readonly folio: string } | undefined
+  >;
   /** Estado de una orden en el servidor y lo pagado (lectura independiente); `undefined` si no existe. */
   orderState(
     id: string,
@@ -699,6 +705,133 @@ export function operationReceiverContract(
       });
     });
 
+    describe('ventas de mostrador', () => {
+      async function conVentas(extra: { admin?: boolean } = {}) {
+        const e = await entorno();
+        const admin = extra.admin === true ? await e.h.newUser(true, true) : undefined;
+        let seq = 0;
+        const venta = async (
+          d: DispositivoDelContrato,
+          opciones: Partial<Parameters<typeof createCounterSaleOperation>[0]> = {},
+        ) => {
+          const id = e.h.newUuid();
+          seq += 1;
+          const r = await d.receiver.receive(
+            createCounterSaleOperation({
+              opId: e.h.newUuid(),
+              deviceId: d.id,
+              seq,
+              userId: e.usuario,
+              year: e.year,
+              newUuid: () => e.h.newUuid(),
+              publicCode: e.h.newPublicCode(),
+              saleId: id,
+              ...opciones,
+            }),
+          );
+          return { id, r };
+        };
+        const cancelar = (
+          d: DispositivoDelContrato,
+          id: string,
+          extra2: Record<string, unknown> = {},
+        ) => {
+          seq += 1;
+          return d.receiver.receive({
+            opId: e.h.newUuid(),
+            deviceId: d.id,
+            seq,
+            type: 'CancelCounterSale',
+            schemaVersion: 1,
+            userId: e.usuario,
+            clientCreatedAt: `${String(e.year)}-06-16T18:00:00.000Z`,
+            payload: { id, reason: 'Error de captura' },
+            ...extra2,
+          });
+        };
+        return { ...e, admin, venta, cancelar };
+      }
+
+      it('registra la venta con su cobro y le da su folio V del año de emisión', async () => {
+        const { h, dispositivo, venta, year } = await conVentas();
+        const { id, r } = await venta(dispositivo);
+        expect(r.ok && r.status).toBe('APPLIED');
+        expect(r.ok && r.folio).toBe(`V-${String(year)}-0001`);
+        expect(await h.saleState(id)).toMatchObject({ status: 'COMPLETED', paidCents: 11_600 });
+      });
+
+      it('un cobro mixto (efectivo + transferencia) que suma el total se aplica', async () => {
+        const { h, dispositivo, venta } = await conVentas();
+        const { id, r } = await venta(dispositivo, { mixto: true });
+        expect(r.ok && r.status).toBe('APPLIED');
+        expect(await h.saleState(id)).toMatchObject({ paidCents: 11_600 });
+      });
+
+      it('un cobro que no suma el total se guarda y queda por revisar: el dinero no se rechaza', async () => {
+        const { h, dispositivo, venta } = await conVentas();
+        const { id, r } = await venta(dispositivo, { cobradoCents: 10_000 });
+        expect(r.ok && r.status).toBe('TO_REVIEW');
+        expect(r.ok && r.reason).toBe('PAYMENT_NOT_EQUAL_TOTAL');
+        expect(await h.saleState(id)).toMatchObject({ paidCents: 10_000 });
+      });
+
+      it('se puede vender sin cliente, pero un cliente que el servidor no conoce se rechaza', async () => {
+        const { h, dispositivo, venta, cliente } = await conVentas();
+        expect((await venta(dispositivo, { customerId: cliente })).r.ok).toBe(true);
+        const falso = await venta(dispositivo, { customerId: h.newUuid() });
+        expect(!falso.r.ok && falso.r.code).toBe('INVALID_PAYLOAD');
+      });
+
+      it('reenviar la venta no la duplica ni repite el cobro', async () => {
+        const { h, dispositivo, year } = await conVentas();
+        const id = h.newUuid();
+        const op = createCounterSaleOperation({
+          opId: h.newUuid(),
+          deviceId: dispositivo.id,
+          seq: 1,
+          userId: (await entorno()).usuario,
+          year,
+          newUuid: () => h.newUuid(),
+          publicCode: h.newPublicCode(),
+          saleId: id,
+        });
+        const a = await dispositivo.receiver.receive(op);
+        const b = await dispositivo.receiver.receive(op);
+        expect(b).toEqual(a);
+        expect(await h.saleState(id)).toMatchObject({ paidCents: 11_600 });
+      });
+
+      it('cancelar: un administrador la cancela; si no lo es, se aplica pero queda por revisar', async () => {
+        const { h, dispositivo, venta, cancelar, admin } = await conVentas({ admin: true });
+        const a = await venta(dispositivo);
+        const sin = await cancelar(dispositivo, a.id);
+        expect(sin.ok && sin.reason).toBe('CANCEL_WITHOUT_AUTHORIZATION');
+        const b = await venta(dispositivo);
+        const con = await cancelar(dispositivo, b.id, { authorizedBy: admin });
+        expect(con.ok && con.status).toBe('APPLIED');
+        expect(await h.saleState(b.id)).toMatchObject({ status: 'CANCELLED' });
+        // Nada se borra: el cobro sigue registrado.
+        expect(await h.saleState(b.id)).toMatchObject({ paidCents: 11_600 });
+      });
+
+      it('una venta ya cancelada no se cancela otra vez, y una que no existe se rechaza', async () => {
+        const { h, dispositivo, venta, cancelar, admin } = await conVentas({ admin: true });
+        const { id } = await venta(dispositivo);
+        await cancelar(dispositivo, id, { authorizedBy: admin });
+        const otra = await cancelar(dispositivo, id, { authorizedBy: admin });
+        expect(otra.ok && otra.reason).toBe('INVALID_TRANSITION');
+        const falsa = await cancelar(dispositivo, h.newUuid(), { authorizedBy: admin });
+        expect(!falsa.ok && falsa.code).toBe('INVALID_PAYLOAD');
+      });
+
+      it('un efectivo recibido menor a lo aplicado se rechaza sin guardar la venta', async () => {
+        const { h, dispositivo, venta } = await conVentas();
+        const { id, r } = await venta(dispositivo, { efectivoInsuficiente: true });
+        expect(r.ok).toBe(false);
+        expect(await h.saleState(id)).toBeUndefined();
+      });
+    });
+
     describe('clientes (UpsertCustomer)', () => {
       it('un cliente capturado sin conexión se aplica y luego se le puede cotizar', async () => {
         const { h, dispositivo, usuario, year } = await entorno();
@@ -884,6 +1017,82 @@ export function createWorkOrderOperation(o: {
           detail: '1 m²',
         },
       ],
+    },
+  };
+}
+
+/** Una operación CreateCounterSale consistente: una línea de 1 m² a $116.00 con IVA incluido, cobrada
+ *  completa (o como se pida para probar los casos que no cuadran). */
+export function createCounterSaleOperation(o: {
+  readonly opId: string;
+  readonly deviceId: string;
+  readonly seq: number;
+  readonly userId: string;
+  readonly year: number;
+  readonly newUuid: () => string;
+  readonly publicCode: string;
+  readonly saleId: string;
+  readonly customerId?: string;
+  /** Cobra dos formas de pago que suman el total. */
+  readonly mixto?: boolean;
+  /** Cuánto se cobró en total (por omisión, el total de la venta). */
+  readonly cobradoCents?: number;
+  /** Efectivo recibido menor a lo aplicado (carga inválida). */
+  readonly efectivoInsuficiente?: boolean;
+}): Record<string, unknown> {
+  const issuedAt = `${String(o.year)}-06-15T18:00:00.000Z`;
+  const cobrado = o.cobradoCents ?? 11_600;
+  const filas =
+    o.efectivoInsuficiente === true
+      ? [{ id: o.newUuid(), method: 'CASH', amountCents: cobrado, cashReceivedCents: cobrado - 1 }]
+      : o.mixto === true
+        ? [
+            { id: o.newUuid(), method: 'CASH', amountCents: 5_000, cashReceivedCents: 6_000 },
+            { id: o.newUuid(), method: 'TRANSFER', amountCents: cobrado - 5_000, reference: 'REF' },
+          ]
+        : [
+            {
+              id: o.newUuid(),
+              method: 'CASH',
+              amountCents: cobrado,
+              cashReceivedCents: cobrado + 400,
+            },
+          ];
+  return {
+    opId: o.opId,
+    deviceId: o.deviceId,
+    seq: o.seq,
+    type: 'CreateCounterSale',
+    schemaVersion: 1,
+    userId: o.userId,
+    clientCreatedAt: issuedAt,
+    payload: {
+      id: o.saleId,
+      tempFolio: `T1-${String(o.seq).padStart(4, '0')}`,
+      publicCode: o.publicCode,
+      ...(o.customerId === undefined ? {} : { customerId: o.customerId }),
+      issuedAt,
+      subtotalCents: 10_000,
+      taxCents: 1_600,
+      totalCents: 11_600,
+      lines: [
+        {
+          id: o.newUuid(),
+          name: 'Vidrio claro 6 mm',
+          chargeUnit: 'SQUARE_METER',
+          unitPriceCents: 11_600,
+          catalogPriceCents: 11_600,
+          ruleId: 'AREA',
+          widthMm: 1000,
+          heightMm: 1000,
+          quantity: 1,
+          lineTotalCents: 11_600,
+          baseCents: 10_000,
+          taxCents: 1_600,
+          detail: '1 m²',
+        },
+      ],
+      payment: { groupId: o.newUuid(), rows: filas },
     },
   };
 }

@@ -350,6 +350,33 @@ describe('Órdenes de trabajo', () => {
     expect((await outbox.list()).length).toBe(antes);
   });
 
+  it('el administrador ve el resumen y los filtros combinados dejan solo la intersección', async () => {
+    await montar({ actor: admin });
+    await crearOrden();
+    fireEvent.click(screen.getByRole('button', { name: 'Volver a las órdenes' }));
+    const resumen = await screen.findByText('Valor en producción');
+    expect(resumen.nextElementSibling?.textContent).toBe('$116.00');
+    expect(
+      screen.getByText('Saldo por cobrar de lo que está listo').nextElementSibling?.textContent,
+    ).toBe('$0.00');
+
+    fireEvent.change(screen.getByLabelText('Cliente'), { target: { value: CLIENTE } });
+    expect(await screen.findByRole('table')).toBeTruthy();
+    fireEvent.change(screen.getByLabelText('Responsable'), { target: { value: ADMIN_ID } });
+    expect(await screen.findByText('Ninguna orden coincide con esos filtros.')).toBeTruthy();
+    fireEvent.change(screen.getByLabelText('Responsable'), { target: { value: '' } });
+    fireEvent.change(screen.getByLabelText('Desde'), { target: { value: '2099-01-01' } });
+    expect(await screen.findByText('Ninguna orden coincide con esos filtros.')).toBeTruthy();
+  });
+
+  it('un cajero no ve el resumen del tablero', async () => {
+    await montar();
+    await crearOrden();
+    fireEvent.click(screen.getByRole('button', { name: 'Volver a las órdenes' }));
+    await screen.findByRole('table');
+    expect(screen.queryByText('Valor en producción')).toBeNull();
+  });
+
   it('la lista filtra por estatus y muestra el saldo de cada orden', async () => {
     await montar();
     await crearOrden();

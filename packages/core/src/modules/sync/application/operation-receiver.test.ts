@@ -47,6 +47,14 @@ operationReceiverContract('memoria', () => {
       almacen.state.knownCustomers.add(id);
       return Promise.resolve(id);
     },
+    saleState: (id) => {
+      const venta = almacen.ordenesStore.ventas.get(id);
+      return Promise.resolve(
+        venta === undefined
+          ? undefined
+          : { status: venta.status, paidCents: venta.paidCents, folio: venta.folio },
+      );
+    },
     orderState: (id) => {
       const orden = almacen.ordenesStore.ordenes.get(id);
       return Promise.resolve(

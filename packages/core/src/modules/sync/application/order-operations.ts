@@ -1,7 +1,9 @@
 import { formatFolio, folioYear } from '../../../shared-kernel/folio/folio';
 import {
   advanceWorkOrderPayloadSchema,
+  cancelCounterSalePayloadSchema,
   cancelWorkOrderPayloadSchema,
+  createCounterSalePayloadSchema,
   createWorkOrderPayloadSchema,
   deliverWorkOrderPayloadSchema,
   registerPaymentPayloadSchema,
@@ -25,6 +27,13 @@ export interface ServerOrder {
   cancelDepositPaidCents: number | null;
 }
 
+export interface ServerSale {
+  folio: string;
+  status: 'COMPLETED' | 'CANCELLED';
+  totalCents: number;
+  paidCents: number;
+}
+
 export interface OrderStore {
   readonly ordenes: Map<string, ServerOrder>;
   /** Pagos aplicados por orden, en centavos. */
@@ -33,6 +42,9 @@ export interface OrderStore {
   readonly pagos: Set<string>;
   readonly convertidas: Set<string>;
   readonly codigosDeOrden: Set<string>;
+  /** Ventas de mostrador del servidor. */
+  readonly ventas: Map<string, ServerSale>;
+  readonly codigosDeVenta: Set<string>;
   /** Cotizaciones del servidor: estado por id. */
   readonly estadoDeCotizacion: Map<string, 'SENT' | 'ACCEPTED' | 'REJECTED'>;
   readonly clientesConocidos: Set<string>;
@@ -47,6 +59,8 @@ export const ORDER_OPERATION_TYPES = [
   'DeliverWorkOrder',
   'CancelWorkOrder',
   'RegisterPayment',
+  'CreateCounterSale',
+  'CancelCounterSale',
 ] as const;
 
 const invalida = (detail?: string): OperationResult => ({
@@ -243,6 +257,75 @@ export async function applyOrderOperation(ctx: {
       }
       store.pagado.set(id, (store.pagado.get(id) ?? 0) + aplicado);
       return fin(orden, id, motivo);
+    }
+
+    case 'CreateCounterSale': {
+      const c = createCounterSalePayloadSchema.safeParse(op.payload);
+      if (!c.success) {
+        return invalida();
+      }
+      const p = c.data;
+      if (
+        p.customerId !== null &&
+        p.customerId !== undefined &&
+        !store.clientesConocidos.has(p.customerId)
+      ) {
+        return invalida('CUSTOMER_NOT_FOUND');
+      }
+      if (store.codigosDeVenta.has(p.publicCode)) {
+        return revisar('PUBLIC_CODE_CONFLICT');
+      }
+      const cobrado = p.payment.rows.reduce((suma, r) => suma + r.amountCents, 0);
+      return ctx.folios.withTransaction(async (tx) => {
+        const anio = folioYear(new Date(p.issuedAt));
+        const numero = await tx.next('COUNTER_SALE', anio);
+        const folio = formatFolio('COUNTER_SALE', anio, numero);
+        if (!folio.ok) {
+          throw new Error('folio inválido');
+        }
+        store.ventas.set(p.id, {
+          folio: folio.value,
+          status: 'COMPLETED',
+          totalCents: p.totalCents,
+          paidCents: cobrado,
+        });
+        store.codigosDeVenta.add(p.publicCode);
+        const motivo = cobrado === p.totalCents ? undefined : 'PAYMENT_NOT_EQUAL_TOTAL';
+        const reason = motivo ?? ctx.baseReason;
+        return {
+          ok: true,
+          status: motivo !== undefined ? 'TO_REVIEW' : ctx.baseStatus,
+          folio: folio.value,
+          documentId: p.id,
+          ...(reason === undefined ? {} : { reason }),
+        } as OperationResult;
+      });
+    }
+
+    case 'CancelCounterSale': {
+      const c = cancelCounterSalePayloadSchema.safeParse(op.payload);
+      if (!c.success) {
+        return invalida();
+      }
+      const venta = store.ventas.get(c.data.id);
+      if (venta === undefined) {
+        return invalida('SALE_NOT_FOUND');
+      }
+      if (venta.status === 'CANCELLED') {
+        return revisar('INVALID_TRANSITION', { folio: venta.folio, documentId: c.data.id });
+      }
+      const quien = op.authorizedBy ?? op.userId;
+      venta.status = 'CANCELLED';
+      const reason = store.administradores.has(quien)
+        ? ctx.baseReason
+        : 'CANCEL_WITHOUT_AUTHORIZATION';
+      return {
+        ok: true,
+        status: store.administradores.has(quien) ? ctx.baseStatus : 'TO_REVIEW',
+        folio: venta.folio,
+        documentId: c.data.id,
+        ...(reason === undefined ? {} : { reason }),
+      };
     }
 
     default:

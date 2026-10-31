@@ -351,7 +351,21 @@ export const textos = {
       crear: 'Crear orden de trabajo',
       creando: 'Creando…',
     },
-    filtro: { titulo: 'Estatus', todas: 'Todas' },
+    filtro: {
+      titulo: 'Estatus',
+      todas: 'Todas',
+      todos: 'Todos',
+      cliente: 'Cliente',
+      responsable: 'Responsable',
+      desde: 'Desde',
+      hasta: 'Hasta',
+      sinResultados: 'Ninguna orden coincide con esos filtros.',
+    },
+    resumen: {
+      titulo: 'Resumen',
+      enProduccion: 'Valor en producción',
+      porCobrar: 'Saldo por cobrar de lo que está listo',
+    },
     estados: {
       WAITING: 'En espera',
       IN_PROCESS: 'En proceso',
