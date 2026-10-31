@@ -81,6 +81,8 @@ export interface OrderDeps {
     readonly warrantyMonthsDefault: number | null;
   };
   readonly policy?: PermissionPolicy;
+  /** Turnos de caja: si se da, todo cobro exige que quien cobra tenga su turno abierto [S3-16]. */
+  readonly shifts?: { openFor(userId: string): Promise<{ readonly id: string } | null> };
 }
 
 const permisos = (d: OrderDeps): PermissionPolicy => d.policy ?? defaultPermissionPolicy;
@@ -576,6 +578,14 @@ export async function registerWorkOrderPayment(
   if (o.value.status === 'CANCELLED') {
     return err({ code: 'ORDER_CANCELLED' });
   }
+  let turnoId: string | null = null;
+  if (deps.shifts !== undefined) {
+    const turno = await deps.shifts.openFor(actor.userId);
+    if (turno === null) {
+      return err({ code: 'NO_OPEN_SHIFT' });
+    }
+    turnoId = turno.id;
+  }
   const pagado = await pagadoDe(deps, orderId);
   const kind = paymentKindForOrder(pagado);
   const plan = planPayment({ kind, balanceCents: o.value.totalCents - pagado, rows });
@@ -598,7 +608,7 @@ export async function registerWorkOrderPayment(
     userId: actor.userId,
     deviceId: deps.device.id,
     paidAt: instante,
-    cashShiftId: null,
+    cashShiftId: turnoId,
   }));
   try {
     await deps.outbox.transaction(async (tx) => {
@@ -614,6 +624,7 @@ export async function registerWorkOrderPayment(
           target: { type: 'WORK_ORDER', id: orderId },
           kind,
           paidAt: instante,
+          ...(turnoId === null ? {} : { cashShiftId: turnoId }),
           rows: pagos.map((p) => ({
             id: p.id,
             method: p.method,

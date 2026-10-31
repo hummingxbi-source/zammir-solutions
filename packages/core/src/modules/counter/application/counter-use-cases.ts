@@ -43,6 +43,8 @@ export interface CounterDeps {
   /** Identificador del dispositivo y su serie de folios provisionales (`T<n>`). */
   readonly device: { readonly id: string; readonly series: number };
   readonly policy?: PermissionPolicy;
+  /** Turnos de caja: si se da, todo cobro exige que quien cobra tenga su turno abierto [S3-16]. */
+  readonly shifts?: { openFor(userId: string): Promise<{ readonly id: string } | null> };
 }
 
 const permisos = (d: CounterDeps): PermissionPolicy => d.policy ?? defaultPermissionPolicy;
@@ -76,6 +78,14 @@ export async function chargeCounterSale(
   if (entrada.ticket.lines.length === 0) {
     return err({ code: 'EMPTY_TICKET' });
   }
+  let turnoId: string | null = null;
+  if (deps.shifts !== undefined) {
+    const turno = await deps.shifts.openFor(actor.userId);
+    if (turno === null) {
+      return err({ code: 'NO_OPEN_SHIFT' });
+    }
+    turnoId = turno.id;
+  }
   const totales = ticketTotals(entrada.ticket);
   const plan = planPayment({ kind: 'SALE', balanceCents: totales.totalCents, rows: entrada.rows });
   if (!plan.ok) {
@@ -98,7 +108,7 @@ export async function chargeCounterSale(
     userId: actor.userId,
     deviceId: deps.device.id,
     paidAt: instante,
-    cashShiftId: null,
+    cashShiftId: turnoId,
   }));
   try {
     const venta = await deps.outbox.transaction(async (tx): Promise<CounterSale> => {
@@ -121,6 +131,7 @@ export async function chargeCounterSale(
         issuedAt: instante,
         userId: actor.userId,
         deviceId: deps.device.id,
+        cashShiftId: turnoId,
         cancelledAt: null,
         cancelReason: null,
         cancelledBy: null,
@@ -140,6 +151,7 @@ export async function chargeCounterSale(
           tempFolio: nueva.tempFolio,
           publicCode: nueva.publicCode,
           ...(nueva.customerId === null ? {} : { customerId: nueva.customerId }),
+          ...(turnoId === null ? {} : { cashShiftId: turnoId }),
           issuedAt: instante,
           subtotalCents: nueva.subtotalCents,
           taxCents: nueva.taxCents,

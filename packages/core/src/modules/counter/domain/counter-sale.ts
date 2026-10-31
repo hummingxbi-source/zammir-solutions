@@ -26,6 +26,8 @@ export interface CounterSale {
   /** Quién cobró (la persona que entró con su PIN). */
   readonly userId: UserId;
   readonly deviceId: string | null;
+  /** Turno de caja de quien cobró [RN-11]. */
+  readonly cashShiftId: string | null;
   readonly cancelledAt: string | null;
   readonly cancelReason: string | null;
   readonly cancelledBy: string | null;

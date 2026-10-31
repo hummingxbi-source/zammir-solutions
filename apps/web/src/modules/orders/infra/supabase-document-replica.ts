@@ -64,6 +64,7 @@ interface FilaDeVenta {
   readonly review_reason: string | null;
   readonly change_seq: number;
   readonly lines: readonly WorkOrderLine[];
+  readonly cash_shift_id: string | null;
 }
 
 interface FilaDePago {
@@ -163,6 +164,7 @@ export function supabaseDocumentReplica(cliente: SupabaseClient): DocumentReplic
           issuedAt: f.issued_at,
           userId: asId<'User'>(f.user_id),
           deviceId: null,
+          cashShiftId: f.cash_shift_id,
           cancelledAt: f.cancelled_at,
           cancelReason: f.cancel_reason,
           cancelledBy: f.cancelled_by,

@@ -142,6 +142,27 @@ export const harness: ReceptorDelContrato & {
     expect(r.ok).toBe(true);
     return id;
   },
+  async shiftState(id) {
+    const { data } = await servicio
+      .from('cash_shifts')
+      .select('status, server_expected_cash_cents, difference_cents')
+      .eq('id', id)
+      .limit(1);
+    const fila = data?.[0] as
+      | {
+          readonly status: string;
+          readonly server_expected_cash_cents: number | null;
+          readonly difference_cents: number | null;
+        }
+      | undefined;
+    return fila === undefined
+      ? undefined
+      : {
+          status: fila.status,
+          expectedCents: fila.server_expected_cash_cents,
+          differenceCents: fila.difference_cents,
+        };
+  },
   async saleState(id) {
     const { data } = await servicio
       .from('counter_sales')

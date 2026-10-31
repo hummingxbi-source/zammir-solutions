@@ -3,6 +3,9 @@ import {
   advanceWorkOrderPayloadSchema,
   cancelCounterSalePayloadSchema,
   cancelWorkOrderPayloadSchema,
+  closeCashShiftPayloadSchema,
+  openCashShiftPayloadSchema,
+  reopenCashShiftPayloadSchema,
   createCounterSalePayloadSchema,
   createWorkOrderPayloadSchema,
   deliverWorkOrderPayloadSchema,
@@ -27,7 +30,19 @@ export interface ServerOrder {
   cancelDepositPaidCents: number | null;
 }
 
+export interface ServerShift {
+  userId: string;
+  floatCents: number;
+  status: 'OPEN' | 'CLOSED';
+  /** Efectivo APLICADO cobrado en el turno, sin las ventas canceladas. */
+  cashCents: number;
+  expectedCents: number | null;
+  differenceCents: number | null;
+}
+
 export interface ServerSale {
+  shiftId: string | null;
+  cashCents: number;
   folio: string;
   status: 'COMPLETED' | 'CANCELLED';
   totalCents: number;
@@ -44,6 +59,8 @@ export interface OrderStore {
   readonly codigosDeOrden: Set<string>;
   /** Ventas de mostrador del servidor. */
   readonly ventas: Map<string, ServerSale>;
+  /** Turnos de caja del servidor. */
+  readonly turnos: Map<string, ServerShift>;
   readonly codigosDeVenta: Set<string>;
   /** Cotizaciones del servidor: estado por id. */
   readonly estadoDeCotizacion: Map<string, 'SENT' | 'ACCEPTED' | 'REJECTED'>;
@@ -61,6 +78,9 @@ export const ORDER_OPERATION_TYPES = [
   'RegisterPayment',
   'CreateCounterSale',
   'CancelCounterSale',
+  'OpenCashShift',
+  'CloseCashShift',
+  'ReopenCashShift',
 ] as const;
 
 const invalida = (detail?: string): OperationResult => ({
@@ -243,6 +263,11 @@ export async function applyOrderOperation(ctx: {
       if (orden === undefined) {
         return invalida('ORDER_NOT_FOUND');
       }
+      const turnoId = c.data.cashShiftId ?? null;
+      const turno = turnoId === null ? undefined : store.turnos.get(turnoId);
+      if (turnoId !== null && turno === undefined) {
+        return invalida('SHIFT_NOT_FOUND');
+      }
       const aplicado = c.data.rows.reduce((suma, r) => suma + r.amountCents, 0);
       const saldo = orden.totalCents - (store.pagado.get(id) ?? 0);
       // El dinero recibido nunca se rechaza: se guarda y, si no cuadra, se revisa.
@@ -251,7 +276,14 @@ export async function applyOrderOperation(ctx: {
           ? 'PAYMENT_EXCEEDS_BALANCE'
           : orden.status === 'CANCELLED'
             ? 'ORDER_CANCELLED'
-            : undefined;
+            : turno?.status === 'CLOSED'
+              ? 'SHIFT_CLOSED'
+              : undefined;
+      if (turno !== undefined) {
+        turno.cashCents += c.data.rows
+          .filter((r) => r.method === 'CASH')
+          .reduce((suma, r) => suma + r.amountCents, 0);
+      }
       for (const r of c.data.rows) {
         store.pagos.add(r.id);
       }
@@ -275,7 +307,15 @@ export async function applyOrderOperation(ctx: {
       if (store.codigosDeVenta.has(p.publicCode)) {
         return revisar('PUBLIC_CODE_CONFLICT');
       }
+      const turnoId = p.cashShiftId ?? null;
+      const turno = turnoId === null ? undefined : store.turnos.get(turnoId);
+      if (turnoId !== null && turno === undefined) {
+        return invalida('SHIFT_NOT_FOUND');
+      }
       const cobrado = p.payment.rows.reduce((suma, r) => suma + r.amountCents, 0);
+      const efectivo = p.payment.rows
+        .filter((r) => r.method === 'CASH')
+        .reduce((suma, r) => suma + r.amountCents, 0);
       return ctx.folios.withTransaction(async (tx) => {
         const anio = folioYear(new Date(p.issuedAt));
         const numero = await tx.next('COUNTER_SALE', anio);
@@ -288,9 +328,19 @@ export async function applyOrderOperation(ctx: {
           status: 'COMPLETED',
           totalCents: p.totalCents,
           paidCents: cobrado,
+          shiftId: turnoId,
+          cashCents: efectivo,
         });
+        if (turno !== undefined) {
+          turno.cashCents += efectivo;
+        }
         store.codigosDeVenta.add(p.publicCode);
-        const motivo = cobrado === p.totalCents ? undefined : 'PAYMENT_NOT_EQUAL_TOTAL';
+        const motivo =
+          cobrado !== p.totalCents
+            ? 'PAYMENT_NOT_EQUAL_TOTAL'
+            : turno?.status === 'CLOSED'
+              ? 'SHIFT_CLOSED'
+              : undefined;
         const reason = motivo ?? ctx.baseReason;
         return {
           ok: true,
@@ -316,6 +366,11 @@ export async function applyOrderOperation(ctx: {
       }
       const quien = op.authorizedBy ?? op.userId;
       venta.status = 'CANCELLED';
+      // La venta cancelada sale del cobro del turno [PD-24].
+      const turnoDeVenta = venta.shiftId === null ? undefined : store.turnos.get(venta.shiftId);
+      if (turnoDeVenta !== undefined) {
+        turnoDeVenta.cashCents -= venta.cashCents;
+      }
       const reason = store.administradores.has(quien)
         ? ctx.baseReason
         : 'CANCEL_WITHOUT_AUTHORIZATION';
@@ -323,6 +378,82 @@ export async function applyOrderOperation(ctx: {
         ok: true,
         status: store.administradores.has(quien) ? ctx.baseStatus : 'TO_REVIEW',
         folio: venta.folio,
+        documentId: c.data.id,
+        ...(reason === undefined ? {} : { reason }),
+      };
+    }
+
+    case 'OpenCashShift': {
+      const c = openCashShiftPayloadSchema.safeParse(op.payload);
+      if (!c.success) {
+        return invalida();
+      }
+      const yaAbierto = [...store.turnos.values()].some(
+        (t) => t.userId === op.userId && t.status === 'OPEN',
+      );
+      store.turnos.set(c.data.id, {
+        userId: op.userId,
+        floatCents: c.data.openingFloatCents,
+        status: 'OPEN',
+        cashCents: 0,
+        expectedCents: null,
+        differenceCents: null,
+      });
+      const reason = yaAbierto ? 'SHIFT_ALREADY_OPEN' : ctx.baseReason;
+      return {
+        ok: true,
+        status: yaAbierto ? 'TO_REVIEW' : ctx.baseStatus,
+        documentId: c.data.id,
+        ...(reason === undefined ? {} : { reason }),
+      };
+    }
+
+    case 'CloseCashShift': {
+      const c = closeCashShiftPayloadSchema.safeParse(op.payload);
+      if (!c.success) {
+        return invalida();
+      }
+      const turno = store.turnos.get(c.data.id);
+      if (turno === undefined) {
+        return invalida('SHIFT_NOT_FOUND');
+      }
+      if (turno.status === 'CLOSED') {
+        return revisar('INVALID_TRANSITION', { documentId: c.data.id });
+      }
+      // El servidor recalcula el efectivo esperado; si no coincide, el corte queda por revisar.
+      const esperado = turno.floatCents + turno.cashCents;
+      turno.status = 'CLOSED';
+      turno.expectedCents = esperado;
+      turno.differenceCents = c.data.countedCashCents - esperado;
+      const difiere = esperado !== c.data.expectedCashCents;
+      const reason = difiere ? 'CASH_SUMMARY_MISMATCH' : ctx.baseReason;
+      return {
+        ok: true,
+        status: difiere ? 'TO_REVIEW' : ctx.baseStatus,
+        documentId: c.data.id,
+        ...(reason === undefined ? {} : { reason }),
+      };
+    }
+
+    case 'ReopenCashShift': {
+      const c = reopenCashShiftPayloadSchema.safeParse(op.payload);
+      if (!c.success) {
+        return invalida();
+      }
+      const turno = store.turnos.get(c.data.id);
+      if (turno === undefined) {
+        return invalida('SHIFT_NOT_FOUND');
+      }
+      if (turno.status !== 'CLOSED') {
+        return revisar('INVALID_TRANSITION', { documentId: c.data.id });
+      }
+      const quien = op.authorizedBy ?? op.userId;
+      turno.status = 'OPEN';
+      const sinPermiso = !store.administradores.has(quien);
+      const reason = sinPermiso ? 'REOPEN_WITHOUT_AUTHORIZATION' : ctx.baseReason;
+      return {
+        ok: true,
+        status: sinPermiso ? 'TO_REVIEW' : ctx.baseStatus,
         documentId: c.data.id,
         ...(reason === undefined ? {} : { reason }),
       };

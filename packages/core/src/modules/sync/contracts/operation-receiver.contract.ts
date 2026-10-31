@@ -14,6 +14,15 @@ export interface ReceptorDelContrato {
   /** Una persona (con PIN) de la tablet; `activa = false` simula a alguien ya desactivado. */
   newUser(activa: boolean, administrador?: boolean): Promise<string>;
   newCustomer(): Promise<string>;
+  /** Estado de un turno de caja en el servidor (lectura independiente); `undefined` si no existe. */
+  shiftState(id: string): Promise<
+    | {
+        readonly status: string;
+        readonly expectedCents: number | null;
+        readonly differenceCents: number | null;
+      }
+    | undefined
+  >;
   /** Estado de una venta de mostrador en el servidor y lo cobrado; `undefined` si no existe. */
   saleState(
     id: string,
@@ -829,6 +838,459 @@ export function operationReceiverContract(
         const { id, r } = await venta(dispositivo, { efectivoInsuficiente: true });
         expect(r.ok).toBe(false);
         expect(await h.saleState(id)).toBeUndefined();
+      });
+    });
+
+    describe('órdenes y ventas · reglas finas', () => {
+      async function base() {
+        const e = await entorno();
+        let seq = 0;
+        const instante = `${String(e.year)}-06-16T18:00:00.000Z`;
+        const enviar = async (
+          d: DispositivoDelContrato,
+          tipo: string,
+          payload: Record<string, unknown>,
+          extra: Record<string, unknown> = {},
+        ) => {
+          const candidato = seq + 1;
+          const r = await d.receiver.receive({
+            opId: e.h.newUuid(),
+            deviceId: d.id,
+            seq: candidato,
+            type: tipo,
+            schemaVersion: 1,
+            userId: e.usuario,
+            clientCreatedAt: instante,
+            payload,
+            ...extra,
+          });
+          if (r.ok) {
+            seq = candidato;
+          }
+          return r;
+        };
+        const orden = async (d: DispositivoDelContrato, extra: Record<string, unknown> = {}) => {
+          const id = e.h.newUuid();
+          const candidato = seq + 1;
+          const op = createWorkOrderOperation({
+            opId: e.h.newUuid(),
+            deviceId: d.id,
+            seq: candidato,
+            userId: e.usuario,
+            customerId: e.cliente,
+            year: e.year,
+            newUuid: () => e.h.newUuid(),
+            publicCode: e.h.newPublicCode(),
+            orderId: id,
+          }) as { payload: Record<string, unknown> };
+          const r = await d.receiver.receive({ ...op, payload: { ...op.payload, ...extra } });
+          if (r.ok) {
+            seq = candidato;
+          }
+          return { id, r };
+        };
+        const cobro = (id: string, centavos: number, target = 'WORK_ORDER') => ({
+          groupId: e.h.newUuid(),
+          target: { type: target, id },
+          kind: 'DEPOSIT',
+          paidAt: instante,
+          rows: [{ id: e.h.newUuid(), method: 'TRANSFER', amountCents: centavos }],
+        });
+        return { ...e, enviar, orden, cobro };
+      }
+
+      it('un código público repetido en otra orden no se aplica: queda por revisar', async () => {
+        const { h, dispositivo, orden } = await base();
+        const repetido = h.newPublicCode();
+        const a = await orden(dispositivo, { publicCode: repetido });
+        expect(a.r.ok && a.r.status).toBe('APPLIED');
+        const b = await orden(dispositivo, { publicCode: repetido });
+        expect(b.r.ok && b.r.status).toBe('TO_REVIEW');
+        expect(b.r.ok && b.r.reason).toBe('PUBLIC_CODE_CONFLICT');
+        expect(await h.orderState(b.id)).toBeUndefined();
+      });
+
+      it('una orden de un cliente que el servidor no conoce, o de una cotización que no conoce, se rechaza', async () => {
+        const { h, dispositivo, orden } = await base();
+        const sinCliente = await orden(dispositivo, { customerId: h.newUuid() });
+        expect(!sinCliente.r.ok && sinCliente.r.code).toBe('INVALID_PAYLOAD');
+        const sinCotizacion = await orden(dispositivo, { quoteId: h.newUuid() });
+        expect(!sinCotizacion.r.ok && sinCotizacion.r.code).toBe('INVALID_PAYLOAD');
+        expect(await h.orderState(sinCliente.id)).toBeUndefined();
+        expect(await h.orderState(sinCotizacion.id)).toBeUndefined();
+      });
+
+      it('una orden que no existe no avanza, no se entrega, no se cancela ni se cobra', async () => {
+        const { h, dispositivo, enviar, cobro } = await base();
+        const fantasma = h.newUuid();
+        const respuestas = [
+          await enviar(dispositivo, 'AdvanceWorkOrder', { id: fantasma, to: 'READY' }),
+          await enviar(dispositivo, 'DeliverWorkOrder', { id: fantasma }),
+          await enviar(dispositivo, 'CancelWorkOrder', { id: fantasma, reason: 'x' }),
+          await enviar(dispositivo, 'RegisterPayment', cobro(fantasma, 100)),
+        ];
+        for (const r of respuestas) {
+          expect(!r.ok && r.code).toBe('INVALID_PAYLOAD');
+        }
+      });
+
+      it('una transición inválida dice qué orden era y su folio', async () => {
+        const { dispositivo, orden, enviar } = await base();
+        const { id } = await orden(dispositivo);
+        const saltada = await enviar(dispositivo, 'AdvanceWorkOrder', { id, to: 'READY' });
+        expect(saltada.ok && saltada.reason).toBe('INVALID_TRANSITION');
+        expect(saltada.ok && saltada.documentId).toBe(id);
+        expect(saltada.ok && saltada.folio).toMatch(/^OT-\d{4}-\d{4,}$/);
+        const entregada = await enviar(dispositivo, 'DeliverWorkOrder', { id });
+        expect(entregada.ok && entregada.reason).toBe('INVALID_TRANSITION');
+        expect(entregada.ok && entregada.folio).toMatch(/^OT-/);
+      });
+
+      it('cobrar justo el saldo se aplica; un centavo de más queda por revisar', async () => {
+        const { h, dispositivo, orden, enviar, cobro } = await base();
+        const exacto = await orden(dispositivo);
+        const r1 = await enviar(dispositivo, 'RegisterPayment', cobro(exacto.id, 11_600));
+        expect(r1.ok && r1.status).toBe('APPLIED');
+        const demas = await orden(dispositivo);
+        const r2 = await enviar(dispositivo, 'RegisterPayment', cobro(demas.id, 11_601));
+        expect(r2.ok && r2.reason).toBe('PAYMENT_EXCEEDS_BALANCE');
+        expect(await h.orderState(demas.id)).toMatchObject({ paidCents: 11_601 });
+      });
+
+      it('a una orden cancelada se le puede cobrar lo que ya se recibió, pero queda por revisar', async () => {
+        const { h, dispositivo, orden, enviar, cobro, admin } = await conAdmin();
+        const { id } = await orden(dispositivo);
+        await enviar(dispositivo, 'CancelWorkOrder', { id, reason: 'x' }, { authorizedBy: admin });
+        const r = await enviar(dispositivo, 'RegisterPayment', cobro(id, 100));
+        expect(r.ok && r.reason).toBe('ORDER_CANCELLED');
+        expect(await h.orderState(id)).toMatchObject({ status: 'CANCELLED', paidCents: 100 });
+      });
+
+      it('las ventas de mostrador todavía no se cobran como cobro de orden', async () => {
+        const { h, dispositivo, enviar, cobro } = await base();
+        const r = await enviar(
+          dispositivo,
+          'RegisterPayment',
+          cobro(h.newUuid(), 100, 'COUNTER_SALE'),
+        );
+        expect(!r.ok && r.code).toBe('INVALID_PAYLOAD');
+      });
+
+      it('entregar con saldo y administrador pero sin motivo, o con motivo en blanco, queda por revisar', async () => {
+        const { dispositivo, orden, enviar, cobro, admin } = await conAdmin();
+        const lista = async () => {
+          const { id } = await orden(dispositivo);
+          await enviar(dispositivo, 'RegisterPayment', cobro(id, 5_800));
+          await enviar(dispositivo, 'AdvanceWorkOrder', { id, to: 'IN_PROCESS' });
+          await enviar(dispositivo, 'AdvanceWorkOrder', { id, to: 'READY' });
+          return id;
+        };
+        const a = await lista();
+        const sinMotivo = await enviar(
+          dispositivo,
+          'DeliverWorkOrder',
+          { id: a },
+          { authorizedBy: admin },
+        );
+        expect(sinMotivo.ok && sinMotivo.reason).toBe(
+          'DELIVERED_WITH_BALANCE_WITHOUT_AUTHORIZATION',
+        );
+        const b = await lista();
+        const enBlanco = await enviar(
+          dispositivo,
+          'DeliverWorkOrder',
+          { id: b, reason: '   ' },
+          { authorizedBy: admin },
+        );
+        expect(enBlanco.ok && enBlanco.reason).toBe('DELIVERED_WITH_BALANCE_WITHOUT_AUTHORIZATION');
+      });
+
+      it('empezar sin anticipo pero con la autorización de un administrador se aplica', async () => {
+        const { dispositivo, orden, enviar, admin } = await conAdmin();
+        const { id } = await orden(dispositivo);
+        const r = await enviar(
+          dispositivo,
+          'AdvanceWorkOrder',
+          { id, to: 'IN_PROCESS' },
+          { authorizedBy: admin },
+        );
+        expect(r.ok && r.status).toBe('APPLIED');
+      });
+
+      it('una venta con el mismo código público que otra no se aplica: queda por revisar', async () => {
+        const { h, dispositivo, usuario, year } = await base();
+        const repetido = h.newPublicCode();
+        let seq = 0;
+        const vender = () => {
+          seq += 1;
+          return dispositivo.receiver.receive(
+            createCounterSaleOperation({
+              opId: h.newUuid(),
+              deviceId: dispositivo.id,
+              seq,
+              userId: usuario,
+              year,
+              newUuid: () => h.newUuid(),
+              publicCode: repetido,
+              saleId: h.newUuid(),
+            }),
+          );
+        };
+        expect((await vender()).ok).toBe(true);
+        const segunda = await vender();
+        expect(segunda.ok && segunda.reason).toBe('PUBLIC_CODE_CONFLICT');
+      });
+
+      async function conAdmin() {
+        const b = await base();
+        const admin = await b.h.newUser(true, true);
+        return { ...b, admin };
+      }
+    });
+
+    describe('turnos de caja', () => {
+      async function conTurnos() {
+        const e = await entorno();
+        const admin = await e.h.newUser(true, true);
+        let seq = 0;
+        const instante = `${String(e.year)}-06-16T18:00:00.000Z`;
+        const enviar = async (
+          d: DispositivoDelContrato,
+          tipo: string,
+          payload: Record<string, unknown>,
+          extra: Record<string, unknown> = {},
+          userId: string = e.usuario,
+        ) => {
+          const candidato = seq + 1;
+          const r = await d.receiver.receive({
+            opId: e.h.newUuid(),
+            deviceId: d.id,
+            seq: candidato,
+            type: tipo,
+            schemaVersion: 1,
+            userId,
+            clientCreatedAt: instante,
+            payload,
+            ...extra,
+          });
+          if (r.ok) {
+            seq = candidato;
+          }
+          return r;
+        };
+        const abrir = async (d: DispositivoDelContrato, fondo = 0, userId: string = e.usuario) => {
+          const id = e.h.newUuid();
+          const r = await enviar(
+            d,
+            'OpenCashShift',
+            { id, openedAt: instante, openingFloatCents: fondo },
+            {},
+            userId,
+          );
+          return { id, r };
+        };
+        const cerrar = (
+          d: DispositivoDelContrato,
+          id: string,
+          contado: number,
+          esperado: number,
+          extra: Record<string, unknown> = {},
+        ) =>
+          enviar(d, 'CloseCashShift', {
+            id,
+            closedAt: instante,
+            countedCashCents: contado,
+            expectedCashCents: esperado,
+            ...extra,
+          });
+        const orden = async (d: DispositivoDelContrato) => {
+          const id = e.h.newUuid();
+          const candidato = seq + 1;
+          const r = await d.receiver.receive(
+            createWorkOrderOperation({
+              opId: e.h.newUuid(),
+              deviceId: d.id,
+              seq: candidato,
+              userId: e.usuario,
+              customerId: e.cliente,
+              year: e.year,
+              newUuid: () => e.h.newUuid(),
+              publicCode: e.h.newPublicCode(),
+              orderId: id,
+            }),
+          );
+          if (r.ok) {
+            seq = candidato;
+          }
+          return id;
+        };
+        const cobrarEfectivo = (
+          d: DispositivoDelContrato,
+          orderId: string,
+          aplicado: number,
+          turno: string | null,
+        ) =>
+          enviar(d, 'RegisterPayment', {
+            groupId: e.h.newUuid(),
+            target: { type: 'WORK_ORDER', id: orderId },
+            kind: 'DEPOSIT',
+            paidAt: instante,
+            ...(turno === null ? {} : { cashShiftId: turno }),
+            rows: [
+              {
+                id: e.h.newUuid(),
+                method: 'CASH',
+                amountCents: aplicado,
+                cashReceivedCents: aplicado + 100,
+              },
+            ],
+          });
+        const vender = async (d: DispositivoDelContrato, turno: string | null) => {
+          const id = e.h.newUuid();
+          const candidato = seq + 1;
+          const op = createCounterSaleOperation({
+            opId: e.h.newUuid(),
+            deviceId: d.id,
+            seq: candidato,
+            userId: e.usuario,
+            year: e.year,
+            newUuid: () => e.h.newUuid(),
+            publicCode: e.h.newPublicCode(),
+            saleId: id,
+          }) as { payload: Record<string, unknown> };
+          const r = await d.receiver.receive({
+            ...op,
+            payload: { ...op.payload, ...(turno === null ? {} : { cashShiftId: turno }) },
+          });
+          if (r.ok) {
+            seq = candidato;
+          }
+          return { id, r };
+        };
+        return { ...e, admin, enviar, abrir, cerrar, orden, cobrarEfectivo, vender };
+      }
+
+      it('abrir un turno lo deja abierto con su fondo; un segundo turno de la misma persona queda por revisar', async () => {
+        const { h, dispositivo, abrir } = await conTurnos();
+        const a = await abrir(dispositivo, 50_000);
+        expect(a.r.ok && a.r.status).toBe('APPLIED');
+        expect(await h.shiftState(a.id)).toMatchObject({ status: 'OPEN' });
+        const b = await abrir(dispositivo);
+        expect(b.r.ok && b.r.status).toBe('TO_REVIEW');
+        expect(b.r.ok && b.r.reason).toBe('SHIFT_ALREADY_OPEN');
+      });
+
+      it('el efectivo esperado es el fondo más lo cobrado en efectivo, de órdenes y de ventas', async () => {
+        const { h, dispositivo, abrir, cerrar, orden, cobrarEfectivo, vender } = await conTurnos();
+        const { id: turno } = await abrir(dispositivo, 10_000);
+        const o = await orden(dispositivo);
+        await cobrarEfectivo(dispositivo, o, 5_800, turno);
+        await vender(dispositivo, turno);
+        // 10 000 de fondo + 5 800 del anticipo + 11 600 de la venta (todo en efectivo).
+        const r = await cerrar(dispositivo, turno, 27_400, 27_400);
+        expect(r.ok && r.status).toBe('APPLIED');
+        expect(await h.shiftState(turno)).toMatchObject({
+          status: 'CLOSED',
+          expectedCents: 27_400,
+          differenceCents: 0,
+        });
+      });
+
+      it('la diferencia es contado − esperado: sobrante positivo, faltante negativo', async () => {
+        const { h, dispositivo, abrir, cerrar, orden, cobrarEfectivo } = await conTurnos();
+        const a = await abrir(dispositivo, 0);
+        await cobrarEfectivo(dispositivo, await orden(dispositivo), 5_800, a.id);
+        const r = await cerrar(dispositivo, a.id, 5_900, 5_800);
+        expect(r.ok && r.status).toBe('APPLIED');
+        expect(await h.shiftState(a.id)).toMatchObject({ differenceCents: 100 });
+      });
+
+      it('si lo que esperaba la tablet no coincide con el recálculo del servidor, queda por revisar', async () => {
+        const { h, dispositivo, abrir, cerrar, orden, cobrarEfectivo } = await conTurnos();
+        const a = await abrir(dispositivo, 0);
+        await cobrarEfectivo(dispositivo, await orden(dispositivo), 5_800, a.id);
+        const r = await cerrar(dispositivo, a.id, 9_999, 9_999);
+        expect(r.ok && r.status).toBe('TO_REVIEW');
+        expect(r.ok && r.reason).toBe('CASH_SUMMARY_MISMATCH');
+        expect(await h.shiftState(a.id)).toMatchObject({ status: 'CLOSED', expectedCents: 5_800 });
+      });
+
+      it('una venta cancelada sale del cobro del turno', async () => {
+        const { h, dispositivo, abrir, cerrar, vender, enviar, admin } = await conTurnos();
+        const a = await abrir(dispositivo, 1_000);
+        const venta = await vender(dispositivo, a.id);
+        await enviar(
+          dispositivo,
+          'CancelCounterSale',
+          { id: venta.id, reason: 'Error' },
+          { authorizedBy: admin },
+        );
+        const r = await cerrar(dispositivo, a.id, 1_000, 1_000);
+        expect(r.ok && r.status).toBe('APPLIED');
+        expect(await h.shiftState(a.id)).toMatchObject({
+          expectedCents: 1_000,
+          differenceCents: 0,
+        });
+      });
+
+      it('un corte cerrado no se cierra de nuevo y uno que no existe se rechaza', async () => {
+        const { h, dispositivo, abrir, cerrar } = await conTurnos();
+        const a = await abrir(dispositivo, 0);
+        await cerrar(dispositivo, a.id, 0, 0);
+        const otra = await cerrar(dispositivo, a.id, 0, 0);
+        expect(otra.ok && otra.reason).toBe('INVALID_TRANSITION');
+        const falso = await cerrar(dispositivo, h.newUuid(), 0, 0);
+        expect(!falso.ok && falso.code).toBe('INVALID_PAYLOAD');
+      });
+
+      it('un cobro a un turno cerrado se guarda y queda por revisar; a uno que no existe se rechaza', async () => {
+        const { h, dispositivo, abrir, cerrar, orden, cobrarEfectivo, vender } = await conTurnos();
+        const a = await abrir(dispositivo, 0);
+        await cerrar(dispositivo, a.id, 0, 0);
+        const o = await orden(dispositivo);
+        const tarde = await cobrarEfectivo(dispositivo, o, 1_000, a.id);
+        expect(tarde.ok && tarde.reason).toBe('SHIFT_CLOSED');
+        expect(await h.orderState(o)).toMatchObject({ paidCents: 1_000 });
+        const venta = await vender(dispositivo, a.id);
+        expect(venta.r.ok && venta.r.reason).toBe('SHIFT_CLOSED');
+        const fantasma = await cobrarEfectivo(dispositivo, o, 1_000, h.newUuid());
+        expect(!fantasma.ok && fantasma.code).toBe('INVALID_PAYLOAD');
+        const ventaFantasma = await vender(dispositivo, h.newUuid());
+        expect(!ventaFantasma.r.ok && ventaFantasma.r.code).toBe('INVALID_PAYLOAD');
+      });
+
+      it('reabrir: un administrador lo reabre; si no lo es, se aplica pero queda por revisar', async () => {
+        const { h, dispositivo, abrir, cerrar, enviar, admin } = await conTurnos();
+        const a = await abrir(dispositivo, 0);
+        await cerrar(dispositivo, a.id, 0, 0);
+        const sin = await enviar(dispositivo, 'ReopenCashShift', {
+          id: a.id,
+          reason: 'Falta un cobro',
+        });
+        expect(sin.ok && sin.reason).toBe('REOPEN_WITHOUT_AUTHORIZATION');
+        await cerrar(dispositivo, a.id, 0, 0);
+        const con = await enviar(
+          dispositivo,
+          'ReopenCashShift',
+          { id: a.id, reason: 'Falta un cobro' },
+          { authorizedBy: admin },
+        );
+        expect(con.ok && con.status).toBe('APPLIED');
+        expect(await h.shiftState(a.id)).toMatchObject({ status: 'OPEN' });
+        const abierto = await enviar(
+          dispositivo,
+          'ReopenCashShift',
+          { id: a.id, reason: 'Otra vez' },
+          { authorizedBy: admin },
+        );
+        expect(abierto.ok && abierto.reason).toBe('INVALID_TRANSITION');
+        const falso = await enviar(
+          dispositivo,
+          'ReopenCashShift',
+          { id: h.newUuid(), reason: 'x' },
+          { authorizedBy: admin },
+        );
+        expect(!falso.ok && falso.code).toBe('INVALID_PAYLOAD');
       });
     });
 

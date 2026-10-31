@@ -17,6 +17,9 @@ export const OPERATION_TYPES = [
   'RegisterPayment',
   'CreateCounterSale',
   'CancelCounterSale',
+  'OpenCashShift',
+  'CloseCashShift',
+  'ReopenCashShift',
 ] as const;
 
 export type OperationType = (typeof OPERATION_TYPES)[number];
@@ -241,6 +244,8 @@ export const registerPaymentPayloadSchema = z.object({
   target: z.object({ type: z.enum(['WORK_ORDER', 'COUNTER_SALE']), id: uuid }),
   kind: z.enum(['DEPOSIT', 'BALANCE', 'SALE']),
   paidAt: z.iso.datetime(),
+  /** Turno de caja de quien cobró [S3-16]. */
+  cashShiftId: uuid.nullable().optional(),
   rows: z.array(paymentRowSchema).min(1),
 });
 
@@ -258,6 +263,7 @@ export const createCounterSalePayloadSchema = z
     subtotalCents: centavos,
     taxCents: centavos,
     totalCents: centavos,
+    cashShiftId: uuid.nullable().optional(),
     lines: z.array(quoteLineSchema).min(1),
     payment: z.object({ groupId: uuid, rows: z.array(paymentRowSchema).min(1) }),
   })
@@ -273,6 +279,30 @@ export const createCounterSalePayloadSchema = z
   });
 
 export type CreateCounterSalePayload = z.infer<typeof createCounterSalePayloadSchema>;
+
+/** Carga de `OpenCashShift`: abrir el turno de caja de la persona con un fondo opcional [S3-16]. */
+export const openCashShiftPayloadSchema = z.object({
+  id: uuid,
+  openedAt: z.iso.datetime(),
+  openingFloatCents: centavos,
+});
+
+/** Carga de `CloseCashShift`: el corte con lo contado y lo que la tablet esperaba. El servidor recalcula
+ *  el esperado y, si no coincide, deja el corte por revisar [S3-17, S3-19]. */
+export const closeCashShiftPayloadSchema = z.object({
+  id: uuid,
+  closedAt: z.iso.datetime(),
+  countedCashCents: centavos,
+  expectedCashCents: entero,
+  /** Operaciones que quedaban sin enviar al cerrar. */
+  pendingAtClose: entero.min(0).optional(),
+});
+
+/** Carga de `ReopenCashShift`: solo un administrador, con motivo [S3-17, RN-19]. */
+export const reopenCashShiftPayloadSchema = z.object({
+  id: uuid,
+  reason: z.string().trim().min(1),
+});
 
 /** Carga de `CancelCounterSale`: cancelar una venta con motivo; solo un administrador [S3-15]. */
 export const cancelCounterSalePayloadSchema = z.object({
@@ -327,6 +357,9 @@ const ESQUEMAS_DE_CARGA: Partial<Record<OperationType, z.ZodType>> = {
   RegisterPayment: registerPaymentPayloadSchema,
   CreateCounterSale: createCounterSalePayloadSchema,
   CancelCounterSale: cancelCounterSalePayloadSchema,
+  OpenCashShift: openCashShiftPayloadSchema,
+  CloseCashShift: closeCashShiftPayloadSchema,
+  ReopenCashShift: reopenCashShiftPayloadSchema,
 };
 
 /** Valida una operación completa: el sobre y, según el tipo, su carga. Es la comprobación que hace la
