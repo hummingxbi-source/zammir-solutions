@@ -106,3 +106,5 @@ export * from './modules/printing/domain/ticket-templates';
 export * from './modules/printing/application/ports';
 export * from './modules/printing/application/print-ticket';
 export * from './modules/printing/infra/fake-ticket-printer';
+export * from './modules/customers/domain/customer-history';
+export * from './modules/customers/application/load-customer-history';

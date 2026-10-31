@@ -2,6 +2,8 @@ import type { ReactElement } from 'react';
 import { Route, Routes } from 'react-router';
 import type {
   ActiveUserSession,
+  CustomerHistory,
+  CustomerId,
   DeviceRepository,
   ImportCatalogDeps,
   LegalDeps,
@@ -66,6 +68,8 @@ export interface AppProps {
   readonly prepararMostrador?: PrepararMostrador | null;
   /** Órdenes de trabajo de la tablet: cómo reunir lo que necesita; sin esto la sección queda vacía. */
   readonly prepararOrdenes?: PrepararOrdenes | null;
+  /** Historial de un cliente desde lo guardado en la tablet (ficha en Clientes). */
+  readonly historialDeCliente?: ((id: CustomerId) => Promise<CustomerHistory>) | null;
   /** Estado del envío de lo guardado en la tablet ("N pendientes"). */
   readonly sincronizacion?: SincronizacionVisible | undefined;
   /** Vigencia sugerida del código de registro; sin ella la persona escribe los minutos. */
@@ -88,6 +92,7 @@ export function App({
   sincronizacion,
   prepararCotizador = null,
   prepararOrdenes = null,
+  historialDeCliente = null,
   prepararMostrador = null,
   cargarVigenciaDeCodigo,
 }: AppProps): ReactElement {
@@ -170,7 +175,10 @@ export function App({
                 </ProtegidaAdmin>
               ) : seccion.id === 'clientes' && clientes !== null ? (
                 <ProtegidaAdmin>
-                  <Clientes deps={clientes} />
+                  <Clientes
+                    deps={clientes}
+                    {...(historialDeCliente === null ? {} : { historial: historialDeCliente })}
+                  />
                 </ProtegidaAdmin>
               ) : (
                 <SeccionVacia titulo={seccion.texto} />

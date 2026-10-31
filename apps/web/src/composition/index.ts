@@ -3,7 +3,11 @@ import {
   authorizeWithAdminPin,
   createActiveUserSession,
   localProductReader,
+  loadCustomerHistory,
   outboxCashShiftStore,
+  outboxWarrantyReader,
+  type CustomerHistory,
+  type CustomerId,
   printWithFallback,
   outboxCounterSaleStore,
   outboxCustomers,
@@ -162,6 +166,7 @@ export interface Composition {
   readonly prepararMostrador: PrepararMostrador | null;
   /** Cómo reunir lo que las órdenes de trabajo necesitan; `null` si no hay servidor configurado. */
   readonly prepararOrdenes: PrepararOrdenes | null;
+  readonly historialDeCliente: ((id: CustomerId) => Promise<CustomerHistory>) | null;
   /** Altas, PIN y desactivación de personas; `null` si no hay servidor configurado. */
   readonly usuarios: ManageUsersDeps | null;
   /** Mínimo de dígitos del PIN de un administrador y vueltas de PBKDF2, de la configuración. */
@@ -740,6 +745,21 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
           credenciales: credencialesDeLaTablet,
         });
 
+  const historialDeCliente =
+    envio === null
+      ? null
+      : (id: CustomerId) =>
+          loadCustomerHistory(
+            {
+              quotes: outboxQuoteStore(envio.outbox),
+              orders: outboxWorkOrderStore(envio.outbox),
+              sales: outboxCounterSaleStore(envio.outbox),
+              payments: outboxPaymentStore(envio.outbox),
+              warranties: outboxWarrantyReader(envio.outbox),
+            },
+            id,
+          );
+
   const prepararMostrador: PrepararMostrador | null =
     envio === null || catalogoLocal === null || entradaConPin === null || reglas === null
       ? null
@@ -757,6 +777,7 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
     prepararCotizador,
     prepararMostrador,
     prepararOrdenes,
+    historialDeCliente,
     adminAuth: cliente === null ? adminAuthNoConfigurada : supabaseAdminAuth(cliente),
     dispositivos: cliente === null ? null : supabaseDeviceRepository(cliente),
     catalogo:
