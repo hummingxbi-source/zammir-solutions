@@ -27,6 +27,7 @@
 | [0019](docs/decisiones/0019-calendario-plan-actual-con-recortes.md) | Calendario: se mantiene el plan actual de sprints, con recortes desde ahora | Aceptada | 2026-10-27 |
 | [0020](docs/decisiones/0020-importacion-del-catalogo-todo-o-nada.md) | Importación del catálogo: todo o nada, primero CSV | Aceptada | 2026-10-30 |
 | [0021](docs/decisiones/0021-clientes-alta-directa-desde-la-tablet-transitoria.md) | La tablet da de alta clientes directo en la base (transitorio hasta el Sprint 2) | Aceptada (transitoria) | 2026-10-30 |
+| [0022](docs/decisiones/0022-catalogo-en-la-tablet-indexeddb.md) | Catálogo en la tablet: IndexedDB con Dexie y cambios por número | Aceptada (propuesta) | 2026-10-30 |
 | [0023](docs/decisiones/0023-receptor-de-operaciones-en-dos-capas.md) | Receptor de operaciones en dos capas y validación de la sincronización | Aceptada (propuesta) | 2026-10-30 |
 
 Plantilla para una nueva decisión: [`docs/decisiones/0000-plantilla.md`](docs/decisiones/0000-plantilla.md).

@@ -131,9 +131,9 @@ Orden recomendado (por dependencias): **S1-14 → S1-18 → S1-17 → S1-10 → 
 | S1-08 Importación del catálogo | 8 h | pendiente | PD-03 (catálogo de prueba) |
 | S1-19 Pantalla de bitácora | 2 h | pendiente | — |
 | S1-09 Catálogo sin conexión | 4 h | pendiente | prueba manual en tablet |
-| S1-15 Entrada con PIN | 8 h | pendiente | S1-14, S1-09; PD-22 (propuesta mía); tablet |
-| S1-16 Cambio de usuario y bloqueo | 2 h | pendiente | S1-15; tablet |
-| S1-20 Aceptación E4 y E8 | 2 h | pendiente | S1-15, S1-18 |
+| S1-15 Entrada con PIN | 8 h | hecha en código (PR de entrada con PIN); falta prueba en tablet | S1-14, S1-09; PD-22 (propuesta mía); tablet |
+| S1-16 Cambio de usuario y bloqueo | 2 h | hecha en código (misma PR); falta prueba en tablet | S1-15; tablet |
+| S1-20 Aceptación E4 y E8 | 2 h | hecha salvo la atribución en base (PP-13) | S1-15, S1-18 |
 | S1-21 Cierre del Sprint 1 | 2 h | pendiente | todo lo anterior; tablet |
 
 ---
