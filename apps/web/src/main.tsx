@@ -44,6 +44,7 @@ createRoot(root).render(
           legal={composition.legal}
           conectarTablet={composition.conectarTablet}
           entradaConPin={composition.entradaConPin}
+          prepararCotizador={composition.prepararCotizador}
           sincronizacion={composition.envio?.visible}
           catalogo={composition.catalogo}
           bitacora={

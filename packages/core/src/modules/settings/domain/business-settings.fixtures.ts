@@ -30,6 +30,7 @@ export function filasValidas(cambios: Record<string, unknown> = {}): SettingRow[
     business_logo_url: null,
     local_retention_days: null,
     sync_stale_hours: 6,
+    quote_conditions: 'Condición uno.\nCondición dos.',
   };
   return Object.entries({ ...base, ...cambios }).map(([key, value]) => ({ key, value }));
 }

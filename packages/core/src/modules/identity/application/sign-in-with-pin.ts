@@ -15,6 +15,19 @@ export interface LoginSnapshot {
   readonly idleLockMinutes: number;
   /** Horas sin enviar antes de avisar que hay documentos por enviar [S2-06]. */
   readonly syncStaleHours?: number;
+  /** Lo que el cotizador necesita para trabajar sin internet [S2-09, S2-13, S2-18]. */
+  readonly quote?: {
+    readonly taxRateBps: number;
+    readonly validityDays: number;
+    /** Condiciones por defecto, una por renglón. */
+    readonly conditionsText: string;
+  };
+  /** Identidad del negocio para los documentos [RN-21]; nulos mientras no se definan (PD-11). */
+  readonly business?: {
+    readonly name: string | null;
+    readonly phone: string | null;
+    readonly address: string | null;
+  };
 }
 
 /** De dónde baja la tablet las personas y la configuración (el servidor). */

@@ -1,6 +1,11 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import {
+  authorizeWithAdminPin,
   createActiveUserSession,
+  localProductReader,
+  outboxQuoteStore,
+  err,
+  ok,
   createSyncEngine,
   exponentialBackoff,
   createPriceRegistry,
@@ -22,6 +27,8 @@ import {
   type SignInWithPinDeps,
   type SyncEngine,
   type SyncOutbox,
+  type AppUser,
+  type UserId,
   type UserPolicy,
 } from '@zammir/core';
 
@@ -42,6 +49,9 @@ import { supabaseAuditReader } from '../modules/audit/infra/supabase-audit-reade
 import { supabaseCatalog } from '../modules/catalog/infra/supabase-catalog';
 import { supabaseCustomers } from '../modules/customers/infra/supabase-customers';
 import { supabaseLegal } from '../modules/legal/infra/supabase-legal';
+import { pdfLibRenderer } from '../modules/documents/infra/pdf-lib-renderer';
+import { entornoDelNavegador, webShareService } from '../modules/documents/infra/web-share-service';
+import type { PrepararCotizador } from '../modules/quotes/ui/CotizadorEnLaTablet';
 import { cryptoRandom } from '../shared/infra/crypto-random';
 import { browserTimer } from '../shared/infra/sync/browser-timer';
 import { dexieOperaciones } from '../shared/infra/sync/dexie-operaciones';
@@ -98,6 +108,8 @@ export interface Composition {
       readonly ahora: () => Date;
     };
   } | null;
+  /** Cómo reunir lo que el cotizador necesita; `null` si no hay servidor configurado. */
+  readonly prepararCotizador: PrepararCotizador | null;
   /** Altas, PIN y desactivación de personas; `null` si no hay servidor configurado. */
   readonly usuarios: ManageUsersDeps | null;
   /** Mínimo de dígitos del PIN de un administrador y vueltas de PBKDF2, de la configuración. */
@@ -259,6 +271,81 @@ function crearEntradaConPin(
   };
 }
 
+/** Lo que el cotizador toma de la tablet: configuración y personas bajadas, catálogo local, cola de salida. */
+function crearPreparadorDelCotizador(d: {
+  readonly envio: NonNullable<Composition['envio']>;
+  readonly catalogoLocal: NonNullable<Composition['catalogoLocal']>;
+  readonly entradaConPin: NonNullable<Composition['entradaConPin']>;
+  readonly credenciales: CredencialesDeLaTablet;
+  readonly clientes: ManageCustomersDeps;
+  readonly reglas: NonNullable<typeof reglas>;
+}): PrepararCotizador {
+  const identidad = dexieIdentity();
+  return async () => {
+    const credenciales = await d.credenciales.load();
+    const copia = await identidad.store.load();
+    if (credenciales === null || copia?.quote === undefined) {
+      return null;
+    }
+    const personas = copia.users;
+    const usuarios = {
+      get: (id: UserId) => {
+        const p = personas.find((u: AppUser) => u.id === id);
+        return Promise.resolve(p === undefined ? err({ code: 'NOT_FOUND' as const }) : ok(p));
+      },
+    };
+    return {
+      deps: {
+        store: outboxQuoteStore(d.envio.outbox),
+        idGenerator: uuidIdGenerator,
+        clock: systemClock,
+        registry: d.reglas,
+        taxRateBps: copia.quote.taxRateBps,
+        outbox: d.envio.outbox,
+        random: cryptoRandom,
+        device: { id: credenciales.device.id, series: credenciales.device.tempSeries },
+        settings: {
+          validityDays: copia.quote.validityDays,
+          conditionsText: copia.quote.conditionsText,
+          privacyNoticeVersion: null,
+          catalogVersion: await d.catalogoLocal.store.cursor(),
+        },
+      },
+      catalogo: localProductReader(d.catalogoLocal.store),
+      clientes: d.clientes,
+      renderer: pdfLibRenderer(),
+      share: webShareService(entornoDelNavegador()),
+      negocio: {
+        name: copia.business?.name ?? 'ZAMMIR (datos de prueba)',
+        phone: copia.business?.phone ?? null,
+        address: copia.business?.address ?? null,
+      },
+      condicionesPorDefecto: copia.quote.conditionsText,
+      autorizacion: {
+        administradores: () =>
+          Promise.resolve(
+            personas
+              .filter((u: AppUser) => u.role === 'ADMIN' && u.isActive)
+              .map((u: AppUser) => ({ id: u.id, name: u.name })),
+          ),
+        autorizar: (adminId: string, pin: string) =>
+          authorizeWithAdminPin(
+            {
+              users: usuarios,
+              hasher: d.entradaConPin.deps.hasher,
+              guard: d.entradaConPin.deps.guard,
+              clock: systemClock,
+            },
+            { adminId: adminId as UserId, pin },
+          ),
+      },
+      onPorEnviar: () => {
+        void d.envio.engine.trigger();
+      },
+    };
+  };
+}
+
 export function createComposition(entorno: EntornoSupabase = {}): Composition {
   const cliente = createSupabaseClient(entorno.url, entorno.anonKey);
   const ajustes = cliente === null ? null : supabaseSettingsRepository(cliente);
@@ -280,9 +367,33 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
       ? null
       : crearEnvio(entorno.url, entorno.anonKey, credencialesDeLaTablet);
 
+  const clientesDelCotizador: ManageCustomersDeps | null =
+    cliente === null
+      ? null
+      : {
+          customers: supabaseCustomers(cliente, { conDatosFiscales: false }),
+          idGenerator: uuidIdGenerator,
+        };
+  const prepararCotizador: PrepararCotizador | null =
+    envio === null ||
+    catalogoLocal === null ||
+    entradaConPin === null ||
+    clientesDelCotizador === null ||
+    reglas === null
+      ? null
+      : crearPreparadorDelCotizador({
+          envio,
+          catalogoLocal,
+          entradaConPin,
+          credenciales: credencialesDeLaTablet,
+          clientes: clientesDelCotizador,
+          reglas,
+        });
+
   return {
     clock: systemClock,
     idGenerator: uuidIdGenerator,
+    prepararCotizador,
     adminAuth: cliente === null ? adminAuthNoConfigurada : supabaseAdminAuth(cliente),
     dispositivos: cliente === null ? null : supabaseDeviceRepository(cliente),
     catalogo:

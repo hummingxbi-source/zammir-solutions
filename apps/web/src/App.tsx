@@ -17,6 +17,10 @@ import { AvisoDePrivacidad } from './modules/legal/ui/AvisoDePrivacidad';
 import { EntrarConPin } from './modules/identity/ui/EntrarConPin';
 import { PersonaActiva } from './modules/identity/ui/PersonaActiva';
 import { ConectarTablet } from './modules/devices/ui/ConectarTablet';
+import {
+  CotizadorEnLaTablet,
+  type PrepararCotizador,
+} from './modules/quotes/ui/CotizadorEnLaTablet';
 import { Dispositivos } from './modules/devices/ui/Dispositivos';
 import { Usuarios, type UsuariosProps } from './modules/identity/ui/Usuarios';
 import { ProtegidaAdmin } from './modules/identity/ui/ProtegidaAdmin';
@@ -47,6 +51,8 @@ export interface AppProps {
   } | null;
   /** Importación del catálogo desde archivo; aparece en Catálogo (solo administradores). */
   readonly catalogo?: ImportCatalogDeps | null;
+  /** Cotizador de la tablet: cómo reunir lo que necesita; sin esto la sección queda vacía. */
+  readonly prepararCotizador?: PrepararCotizador | null;
   /** Estado del envío de lo guardado en la tablet ("N pendientes"). */
   readonly sincronizacion?: SincronizacionVisible | undefined;
   /** Vigencia sugerida del código de registro; sin ella la persona escribe los minutos. */
@@ -66,6 +72,7 @@ export function App({
   entradaConPin = null,
   catalogo = null,
   sincronizacion,
+  prepararCotizador = null,
   cargarVigenciaDeCodigo,
 }: AppProps): ReactElement {
   const secciones = [
@@ -125,6 +132,10 @@ export function App({
                     <SeccionVacia titulo={seccion.texto} />
                   )}
                 </ProtegidaAdmin>
+              ) : seccion.id === 'cotizador' &&
+                prepararCotizador !== null &&
+                entradaConPin !== null ? (
+                <CotizadorEnLaTablet preparar={prepararCotizador} session={entradaConPin.session} />
               ) : seccion.id === 'catalogo' && catalogo !== null ? (
                 <ProtegidaAdmin>
                   <section>
