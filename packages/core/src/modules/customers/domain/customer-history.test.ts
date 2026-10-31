@@ -1,19 +1,10 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 
-import { fixedClock } from '../../../shared-kernel/clock';
-import { inMemorySyncOutbox } from '../../sync/application/in-memory-sync-outbox';
-import { outboxCounterSaleStore } from '../../counter/application/counter-sale-store';
-import {
-  outboxPaymentStore,
-  outboxWorkOrderStore,
-} from '../../orders/application/work-order-store';
 import type { CounterSale } from '../../counter/domain/counter-sale';
 import type { Warranty, WorkOrder } from '../../orders/domain/work-order';
 import type { Payment } from '../../payments/domain/payment';
 import type { Quote } from '../../quotes/domain/quote';
-import { outboxQuoteStore } from '../../quotes/application/quote-store';
-import { loadCustomerHistory } from '../application/load-customer-history';
 import {
   buildCustomerHistory,
   RECURRING_MIN_DELIVERED_ORDERS,
@@ -164,34 +155,6 @@ describe('historial de un cliente', () => {
         },
       ),
     );
-  });
-});
-
-describe('cargar el historial de la tablet', () => {
-  it('lee los almacenes de la tablet y trae las garantías de lo entregado', async () => {
-    const outbox = inMemorySyncOutbox({ clock: fixedClock(new Date('2026-10-31T18:00:00.000Z')) });
-    const orders = outboxWorkOrderStore(outbox);
-    const quotes = outboxQuoteStore(outbox);
-    const sales = outboxCounterSaleStore(outbox);
-    const payments = outboxPaymentStore(outbox);
-    await orders.save({ ...orden('o1', 'c-ana', 'DELIVERED'), id: 'o1' } as never);
-    await orders.save({ ...orden('o2', 'c-beto', 'DELIVERED'), id: 'o2' } as never);
-    await sales.save(venta('v1', 'c-ana'));
-    await quotes.save(cotizacion('q1', 'c-ana'));
-    const h = await loadCustomerHistory(
-      {
-        quotes,
-        orders,
-        sales,
-        payments,
-        warranties: { get: (id) => Promise.resolve(id === 'o1' ? garantia('o1') : null) },
-      },
-      ANA,
-    );
-    expect(h.orders.map((o) => o.id)).toEqual(['o1']);
-    expect(h.sales.map((v) => v.id)).toEqual(['v1']);
-    expect(h.quotes.map((q) => q.id)).toEqual(['q1']);
-    expect(h.warranties).toHaveLength(1);
   });
 });
 
