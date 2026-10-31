@@ -69,3 +69,5 @@ export * from './shared-kernel/random';
 export * from './modules/sync/domain/public-code';
 export * from './modules/sync/application/ports';
 export * from './modules/sync/application/in-memory-sync-outbox';
+export * from './modules/sync/application/run-sync';
+export * from './modules/sync/application/sync-engine';

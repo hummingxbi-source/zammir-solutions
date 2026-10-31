@@ -1,6 +1,8 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import {
   createActiveUserSession,
+  createSyncEngine,
+  exponentialBackoff,
   createPriceRegistry,
   defaultRules,
   refreshLogin,
@@ -18,6 +20,8 @@ import {
   type ManageUsersDeps,
   type RegisterTabletDeps,
   type SignInWithPinDeps,
+  type SyncEngine,
+  type SyncOutbox,
   type UserPolicy,
 } from '@zammir/core';
 
@@ -38,6 +42,11 @@ import { supabaseAuditReader } from '../modules/audit/infra/supabase-audit-reade
 import { supabaseCatalog } from '../modules/catalog/infra/supabase-catalog';
 import { supabaseCustomers } from '../modules/customers/infra/supabase-customers';
 import { supabaseLegal } from '../modules/legal/infra/supabase-legal';
+import { cryptoRandom } from '../shared/infra/crypto-random';
+import { browserTimer } from '../shared/infra/sync/browser-timer';
+import { dexieOperaciones } from '../shared/infra/sync/dexie-operaciones';
+import { functionOperationReceiver } from '../shared/infra/sync/function-operation-receiver';
+import { httpOperationTransport } from '../shared/infra/sync/http-operation-transport';
 import { dexieIdentity } from '../modules/identity/infra/dexie-identity-store';
 import { supabaseLoginSource } from '../modules/identity/infra/supabase-login-source';
 import { supabaseUsers } from '../modules/identity/infra/supabase-users';
@@ -77,6 +86,17 @@ export interface Composition {
     readonly deps: SignInWithPinDeps;
     readonly session: ActiveUserSession;
     readonly actualizar: () => Promise<boolean>;
+  } | null;
+  /** Cola de salida y envío automático de lo guardado en la tablet; `null` si no hay servidor. */
+  readonly envio: {
+    readonly outbox: SyncOutbox;
+    readonly engine: SyncEngine;
+    /** Para el indicador de estado: horas sin enviar antes de avisar (de la configuración bajada). */
+    readonly visible: {
+      readonly engine: SyncEngine;
+      readonly staleHours: number | null;
+      readonly ahora: () => Date;
+    };
   } | null;
   /** Altas, PIN y desactivación de personas; `null` si no hay servidor configurado. */
   readonly usuarios: ManageUsersDeps | null;
@@ -144,6 +164,54 @@ function crearCatalogoLocal(
   };
 }
 
+function crearEnvio(
+  url: string,
+  anonKey: string,
+  credenciales: CredencialesDeLaTablet,
+): NonNullable<Composition['envio']> {
+  const outbox = dexieOperaciones({ clock: systemClock });
+  const receiver = functionOperationReceiver({
+    url,
+    anonKey,
+    accessToken: async () => {
+      const c = await credenciales.load();
+      const cliente =
+        c === null ? null : await abrirSesionDeLaTablet(url, anonKey, credenciales, c);
+      const sesion = cliente === null ? null : (await cliente.auth.getSession()).data.session;
+      // Sin sesión de la tablet el servidor responderá "dispositivo no válido": se detiene la cola.
+      return sesion?.access_token ?? '';
+    },
+  });
+  const engine = createSyncEngine({
+    outbox,
+    transport: httpOperationTransport(receiver),
+    backoff: exponentialBackoff(),
+    random: cryptoRandom,
+    timer: browserTimer,
+    clock: systemClock,
+  });
+  const identidad = dexieIdentity();
+  let horas: number | null = null;
+  const leerHoras = (): void => {
+    void identidad.store.load().then((copia) => {
+      horas = copia?.syncStaleHours ?? null;
+    });
+  };
+  leerHoras();
+  engine.subscribe(leerHoras);
+  return {
+    outbox,
+    engine,
+    visible: {
+      engine,
+      get staleHours() {
+        return horas;
+      },
+      ahora: () => systemClock.now(),
+    },
+  };
+}
+
 /** Minutos de bloqueo por inactividad cuando la tablet todavía no ha bajado la configuración. */
 const MINUTOS_DE_BLOQUEO_INICIALES = 5;
 
@@ -207,6 +275,11 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
       ? null
       : crearEntradaConPin(entorno.url, entorno.anonKey, credencialesDeLaTablet);
 
+  const envio =
+    entorno.url === undefined || entorno.anonKey === undefined
+      ? null
+      : crearEnvio(entorno.url, entorno.anonKey, credencialesDeLaTablet);
+
   return {
     clock: systemClock,
     idGenerator: uuidIdGenerator,
@@ -256,6 +329,7 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
           },
     catalogoLocal,
     entradaConPin,
+    envio,
     cargarPoliticaDeUsuarios: async () => {
       if (ajustes === null) {
         return null;

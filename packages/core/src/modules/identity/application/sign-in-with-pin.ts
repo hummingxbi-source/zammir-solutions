@@ -13,6 +13,8 @@ export interface LoginSnapshot {
   readonly lockout: LockoutPolicy | null;
   /** Minutos sin actividad antes de volver a la pantalla de personas [RF-M4-08]. */
   readonly idleLockMinutes: number;
+  /** Horas sin enviar antes de avisar que hay documentos por enviar [S2-06]. */
+  readonly syncStaleHours?: number;
 }
 
 /** De dónde baja la tablet las personas y la configuración (el servidor). */

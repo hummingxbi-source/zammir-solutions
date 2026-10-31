@@ -29,6 +29,7 @@ export function filasValidas(cambios: Record<string, unknown> = {}): SettingRow[
     business_address: null,
     business_logo_url: null,
     local_retention_days: null,
+    sync_stale_hours: 6,
   };
   return Object.entries({ ...base, ...cambios }).map(([key, value]) => ({ key, value }));
 }

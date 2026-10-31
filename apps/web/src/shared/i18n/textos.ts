@@ -536,6 +536,17 @@ export const textos = {
     sinInternet: 'Sin internet.',
     puedesSeguir: 'Sigues trabajando: lo que captures queda guardado en la tablet.',
   },
+  sincronizacion: {
+    guardadoEnLaTablet: 'Guardado en la tablet',
+    enviado: 'Enviado',
+    pendientes: (n: number): string => (n === 1 ? '1 pendiente' : `${String(n)} pendientes`),
+    sinInternetPendientes: (n: number): string =>
+      `Hay ${String(n)} ${n === 1 ? 'documento' : 'documentos'} por enviar. Se enviarán solos al volver el internet.`,
+    sinEnviarDesde: (horas: number): string =>
+      `Hay documentos sin enviar desde hace ${String(horas)} ${horas === 1 ? 'hora' : 'horas'}. Conéctate a internet.`,
+    problema: 'Hay un problema con un documento. Avisa a soporte.',
+    necesitaInternet: 'Para hacer esto necesitas internet.',
+  },
   seccionVacia: {
     descripcion: 'Esta sección estará lista pronto.',
   },

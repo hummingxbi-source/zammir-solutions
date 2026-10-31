@@ -35,6 +35,7 @@ const esquema = z.object({
   business_address: z.string().min(1).nullable(),
   business_logo_url: z.string().min(1).nullable(),
   local_retention_days: enteroPositivo.nullable(),
+  sync_stale_hours: enteroPositivo,
 });
 
 export type BusinessSettings = z.infer<typeof esquema>;
