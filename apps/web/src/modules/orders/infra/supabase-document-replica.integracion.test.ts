@@ -111,10 +111,18 @@ describe('réplica de órdenes y pagos con el servidor real', () => {
     });
     expect(await outboxPaymentStore(outbox).listByTarget(ventaId)).toHaveLength(2);
 
+    // Traer otra vez no duplica nada. (Otras pruebas corren a la vez contra el mismo servidor y pueden
+    // haber agregado documentos nuevos, así que se revisa lo propio y no el total.)
     const segunda = await refreshDocuments({ source: fuente, outbox, clock: reloj });
-    expect(segunda.ok && segunda.value.orders).toBe(0);
-    expect(segunda.ok && segunda.value.payments).toBe(0);
-    expect(segunda.ok && segunda.value.sales).toBe(0);
+    expect(segunda.ok).toBe(true);
+    expect(
+      (await outboxWorkOrderStore(outbox).list()).filter((o) => o.id === orderId),
+    ).toHaveLength(1);
+    expect(await outboxPaymentStore(outbox).listByTarget(orderId)).toHaveLength(1);
+    expect(await outboxPaymentStore(outbox).listByTarget(ventaId)).toHaveLength(2);
+    expect(
+      (await outboxCounterSaleStore(outbox).list()).filter((v) => v.id === ventaId),
+    ).toHaveLength(1);
   }, 60_000);
 
   it('las vistas de la tablet no traen columnas fiscales ni de relleno', async () => {
