@@ -2,7 +2,7 @@ import type { LengthUnit, Millimeters } from '../../../shared-kernel/measure/len
 import { money, type Money } from '../../../shared-kernel/money/money';
 import { err, ok, type Result } from '../../../shared-kernel/result';
 import { splitTax } from '../../../shared-kernel/tax/tax';
-import type { SellableProduct } from '../../catalog/application/ports';
+import type { ProductId } from '../../../shared-kernel/id';
 import { formatPriceDetail } from '../../catalog/domain/pricing/detail';
 import type { PriceRegistry } from '../../catalog/domain/pricing/registry';
 import type { QuoteLine } from './quote';
@@ -19,6 +19,17 @@ export type QuoteLineErrorCode =
 
 export interface QuoteLineError {
   readonly code: QuoteLineErrorCode;
+}
+
+/** Lo que la cotización necesita de un producto del catálogo; un `SellableProduct` lo cumple. */
+export interface QuoteProduct {
+  readonly id: ProductId;
+  readonly name: string;
+  readonly chargeUnit: QuoteLine['chargeUnit'];
+  readonly listPrice: Money;
+  readonly isTaxExempt: boolean;
+  readonly ruleId: string;
+  readonly ruleParams: unknown;
 }
 
 export interface LineInput {
@@ -98,7 +109,7 @@ function calcularLinea(
 
 /** Arma una línea desde un producto del catálogo, con su precio del catálogo [RF-M2-02, RN-04]. */
 export function buildQuoteLine(
-  producto: SellableProduct,
+  producto: QuoteProduct,
   entrada: LineInput,
   deps: LineDeps,
 ): Result<QuoteLine, QuoteLineError> {
