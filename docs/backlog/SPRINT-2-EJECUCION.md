@@ -37,6 +37,16 @@ Inventario completo del núcleo y de la base: [`SPRINT-1-EJECUCION.md`](SPRINT-1
 - **PP-13:** la base ve la sesión de la *tablet*, no a la persona con PIN. Con el sobre de la operación (`userId`, `authorizedBy`) la atribución **sí** queda guardada en `operations` y en la bitácora que escriba la función de recepción; lo que PP-13 pide es que la base **valide** que ese `userId` es una persona activa (S2-03 lo hace).
 - Sin medir: iteraciones de PBKDF2 en la tablet real (manual, al final).
 
+### 2.1 Lo construido en este sprint (se actualiza al terminar cada historia)
+
+| Pieza | Dónde | Notas para quien siga |
+|---|---|---|
+| Folios (dominio) | `core/shared-kernel/folio/folio.ts` (**no** en `modules/sync`: el umbral de 100 % y la mutación apuntan a `shared-kernel/folio`) | `formatFolio(docType, año, n)`, `formatTempFolio(serie, n)`, `folioYear(fecha)` (hora de México), `parseTempFolio(texto)` |
+| Asignador | `core/modules/sync/application/folio-allocator.ts` + contrato `folioAllocatorContract`; Postgres real en `apps/web/src/shared/infra/sync/pg-folio-allocator.ts` (solo pruebas, usa `pg` y `ZAMMIR_TEST_DB_URL`) | SQL: `private.next_folio(tipo, año)`, `private.folio_year(timestamptz)`, tabla `folio_counters` |
+| Operaciones (dominio) | `core/modules/sync/domain/operation.ts` | `parseEnvelope`, `operationEnvelopeSchema`, `issueQuotePayloadSchema` (valida que totales = suma de líneas), `OperationResult`, `isStructuralRejection`. La recomputación con reglas de precio queda para S2-13 (código `TOTALS_MISMATCH` reservado) |
+| Receptor | puerto `OperationReceiver` + `inMemoryOperationReceiver` (`core/modules/sync/application/operation-receiver.ts`), contrato `operationReceiverContract` (con `issueQuoteOperation(...)` para armar operaciones de prueba); servidor: `supabase/functions/recibir-operacion/index.ts` + SQL `public.receive_operation(p jsonb)`; cliente: `apps/web/src/shared/infra/sync/function-operation-receiver.ts` (lanza `OperationTransportError` si no hay red o el servidor falla) | Tablas nuevas: `operations` (solo se agrega), `quotes`, `quote_lines` (solo las escribe `receive_operation`), `devices.last_seq`. El resto de tipos (`MarkQuoteAccepted`, `MarkQuoteRejected`, `UpsertCustomer`) hoy responden `UNKNOWN_TYPE`: agregarlos en SQL (`case v_type`) y en el receptor en memoria cuando se hagan S2-08/S2-10 |
+| Pruebas con servidor local | `pnpm test:integracion` | Si falla con `SERVER_UNAVAILABLE`, hay un `supabase functions serve` viejo sin la función nueva: apagarlo y repetir |
+
 ## 3. Cómo trabajar (resumen)
 
 - **Carpeta de trabajo:** `C:\z\s16`. pnpm: en Bash `export PATH="/c/z/bin:$PATH"`. Node 24; Docker Desktop encendido para Supabase local. Antes de `supabase start`/`db reset`: `pnpm funciones:empaquetar`.
@@ -260,8 +270,8 @@ Compuerta común en verde; concurrencia de folios 10 veces seguidas; totales del
 
 | Historia | Talla | Estado | Rama / PR |
 |---|---|---|---|
-| S2-04 Folio definitivo | M | pendiente | |
-| S2-03 Receptor idempotente | L | pendiente | |
+| S2-04 Folio definitivo | M | **hecha** (PR #56) | `feat/s2-04-folio` |
+| S2-03 Receptor idempotente | L | **hecha** (PR #57) | `feat/s2-03-receptor` |
 | S2-01 Validación de sincronización | L | pendiente | |
 | S2-05 Folio temporal | S | pendiente | |
 | S2-02 Cola de salida | L | pendiente | |
