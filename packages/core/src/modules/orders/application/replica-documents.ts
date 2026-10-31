@@ -1,6 +1,8 @@
 import { err, ok, type Result } from '../../../shared-kernel/result';
 import type { Payment } from '../../payments/domain/payment';
 import type { Clock } from '../../../shared-kernel/clock';
+import type { CounterSale } from '../../counter/domain/counter-sale';
+import { COUNTER_SALES_COLLECTION } from '../../counter/application/counter-sale-store';
 import type { SyncOutbox } from '../../sync/application/ports';
 import type { WorkOrder } from '../domain/work-order';
 import { PAYMENTS_COLLECTION, WORK_ORDERS_COLLECTION } from './work-order-store';
@@ -14,6 +16,7 @@ export interface ReplicaDocumentsError {
 /** Una orden o un pago tal como baja del servidor, con su número de cambio. Sin datos fiscales [RNF-06]. */
 export type ReplicatedWorkOrder = Omit<WorkOrder, 'updatedAt'> & { readonly changeSeq: number };
 export type ReplicatedPayment = Payment & { readonly changeSeq: number };
+export type ReplicatedSale = Omit<CounterSale, 'updatedAt'> & { readonly changeSeq: number };
 
 /** De dónde baja la tablet las órdenes y los pagos de las demás tablets (el servidor). */
 export interface DocumentReplicaSource {
@@ -21,6 +24,10 @@ export interface DocumentReplicaSource {
     seq: number,
     limit: number,
   ): Promise<Result<readonly ReplicatedWorkOrder[], ReplicaDocumentsError>>;
+  salesChangedAfter(
+    seq: number,
+    limit: number,
+  ): Promise<Result<readonly ReplicatedSale[], ReplicaDocumentsError>>;
   paymentsChangedAfter(
     seq: number,
     limit: number,
@@ -60,6 +67,7 @@ export async function refreshDocuments(deps: {
 }): Promise<Result<{ readonly orders: number; readonly payments: number }, ReplicaDocumentsError>> {
   let ordenes = 0;
   let pagos = 0;
+  let ventas = 0;
 
   for (;;) {
     const desde = await cursor(deps.outbox, 'orders');
@@ -96,6 +104,40 @@ export async function refreshDocuments(deps: {
   }
 
   for (;;) {
+    const desde = await cursor(deps.outbox, 'sales');
+    const pagina = await deps.source.salesChangedAfter(desde, DOCUMENT_REPLICA_PAGE_SIZE);
+    if (!pagina.ok) {
+      return err(pagina.error);
+    }
+    if (pagina.value.length > 0) {
+      const pendientes = new Set(
+        (await deps.outbox.list())
+          .filter((o) => o.status === 'PENDING' || o.status === 'FAILED')
+          .map((o) => ordenDeOperacion(o.envelope.type, o.envelope.payload)),
+      );
+      const mayor = Math.max(...pagina.value.map((v) => v.changeSeq));
+      const instante = deps.clock.now().toISOString();
+      await deps.outbox.transaction(async (tx) => {
+        for (const completa of pagina.value) {
+          const venta = sinCambio(completa);
+          if (!pendientes.has(venta.id)) {
+            await tx.putDocument(COUNTER_SALES_COLLECTION, venta.id, {
+              ...venta,
+              syncStatus: 'SENT',
+              updatedAt: instante,
+            });
+          }
+        }
+        await tx.putDocument(META, 'sales', mayor);
+      });
+      ventas += pagina.value.length;
+    }
+    if (pagina.value.length < DOCUMENT_REPLICA_PAGE_SIZE) {
+      break;
+    }
+  }
+
+  for (;;) {
     const desde = await cursor(deps.outbox, 'payments');
     const pagina = await deps.source.paymentsChangedAfter(desde, DOCUMENT_REPLICA_PAGE_SIZE);
     if (!pagina.ok) {
@@ -118,5 +160,5 @@ export async function refreshDocuments(deps: {
       break;
     }
   }
-  return ok({ orders: ordenes, payments: pagos });
+  return ok({ orders: ordenes, payments: pagos, sales: ventas });
 }

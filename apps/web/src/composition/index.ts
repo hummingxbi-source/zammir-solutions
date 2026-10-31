@@ -10,6 +10,7 @@ import {
   outboxQuoteStore,
   reconcileOrders,
   reconcileQuotes,
+  reconcileSales,
   refreshDocuments,
   uploadPendingPhotos,
   refreshCustomers,
@@ -237,6 +238,7 @@ function crearEnvio(
     afterPass: async () => {
       await reconcileQuotes(outbox);
       await reconcileOrders(outbox);
+      await reconcileSales(outbox);
     },
   });
   const fotos = dexiePhotoStore();

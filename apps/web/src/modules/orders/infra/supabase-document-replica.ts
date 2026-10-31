@@ -5,6 +5,7 @@ import {
   ok,
   type DocumentReplicaSource,
   type Payment,
+  type ReplicatedSale,
   type ReplicatedWorkOrder,
   type WorkOrderLine,
   type WorkOrderStatus,
@@ -39,6 +40,26 @@ interface FilaDeOrden {
   readonly cancel_reason: string | null;
   readonly cancelled_from_status: WorkOrderStatus | null;
   readonly cancel_deposit_paid_cents: number | null;
+  readonly user_id: string;
+  readonly review_reason: string | null;
+  readonly change_seq: number;
+  readonly lines: readonly WorkOrderLine[];
+}
+
+interface FilaDeVenta {
+  readonly id: string;
+  readonly temp_folio: string;
+  readonly folio: string | null;
+  readonly public_code: string;
+  readonly status: 'COMPLETED' | 'CANCELLED';
+  readonly customer_id: string | null;
+  readonly issued_at: string;
+  readonly subtotal_cents: number;
+  readonly tax_cents: number;
+  readonly total_cents: number;
+  readonly cancelled_at: string | null;
+  readonly cancel_reason: string | null;
+  readonly cancelled_by: string | null;
   readonly user_id: string;
   readonly review_reason: string | null;
   readonly change_seq: number;
@@ -110,6 +131,41 @@ export function supabaseDocumentReplica(cliente: SupabaseClient): DocumentReplic
           cancelledFromStatus: f.cancelled_from_status,
           cancelDepositPaidCents: f.cancel_deposit_paid_cents,
           userId: asId<'User'>(f.user_id),
+          syncStatus: 'SENT',
+          reviewReason: f.review_reason,
+          changeSeq: f.change_seq,
+        })),
+      );
+    },
+
+    async salesChangedAfter(seq, limit) {
+      const r = await cliente
+        .from('counter_sales_for_device')
+        .select('*')
+        .gt('change_seq', seq)
+        .order('change_seq')
+        .limit(limit);
+      if (r.error !== null) {
+        return err({ code: 'DOCUMENTS_UNAVAILABLE' });
+      }
+      return ok(
+        (r.data as FilaDeVenta[]).map((f): ReplicatedSale => ({
+          id: f.id,
+          status: f.status,
+          customerId: f.customer_id === null ? null : asId<'Customer'>(f.customer_id),
+          lines: f.lines,
+          subtotalCents: f.subtotal_cents,
+          taxCents: f.tax_cents,
+          totalCents: f.total_cents,
+          tempFolio: f.temp_folio,
+          folio: f.folio,
+          publicCode: f.public_code,
+          issuedAt: f.issued_at,
+          userId: asId<'User'>(f.user_id),
+          deviceId: null,
+          cancelledAt: f.cancelled_at,
+          cancelReason: f.cancel_reason,
+          cancelledBy: f.cancelled_by,
           syncStatus: 'SENT',
           reviewReason: f.review_reason,
           changeSeq: f.change_seq,
