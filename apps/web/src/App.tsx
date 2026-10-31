@@ -16,6 +16,7 @@ import type {
 import { Bitacora, type BitacoraProps } from './modules/audit/ui/Bitacora';
 import { ImportarCatalogo } from './modules/catalog/ui/ImportarCatalogo';
 import { Clientes } from './modules/customers/ui/Clientes';
+import { ReportesEnLaTablet, type PrepararReportes } from './modules/reports/ui/ReportesEnLaTablet';
 import {
   CuentasEnLaTablet,
   type PrepararCuentas,
@@ -74,6 +75,8 @@ export interface AppProps {
   readonly prepararOrdenes?: PrepararOrdenes | null;
   /** Cuentas por cobrar de la tablet: cómo reunir lo que necesitan; sin esto la sección queda como antes. */
   readonly prepararCuentas?: PrepararCuentas | null;
+  /** Reportes de la tablet: cómo reunir lo que necesitan; sin esto la sección queda como antes. */
+  readonly prepararReportes?: PrepararReportes | null;
   /** Historial de un cliente desde lo guardado en la tablet (ficha en Clientes). */
   readonly historialDeCliente?: ((id: CustomerId) => Promise<CustomerHistory>) | null;
   /** Estado del envío de lo guardado en la tablet ("N pendientes"). */
@@ -99,6 +102,7 @@ export function App({
   prepararCotizador = null,
   prepararOrdenes = null,
   prepararCuentas = null,
+  prepararReportes = null,
   historialDeCliente = null,
   prepararMostrador = null,
   cargarVigenciaDeCodigo,
@@ -136,9 +140,11 @@ export function App({
             key={seccion.id}
             path={seccion.ruta}
             element={
-              seccion.id === 'cuentas-por-cobrar' &&
-              prepararCuentas !== null &&
-              entradaConPin !== null ? (
+              seccion.id === 'reportes' && prepararReportes !== null && entradaConPin !== null ? (
+                <ReportesEnLaTablet preparar={prepararReportes} session={entradaConPin.session} />
+              ) : seccion.id === 'cuentas-por-cobrar' &&
+                prepararCuentas !== null &&
+                entradaConPin !== null ? (
                 <CuentasEnLaTablet preparar={prepararCuentas} session={entradaConPin.session} />
               ) : seccion.soloAdministrador === true ? (
                 <ProtegidaAdmin>
