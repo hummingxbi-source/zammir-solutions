@@ -71,3 +71,8 @@ export * from './modules/sync/application/ports';
 export * from './modules/sync/application/in-memory-sync-outbox';
 export * from './modules/sync/application/run-sync';
 export * from './modules/sync/application/sync-engine';
+export * from './shared-kernel/date/mx-date';
+export * from './modules/quotes/domain/quote';
+export * from './modules/quotes/domain/quote-line';
+export * from './modules/quotes/application/quote-store';
+export * from './modules/quotes/application/quote-use-cases';

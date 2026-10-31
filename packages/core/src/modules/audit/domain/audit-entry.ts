@@ -17,7 +17,11 @@ export type AuditAction =
   | 'USER_DEACTIVATED'
   | 'USER_PIN_RESET'
   | 'CUSTOMER_ANONYMIZED'
-  | 'LEGAL_DOCUMENT_PUBLISHED';
+  | 'LEGAL_DOCUMENT_PUBLISHED'
+  | 'QUOTE_ISSUED'
+  | 'QUOTE_ACCEPTED'
+  | 'QUOTE_REJECTED'
+  | 'QUOTE_LINE_PRICE_CHANGED';
 
 export type AuditEntryId = Id<'AuditEntry'>;
 

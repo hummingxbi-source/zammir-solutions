@@ -184,3 +184,36 @@ describe('S2-01 · motor de sincronización contra el servidor real', () => {
     expect(!r.ok && r.code).toBe('INVALID_PAYLOAD');
   }, 60_000);
 });
+
+describe('S2-11 · descuentos en la bitácora del servidor', () => {
+  it('un descuento autorizado deja en la bitácora el precio anterior, el nuevo y quién lo autorizó', async () => {
+    const usuario = await harness.newUser(true);
+    const autoriza = await harness.newUser(true);
+    const cliente = await harness.newCustomer();
+    const year = await harness.newYear();
+    const d = await harness.newDevice();
+    const op = issueQuoteOperation({
+      opId: harness.newUuid(),
+      deviceId: d.id,
+      seq: 1,
+      userId: usuario,
+      customerId: cliente,
+      year,
+      newUuid: () => harness.newUuid(),
+      publicCode: harness.newPublicCode(),
+      discounted: true,
+      authorizedBy: autoriza,
+    });
+    const r = await d.receiver.receive(op);
+    expect(r.ok && r.status).toBe('APPLIED');
+    const lineaId = ((op.payload as { lines: { id: string }[] }).lines[0] ?? { id: '' }).id;
+    const bitacora = await harness.auditFor(lineaId);
+    expect(bitacora).toHaveLength(1);
+    expect(bitacora[0]).toMatchObject({
+      action: 'QUOTE_LINE_PRICE_CHANGED',
+      old_value: { precio_centavos: 11_600 },
+      authorized_by: autoriza,
+    });
+    expect((bitacora[0]?.new_value as { precio_centavos: number }).precio_centavos).toBe(5_800);
+  }, 60_000);
+});
