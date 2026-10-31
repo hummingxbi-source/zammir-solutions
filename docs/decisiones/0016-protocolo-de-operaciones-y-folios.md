@@ -1,6 +1,6 @@
 # ADR-0016: Protocolo de operaciones y asignación de folios
 
-- **Estado:** Propuesta — se cierra cuando `spike/sync` pase [ADR-0012]
+- **Estado:** Aceptada el 2026-10-30 — validada por [ADR-0023] (la ejecución en servidor es función de borde + función SQL, no conexión directa)
 - **Fecha:** 2026-10-26
 - **Decide:** Juanito
 - **Detalle en:** `docs/arquitectura/SINCRONIZACION.md`
