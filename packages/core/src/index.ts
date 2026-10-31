@@ -86,3 +86,5 @@ export * from './modules/orders/domain/work-order';
 export * from './modules/orders/application/work-order-store';
 export * from './modules/orders/application/work-order-use-cases';
 export * from './modules/payments/domain/payment';
+export * from './modules/orders/application/reconcile-orders';
+export * from './modules/orders/application/replica-documents';

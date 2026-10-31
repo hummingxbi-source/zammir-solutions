@@ -147,6 +147,8 @@ export function planPayment(entrada: {
 }
 
 /** Un cobro de orden es anticipo mientras no se haya recibido nada, y saldo después. */
-export function paymentKindForOrder(paidBeforeCents: number): Extract<PaymentKind, 'DEPOSIT' | 'BALANCE'> {
+export function paymentKindForOrder(
+  paidBeforeCents: number,
+): Extract<PaymentKind, 'DEPOSIT' | 'BALANCE'> {
   return paidBeforeCents === 0 ? 'DEPOSIT' : 'BALANCE';
 }

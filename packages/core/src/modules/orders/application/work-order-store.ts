@@ -28,7 +28,9 @@ const masRecientesPrimero = (a: WorkOrder, b: WorkOrder): number =>
 
 export function outboxWorkOrderStore(outbox: SyncOutbox): WorkOrderStore {
   const todas = async (): Promise<readonly WorkOrder[]> =>
-    (await outbox.transaction((tx) => tx.listDocuments(WORK_ORDERS_COLLECTION))) as readonly WorkOrder[];
+    (await outbox.transaction((tx) =>
+      tx.listDocuments(WORK_ORDERS_COLLECTION),
+    )) as readonly WorkOrder[];
   return {
     async get(id) {
       const doc = await outbox.transaction((tx) => tx.getDocument(WORK_ORDERS_COLLECTION, id));
@@ -62,7 +64,9 @@ export function outboxWarrantyReader(outbox: SyncOutbox): {
 } {
   return {
     async get(workOrderId) {
-      const doc = await outbox.transaction((tx) => tx.getDocument(WARRANTIES_COLLECTION, workOrderId));
+      const doc = await outbox.transaction((tx) =>
+        tx.getDocument(WARRANTIES_COLLECTION, workOrderId),
+      );
       return doc === undefined ? null : (doc as Warranty);
     },
   };

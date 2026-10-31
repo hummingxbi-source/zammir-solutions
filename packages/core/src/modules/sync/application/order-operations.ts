@@ -67,11 +67,7 @@ export async function applyOrderOperation(ctx: {
   const { store, op } = ctx;
   const revisar = (reason: string, extra: Partial<OperationResult> = {}): OperationResult =>
     ({ ok: true, status: 'TO_REVIEW', reason, ...extra }) as OperationResult;
-  const fin = (
-    orden: ServerOrder,
-    id: string,
-    motivo?: string,
-  ): OperationResult => {
+  const fin = (orden: ServerOrder, id: string, motivo?: string): OperationResult => {
     const reason = motivo ?? ctx.baseReason;
     return {
       ok: true,

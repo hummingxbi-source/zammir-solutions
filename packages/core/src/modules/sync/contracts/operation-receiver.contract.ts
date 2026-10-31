@@ -472,8 +472,12 @@ export function operationReceiverContract(
             { id: e.h.newUuid(), method: 'TRANSFER', amountCents: centavos, reference: 'REF-1' },
           ],
         });
-        const pagar = (d: DispositivoDelContrato, orderId: string, centavos: number, kind?: string) =>
-          enviar(d, 'RegisterPayment', cobro(orderId, centavos, kind));
+        const pagar = (
+          d: DispositivoDelContrato,
+          orderId: string,
+          centavos: number,
+          kind?: string,
+        ) => enviar(d, 'RegisterPayment', cobro(orderId, centavos, kind));
         return { ...e, admin, crear, enviar, pagar, cobro, siguiente };
       }
 
@@ -651,7 +655,12 @@ export function operationReceiverContract(
       it('una orden cancelada no se cancela otra vez', async () => {
         const { dispositivo, crear, enviar, admin } = await conOrden({ admin: true });
         const { id } = await crear(dispositivo);
-        await enviar(dispositivo, 'CancelWorkOrder', { id, reason: 'Duplicada' }, { authorizedBy: admin });
+        await enviar(
+          dispositivo,
+          'CancelWorkOrder',
+          { id, reason: 'Duplicada' },
+          { authorizedBy: admin },
+        );
         const otra = await enviar(
           dispositivo,
           'CancelWorkOrder',

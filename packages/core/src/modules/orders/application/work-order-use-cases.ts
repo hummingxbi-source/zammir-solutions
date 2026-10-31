@@ -8,10 +8,7 @@ import { computeDeposit } from '../../../shared-kernel/tax/tax';
 import { formatTempFolio } from '../../../shared-kernel/folio/folio';
 import { mexicoDate } from '../../../shared-kernel/date/mx-date';
 import type { Authorization } from '../../identity/application/authorize-with-admin-pin';
-import {
-  defaultPermissionPolicy,
-  type PermissionPolicy,
-} from '../../identity/domain/permissions';
+import { defaultPermissionPolicy, type PermissionPolicy } from '../../identity/domain/permissions';
 import {
   balanceCents,
   paymentKindForOrder,
@@ -107,7 +104,9 @@ function lineaAPayload(l: WorkOrderLine) {
     taxCents: l.taxCents,
     isTaxExempt: l.isTaxExempt,
     detail: l.detail,
-    ...(l.displayUnit === undefined || l.displayUnit === null ? {} : { displayUnit: l.displayUnit }),
+    ...(l.displayUnit === undefined || l.displayUnit === null
+      ? {}
+      : { displayUnit: l.displayUnit }),
   };
 }
 
@@ -281,11 +280,7 @@ async function aplicar(
   actor: QuoteActor,
   nueva: WorkOrder,
   operacion: {
-    readonly type:
-      | 'UpdateWorkOrder'
-      | 'AdvanceWorkOrder'
-      | 'DeliverWorkOrder'
-      | 'CancelWorkOrder';
+    readonly type: 'UpdateWorkOrder' | 'AdvanceWorkOrder' | 'DeliverWorkOrder' | 'CancelWorkOrder';
     readonly payload: unknown;
     readonly authorizedBy?: string | null;
   },
@@ -354,7 +349,11 @@ export async function updateWorkOrder(
     return err({ code: 'INVALID_DATE' });
   }
   const notas =
-    parche.notes === undefined ? undefined : (parche.notes?.trim() ?? '') === '' ? null : parche.notes?.trim();
+    parche.notes === undefined
+      ? undefined
+      : (parche.notes?.trim() ?? '') === ''
+        ? null
+        : parche.notes?.trim();
   const limpio = { ...parche, ...(notas === undefined ? {} : { notes: notas }) };
   const nueva: WorkOrder = {
     ...o.value,
@@ -557,7 +556,10 @@ export async function registerWorkOrderPayment(
   orderId: string,
   rows: readonly PaymentRowInput[],
 ): Promise<
-  Result<{ readonly payments: readonly Payment[]; readonly plan: PaymentPlan }, RegisterPaymentError>
+  Result<
+    { readonly payments: readonly Payment[]; readonly plan: PaymentPlan },
+    RegisterPaymentError
+  >
 > {
   if (permisos(deps).check(actor.role, 'SALE_REGISTER') === 'DENY') {
     return err({ code: 'NOT_AUTHORIZED' });

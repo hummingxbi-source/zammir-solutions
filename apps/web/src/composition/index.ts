@@ -5,7 +5,9 @@ import {
   localProductReader,
   outboxCustomers,
   outboxQuoteStore,
+  reconcileOrders,
   reconcileQuotes,
+  refreshDocuments,
   refreshCustomers,
   err,
   ok,
@@ -51,6 +53,7 @@ import {
 } from '../modules/identity/infra/supabase-admin-auth';
 import { supabaseAuditReader } from '../modules/audit/infra/supabase-audit-reader';
 import { supabaseCatalog } from '../modules/catalog/infra/supabase-catalog';
+import { supabaseDocumentReplica } from '../modules/orders/infra/supabase-document-replica';
 import { supabaseCustomerReplica } from '../modules/customers/infra/supabase-customer-replica';
 import { supabaseCustomers } from '../modules/customers/infra/supabase-customers';
 import { supabaseLegal } from '../modules/legal/infra/supabase-legal';
@@ -111,6 +114,8 @@ export interface Composition {
     readonly engine: SyncEngine;
     /** Baja los clientes nuevos o corregidos desde otras tablets (sin datos fiscales). */
     readonly actualizarClientes: () => Promise<void>;
+    /** Baja las órdenes y los pagos hechos en otras tablets. */
+    readonly actualizarDocumentos: () => Promise<void>;
     /** Para el indicador de estado: horas sin enviar antes de avisar (de la configuración bajada). */
     readonly visible: {
       readonly engine: SyncEngine;
@@ -213,6 +218,7 @@ function crearEnvio(
     clock: systemClock,
     afterPass: async () => {
       await reconcileQuotes(outbox);
+      await reconcileOrders(outbox);
     },
   });
   const identidad = dexieIdentity();
@@ -232,6 +238,17 @@ function crearEnvio(
       const sesion = c === null ? null : await abrirSesionDeLaTablet(url, anonKey, credenciales, c);
       if (sesion !== null) {
         await refreshCustomers({ source: supabaseCustomerReplica(sesion), outbox });
+      }
+    },
+    async actualizarDocumentos() {
+      const c = await credenciales.load();
+      const sesion = c === null ? null : await abrirSesionDeLaTablet(url, anonKey, credenciales, c);
+      if (sesion !== null) {
+        await refreshDocuments({
+          source: supabaseDocumentReplica(sesion),
+          outbox,
+          clock: systemClock,
+        });
       }
     },
     visible: {

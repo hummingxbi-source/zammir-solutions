@@ -61,7 +61,9 @@ let contador = Math.floor(Math.random() * 900_000) * 1000;
 let anio = 0;
 const aniosUsados = new Set<number>();
 
-export async function nuevoDispositivo(fetchImpl?: typeof fetch): Promise<DispositivoDelContrato> {
+export async function nuevoDispositivo(
+  fetchImpl?: typeof fetch,
+): Promise<DispositivoDelContrato & { readonly session: ReturnType<typeof crearCliente> }> {
   const correo = `ops-tablet-${crypto.randomUUID()}@dispositivos.zammir.invalid`;
   const clave = `${crypto.randomUUID()}${crypto.randomUUID()}`;
   const creada = await servicio.auth.admin.createUser({
@@ -89,6 +91,7 @@ export async function nuevoDispositivo(fetchImpl?: typeof fetch): Promise<Dispos
   expect(entrada.error).toBeNull();
   return {
     id,
+    session: sesion,
     receiver: functionOperationReceiver({
       url: URL,
       anonKey: ANON,
@@ -113,7 +116,11 @@ export const harness: ReceptorDelContrato & {
     const id = asId<'User'>(crypto.randomUUID());
     const usuarios = supabaseUsers(await clienteAdmin());
     const r = await usuarios.create(
-      usuarioDePrueba(id, `Persona ${sufijo} ${id.slice(0, 8)}`, administrador ? { role: 'ADMIN' } : {}),
+      usuarioDePrueba(
+        id,
+        `Persona ${sufijo} ${id.slice(0, 8)}`,
+        administrador ? { role: 'ADMIN' } : {},
+      ),
     );
     expect(r.ok).toBe(true);
     if (!activa) {

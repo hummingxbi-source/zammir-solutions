@@ -8,13 +8,14 @@ export type WorkOrderStatus = 'WAITING' | 'IN_PROCESS' | 'READY' | 'DELIVERED' |
 
 /** Tabla de transiciones válidas. "Entregado" y "cancelado" son finales; cancelar se puede desde
  *  cualquier estado no final. */
-export const WORK_ORDER_TRANSITIONS: Readonly<Record<WorkOrderStatus, readonly WorkOrderStatus[]>> = {
-  WAITING: ['IN_PROCESS', 'CANCELLED'],
-  IN_PROCESS: ['READY', 'CANCELLED'],
-  READY: ['DELIVERED', 'CANCELLED'],
-  DELIVERED: [],
-  CANCELLED: [],
-};
+export const WORK_ORDER_TRANSITIONS: Readonly<Record<WorkOrderStatus, readonly WorkOrderStatus[]>> =
+  {
+    WAITING: ['IN_PROCESS', 'CANCELLED'],
+    IN_PROCESS: ['READY', 'CANCELLED'],
+    READY: ['DELIVERED', 'CANCELLED'],
+    DELIVERED: [],
+    CANCELLED: [],
+  };
 
 export interface InvalidWorkOrderTransition {
   readonly code: 'INVALID_TRANSITION';
@@ -33,7 +34,13 @@ export function checkWorkOrderTransition(
 
 /** El siguiente estatus del botón "Avanzar"; `null` si ya no hay [RF-M3-02]. */
 export function nextWorkOrderStatus(status: WorkOrderStatus): WorkOrderStatus | null {
-  return status === 'WAITING' ? 'IN_PROCESS' : status === 'IN_PROCESS' ? 'READY' : status === 'READY' ? 'DELIVERED' : null;
+  return status === 'WAITING'
+    ? 'IN_PROCESS'
+    : status === 'IN_PROCESS'
+      ? 'READY'
+      : status === 'READY'
+        ? 'DELIVERED'
+        : null;
 }
 
 /** Línea de la orden: copia congelada de la línea de la cotización. Las que bajan del servidor no
