@@ -1,6 +1,6 @@
 import type { CustomerId } from '../../../shared-kernel/id';
 import type { CounterSaleStore } from '../../counter/application/counter-sale-store';
-import { outboxWarrantyReader } from '../../orders/application/work-order-store';
+import type { outboxWarrantyReader } from '../../orders/application/work-order-store';
 import type { PaymentStore, WorkOrderStore } from '../../orders/application/work-order-store';
 import type { Warranty } from '../../orders/domain/work-order';
 import type { QuoteStore } from '../../quotes/application/quote-store';

@@ -130,7 +130,7 @@ describe('Ficha del cliente', () => {
         phone: '5512345678',
         email: '',
         notes: '',
-        fiscal: { rfc: '', legalName: '', fiscalZip: '', regime: '', cfdiUse: '' } as never,
+        fiscal: { rfc: '', legalName: '', fiscalZip: '', regime: '', cfdiUse: '' },
         privacyNoticeVersion: null,
       },
     );

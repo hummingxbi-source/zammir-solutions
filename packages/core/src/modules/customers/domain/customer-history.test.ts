@@ -176,8 +176,8 @@ describe('cargar el historial de la tablet', () => {
     const payments = outboxPaymentStore(outbox);
     await orders.save({ ...orden('o1', 'c-ana', 'DELIVERED'), id: 'o1' } as never);
     await orders.save({ ...orden('o2', 'c-beto', 'DELIVERED'), id: 'o2' } as never);
-    await sales.save(venta('v1', 'c-ana') as never);
-    await quotes.save(cotizacion('q1', 'c-ana') as never);
+    await sales.save(venta('v1', 'c-ana'));
+    await quotes.save(cotizacion('q1', 'c-ana'));
     const h = await loadCustomerHistory(
       {
         quotes,
