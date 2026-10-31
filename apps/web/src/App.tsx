@@ -1,16 +1,22 @@
 import type { ReactElement } from 'react';
 import { Route, Routes } from 'react-router';
 import type {
+  ActiveUserSession,
   DeviceRepository,
   ImportCatalogDeps,
   LegalDeps,
   ManageCustomersDeps,
+  RegisterTabletDeps,
+  SignInWithPinDeps,
 } from '@zammir/core';
 
 import { Bitacora, type BitacoraProps } from './modules/audit/ui/Bitacora';
 import { ImportarCatalogo } from './modules/catalog/ui/ImportarCatalogo';
 import { Clientes } from './modules/customers/ui/Clientes';
 import { AvisoDePrivacidad } from './modules/legal/ui/AvisoDePrivacidad';
+import { EntrarConPin } from './modules/identity/ui/EntrarConPin';
+import { PersonaActiva } from './modules/identity/ui/PersonaActiva';
+import { ConectarTablet } from './modules/devices/ui/ConectarTablet';
 import { Dispositivos } from './modules/devices/ui/Dispositivos';
 import { Usuarios, type UsuariosProps } from './modules/identity/ui/Usuarios';
 import { ProtegidaAdmin } from './modules/identity/ui/ProtegidaAdmin';
@@ -31,6 +37,13 @@ export interface AppProps {
   readonly legal?: LegalDeps | null;
   /** Bitácora consultable; aparece en Usuarios. */
   readonly bitacora?: BitacoraProps | null;
+  /** Conexión de esta tablet con un código de registro; abre en `/conectar`. */
+  readonly conectarTablet?: RegisterTabletDeps | null;
+  /** Entrada con PIN en la tablet y quién está usándola; abre en `/entrar`. */
+  readonly entradaConPin?: {
+    readonly deps: SignInWithPinDeps;
+    readonly session: ActiveUserSession;
+  } | null;
   /** Importación del catálogo desde archivo; aparece en Catálogo (solo administradores). */
   readonly catalogo?: ImportCatalogDeps | null;
   /** Vigencia sugerida del código de registro; sin ella la persona escribe los minutos. */
@@ -46,6 +59,8 @@ export function App({
   clientes = null,
   legal = null,
   bitacora = null,
+  conectarTablet = null,
+  entradaConPin = null,
   catalogo = null,
   cargarVigenciaDeCodigo,
 }: AppProps): ReactElement {
@@ -56,8 +71,27 @@ export function App({
 
   return (
     <Layout interruptores={interruptores}>
+      {entradaConPin !== null ? <PersonaActiva session={entradaConPin.session} /> : null}
       <Routes>
-        <Route index element={<PanelDeInicio interruptores={interruptores} />} />
+        <Route
+          index
+          element={
+            <PanelDeInicio
+              interruptores={interruptores}
+              conectar={conectarTablet !== null}
+              entrar={entradaConPin !== null}
+            />
+          }
+        />
+        {entradaConPin !== null ? (
+          <Route
+            path="/entrar"
+            element={<EntrarConPin deps={entradaConPin.deps} session={entradaConPin.session} />}
+          />
+        ) : null}
+        {conectarTablet !== null ? (
+          <Route path="/conectar" element={<ConectarTablet deps={conectarTablet} />} />
+        ) : null}
         {secciones.map((seccion) => (
           <Route
             key={seccion.id}
@@ -104,7 +138,16 @@ export function App({
             }
           />
         ))}
-        <Route path="*" element={<PanelDeInicio interruptores={interruptores} />} />
+        <Route
+          path="*"
+          element={
+            <PanelDeInicio
+              interruptores={interruptores}
+              conectar={conectarTablet !== null}
+              entrar={entradaConPin !== null}
+            />
+          }
+        />
       </Routes>
     </Layout>
   );

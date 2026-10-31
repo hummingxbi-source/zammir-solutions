@@ -7,8 +7,14 @@ import { seccionesVisibles, type Interruptor, type Seccion } from './secciones';
 /** Panel de inicio: por ahora solo accesos a las secciones, sin cifras (contenido por rol: PD-31). */
 export function PanelDeInicio({
   interruptores,
+  conectar = false,
+  entrar = false,
 }: {
   readonly interruptores: ReadonlySet<Interruptor>;
+  /** Muestra el acceso para conectar esta tablet con un código de registro. */
+  readonly conectar?: boolean;
+  /** Muestra el acceso para entrar con PIN. */
+  readonly entrar?: boolean;
 }): ReactElement {
   const accesos: Seccion[] = [
     ...seccionesVisibles('principal', interruptores),
@@ -28,6 +34,20 @@ export function PanelDeInicio({
           </li>
         ))}
       </ul>
+      {entrar ? (
+        <p>
+          <Link to="/entrar" className="acceso">
+            {textos.personas.acceso}
+          </Link>
+        </p>
+      ) : null}
+      {conectar ? (
+        <p>
+          <Link to="/conectar" className="acceso">
+            {textos.conectar.titulo}
+          </Link>
+        </p>
+      ) : null}
     </section>
   );
 }
