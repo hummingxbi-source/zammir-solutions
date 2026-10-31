@@ -42,6 +42,10 @@
 17. **Anticipo:** el sistema propone **50 %** en trabajos a medida y puertas o ventanas. ☐ Está bien ☐ Cambiar a ___ %. ¿Hay trabajos sin anticipo? ¿Cuáles?
 18. **¿Se puede convertir en orden solo una parte de una cotización?** ☐ Sí ☐ No. (PP-15)
 19. **¿Quieren ver las cotizaciones por vencer** y cuántas se aceptan? ☐ Sí ☐ No. (PP-19)
+    - **19.1 Cotización vencida:** si un cliente quiere aceptar una cotización cuya vigencia ya pasó, ¿se puede? ☐ Sí, avisando que los precios pueden haber cambiado ☐ No, hay que hacer una nueva. *Si no sabes: se puede aceptar con aviso.* (Sprint 2, estados de la cotización)
+    - **19.2 Cotización cancelada:** ¿hace falta "cancelar" una cotización ya enviada además de marcarla "rechazada"? ☐ Basta con rechazada ☐ Necesitamos cancelada con motivo. *Si no sabes: basta con rechazada; el folio se conserva.*
+    - **19.3 Historial en la tablet:** ¿cuántos días de cotizaciones, órdenes y ventas debe tener a la mano cada tablet sin internet? ☐ 30 ☐ 90 ☐ 180 ☐ Todo. *Si no sabes: 90 días.* (ventana de retención local)
+    - **19.4 Aviso de documentos sin enviar:** ¿después de cuántas horas sin internet avisamos que hay documentos sin enviar? *Si no sabes: 6 horas.*
 
 ## 3. Órdenes de trabajo y producción
 
