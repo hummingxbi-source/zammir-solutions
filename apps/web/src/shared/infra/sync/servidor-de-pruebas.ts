@@ -109,10 +109,12 @@ export const harness: ReceptorDelContrato & {
   },
 
   newDevice: () => nuevoDispositivo(),
-  async newUser(activa) {
+  async newUser(activa, administrador = false) {
     const id = asId<'User'>(crypto.randomUUID());
     const usuarios = supabaseUsers(await clienteAdmin());
-    const r = await usuarios.create(usuarioDePrueba(id, `Persona ${sufijo} ${id.slice(0, 8)}`));
+    const r = await usuarios.create(
+      usuarioDePrueba(id, `Persona ${sufijo} ${id.slice(0, 8)}`, administrador ? { role: 'ADMIN' } : {}),
+    );
     expect(r.ok).toBe(true);
     if (!activa) {
       const baja = await usuarios.update({
@@ -132,6 +134,23 @@ export const harness: ReceptorDelContrato & {
     );
     expect(r.ok).toBe(true);
     return id;
+  },
+  async orderState(id) {
+    const { data } = await servicio
+      .from('work_orders')
+      .select('status, folio')
+      .eq('id', id)
+      .limit(1);
+    const fila = data?.[0] as { readonly status: string; readonly folio: string } | undefined;
+    if (fila === undefined) {
+      return undefined;
+    }
+    const pagos = await servicio.from('payments').select('amount_cents').eq('work_order_id', id);
+    const pagado = ((pagos.data ?? []) as { readonly amount_cents: number }[]).reduce(
+      (suma, p) => suma + Number(p.amount_cents),
+      0,
+    );
+    return { status: fila.status, folio: fila.folio, paidCents: pagado };
   },
   async customerName(id) {
     const { data } = await servicio.from('customers').select('name').eq('id', id).limit(1);

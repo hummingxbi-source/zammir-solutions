@@ -82,3 +82,7 @@ export * from './modules/quotes/application/quote-use-cases';
 export * from './modules/documents/domain/quote-document';
 export * from './modules/documents/application/ports';
 export * from './modules/documents/application/share-quote';
+export * from './modules/orders/domain/work-order';
+export * from './modules/orders/application/work-order-store';
+export * from './modules/orders/application/work-order-use-cases';
+export * from './modules/payments/domain/payment';

@@ -5,7 +5,7 @@
 // Se llama con la sesión de la tablet (su JWT): la base verifica que sea un dispositivo activo.
 // @ts-nocheck: el archivo se ejecuta en Deno, no lo compila el TypeScript del repositorio.
 import { createClient } from 'npm:@supabase/supabase-js@2.118.0';
-import { issueQuotePayloadSchema, parseEnvelope } from '../_shared/core.mjs';
+import { parseEnvelope, parseOperation } from '../_shared/core.mjs';
 
 const cabeceras = {
   'content-type': 'application/json',
@@ -41,18 +41,15 @@ Deno.serve(async (req: Request) => {
       code: sobre.error.code === 'UNKNOWN_TYPE' ? 'UNKNOWN_TYPE' : 'INVALID_ENVELOPE',
     });
   }
-  if (sobre.value.type === 'IssueQuote') {
-    const carga = issueQuotePayloadSchema.safeParse(sobre.value.payload);
-    if (!carga.success) {
-      return responder(200, {
-        ok: false,
-        code: 'INVALID_PAYLOAD',
-        detail: carga.error.issues
-          .map((i) => i.message)
-          .join('; ')
-          .slice(0, 300),
-      });
-    }
+  // La carga de cada tipo se valida con el mismo código que la tablet. Una carga inválida es un rechazo
+  // estructural (200 con ok:false), nunca una falla del servidor que la tablet reintentaría para siempre.
+  const completa = parseOperation(cuerpo);
+  if (!completa.ok) {
+    return responder(200, {
+      ok: false,
+      code: 'INVALID_PAYLOAD',
+      detail: completa.error.problems.join('; ').slice(0, 300),
+    });
   }
 
   const autorizacion = req.headers.get('authorization') ?? '';

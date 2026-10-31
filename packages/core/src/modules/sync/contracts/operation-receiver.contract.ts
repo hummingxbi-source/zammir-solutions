@@ -12,8 +12,14 @@ export interface DispositivoDelContrato {
 export interface ReceptorDelContrato {
   newDevice(): Promise<DispositivoDelContrato>;
   /** Una persona (con PIN) de la tablet; `activa = false` simula a alguien ya desactivado. */
-  newUser(activa: boolean): Promise<string>;
+  newUser(activa: boolean, administrador?: boolean): Promise<string>;
   newCustomer(): Promise<string>;
+  /** Estado de una orden en el servidor y lo pagado (lectura independiente); `undefined` si no existe. */
+  orderState(
+    id: string,
+  ): Promise<
+    { readonly status: string; readonly paidCents: number; readonly folio: string } | undefined
+  >;
   /** Nombre con que quedó un cliente en el servidor (lectura independiente); `undefined` si no existe. */
   customerName(id: string): Promise<string | undefined>;
   revokeDevice(id: string): Promise<void>;
@@ -411,6 +417,279 @@ export function operationReceiverContract(
       });
     });
 
+    describe('órdenes de trabajo y pagos', () => {
+      async function conOrden(extra: { admin?: boolean } = {}) {
+        const e = await entorno();
+        const admin = extra.admin === true ? await e.h.newUser(true, true) : undefined;
+        let seq = 0;
+        const siguiente = () => {
+          seq += 1;
+          return seq;
+        };
+        const instante = `${String(e.year)}-06-16T18:00:00.000Z`;
+        const crear = async (d: DispositivoDelContrato, opciones: { quoteId?: string } = {}) => {
+          const id = e.h.newUuid();
+          const r = await d.receiver.receive(
+            createWorkOrderOperation({
+              opId: e.h.newUuid(),
+              deviceId: d.id,
+              seq: siguiente(),
+              userId: e.usuario,
+              customerId: e.cliente,
+              year: e.year,
+              newUuid: () => e.h.newUuid(),
+              publicCode: e.h.newPublicCode(),
+              orderId: id,
+              ...opciones,
+            }),
+          );
+          return { id, r };
+        };
+        const enviar = (
+          d: DispositivoDelContrato,
+          tipo: string,
+          payload: Record<string, unknown>,
+          extra: Record<string, unknown> = {},
+          op: string = e.h.newUuid(),
+        ) =>
+          d.receiver.receive({
+            opId: op,
+            deviceId: d.id,
+            seq: siguiente(),
+            type: tipo,
+            schemaVersion: 1,
+            userId: e.usuario,
+            clientCreatedAt: instante,
+            payload,
+            ...extra,
+          });
+        const cobro = (orderId: string, centavos: number, kind = 'DEPOSIT') => ({
+          groupId: e.h.newUuid(),
+          target: { type: 'WORK_ORDER', id: orderId },
+          kind,
+          paidAt: instante,
+          rows: [
+            { id: e.h.newUuid(), method: 'TRANSFER', amountCents: centavos, reference: 'REF-1' },
+          ],
+        });
+        const pagar = (d: DispositivoDelContrato, orderId: string, centavos: number, kind?: string) =>
+          enviar(d, 'RegisterPayment', cobro(orderId, centavos, kind));
+        return { ...e, admin, crear, enviar, pagar, cobro, siguiente };
+      }
+
+      it('crea una orden sin cotización y le da su folio OT del año de emisión', async () => {
+        const { dispositivo, crear, year, h } = await conOrden();
+        const { id, r } = await crear(dispositivo);
+        expect(r.ok && r.status).toBe('APPLIED');
+        expect(r.ok && r.folio).toBe(`OT-${String(year)}-0001`);
+        expect(await h.orderState(id)).toMatchObject({ status: 'WAITING', paidCents: 0 });
+      });
+
+      it('una cotización aceptada se convierte una sola vez; la segunda queda por revisar', async () => {
+        const { h, dispositivo, usuario, cliente, year, siguiente, crear } = await conOrden();
+        const emitida = issueQuoteOperation({
+          opId: h.newUuid(),
+          deviceId: dispositivo.id,
+          seq: siguiente(),
+          userId: usuario,
+          customerId: cliente,
+          year,
+          newUuid: () => h.newUuid(),
+          publicCode: h.newPublicCode(),
+        });
+        expect((await dispositivo.receiver.receive(emitida)).ok).toBe(true);
+        const quoteId = (emitida.payload as { id: string }).id;
+        await dispositivo.receiver.receive(
+          markQuoteOperation({
+            opId: h.newUuid(),
+            deviceId: dispositivo.id,
+            seq: siguiente(),
+            userId: usuario,
+            quoteId,
+            accepted: true,
+          }),
+        );
+        const primera = await crear(dispositivo, { quoteId });
+        const segunda = await crear(dispositivo, { quoteId });
+        expect(primera.r.ok && primera.r.status).toBe('APPLIED');
+        expect(segunda.r.ok && segunda.r.status).toBe('TO_REVIEW');
+        expect(segunda.r.ok && segunda.r.reason).toBe('QUOTE_ALREADY_CONVERTED');
+      });
+
+      it('convertir una cotización que no está aceptada se guarda pero queda por revisar', async () => {
+        const { h, dispositivo, usuario, cliente, year, siguiente, crear } = await conOrden();
+        const emitida = issueQuoteOperation({
+          opId: h.newUuid(),
+          deviceId: dispositivo.id,
+          seq: siguiente(),
+          userId: usuario,
+          customerId: cliente,
+          year,
+          newUuid: () => h.newUuid(),
+          publicCode: h.newPublicCode(),
+        });
+        await dispositivo.receiver.receive(emitida);
+        const { r } = await crear(dispositivo, { quoteId: (emitida.payload as { id: string }).id });
+        expect(r.ok && r.status).toBe('TO_REVIEW');
+        expect(r.ok && r.reason).toBe('QUOTE_NOT_ACCEPTED');
+      });
+
+      it('reenviar un cobro no duplica el pago', async () => {
+        const { h, dispositivo, crear, enviar, cobro } = await conOrden();
+        const { id } = await crear(dispositivo);
+        const payload = cobro(id, 5_800);
+        const op = h.newUuid();
+        // El mismo opId repetido: el servidor devuelve lo ya guardado, sin cobrar de nuevo.
+        const a = await enviar(dispositivo, 'RegisterPayment', payload, {}, op);
+        const b = await enviar(dispositivo, 'RegisterPayment', payload, {}, op);
+        expect(a.ok && a.status).toBe('APPLIED');
+        expect(b).toEqual(a);
+        expect(await h.orderState(id)).toMatchObject({ paidCents: 5_800 });
+      });
+
+      it('un pago mayor al saldo se guarda y queda por revisar: el dinero recibido no se rechaza', async () => {
+        const { h, dispositivo, crear, pagar } = await conOrden();
+        const { id } = await crear(dispositivo);
+        const r = await pagar(dispositivo, id, 20_000);
+        expect(r.ok && r.status).toBe('TO_REVIEW');
+        expect(r.ok && r.reason).toBe('PAYMENT_EXCEEDS_BALANCE');
+        expect(await h.orderState(id)).toMatchObject({ paidCents: 20_000 });
+      });
+
+      it('un efectivo recibido menor a lo aplicado se rechaza sin guardar nada', async () => {
+        const { h, dispositivo, crear, enviar } = await conOrden();
+        const { id } = await crear(dispositivo);
+        const r = await enviar(dispositivo, 'RegisterPayment', {
+          groupId: h.newUuid(),
+          target: { type: 'WORK_ORDER', id },
+          kind: 'DEPOSIT',
+          paidAt: '2090-06-16T18:00:00.000Z',
+          rows: [{ id: h.newUuid(), method: 'CASH', amountCents: 5_000, cashReceivedCents: 4_000 }],
+        });
+        expect(r.ok).toBe(false);
+        expect(await h.orderState(id)).toMatchObject({ paidCents: 0 });
+      });
+
+      it('avanzar: sin anticipo ni autorización queda por revisar; con anticipo se aplica', async () => {
+        const { h, dispositivo, crear, enviar, pagar } = await conOrden();
+        const sin = await crear(dispositivo);
+        const r1 = await enviar(dispositivo, 'AdvanceWorkOrder', { id: sin.id, to: 'IN_PROCESS' });
+        expect(r1.ok && r1.reason).toBe('STARTED_WITHOUT_DEPOSIT');
+        const con = await crear(dispositivo);
+        await pagar(dispositivo, con.id, 5_800);
+        const r2 = await enviar(dispositivo, 'AdvanceWorkOrder', { id: con.id, to: 'IN_PROCESS' });
+        expect(r2.ok && r2.status).toBe('APPLIED');
+        const r3 = await enviar(dispositivo, 'AdvanceWorkOrder', { id: con.id, to: 'READY' });
+        expect(r3.ok && r3.status).toBe('APPLIED');
+        expect(await h.orderState(con.id)).toMatchObject({ status: 'READY' });
+      });
+
+      it('una transición que ya no es válida se aplica como por revisar y no cambia la orden', async () => {
+        const { h, dispositivo, crear, enviar, pagar } = await conOrden();
+        const { id } = await crear(dispositivo);
+        await pagar(dispositivo, id, 5_800);
+        await enviar(dispositivo, 'AdvanceWorkOrder', { id, to: 'IN_PROCESS' });
+        const repetida = await enviar(dispositivo, 'AdvanceWorkOrder', { id, to: 'IN_PROCESS' });
+        expect(repetida.ok && repetida.status).toBe('TO_REVIEW');
+        expect(repetida.ok && repetida.reason).toBe('INVALID_TRANSITION');
+        expect(await h.orderState(id)).toMatchObject({ status: 'IN_PROCESS' });
+      });
+
+      it('entregar con saldo sin administrador ni motivo queda por revisar; con ambos se aplica', async () => {
+        const { h, dispositivo, crear, enviar, pagar, admin } = await conOrden({ admin: true });
+        const listo = async () => {
+          const { id } = await crear(dispositivo);
+          await pagar(dispositivo, id, 5_800);
+          await enviar(dispositivo, 'AdvanceWorkOrder', { id, to: 'IN_PROCESS' });
+          await enviar(dispositivo, 'AdvanceWorkOrder', { id, to: 'READY' });
+          return id;
+        };
+        const a = await listo();
+        const sin = await enviar(dispositivo, 'DeliverWorkOrder', { id: a });
+        expect(sin.ok && sin.reason).toBe('DELIVERED_WITH_BALANCE_WITHOUT_AUTHORIZATION');
+        const b = await listo();
+        const con = await enviar(
+          dispositivo,
+          'DeliverWorkOrder',
+          { id: b, reason: 'El cliente liquida el viernes' },
+          { authorizedBy: admin },
+        );
+        expect(con.ok && con.status).toBe('APPLIED');
+        expect(await h.orderState(b)).toMatchObject({ status: 'DELIVERED' });
+      });
+
+      it('entregar con el saldo liquidado no necesita autorización', async () => {
+        const { dispositivo, crear, enviar, pagar } = await conOrden();
+        const { id } = await crear(dispositivo);
+        await pagar(dispositivo, id, 5_800);
+        await enviar(dispositivo, 'AdvanceWorkOrder', { id, to: 'IN_PROCESS' });
+        await enviar(dispositivo, 'AdvanceWorkOrder', { id, to: 'READY' });
+        await pagar(dispositivo, id, 5_800, 'BALANCE');
+        const r = await enviar(dispositivo, 'DeliverWorkOrder', { id });
+        expect(r.ok && r.status).toBe('APPLIED');
+      });
+
+      it('cancelar: un administrador la cancela; si no lo es, se aplica pero queda por revisar', async () => {
+        const { h, dispositivo, crear, enviar, admin } = await conOrden({ admin: true });
+        const a = await crear(dispositivo);
+        const sin = await enviar(dispositivo, 'CancelWorkOrder', {
+          id: a.id,
+          reason: 'Se arrepintió',
+        });
+        expect(sin.ok && sin.reason).toBe('CANCEL_WITHOUT_AUTHORIZATION');
+        const b = await crear(dispositivo);
+        const con = await enviar(
+          dispositivo,
+          'CancelWorkOrder',
+          { id: b.id, reason: 'Se arrepintió' },
+          { authorizedBy: admin },
+        );
+        expect(con.ok && con.status).toBe('APPLIED');
+        expect(await h.orderState(b.id)).toMatchObject({ status: 'CANCELLED' });
+      });
+
+      it('una orden cancelada no se cancela otra vez', async () => {
+        const { dispositivo, crear, enviar, admin } = await conOrden({ admin: true });
+        const { id } = await crear(dispositivo);
+        await enviar(dispositivo, 'CancelWorkOrder', { id, reason: 'Duplicada' }, { authorizedBy: admin });
+        const otra = await enviar(
+          dispositivo,
+          'CancelWorkOrder',
+          { id, reason: 'Otra vez' },
+          { authorizedBy: admin },
+        );
+        expect(otra.ok && otra.reason).toBe('INVALID_TRANSITION');
+      });
+
+      it('editar datos de una orden que no existe se rechaza como carga inválida', async () => {
+        const { h, dispositivo, enviar } = await conOrden();
+        const r = await enviar(dispositivo, 'UpdateWorkOrder', {
+          id: h.newUuid(),
+          patch: { notes: 'x' },
+        });
+        expect(!r.ok && r.code).toBe('INVALID_PAYLOAD');
+      });
+
+      it('dos tablets editan campos distintos de la misma orden: ambas ediciones se aplican', async () => {
+        const { h, dispositivo, crear, enviar, usuario } = await conOrden();
+        const otra = await h.newDevice();
+        const { id } = await crear(dispositivo);
+        const a = await enviar(dispositivo, 'UpdateWorkOrder', { id, patch: { notes: 'Nota A' } });
+        const b = await otra.receiver.receive({
+          opId: h.newUuid(),
+          deviceId: otra.id,
+          seq: 1,
+          type: 'UpdateWorkOrder',
+          schemaVersion: 1,
+          userId: usuario,
+          clientCreatedAt: '2090-06-16T18:00:00.000Z',
+          payload: { id, patch: { estimatedDeliveryDate: '2090-07-01' } },
+        });
+        expect(a.ok && a.status).toBe('APPLIED');
+        expect(b.ok && b.status).toBe('APPLIED');
+      });
+    });
+
     describe('clientes (UpsertCustomer)', () => {
       it('un cliente capturado sin conexión se aplica y luego se le puede cotizar', async () => {
         const { h, dispositivo, usuario, year } = await entorno();
@@ -540,6 +819,62 @@ export function upsertCustomerOperation(o: {
       email: null,
       notes: null,
       privacyNoticeVersion: 1,
+    },
+  };
+}
+
+/** Una operación CreateWorkOrder completa y consistente (una línea de 1 m² a $116.00 con IVA incluido y
+ *  anticipo exigido de $58.00). */
+export function createWorkOrderOperation(o: {
+  readonly opId: string;
+  readonly deviceId: string;
+  readonly seq: number;
+  readonly userId: string;
+  readonly customerId: string;
+  readonly year: number;
+  readonly newUuid: () => string;
+  readonly publicCode: string;
+  readonly orderId: string;
+  readonly quoteId?: string;
+}): Record<string, unknown> {
+  const issuedAt = `${String(o.year)}-06-15T18:00:00.000Z`;
+  return {
+    opId: o.opId,
+    deviceId: o.deviceId,
+    seq: o.seq,
+    type: 'CreateWorkOrder',
+    schemaVersion: 1,
+    userId: o.userId,
+    clientCreatedAt: issuedAt,
+    payload: {
+      id: o.orderId,
+      tempFolio: `T1-${String(o.seq).padStart(4, '0')}`,
+      publicCode: o.publicCode,
+      customerId: o.customerId,
+      ...(o.quoteId === undefined ? {} : { quoteId: o.quoteId }),
+      issuedAt,
+      depositPercentBps: 5_000,
+      depositRequiredCents: 5_800,
+      subtotalCents: 10_000,
+      taxCents: 1_600,
+      totalCents: 11_600,
+      lines: [
+        {
+          id: o.newUuid(),
+          name: 'Vidrio claro 6 mm',
+          chargeUnit: 'SQUARE_METER',
+          unitPriceCents: 11_600,
+          catalogPriceCents: 11_600,
+          ruleId: 'AREA',
+          widthMm: 1000,
+          heightMm: 1000,
+          quantity: 1,
+          lineTotalCents: 11_600,
+          baseCents: 10_000,
+          taxCents: 1_600,
+          detail: '1 m²',
+        },
+      ],
     },
   };
 }
