@@ -36,6 +36,10 @@ export interface OpcionesDeOperacion {
   readonly tempFolio?: string;
   readonly type?: string;
   readonly totalCents?: number;
+  /** Administrador que autorizó un descuento. */
+  readonly authorizedBy?: string;
+  /** La línea se cobra a la mitad ($58.00) en lugar del precio de catálogo ($116.00): un descuento. */
+  readonly discounted?: boolean;
 }
 
 /** Una operación IssueQuote completa y consistente (una línea de 1 m² a $116.00 con IVA incluido). */
@@ -49,22 +53,23 @@ export function issueQuoteOperation(o: OpcionesDeOperacion): Record<string, unkn
     issuedAt,
     validUntil: `${String(o.year)}-06-30`,
     conditionsText: 'Condiciones de prueba',
-    subtotalCents: 10_000,
-    taxCents: 1_600,
-    totalCents: o.totalCents ?? 11_600,
+    subtotalCents: o.discounted === true ? 5_000 : 10_000,
+    taxCents: o.discounted === true ? 800 : 1_600,
+    totalCents: o.totalCents ?? (o.discounted === true ? 5_800 : 11_600),
     lines: [
       {
         id: o.newUuid(),
         name: 'Vidrio claro 6 mm',
         chargeUnit: 'SQUARE_METER',
-        unitPriceCents: 11_600,
+        unitPriceCents: o.discounted === true ? 5_800 : 11_600,
+        catalogPriceCents: 11_600,
         ruleId: 'AREA',
         widthMm: 1000,
         heightMm: 1000,
         quantity: 1,
-        lineTotalCents: 11_600,
-        baseCents: 10_000,
-        taxCents: 1_600,
+        lineTotalCents: o.discounted === true ? 5_800 : 11_600,
+        baseCents: o.discounted === true ? 5_000 : 10_000,
+        taxCents: o.discounted === true ? 800 : 1_600,
         detail: '1 m²',
       },
     ],
@@ -76,12 +81,34 @@ export function issueQuoteOperation(o: OpcionesDeOperacion): Record<string, unkn
     type: o.type ?? 'IssueQuote',
     schemaVersion: 1,
     userId: o.userId,
+    ...(o.authorizedBy === undefined ? {} : { authorizedBy: o.authorizedBy }),
     clientCreatedAt: issuedAt,
     payload,
   };
 }
 
 type IssuePayloadCrudo = Omit<IssueQuotePayload, 'privacyNoticeVersion' | 'catalogVersion'>;
+
+/** Operación para aceptar o rechazar una cotización ya emitida. */
+export function markQuoteOperation(o: {
+  readonly opId: string;
+  readonly deviceId: string;
+  readonly seq: number;
+  readonly userId: string;
+  readonly quoteId: string;
+  readonly accepted: boolean;
+}): Record<string, unknown> {
+  return {
+    opId: o.opId,
+    deviceId: o.deviceId,
+    seq: o.seq,
+    type: o.accepted ? 'MarkQuoteAccepted' : 'MarkQuoteRejected',
+    schemaVersion: 1,
+    userId: o.userId,
+    clientCreatedAt: '2090-06-16T18:00:00.000Z',
+    payload: { quoteId: o.quoteId },
+  };
+}
 
 const CODIGOS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 
@@ -275,6 +302,111 @@ export function operationReceiverContract(
         await dispositivo.receiver.receive(op);
       }
       expect(await h.countsFor([dispositivo.id])).toEqual({ quotes: 15, operations: 15 });
+    });
+
+    it('un descuento con quien lo autorizó se aplica normalmente', async () => {
+      const { h, dispositivo, operacion } = await entorno();
+      const autoriza = await h.newUser(true);
+      const r = await dispositivo.receiver.receive(
+        operacion(dispositivo, 1, { discounted: true, authorizedBy: autoriza }),
+      );
+      expect(r.ok && r.status).toBe('APPLIED');
+    });
+
+    it('un descuento sin quien lo autorice no se rechaza: queda por revisar y conserva su folio', async () => {
+      const { dispositivo, operacion } = await entorno();
+      const r = await dispositivo.receiver.receive(operacion(dispositivo, 1, { discounted: true }));
+      expect(r.ok && r.status).toBe('TO_REVIEW');
+      expect(r.ok && r.reason).toBe('DISCOUNT_WITHOUT_AUTHORIZATION');
+      expect(folioDe(r)).toBeDefined();
+    });
+
+    describe('aceptar y rechazar', () => {
+      async function conCotizacionEmitida() {
+        const e = await entorno();
+        const emitida = await e.dispositivo.receiver.receive(e.operacion(e.dispositivo, 1));
+        if (!emitida.ok || emitida.documentId === undefined) {
+          throw new Error('no se emitió');
+        }
+        const marcar = (d: DispositivoDelContrato, seq: number, aceptar: boolean) =>
+          d.receiver.receive(
+            markQuoteOperation({
+              opId: e.h.newUuid(),
+              deviceId: d.id,
+              seq,
+              userId: e.usuario,
+              quoteId: emitida.documentId ?? '',
+              accepted: aceptar,
+            }),
+          );
+        return { ...e, quoteId: emitida.documentId, folio: folioDe(emitida), marcar };
+      }
+
+      it('aceptar una cotización enviada se aplica y devuelve su folio', async () => {
+        const { dispositivo, marcar, folio } = await conCotizacionEmitida();
+        const r = await marcar(dispositivo, 2, true);
+        expect(r.ok && r.status).toBe('APPLIED');
+        expect(folioDe(r)).toBe(folio);
+      });
+
+      it('rechazarla también, y reenviar la operación no repite nada', async () => {
+        const { h, dispositivo, usuario, quoteId } = await conCotizacionEmitida();
+        const op = markQuoteOperation({
+          opId: h.newUuid(),
+          deviceId: dispositivo.id,
+          seq: 2,
+          userId: usuario,
+          quoteId,
+          accepted: false,
+        });
+        const a = await dispositivo.receiver.receive(op);
+        const b = await dispositivo.receiver.receive(op);
+        expect(a.ok && a.status).toBe('APPLIED');
+        expect(b).toEqual(a);
+      });
+
+      it('si otra tablet ya la cambió, la segunda se aplica como por revisar y la cotización no cambia', async () => {
+        const { h, dispositivo, usuario, quoteId } = await conCotizacionEmitida();
+        const otra = await h.newDevice();
+        const primera = await dispositivo.receiver.receive(
+          markQuoteOperation({
+            opId: h.newUuid(),
+            deviceId: dispositivo.id,
+            seq: 2,
+            userId: usuario,
+            quoteId,
+            accepted: true,
+          }),
+        );
+        const segunda = await otra.receiver.receive(
+          markQuoteOperation({
+            opId: h.newUuid(),
+            deviceId: otra.id,
+            seq: 1,
+            userId: usuario,
+            quoteId,
+            accepted: false,
+          }),
+        );
+        expect(primera.ok && primera.status).toBe('APPLIED');
+        expect(segunda.ok && segunda.status).toBe('TO_REVIEW');
+        expect(segunda.ok && segunda.reason).toBe('INVALID_TRANSITION');
+      });
+
+      it('una cotización que el servidor no conoce se rechaza como carga inválida', async () => {
+        const { h, dispositivo, usuario } = await entorno();
+        const r = await dispositivo.receiver.receive(
+          markQuoteOperation({
+            opId: h.newUuid(),
+            deviceId: dispositivo.id,
+            seq: 1,
+            userId: usuario,
+            quoteId: h.newUuid(),
+            accepted: true,
+          }),
+        );
+        expect(!r.ok && r.code).toBe('INVALID_PAYLOAD');
+      });
     });
   });
 }

@@ -70,6 +70,7 @@ const quoteLineSchema = z
     name: z.string().trim().min(1),
     chargeUnit: z.enum(['SQUARE_METER', 'LINEAR_METER', 'PIECE', 'SERVICE']),
     unitPriceCents: centavos,
+    catalogPriceCents: centavos.optional(),
     ruleId: z.string().min(1),
     ruleParams: z.unknown().optional(),
     widthMm: entero.min(1).nullable().optional(),

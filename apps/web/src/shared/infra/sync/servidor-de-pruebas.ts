@@ -98,7 +98,16 @@ export async function nuevoDispositivo(fetchImpl?: typeof fetch): Promise<Dispos
   };
 }
 
-export const harness: ReceptorDelContrato = {
+export const harness: ReceptorDelContrato & {
+  auditFor(entityId: string): Promise<Record<string, unknown>[]>;
+} = {
+  /** Entradas de bitácora de una entidad (lectura independiente con la llave de servicio). */
+  async auditFor(entityId) {
+    const { data, error } = await servicio.from('audit_log').select('*').eq('entity_id', entityId);
+    expect(error).toBeNull();
+    return (data ?? []) as Record<string, unknown>[];
+  },
+
   newDevice: () => nuevoDispositivo(),
   async newUser(activa) {
     const id = asId<'User'>(crypto.randomUUID());

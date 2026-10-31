@@ -262,6 +262,10 @@ export const textos = {
       USER_PIN_RESET: 'Restableció un PIN',
       CUSTOMER_ANONYMIZED: 'Anonimizó a un cliente',
       LEGAL_DOCUMENT_PUBLISHED: 'Publicó una versión del aviso o de los términos',
+      QUOTE_ISSUED: 'Emitió una cotización',
+      QUOTE_ACCEPTED: 'Marcó una cotización como aceptada',
+      QUOTE_REJECTED: 'Marcó una cotización como rechazada',
+      QUOTE_LINE_PRICE_CHANGED: 'Cambió el precio de una línea de cotización',
     },
     campos: {
       nombre: 'Nombre',

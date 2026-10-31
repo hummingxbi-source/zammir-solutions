@@ -80,11 +80,20 @@ export function inMemoryOperationReceiver(deps: {
           motivo = 'USER_INACTIVE';
         }
 
-        const carga = issueQuotePayloadSchema.safeParse(op.payload);
+        if (op.type === 'MarkQuoteAccepted' || op.type === 'MarkQuoteRejected') {
+          const nuevo = op.type === 'MarkQuoteAccepted' ? 'ACCEPTED' : 'REJECTED';
+          const resultado = marcarCotizacion(compartido, op.payload, nuevo, estado, motivo);
+          if (resultado.ok) {
+            compartido.operaciones.set(op.opId, { resultado });
+            compartido.ultimaSeq.set(op.deviceId, op.seq);
+          }
+          return resultado;
+        }
         if (op.type !== 'IssueQuote') {
           // Los demás tipos del sprint se implementan en sus historias; hasta entonces no hay efecto.
           return { ok: false, code: 'UNKNOWN_TYPE' } as const;
         }
+        const carga = issueQuotePayloadSchema.safeParse(op.payload);
         if (!carga.success) {
           return { ok: false, code: 'INVALID_PAYLOAD' } as const;
         }
@@ -102,6 +111,15 @@ export function inMemoryOperationReceiver(deps: {
           return resultado;
         }
 
+        // Un descuento sin quien lo autorice no se rechaza (ya se dio): queda por revisar.
+        const hayDescuento = q.lines.some(
+          (l) => l.unitPriceCents < (l.catalogPriceCents ?? l.unitPriceCents),
+        );
+        if (hayDescuento && (op.authorizedBy === undefined || op.authorizedBy === null)) {
+          estado = 'TO_REVIEW';
+          motivo = 'DISCOUNT_WITHOUT_AUTHORIZATION';
+        }
+
         const resultado = await deps.folios.withTransaction(async (tx) => {
           const anio = folioYear(new Date(q.issuedAt));
           const numero = await tx.next('QUOTE', anio);
@@ -117,6 +135,7 @@ export function inMemoryOperationReceiver(deps: {
             ...(motivo === undefined ? {} : { reason: motivo }),
           };
           compartido.cotizaciones.set(q.id, folio.value);
+          compartido.estados.set(q.id, 'SENT');
           compartido.codigos.add(q.publicCode);
           return res;
         });
@@ -128,11 +147,45 @@ export function inMemoryOperationReceiver(deps: {
   };
 }
 
+function marcarCotizacion(
+  almacen: SharedStore,
+  carga: unknown,
+  nuevo: 'ACCEPTED' | 'REJECTED',
+  estado: 'APPLIED' | 'TO_REVIEW',
+  motivo: string | undefined,
+): OperationResult {
+  const id = (carga as { readonly quoteId?: unknown } | null)?.quoteId;
+  if (typeof id !== 'string' || !almacen.cotizaciones.has(id)) {
+    return { ok: false, code: 'INVALID_PAYLOAD', detail: 'QUOTE_NOT_FOUND' };
+  }
+  const folio = almacen.cotizaciones.get(id);
+  // Transición no válida (otra tablet ya la cambió): se aplica como por revisar, sin tocar la cotización.
+  if (almacen.estados.get(id) !== 'SENT') {
+    return {
+      ok: true,
+      status: 'TO_REVIEW',
+      reason: 'INVALID_TRANSITION',
+      documentId: id,
+      ...(folio === undefined ? {} : { folio }),
+    };
+  }
+  almacen.estados.set(id, nuevo);
+  return {
+    ok: true,
+    status: estado,
+    documentId: id,
+    ...(folio === undefined ? {} : { folio }),
+    ...(motivo === undefined ? {} : { reason: motivo }),
+  };
+}
+
 /** Lo que comparten los receptores de varios dispositivos: es "el servidor". */
 export interface SharedStore {
   readonly state: InMemoryReceiverState;
   readonly operaciones: Map<string, Guardada>;
   readonly cotizaciones: Map<string, string>;
+  /** Estado de cada cotización en el servidor. */
+  readonly estados: Map<string, 'SENT' | 'ACCEPTED' | 'REJECTED'>;
   readonly codigos: Set<string>;
   readonly ultimaSeq: Map<string, number>;
   porDispositivo<T>(deviceId: string, trabajo: () => Promise<T>): Promise<T>;
@@ -148,6 +201,7 @@ export function crearAlmacen(): SharedStore {
     },
     operaciones: new Map(),
     cotizaciones: new Map(),
+    estados: new Map(),
     codigos: new Set(),
     ultimaSeq: new Map(),
     porDispositivo<T>(deviceId: string, trabajo: () => Promise<T>): Promise<T> {
