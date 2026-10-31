@@ -20,6 +20,7 @@ import { ConectarTablet } from './modules/devices/ui/ConectarTablet';
 import { Dispositivos } from './modules/devices/ui/Dispositivos';
 import { Usuarios, type UsuariosProps } from './modules/identity/ui/Usuarios';
 import { ProtegidaAdmin } from './modules/identity/ui/ProtegidaAdmin';
+import type { SincronizacionVisible } from './shell/IndicadorDeConexion';
 import { Layout } from './shell/Layout';
 import { PanelDeInicio, SeccionVacia } from './shell/Paginas';
 import { seccionesVisibles, type Interruptor } from './shell/secciones';
@@ -46,6 +47,8 @@ export interface AppProps {
   } | null;
   /** Importación del catálogo desde archivo; aparece en Catálogo (solo administradores). */
   readonly catalogo?: ImportCatalogDeps | null;
+  /** Estado del envío de lo guardado en la tablet ("N pendientes"). */
+  readonly sincronizacion?: SincronizacionVisible | undefined;
   /** Vigencia sugerida del código de registro; sin ella la persona escribe los minutos. */
   readonly cargarVigenciaDeCodigo?: (() => Promise<number | null>) | undefined;
 }
@@ -62,6 +65,7 @@ export function App({
   conectarTablet = null,
   entradaConPin = null,
   catalogo = null,
+  sincronizacion,
   cargarVigenciaDeCodigo,
 }: AppProps): ReactElement {
   const secciones = [
@@ -70,7 +74,7 @@ export function App({
   ];
 
   return (
-    <Layout interruptores={interruptores}>
+    <Layout interruptores={interruptores} sincronizacion={sincronizacion}>
       {entradaConPin !== null ? <PersonaActiva session={entradaConPin.session} /> : null}
       <Routes>
         <Route

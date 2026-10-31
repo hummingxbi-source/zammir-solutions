@@ -3,18 +3,20 @@ import type { ReactElement, ReactNode } from 'react';
 import { Link, NavLink, useLocation } from 'react-router';
 
 import { textos } from '../shared/i18n/textos';
-import { IndicadorDeConexion } from './IndicadorDeConexion';
+import { IndicadorDeConexion, type SincronizacionVisible } from './IndicadorDeConexion';
 import { seccionesVisibles, SECCIONES, type Interruptor } from './secciones';
 import { useSeccionesVisitadas } from './useSeccionesVisitadas';
 
 export interface LayoutProps {
   readonly interruptores: ReadonlySet<Interruptor>;
   readonly children: ReactNode;
+  /** Estado del envío de lo guardado en la tablet; sin esto solo se avisa si no hay internet. */
+  readonly sincronizacion?: SincronizacionVisible | undefined;
 }
 
 /** Marco de la aplicación: logo que lleva al panel de inicio, secciones en el orden del trabajo
  *  con numeración discreta y marca de visitadas, y un menú secundario [RF-UX-01]. */
-export function Layout({ interruptores, children }: LayoutProps): ReactElement {
+export function Layout({ interruptores, children, sincronizacion }: LayoutProps): ReactElement {
   const { pathname } = useLocation();
   const { visitadas, marcar } = useSeccionesVisitadas();
 
@@ -72,7 +74,7 @@ export function Layout({ interruptores, children }: LayoutProps): ReactElement {
         </details>
       </header>
 
-      <IndicadorDeConexion />
+      <IndicadorDeConexion sincronizacion={sincronizacion} />
 
       <main className="marco__contenido">{children}</main>
     </div>

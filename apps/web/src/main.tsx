@@ -18,6 +18,7 @@ const composition = createComposition({
 
 // Pone al día el catálogo guardado en la tablet al abrir y cada vez que vuelve la conexión.
 function ponerAlDia(): void {
+  void composition.envio?.engine.trigger();
   void composition.catalogoLocal?.actualizar();
   void composition.entradaConPin?.actualizar();
 }
@@ -43,6 +44,7 @@ createRoot(root).render(
           legal={composition.legal}
           conectarTablet={composition.conectarTablet}
           entradaConPin={composition.entradaConPin}
+          sincronizacion={composition.envio?.visible}
           catalogo={composition.catalogo}
           bitacora={
             composition.bitacora === null

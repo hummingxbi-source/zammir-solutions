@@ -51,8 +51,13 @@ export function supabaseLoginSource(cliente: SupabaseClient): LoginReplicaSource
       if (!ajustes.ok) {
         return err({ code: 'USERS_UNAVAILABLE' });
       }
-      const { pin_max_failed_attempts, pin_lock_seconds, pin_lock_max_seconds, idle_lock_minutes } =
-        ajustes.value;
+      const {
+        pin_max_failed_attempts,
+        pin_lock_seconds,
+        pin_lock_max_seconds,
+        idle_lock_minutes,
+        sync_stale_hours,
+      } = ajustes.value;
       const lockout: LockoutPolicy | null =
         pin_max_failed_attempts === null || pin_lock_seconds === null
           ? null
@@ -65,6 +70,7 @@ export function supabaseLoginSource(cliente: SupabaseClient): LoginReplicaSource
         users: (datos as FilaDeLogin[]).map(aPersona),
         lockout,
         idleLockMinutes: idle_lock_minutes,
+        syncStaleHours: sync_stale_hours,
       });
     },
   };
