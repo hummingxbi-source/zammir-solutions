@@ -16,3 +16,4 @@ export * from './modules/identity/contracts/pin-attempt-guard.contract';
 export * from './modules/identity/contracts/local-login-store.contract';
 export * from './modules/sync/contracts/folio-allocator.contract';
 export * from './modules/sync/contracts/operation-receiver.contract';
+export * from './modules/sync/contracts/sync-outbox.contract';

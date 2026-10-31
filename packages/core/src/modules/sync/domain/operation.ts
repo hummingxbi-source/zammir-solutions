@@ -91,7 +91,7 @@ export const issueQuotePayloadSchema = z
   .object({
     id: uuid,
     tempFolio: z.string().regex(/^T[0-9]+-[0-9]+$/),
-    publicCode: z.string().regex(/^[A-Z2-9]{8}$/),
+    publicCode: z.string().regex(/^[A-HJKMNP-Z2-9]{8}$/),
     customerId: uuid,
     siteAddress: z.string().nullable().optional(),
     issuedAt: z.iso.datetime(),
@@ -150,4 +150,24 @@ export type OperationResult = OperationApplied | OperationRejected;
 /** ¿Este rechazo es de los que detienen la cola del dispositivo? */
 export function isStructuralRejection(r: OperationRejected): boolean {
   return r.code !== 'OUT_OF_ORDER';
+}
+
+/** Valida una operación completa: el sobre y, según el tipo, su carga. Es la comprobación que hace la
+ *  cola de la tablet antes de guardar y la misma que hace el servidor al recibir. Los tipos cuya carga
+ *  todavía no tiene esquema (se agregan con su historia) solo validan el sobre. */
+export function parseOperation(crudo: unknown): Result<OperationEnvelope, EnvelopeError> {
+  const sobre = parseEnvelope(crudo);
+  if (!sobre.ok) {
+    return sobre;
+  }
+  if (sobre.value.type === 'IssueQuote') {
+    const carga = issueQuotePayloadSchema.safeParse(sobre.value.payload);
+    if (!carga.success) {
+      return err({
+        code: 'INVALID_ENVELOPE',
+        problems: carga.error.issues.map((i) => `payload.${i.path.join('.')}: ${i.message}`),
+      });
+    }
+  }
+  return sobre;
 }

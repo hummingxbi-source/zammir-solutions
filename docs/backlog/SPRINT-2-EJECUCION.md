@@ -45,6 +45,8 @@ Inventario completo del núcleo y de la base: [`SPRINT-1-EJECUCION.md`](SPRINT-1
 | Asignador | `core/modules/sync/application/folio-allocator.ts` + contrato `folioAllocatorContract`; Postgres real en `apps/web/src/shared/infra/sync/pg-folio-allocator.ts` (solo pruebas, usa `pg` y `ZAMMIR_TEST_DB_URL`) | SQL: `private.next_folio(tipo, año)`, `private.folio_year(timestamptz)`, tabla `folio_counters` |
 | Operaciones (dominio) | `core/modules/sync/domain/operation.ts` | `parseEnvelope`, `operationEnvelopeSchema`, `issueQuotePayloadSchema` (valida que totales = suma de líneas), `OperationResult`, `isStructuralRejection`. La recomputación con reglas de precio queda para S2-13 (código `TOTALS_MISMATCH` reservado) |
 | Receptor | puerto `OperationReceiver` + `inMemoryOperationReceiver` (`core/modules/sync/application/operation-receiver.ts`), contrato `operationReceiverContract` (con `issueQuoteOperation(...)` para armar operaciones de prueba); servidor: `supabase/functions/recibir-operacion/index.ts` + SQL `public.receive_operation(p jsonb)`; cliente: `apps/web/src/shared/infra/sync/function-operation-receiver.ts` (lanza `OperationTransportError` si no hay red o el servidor falla) | Tablas nuevas: `operations` (solo se agrega), `quotes`, `quote_lines` (solo las escribe `receive_operation`), `devices.last_seq`. El resto de tipos (`MarkQuoteAccepted`, `MarkQuoteRejected`, `UpsertCustomer`) hoy responden `UNKNOWN_TYPE`: agregarlos en SQL (`case v_type`) y en el receptor en memoria cuando se hagan S2-08/S2-10 |
+| Cola de salida | puerto `SyncOutbox` y `OutboxTransaction` en `core/modules/sync/application/ports.ts`; `inMemorySyncOutbox({clock})`; contrato `syncOutboxContract` (+ `operacionSinSeq()` para armar operaciones); Dexie: `apps/web/src/shared/infra/sync/dexie-operaciones.ts` (`dexieOperaciones({clock, nombre?})`, base `zammir-operaciones` con tablas `operaciones`, `documentos`, `contadores`) | **Todo documento nuevo se guarda con `outbox.transaction(async tx => { const n = await tx.nextTempNumber(); await tx.putDocument('quotes', id, doc); await tx.enqueue({...sin seq}) })`**: documento, operación (con `seq` consecutivo) y folio provisional en una sola transacción. Dentro de `work` solo se esperan llamadas de `tx` (IndexedDB cierra la transacción si se espera otra cosa). `nextToSend()` devuelve `null` si hay una `FAILED` (cola detenida) |
+| Azar y código público | `core/shared-kernel/random.ts` (`Random`, `seededRandom`), `core/modules/sync/domain/public-code.ts` (`generatePublicCode`, `isPublicCode`), web `shared/infra/crypto-random.ts` (`cryptoRandom`) | Códigos de 8 caracteres sin 0/O/1/I/L |
 | Pruebas con servidor local | `pnpm test:integracion` | Si falla con `SERVER_UNAVAILABLE`, hay un `supabase functions serve` viejo sin la función nueva: apagarlo y repetir |
 
 ## 3. Cómo trabajar (resumen)
@@ -273,8 +275,8 @@ Compuerta común en verde; concurrencia de folios 10 veces seguidas; totales del
 | S2-04 Folio definitivo | M | **hecha** (PR #56) | `feat/s2-04-folio` |
 | S2-03 Receptor idempotente | L | **hecha** (PR #57) | `feat/s2-03-receptor` |
 | S2-01 Validación de sincronización | L | **hecha** (ADR-0023, PR #58) | `feat/s2-01-validacion-sync` |
-| S2-05 Folio temporal | S | pendiente | |
-| S2-02 Cola de salida | L | pendiente | |
+| S2-05 Folio temporal | S | **hecha** (PR de S2-02) | `feat/s2-02-cola-de-salida` |
+| S2-02 Cola de salida | L | **hecha** (PR #59) | `feat/s2-02-cola-de-salida` |
 | S2-06 Envío automático y estado | M | pendiente | |
 | S2-07 Descarga y reconciliación | M | pendiente | |
 | S2-08 Conflictos | M | pendiente | |

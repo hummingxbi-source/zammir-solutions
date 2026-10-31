@@ -65,3 +65,7 @@ export * from './shared-kernel/folio/folio';
 export * from './modules/sync/application/folio-allocator';
 export * from './modules/sync/domain/operation';
 export * from './modules/sync/application/operation-receiver';
+export * from './shared-kernel/random';
+export * from './modules/sync/domain/public-code';
+export * from './modules/sync/application/ports';
+export * from './modules/sync/application/in-memory-sync-outbox';
