@@ -77,6 +77,13 @@ export function supabaseLoginSource(cliente: SupabaseClient): LoginReplicaSource
           validityDays: v.quote_validity_days,
           conditionsText: v.quote_conditions,
         },
+        orders: {
+          depositPercentBps: v.deposit_percent_bps,
+          requireDepositToStart: v.require_deposit_to_start,
+          warrantyMonthsDefault: v.warranty_months_default,
+          selfInvoicingLegend: v.self_invoicing_legend,
+          publicBaseUrl: v.public_base_url,
+        },
         business: { name: v.business_name, phone: v.business_phone, address: v.business_address },
       });
     },

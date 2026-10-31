@@ -306,6 +306,98 @@ function condicionesYFirma(e: Estado): void {
   e.y -= 30;
 }
 
+/** Pagos, anticipo exigido, pagado y saldo del comprobante de trabajo [RF-M3-06]. */
+function pagosYSaldo(e: Estado): void {
+  const r = e.doc.receipt;
+  if (r === undefined) {
+    return;
+  }
+  const renglonesDePago = r.paymentLines.flatMap((p) => envolver(p, e.fuentes.normal, 9, UTIL));
+  asegurarEspacio(e, 30 + renglonesDePago.length * 11 + 56, false);
+  texto(e, `${r.labels.payments} (${r.status})`, MARGEN, e.y, { size: 10, bold: true });
+  e.y -= 14;
+  for (const renglon of renglonesDePago) {
+    texto(e, renglon, MARGEN, e.y, { size: 9 });
+    e.y -= 11;
+  }
+  e.y -= 6;
+  const etiquetaX = MARGEN + UTIL - COL_IMPORTE - COL_UNIT;
+  for (const [etiqueta, valor, negrita] of [
+    [r.labels.depositRequired, r.depositRequired, false],
+    [r.labels.paid, r.paid, false],
+    [r.labels.balance, r.balance, true],
+  ] as const) {
+    texto(e, etiqueta, 0, e.y, {
+      size: negrita ? 12 : 10,
+      bold: negrita,
+      alignRight: etiquetaX + COL_UNIT,
+    });
+    texto(e, valor, 0, e.y, { size: negrita ? 12 : 10, bold: negrita, alignRight: MARGEN + UTIL });
+    e.y -= negrita ? 18 : 14;
+  }
+  e.y -= 6;
+}
+
+/** Garantía escrita: solo los renglones que existen [RN-14]. */
+function garantiaEscrita(e: Estado): void {
+  const r = e.doc.receipt;
+  if (r === undefined || r.warrantyLines.length === 0) {
+    return;
+  }
+  const renglones = r.warrantyLines.flatMap((p) => envolver(p, e.fuentes.normal, 9, UTIL));
+  asegurarEspacio(e, 20 + renglones.length * 11, false);
+  texto(e, r.labels.warranty, MARGEN, e.y, { size: 10, bold: true });
+  e.y -= 14;
+  for (const renglon of renglones) {
+    texto(e, renglon, MARGEN, e.y, { size: 9 });
+    e.y -= 11;
+  }
+  e.y -= 8;
+}
+
+const MODULO = 3;
+const SILENCIO = 4;
+
+/** QR de autofacturación dibujado como cuadros vectoriales (nítido al imprimir o ampliar), con el
+ *  código de verificación y la leyenda del plazo a un lado [RF-M3-06, RN-26]. */
+function codigoQr(e: Estado): void {
+  const r = e.doc.receipt;
+  if (r === undefined) {
+    return;
+  }
+  const n = r.qr.matrix.length;
+  const lado = (n + 2 * SILENCIO) * MODULO;
+  const leyenda = r.qr.legend.flatMap((l) => envolver(l, e.fuentes.normal, 9, UTIL - lado - 16));
+  asegurarEspacio(e, Math.max(lado, 24 + leyenda.length * 11) + 12, false);
+  const arriba = e.y;
+  const x0 = MARGEN + SILENCIO * MODULO;
+  const y0 = arriba - SILENCIO * MODULO;
+  r.qr.matrix.forEach((fila, i) => {
+    fila.forEach((oscuro, j) => {
+      if (oscuro) {
+        e.page.drawRectangle({
+          x: x0 + j * MODULO,
+          y: y0 - (i + 1) * MODULO,
+          width: MODULO,
+          height: MODULO,
+          color: NEGRO,
+        });
+      }
+    });
+  });
+  const xTexto = MARGEN + lado + 16;
+  let y = arriba - 10;
+  texto(e, r.labels.selfInvoicing, xTexto, y, { size: 10, bold: true });
+  y -= 14;
+  texto(e, `${r.labels.verificationCode}: ${r.qr.code}`, xTexto, y, { size: 10 });
+  y -= 14;
+  for (const renglon of leyenda) {
+    texto(e, renglon, xTexto, y, { size: 9, color: GRIS });
+    y -= 11;
+  }
+  e.y = arriba - Math.max(lado, arriba - y) - 12;
+}
+
 function aviso(e: Estado): void {
   const renglones = envolver(e.doc.privacyNotice, e.fuentes.normal, 7, UTIL);
   asegurarEspacio(e, renglones.length * 9 + 4, false);
@@ -355,7 +447,10 @@ export function pdfLibRenderer(): DocumentRenderer {
         encabezadoDeTabla(e);
         filas(e);
         totales(e);
+        pagosYSaldo(e);
+        garantiaEscrita(e);
         condicionesYFirma(e);
+        codigoQr(e);
         aviso(e);
         pies(e);
         return ok(await pdf.save());

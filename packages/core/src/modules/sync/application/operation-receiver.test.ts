@@ -32,10 +32,13 @@ operationReceiverContract('memoria', () => {
         }),
       });
     },
-    newUser: (activa) => {
+    newUser: (activa, administrador = false) => {
       const id = uuidDePrueba();
       if (activa) {
         almacen.state.activeUsers.add(id);
+        if (administrador) {
+          almacen.state.adminUsers.add(id);
+        }
       }
       return Promise.resolve(id);
     },
@@ -43,6 +46,18 @@ operationReceiverContract('memoria', () => {
       const id = uuidDePrueba();
       almacen.state.knownCustomers.add(id);
       return Promise.resolve(id);
+    },
+    orderState: (id) => {
+      const orden = almacen.ordenesStore.ordenes.get(id);
+      return Promise.resolve(
+        orden === undefined
+          ? undefined
+          : {
+              status: orden.status,
+              paidCents: almacen.ordenesStore.pagado.get(id) ?? 0,
+              folio: orden.folio,
+            },
+      );
     },
     customerName: (id) => Promise.resolve(almacen.clientes.get(id)?.name),
     revokeDevice: (id) => {

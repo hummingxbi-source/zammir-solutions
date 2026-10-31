@@ -30,5 +30,6 @@
 | [0022](docs/decisiones/0022-catalogo-en-la-tablet-indexeddb.md) | Catálogo en la tablet: IndexedDB con Dexie y cambios por número | Aceptada (propuesta) | 2026-10-30 |
 | [0023](docs/decisiones/0023-receptor-de-operaciones-en-dos-capas.md) | Receptor de operaciones en dos capas y validación de la sincronización | Aceptada (propuesta) | 2026-10-30 |
 | [0024](docs/decisiones/0024-clientes-como-operacion-y-folio-reconciliado.md) | Clientes como operación en cola, réplica por número de cambio y folio reconciliado | Aceptada (propuesta) | 2026-10-31 |
+| [0025](docs/decisiones/0025-ordenes-pagos-y-fotos-en-la-tablet.md) | Órdenes de trabajo, pagos que solo se agregan y fotos de medición | Aceptada (propuesta) | 2026-10-31 |
 
 Plantilla para una nueva decisión: [`docs/decisiones/0000-plantilla.md`](docs/decisiones/0000-plantilla.md).

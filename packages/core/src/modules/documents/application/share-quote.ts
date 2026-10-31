@@ -14,10 +14,13 @@ export function whatsappUrl(telefono10: string, mensaje: string): string {
   return `https://wa.me/52${telefono10}?text=${encodeURIComponent(mensaje)}`;
 }
 
-/** Nombre del archivo: `Cotizacion-COT-2026-0012.pdf`, o con el folio provisional si aún no se envió. */
-export function pdfFileName(documento: Pick<QuoteDocument, 'folio' | 'tempFolio'>): string {
+/** Nombre del archivo: `Cotizacion-COT-2026-0012.pdf` o `Comprobante-OT-2026-0012.pdf`; con el folio
+ *  provisional si aún no se envió. */
+export function pdfFileName(
+  documento: Pick<QuoteDocument, 'folio' | 'tempFolio' | 'receipt'>,
+): string {
   const folio = documento.folio ?? documento.tempFolio ?? 'borrador';
-  return `Cotizacion-${folio}.pdf`;
+  return `${documento.receipt === undefined ? 'Cotizacion' : 'Comprobante'}-${folio}.pdf`;
 }
 
 export type ShareOutcome =

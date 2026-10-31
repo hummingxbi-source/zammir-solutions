@@ -77,7 +77,7 @@ erDiagram
 | `work_orders` | `temp_folio`, `folio?`, `public_code`, `status` (en espera, en proceso, listo, entregado, cancelado), `customer_id`, `quote_id?`, descripción, totales congelados, `deposit_percent_bps` y `deposit_required_cents` (anticipo exigido, hacia arriba [ADR-0011]), responsables de medición, fabricación e instalación, fecha estimada de entrega, notas, `delivered_with_balance` con motivo y autorizador, datos de cancelación (motivo, usuario, autorizador, monto y trato del anticipo ⚠ PD-07) |
 | `work_order_lines` | Igual que `quote_lines`, copiadas al crear la orden |
 | `work_order_status_events` | Estado anterior y nuevo, usuario, dispositivo, hora, motivo, autorizador. Solo se agrega [RF-M3-02] |
-| `work_order_photos` | Referencia al archivo de medición (opcional); subida aparte [SINCRONIZACION §9] |
+| _(sin tabla)_ fotos de medición | Archivos en el bucket privado `order-photos`, ruta `<orden>/<foto>.jpg`; subida aparte de la cola [SINCRONIZACION §9, ADR-0025] |
 | `warranties` | Orden, inicio, `duration_months?` (⚠ PD-06, configurable), cobertura, exclusiones [RF-M3-05] |
 
 El **saldo** es total − pagos y vive en una vista.

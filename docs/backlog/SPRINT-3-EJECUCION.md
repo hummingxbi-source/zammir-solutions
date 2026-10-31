@@ -38,10 +38,27 @@ Inventario del Sprint 1: [`SPRINT-1-EJECUCION.md`](SPRINT-1-EJECUCION.md) §2. D
 | Prueba con servidor real | `pnpm test:integracion` (necesita el shim de `pnpm` en el PATH en esta máquina), `servidor-de-pruebas.ts` (`harness`, `nuevoDispositivo`, `newYear`, `customerName`…), `pnpm test:concurrencia` | Cada operación nueva se prueba contra el servidor real |
 
 **Huecos que este sprint hereda:**
+- _(actualización)_ la réplica de **órdenes y pagos** ya existe (S3-00); la de cotizaciones de otras tablets sigue como PP-20.
 - **PP-20 (bajar documentos del servidor por número de cambio)** deja de ser opcional: un saldo de una orden se cobra en **otra** tablet (RF-M4-05), y el tablero y el historial necesitan ver lo que hizo otra tablet. Se vuelve la historia **S3-00** (sección 6).
 - **PP-13:** la base ve la tablet, no la persona con PIN. El sobre de la operación ya lleva `userId`/`authorizedBy`; los pagos y turnos guardan el usuario del sobre.
 - **PP-21:** el aviso de privacidad vigente aún no baja a la tablet.
 - Sin medir en tablet: PBKDF2, PDF < 3 s, impresión < 5 s, Bluetooth.
+
+### 2.1 Lo construido en este sprint (se actualiza al terminar cada historia)
+
+| Pieza | Dónde | Notas para quien siga |
+|---|---|---|
+| Migraciones | `20261031100000_orders_payments.sql` (órdenes, líneas, eventos, garantías, pagos, vistas `*_for_device`, `receive_operation` con 6 casos nuevos, `require_deposit_to_start`, `public_base_url`) y `20261031110000_order_photos.sql` (bucket `order-photos`) | pgTAP `14_orders_payments.test.sql`; los pagos y los eventos de estatus tienen disparador que impide `UPDATE`/`DELETE` |
+| Operaciones | `core/modules/sync/domain/operation.ts`: `createWorkOrderPayloadSchema`, `updateWorkOrderPayloadSchema`, `advanceWorkOrderPayloadSchema`, `deliverWorkOrderPayloadSchema`, `cancelWorkOrderPayloadSchema`, `registerPaymentPayloadSchema`; `parseOperation` valida **todos** los tipos (la función de borde también) | Para un tipo nuevo: esquema Zod + `ESQUEMAS_DE_CARGA` + caso SQL + caso en `sync/application/order-operations.ts` (receptor en memoria) + pruebas en el contrato |
+| Receptor en memoria | `core/modules/sync/application/order-operations.ts` (+ `operation-receiver.ts`) | El contrato `operationReceiverContract` incluye "órdenes de trabajo y pagos" y corre contra memoria y servidor real; `newUser(activa, administrador?)` y `orderState(id)` en el arnés |
+| Dominio de órdenes | `core/modules/orders/domain/work-order.ts` (`WorkOrder`, `WORK_ORDER_TRANSITIONS`, `checkWorkOrderTransition`, `nextWorkOrderStatus`, `Warranty`) | En el conjunto de mutación crítica |
+| Dominio de pagos | `core/modules/payments/domain/payment.ts` (`Payment`, `planPayment`, `balanceCents`, `paymentKindForOrder`) | En el conjunto de mutación crítica. `planPayment` rechaza pago mayor al saldo, decide el cambio y exige pagar completa una venta |
+| Casos de uso | `core/modules/orders/application/work-order-use-cases.ts`: `convertQuoteToWorkOrder`, `createManualWorkOrder`, `updateWorkOrder`, `advanceWorkOrder`, `deliverWorkOrder`, `cancelWorkOrder`, `registerWorkOrderPayment`, `workOrderBalance`; `OrderDeps` | `registerWorkOrderPayment` es el cobro que reutilizará el Mostrador (S3-14); sirve de modelo para `RegisterPayment` de ventas |
+| Almacenes | `orders/application/work-order-store.ts` (`outboxWorkOrderStore`, `outboxPaymentStore`, `outboxWarrantyReader`), colecciones `work_orders`, `payments`, `warranties` | Mismos que cotizaciones: el documento y su operación se guardan en una sola transacción local |
+| Reconciliación y réplica | `reconcile-orders.ts` (`afterPass` del motor) y `replica-documents.ts` (`refreshDocuments`, `DocumentReplicaSource`); web: `orders/infra/supabase-document-replica.ts` y `composition.envio.actualizarDocumentos` (se llama en `ponerAlDia`) | Una orden con operación pendiente no se sobrescribe; un pago ya guardado no se toca |
+| Comprobante | `core/modules/documents/domain/work-order-document.ts` (`buildWorkOrderDocument`, `autoinvoiceUrl`); `QuoteDocument.receipt`; render en `pdf-lib-renderer.ts` (pagos, saldo, garantía, QR vectorial); `documents/infra/qr-matrix.ts`; `orders/ui/comprobante.ts` (`compartirComprobante`) | Nombre de archivo `Comprobante-<folio>.pdf`; prueba `acceptance/s3-comprobante.test.ts` lee el PDF con pdf.js y el QR con jsqr |
+| Fotos | `orders/application/order-photos.ts` (`attachOrderPhoto`, `uploadPendingPhotos`, `fitWithin`, límites); web: `dexie-photo-store.ts`, `canvas-image-compressor.ts`, `supabase-photo-uploader.ts`; `composition.envio.subirFotos` | No usa la cola de operaciones; la compresión con lienzo no se puede probar en jsdom |
+| Pantallas | `apps/web/src/modules/orders/ui/`: `Ordenes.tsx` (lista, filtro por estatus, cotizaciones por convertir), `DetalleDeOrden.tsx` (totales, pagos, datos, fotos, acciones), `DialogoDeCobro.tsx`, `DialogoDeAutorizacion.tsx`, `OrdenesEnLaTablet.tsx`; `composition.prepararOrdenes`; `LoginSnapshot.orders` | Textos en `textos.ordenes` y `textos.documento.comprobante` |
 
 ## 3. Cómo trabajar (resumen)
 
@@ -168,16 +185,16 @@ E1 (cotizar → aceptar → orden → anticipo → avanzar → entregar con sald
 
 | Historia | Talla | Estado | Rama / PR |
 |---|---|---|---|
-| S3-00 Réplica de documentos | L | pendiente | |
-| S3-01 Orden desde cotización | L | pendiente | |
-| S3-02 Datos de la orden | M | pendiente | |
-| S3-03 Fotos de la medición | M | pendiente (recortable) | |
-| S3-04 Estatus y "Avanzar" | M | pendiente | |
-| S3-05 Anticipos y pagos | L | pendiente | |
-| S3-06 Entrega con saldo | S | pendiente | |
-| S3-07 Garantía | M | pendiente | |
-| S3-08 Cancelación de la orden | S | pendiente | |
-| S3-09 Comprobante PDF con QR | L | pendiente | |
+| S3-00 Réplica de documentos | L | **hecha** para órdenes y pagos (cotizaciones de otras tablets siguen en PP-20) | `feat/s3-ordenes` |
+| S3-01 Orden desde cotización | L | **hecha** (cotización aceptada → orden en un toque; orden manual solo en el núcleo, sin pantalla: PP-23) | `feat/s3-ordenes` |
+| S3-02 Datos de la orden | M | **hecha** (responsables, fecha estimada, notas; último por campo) | `feat/s3-ordenes` |
+| S3-03 Fotos de la medición | M | **hecha** salvo probar la cámara y la compresión en la tablet | `feat/s3-ordenes` |
+| S3-04 Estatus y "Avanzar" | M | **hecha** (con PD-39 configurable) | `feat/s3-ordenes` |
+| S3-05 Anticipos y pagos | L | **hecha** (el turno de caja se liga en S3-16) | `feat/s3-ordenes` |
+| S3-06 Entrega con saldo | S | **hecha** | `feat/s3-ordenes` |
+| S3-07 Garantía | M | **hecha** (duración vacía mientras PD-06 no se defina) | `feat/s3-ordenes` |
+| S3-08 Cancelación de la orden | S | **hecha** | `feat/s3-ordenes` |
+| S3-09 Comprobante PDF con QR | L | **hecha** (PDF verificado con otro lector y QR decodificado; falta verla y escanearla desde la tablet) | `feat/s3-ordenes` |
 | S3-10 Tablero y lista | M | pendiente | |
 | S3-11 Venta rápida y ticket actual | M | pendiente | |
 | S3-12 Cobro (efectivo, transferencia, mixto) | M | pendiente | |

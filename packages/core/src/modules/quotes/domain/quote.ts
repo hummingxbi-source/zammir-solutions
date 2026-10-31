@@ -66,6 +66,8 @@ export interface Quote {
   readonly syncStatus: QuoteSyncStatus;
   /** Motivo por el que un administrador debe revisarla, si el servidor la marcó. */
   readonly reviewReason: string | null;
+  /** Orden de trabajo en que se convirtió; una cotización no se convierte dos veces [RF-M2-08]. */
+  readonly convertedWorkOrderId?: string | null;
   /** Última modificación local (ISO, UTC). */
   readonly updatedAt: string;
 }
@@ -77,7 +79,9 @@ export interface QuoteTotals {
 }
 
 /** El total es la suma de las líneas: subtotal e IVA son las sumas de los de cada línea [ADR-0011]. */
-export function quoteTotals(lines: readonly QuoteLine[]): QuoteTotals {
+export function quoteTotals(
+  lines: readonly Pick<QuoteLine, 'baseCents' | 'taxCents'>[],
+): QuoteTotals {
   let subtotalCents = 0;
   let taxCents = 0;
   for (const linea of lines) {

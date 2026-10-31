@@ -8,6 +8,7 @@ import {
   type OperationResult,
 } from '../domain/operation';
 import type { FolioAllocator } from './folio-allocator';
+import { applyOrderOperation, ORDER_OPERATION_TYPES, type OrderStore } from './order-operations';
 
 /** Puerto del servidor: recibe una operación de una tablet y la aplica UNA sola vez [RNF-03, ADR-0016].
  *  - El mismo `opId` devuelve el mismo resultado guardado, sin repetir nada ni consumir otro folio.
@@ -22,6 +23,8 @@ export interface InMemoryReceiverState {
   readonly activeDevices: Set<string>;
   readonly activeUsers: Set<string>;
   readonly knownCustomers: Set<string>;
+  /** Personas con rol de administrador (para validar quién puede cancelar). */
+  readonly adminUsers: Set<string>;
 }
 
 export interface InMemoryReceiver extends OperationReceiver {
@@ -91,6 +94,26 @@ export function inMemoryOperationReceiver(deps: {
         if (op.type === 'MarkQuoteAccepted' || op.type === 'MarkQuoteRejected') {
           const nuevo = op.type === 'MarkQuoteAccepted' ? 'ACCEPTED' : 'REJECTED';
           const resultado = marcarCotizacion(compartido, op.payload, nuevo, estado, motivo);
+          if (resultado.ok) {
+            compartido.operaciones.set(op.opId, { resultado });
+            compartido.ultimaSeq.set(op.deviceId, op.seq);
+          }
+          return resultado;
+        }
+        if ((ORDER_OPERATION_TYPES as readonly string[]).includes(op.type)) {
+          const resultado = await applyOrderOperation({
+            store: {
+              ...compartido.ordenesStore,
+              estadoDeCotizacion: compartido.estados,
+              clientesConocidos: state.knownCustomers,
+              administradores: state.adminUsers,
+              requireDepositToStart: true,
+            },
+            folios: deps.folios,
+            op,
+            baseStatus: estado,
+            baseReason: motivo,
+          });
           if (resultado.ok) {
             compartido.operaciones.set(op.opId, { resultado });
             compartido.ultimaSeq.set(op.deviceId, op.seq);
@@ -222,6 +245,11 @@ export interface SharedStore {
   readonly estados: Map<string, 'SENT' | 'ACCEPTED' | 'REJECTED'>;
   readonly codigos: Set<string>;
   readonly clientes: Map<string, { name: string; phone: string; anonymized: boolean }>;
+  /** Órdenes y pagos del servidor en memoria. */
+  readonly ordenesStore: Pick<
+    OrderStore,
+    'ordenes' | 'pagado' | 'pagos' | 'convertidas' | 'codigosDeOrden'
+  >;
   readonly ultimaSeq: Map<string, number>;
   porDispositivo<T>(deviceId: string, trabajo: () => Promise<T>): Promise<T>;
 }
@@ -233,12 +261,20 @@ export function crearAlmacen(): SharedStore {
       activeDevices: new Set(),
       activeUsers: new Set(),
       knownCustomers: new Set(),
+      adminUsers: new Set(),
     },
     operaciones: new Map(),
     cotizaciones: new Map(),
     estados: new Map(),
     codigos: new Set(),
     clientes: new Map(),
+    ordenesStore: {
+      ordenes: new Map(),
+      pagado: new Map(),
+      pagos: new Set(),
+      convertidas: new Set(),
+      codigosDeOrden: new Set(),
+    },
     ultimaSeq: new Map(),
     porDispositivo<T>(deviceId: string, trabajo: () => Promise<T>): Promise<T> {
       const turno = (colas.get(deviceId) ?? Promise.resolve()).then(trabajo);

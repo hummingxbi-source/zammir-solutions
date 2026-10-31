@@ -20,6 +20,8 @@ const composition = createComposition({
 function ponerAlDia(): void {
   void composition.envio?.engine.trigger();
   void composition.envio?.actualizarClientes();
+  void composition.envio?.actualizarDocumentos();
+  void composition.envio?.subirFotos();
   void composition.catalogoLocal?.actualizar();
   void composition.entradaConPin?.actualizar();
 }
@@ -47,6 +49,7 @@ createRoot(root).render(
           conectarTablet={composition.conectarTablet}
           entradaConPin={composition.entradaConPin}
           prepararCotizador={composition.prepararCotizador}
+          prepararOrdenes={composition.prepararOrdenes}
           sincronizacion={composition.envio?.visible}
           catalogo={composition.catalogo}
           bitacora={

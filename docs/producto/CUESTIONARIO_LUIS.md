@@ -62,6 +62,9 @@
 27. **¿Quieren avisar al cliente por WhatsApp** cuando su trabajo esté listo? ☐ Sí ☐ No. (PP-11)
 28. **¿Una orden puede quedar "detenida"** (esperando material o al cliente) con su motivo? ☐ Sí ☐ No. (PP-10)
 29. **Reposiciones:** cuando se repone una pieza rota, ¿se registra ligada a la orden original, sin cobro? ☐ Sí ☐ No. (PP-12)
+    - **29.1 Fotos de la medición:** ¿cuántas fotos suelen hacer falta por trabajo y quién debe poder verlas? *Si no sabes: hasta 10 por orden; las ven las tablets y los administradores.* (S3-03)
+    - **29.2 Comprobante de trabajo:** ¿las condiciones del comprobante son las mismas de la cotización (anticipo, saldo contra entrega, tiempos)? ☐ Sí ☐ No, otras: ___. *Si no sabes: las mismas.* (S3-09)
+    - **29.3 Pago de más:** si el cliente deja más dinero del saldo de su orden, el sistema solo cobra el saldo y el resto es cambio. ☐ Está bien ☐ Hace falta registrar un saldo a favor. (S3-05)
 
 ## 4. Mostrador y caja
 
@@ -138,3 +141,4 @@ Pendientes que no dependen de Luis, para no perderlos de vista:
 | 29 oct 2026 | Primera versión: 60 preguntas de `PENDIENTES.md`, `CATEGORIAS_CATALOGO.md` y las propuestas PP-04 a PP-19. |
 | 31 oct 2026 | Sprint 2: preguntas 19.5 a 19.7 (cotizaciones entre tablets, cambios simultáneos a un cliente, condiciones). |
 | 31 oct 2026 | Sprint 3: preguntas 37.1 y 37.2 (una caja o una por persona; turno que cruza la medianoche). |
+| 31 oct 2026 | Sprint 3 (primeras 10 historias): preguntas 29.1 a 29.3 (fotos, condiciones del comprobante, pago de más). |

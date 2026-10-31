@@ -22,6 +22,18 @@ export interface LoginSnapshot {
     /** Condiciones por defecto, una por renglón. */
     readonly conditionsText: string;
   };
+  /** Lo que las órdenes de trabajo necesitan sin internet [S3-01, S3-04, S3-07]. */
+  readonly orders?: {
+    /** Anticipo exigido en puntos base (5000 = 50 %) [RN-08]. */
+    readonly depositPercentBps: number;
+    /** PD-39: empezar sin anticipo exige autorización de un administrador. */
+    readonly requireDepositToStart: boolean;
+    /** PD-06: sin valor definido, la garantía queda sin duración. */
+    readonly warrantyMonthsDefault: number | null;
+    /** Leyenda y dirección base del QR de autofacturación (PD-09, PD-10); nulos mientras no se definan. */
+    readonly selfInvoicingLegend: string | null;
+    readonly publicBaseUrl: string | null;
+  };
   /** Identidad del negocio para los documentos [RN-21]; nulos mientras no se definan (PD-11). */
   readonly business?: {
     readonly name: string | null;

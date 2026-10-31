@@ -37,6 +37,8 @@ const esquema = z.object({
   local_retention_days: enteroPositivo.nullable(),
   sync_stale_hours: enteroPositivo,
   quote_conditions: z.string().trim().min(1),
+  require_deposit_to_start: z.boolean(),
+  public_base_url: z.string().min(1).nullable(),
 });
 
 export type BusinessSettings = z.infer<typeof esquema>;
