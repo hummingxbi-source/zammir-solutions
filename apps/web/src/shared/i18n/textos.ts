@@ -264,6 +264,7 @@ export const textos = {
       LEGAL_DOCUMENT_PUBLISHED: 'Publicó una versión del aviso o de los términos',
       QUOTE_ISSUED: 'Emitió una cotización',
       QUOTE_ACCEPTED: 'Marcó una cotización como aceptada',
+      CUSTOMER_UPSERTED: 'Guardó o corrigió a un cliente',
       QUOTE_REJECTED: 'Marcó una cotización como rechazada',
       QUOTE_LINE_PRICE_CHANGED: 'Cambió el precio de una línea de cotización',
     },
@@ -324,6 +325,42 @@ export const textos = {
         queHacer: 'Entra con una cuenta de administrador.',
       },
       LEGAL_UNAVAILABLE: {
+        mensaje: 'No hay conexión con el servidor.',
+        queHacer: 'Conéctate a internet e intenta de nuevo.',
+      },
+    },
+  },
+  condiciones: {
+    titulo: 'Condiciones de la cotización',
+    descripcion:
+      'Cada línea es una condición. Se copian a las cotizaciones nuevas; las que ya emitiste conservan el texto que tenían.',
+    cargando: 'Cargando condiciones…',
+    texto: 'Condiciones (una por línea)',
+    guardar: 'Guardar condiciones',
+    guardando: 'Guardando…',
+    guardado: 'Condiciones guardadas. Se usarán en las cotizaciones nuevas.',
+    errores: {
+      NOT_AUTHORIZED: {
+        mensaje: 'Tu cuenta no puede cambiar las condiciones.',
+        queHacer: 'Entra con una cuenta de administrador.',
+      },
+      EMPTY: {
+        mensaje: 'Falta al menos una condición.',
+        queHacer: 'Escribe una condición por línea.',
+      },
+      TOO_MANY: {
+        mensaje: 'Son demasiadas condiciones para una hoja.',
+        queHacer: 'Deja diez como máximo.',
+      },
+      TOO_LONG: {
+        mensaje: 'Una condición es demasiado larga.',
+        queHacer: 'Acórtala a 300 letras o divídela en dos líneas.',
+      },
+      SETTINGS_INVALID: {
+        mensaje: 'Las condiciones guardadas no se pueden leer.',
+        queHacer: 'Avisa a soporte.',
+      },
+      SETTINGS_UNAVAILABLE: {
         mensaje: 'No hay conexión con el servidor.',
         queHacer: 'Conéctate a internet e intenta de nuevo.',
       },
@@ -627,6 +664,8 @@ export const textos = {
     historial: {
       titulo: 'Cotizaciones de este cliente',
       vacio: 'Este cliente todavía no tiene cotizaciones.',
+      filtrar: 'Buscar por cliente (nombre o WhatsApp)',
+      sinResultados: 'Ninguna cotización coincide con esa búsqueda.',
       folio: 'Folio',
       fecha: 'Fecha',
       estado: 'Estado',
