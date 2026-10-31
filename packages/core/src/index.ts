@@ -61,3 +61,5 @@ export * from './modules/catalog/application/in-memory-catalog-local-store';
 export * from './modules/identity/application/sign-in-with-pin';
 export * from './modules/identity/application/in-memory-login-store';
 export * from './modules/identity/application/active-user-session';
+export * from './shared-kernel/folio/folio';
+export * from './modules/sync/application/folio-allocator';

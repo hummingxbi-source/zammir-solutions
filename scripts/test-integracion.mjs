@@ -23,6 +23,7 @@ for (const linea of estado.stdout.split(/\r?\n/)) {
 const url = valores.get('API_URL');
 const anon = valores.get('ANON_KEY');
 const servicio = valores.get('SERVICE_ROLE_KEY');
+const dbUrl = valores.get('DB_URL');
 if (url === undefined || anon === undefined || servicio === undefined) {
   process.stderr.write('Faltan API_URL, ANON_KEY o SERVICE_ROLE_KEY en el estado de Supabase.\n');
   process.exit(1);
@@ -81,6 +82,7 @@ const resultado = spawnSync(
       ZAMMIR_TEST_SUPABASE_URL: url,
       ZAMMIR_TEST_SUPABASE_ANON_KEY: anon,
       ZAMMIR_TEST_SUPABASE_SERVICE_KEY: servicio,
+      ZAMMIR_TEST_DB_URL: dbUrl ?? '',
     },
   },
 );

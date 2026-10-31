@@ -14,3 +14,4 @@ export * from './modules/audit/contracts/audit-reader.contract';
 export * from './modules/catalog/contracts/catalog-local-store.contract';
 export * from './modules/identity/contracts/pin-attempt-guard.contract';
 export * from './modules/identity/contracts/local-login-store.contract';
+export * from './modules/sync/contracts/folio-allocator.contract';
