@@ -339,8 +339,11 @@ describe('propiedades', () => {
         if (r.ok) {
           const anticipo = r.value.deposit as number;
           expect(anticipo + (r.value.balance as number)).toBe(t);
-          expect(anticipo * 10_000).toBeGreaterThanOrEqual(t * bps);
-          expect(anticipo * 10_000 - t * bps).toBeLessThan(10_000);
+          // t × bps llega a 10^16, más allá de lo exacto en un número: se compara con BigInt.
+          const exacto = BigInt(t) * BigInt(bps);
+          const cobrado = BigInt(anticipo) * 10_000n;
+          expect(cobrado >= exacto).toBe(true);
+          expect(cobrado - exacto < 10_000n).toBe(true);
         }
       }),
     );
