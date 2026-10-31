@@ -18,3 +18,4 @@ export * from './modules/sync/contracts/folio-allocator.contract';
 export * from './modules/sync/contracts/operation-receiver.contract';
 export * from './modules/sync/contracts/sync-outbox.contract';
 export * from './modules/documents/contracts/document-renderer.contract';
+export * from './modules/printing/contracts/ticket-printer.contract';

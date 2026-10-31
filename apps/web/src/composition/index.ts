@@ -4,6 +4,7 @@ import {
   createActiveUserSession,
   localProductReader,
   outboxCashShiftStore,
+  printWithFallback,
   outboxCounterSaleStore,
   outboxCustomers,
   attachOrderPhoto,
@@ -71,6 +72,16 @@ import { supabaseLegal } from '../modules/legal/infra/supabase-legal';
 import { supabaseQuoteConditions } from '../modules/settings/infra/supabase-quote-conditions';
 import { pdfLibRenderer } from '../modules/documents/infra/pdf-lib-renderer';
 import { entornoDelNavegador, webShareService } from '../modules/documents/infra/web-share-service';
+import {
+  androidPrintPrinter,
+  imprimirDesdeElNavegador,
+} from '../modules/printing/infra/android-print-printer';
+import { shareTicketPrinter } from '../modules/printing/infra/share-ticket-printer';
+import {
+  webBluetoothPrinter,
+  type EntornoBluetooth,
+} from '../modules/printing/infra/web-bluetooth-printer';
+import type { ImpresionDeTickets } from '../modules/printing/ui/impresion';
 import type { PrepararCotizador } from '../modules/quotes/ui/CotizadorEnLaTablet';
 import { canvasImageCompressor } from '../modules/orders/infra/canvas-image-compressor';
 import { dexiePhotoStore } from '../modules/orders/infra/dexie-photo-store';
@@ -602,8 +613,36 @@ function crearPreparadorDelMostrador(d: {
       clock: systemClock,
       device: { id: dispositivo.id },
     };
+    const bluetooth = webBluetoothPrinter(
+      (navigator as Navigator & { bluetooth?: EntornoBluetooth }).bluetooth,
+    );
+    const respaldos = [
+      androidPrintPrinter(imprimirDesdeElNavegador(window)),
+      shareTicketPrinter(webShareService(entornoDelNavegador())),
+    ];
+    const impresion: ImpresionDeTickets = {
+      // 58 mm ≈ 32 caracteres; se cambia cuando se defina la impresora (PD-15).
+      width: 32,
+      business: {
+        name: copia.business?.name ?? 'ZAMMIR (datos de prueba)',
+        phone: copia.business?.phone ?? null,
+        address: copia.business?.address ?? null,
+      },
+      selfInvoicingLegend: copia.orders.selfInvoicingLegend ?? '',
+      publicBaseUrl: copia.orders.publicBaseUrl,
+      estado: () => bluetooth.status(),
+      conectar: async () => {
+        const r = await bluetooth.connect();
+        return r.ok ? null : r.error.code;
+      },
+      imprimir: async (documento) => {
+        const r = await printWithFallback([bluetooth, ...respaldos], documento);
+        return r.ok ? { via: r.value.via } : { error: r.error.code };
+      },
+    };
     return {
       cash,
+      impresion,
       personas: personas
         .filter((u: AppUser) => u.isActive)
         .map((u: AppUser) => ({ id: u.id, name: u.name })),

@@ -18,10 +18,12 @@ import {
   outboxQuoteStore,
   outboxWorkOrderStore,
   seededRandom,
+  toPlainLines,
   type CashDeps,
   type CounterDeps,
   type ManageCustomersDeps,
   type OrderDeps,
+  type PrintDocument,
   type ProductReader,
   type Quote,
   type QuoteActor,
@@ -31,6 +33,7 @@ import {
 import { clientesEnMemoriaDePrueba } from '@zammir/core/testing';
 import { describe, expect, it, vi } from 'vitest';
 
+import type { ImpresionDeTickets } from '../../printing/ui/impresion';
 import { Mostrador, type MostradorProps } from './Mostrador';
 
 const registro = (() => {
@@ -125,6 +128,7 @@ async function montar(
     actor?: QuoteActor | null;
     productos?: readonly SellableProduct[];
     conOrden?: boolean;
+    impresion?: ImpresionDeTickets;
   } = {},
 ) {
   const reloj = fixedClock(new Date('2026-10-31T18:00:00.000Z'));
@@ -224,6 +228,7 @@ async function montar(
             : err({ code: 'AUTH_FAILED' as const }),
         ),
     },
+    ...(opciones.impresion === undefined ? {} : { impresion: opciones.impresion }),
     onPorEnviar: porEnviar,
   };
   render(
@@ -420,5 +425,96 @@ describe('Mostrador', () => {
     await waitFor(() => {
       expect(screen.getByText('Cancelada')).toBeTruthy();
     });
+  });
+});
+
+describe('Mostrador · impresión', () => {
+  function impresionFalsa(falla: string | null = null) {
+    const impresos: PrintDocument[] = [];
+    const impresion: ImpresionDeTickets = {
+      width: 32,
+      business: { name: 'ZAMMIR (datos de prueba)', phone: null, address: null },
+      selfInvoicingLegend: 'Factura en 30 días.',
+      publicBaseUrl: null,
+      estado: () => Promise.resolve({ state: 'READY', name: 'PT-210' }),
+      conectar: () => Promise.resolve(null),
+      imprimir: (doc) => {
+        if (falla !== null) {
+          return Promise.resolve({ error: falla });
+        }
+        impresos.push(doc);
+        return Promise.resolve({ via: 'Impresora Bluetooth' });
+      },
+    };
+    return { impresion, impresos };
+  }
+
+  async function cobrarUnaChapa(): Promise<void> {
+    await agregarChapa();
+    fireEvent.click(screen.getByRole('button', { name: 'Cobrar' }));
+    const dialogo = await screen.findByRole('dialog', { name: 'Cobrar' });
+    fireEvent.change(within(dialogo).getByLabelText('Transferencia'), { target: { value: '0' } });
+    fireEvent.change(within(dialogo).getByLabelText('Efectivo recibido'), {
+      target: { value: '200' },
+    });
+    fireEvent.change(within(dialogo).getByLabelText('Efectivo que se aplica'), {
+      target: { value: '116' },
+    });
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Registrar cobro' }));
+    await screen.findByText(/Venta registrada/, { selector: 'strong' });
+  }
+
+  it('sin impresora configurada no se ofrece imprimir', async () => {
+    await montar();
+    await cobrarUnaChapa();
+    expect(screen.queryByRole('button', { name: 'Imprimir ticket' })).toBeNull();
+    expect(screen.queryByText('Impresora de tickets')).toBeNull();
+  });
+
+  it('muestra el estado de la impresora y manda una página de prueba', async () => {
+    const { impresion, impresos } = impresionFalsa();
+    await montar({ impresion });
+    expect(await screen.findByText(/Lista · PT-210/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Imprimir prueba' }));
+    expect(await screen.findByText(/Ticket enviado a la impresora/)).toBeTruthy();
+    expect(impresos[0]?.title).toBe('PRUEBA DE IMPRESORA');
+  });
+
+  it('imprime el ticket de la venta recién cobrada, con su cambio y el nombre de quien cobró', async () => {
+    const { impresion, impresos } = impresionFalsa();
+    await montar({ impresion });
+    await cobrarUnaChapa();
+    fireEvent.click(await screen.findByRole('button', { name: 'Imprimir ticket' }));
+    await waitFor(() => {
+      expect(impresos).toHaveLength(1);
+    });
+    const texto = toPlainLines(impresos[0]!).join(' | ');
+    expect(texto).toContain('VENTA');
+    expect(texto).toContain('Folio T1-0001');
+    expect(texto).toContain('Atendió: Beto');
+    expect(texto).toContain('Chapa de baño');
+    expect(texto).toContain('Cambio');
+    expect(texto).not.toContain('REIMPRESIÓN');
+    expect(texto).toContain('Factura en 30 días.');
+  });
+
+  it('reimprimir una venta de hoy marca el ticket como reimpresión', async () => {
+    const { impresion, impresos } = impresionFalsa();
+    await montar({ impresion });
+    await cobrarUnaChapa();
+    fireEvent.click(await screen.findByRole('button', { name: 'Reimprimir ticket' }));
+    await waitFor(() => {
+      expect(impresos).toHaveLength(1);
+    });
+    expect(toPlainLines(impresos[0]!).join(' | ')).toContain('REIMPRESIÓN');
+  });
+
+  it('si el ticket no sale dice qué hacer y la venta sigue guardada', async () => {
+    const { impresion } = impresionFalsa('PRINTER_UNAVAILABLE');
+    await montar({ impresion });
+    await cobrarUnaChapa();
+    fireEvent.click(await screen.findByRole('button', { name: 'Imprimir ticket' }));
+    expect(await screen.findByText('No se pudo hablar con la impresora.')).toBeTruthy();
+    expect(screen.getAllByText('T1-0001').length).toBeGreaterThan(0);
   });
 });

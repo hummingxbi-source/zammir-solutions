@@ -13,7 +13,9 @@ import {
   parseLength,
   registerWorkOrderPayment,
   removeFromTicket,
+  saleTicket,
   searchProducts,
+  shiftCutTicket,
   setTicketQuantity,
   ticketTotals,
   type Authorization,
@@ -41,6 +43,8 @@ import { CampoNumerico } from '../../../shared/ui/Campo';
 import { Campo } from '../../../shared/ui/Campo';
 import { formatearPesos } from '../../../shared/ui/formatos';
 import { DialogoDeAutorizacion } from '../../orders/ui/DialogoDeAutorizacion';
+import type { ImpresionDeTickets } from '../../printing/ui/impresion';
+import { mensajeDeImpresion, PanelDeImpresora } from '../../printing/ui/PanelDeImpresora';
 import { TurnoDeCaja, type Persona } from './TurnoDeCaja';
 import { DialogoDeCobro } from '../../orders/ui/DialogoDeCobro';
 import type { AutorizacionDeAdministrador } from '../../quotes/ui/DialogoDeDescuento';
@@ -64,6 +68,8 @@ export interface MostradorProps {
   readonly registry: PriceRegistry;
   readonly taxRateBps: number;
   readonly autorizacion: AutorizacionDeAdministrador;
+  /** Impresora de tickets; sin ella no se ofrece imprimir [S3-20 a S3-24]. */
+  readonly impresion?: ImpresionDeTickets;
   readonly onPorEnviar?: () => void;
   readonly alCambiarElEnvio?: (aviso: () => void) => () => void;
 }
@@ -103,7 +109,7 @@ export function Mostrador(props: MostradorProps): ReactElement {
   const [dialogo, setDialogo] = useState<Dialogo>(null);
   const [error, setError] = useState<{ mensaje: string; queHacer: string } | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
-  const [ultima, setUltima] = useState<{ folio: string; cambio: number } | null>(null);
+  const [ultima, setUltima] = useState<{ id: string; folio: string; cambio: number } | null>(null);
   const [ventas, setVentas] = useState<readonly CounterSale[]>([]);
   const [ordenes, setOrdenes] = useState<readonly WorkOrder[]>([]);
   const [pagos, setPagos] = useState<readonly Payment[]>([]);
@@ -253,7 +259,11 @@ export function Mostrador(props: MostradorProps): ReactElement {
     setTicket(EMPTY_TICKET);
     setDialogo(null);
     setError(null);
-    setUltima({ folio: r.value.sale.tempFolio, cambio: r.value.plan.changeCents });
+    setUltima({
+      id: r.value.sale.id,
+      folio: r.value.sale.tempFolio,
+      cambio: r.value.plan.changeCents,
+    });
     props.onPorEnviar?.();
     await refrescar();
     return null;
@@ -273,6 +283,59 @@ export function Mostrador(props: MostradorProps): ReactElement {
     props.onPorEnviar?.();
     await refrescar();
     return null;
+  }
+
+  /** Imprime el ticket de una venta; `copia` lo marca como reimpresión. La venta ya está guardada: si el
+   *  ticket no sale, se puede volver a imprimir desde Ventas de hoy. */
+  async function imprimirVenta(venta: CounterSale, copia: boolean): Promise<void> {
+    const impresion = props.impresion;
+    if (impresion === undefined) {
+      return;
+    }
+    const cliente = venta.customerId === null ? undefined : clientes.get(venta.customerId);
+    const documento = saleTicket({
+      business: impresion.business,
+      labels: textos.impresion.rotulos,
+      width: impresion.width,
+      reprint: copia,
+      sale: venta,
+      payments: pagos.filter((p) => p.targetType === 'COUNTER_SALE' && p.targetId === venta.id),
+      customerName: cliente?.name ?? null,
+      cashierName: props.personas.find((x) => x.id === venta.userId)?.name ?? persona.userId,
+      selfInvoicingLegend: impresion.selfInvoicingLegend,
+      publicBaseUrl: impresion.publicBaseUrl,
+    });
+    const r = await impresion.imprimir(documento);
+    if ('error' in r) {
+      setAviso(null);
+      setError(mensajeDeImpresion(r.error));
+    } else {
+      setError(null);
+      setAviso(`${textos.impresion.impreso} · ${textos.impresion.impresoPor} ${r.via}`);
+    }
+  }
+
+  async function imprimirCorte(
+    turno: Parameters<NonNullable<React.ComponentProps<typeof TurnoDeCaja>['onImprimir']>>[0],
+    resumen: Parameters<NonNullable<React.ComponentProps<typeof TurnoDeCaja>['onImprimir']>>[1],
+  ): Promise<string | null> {
+    const impresion = props.impresion;
+    if (impresion === undefined) {
+      return 'PRINTER_NOT_CONFIGURED';
+    }
+    const r = await impresion.imprimir(
+      shiftCutTicket({
+        business: impresion.business,
+        labels: textos.impresion.rotulos,
+        width: impresion.width,
+        cashierName: props.personas.find((x) => x.id === turno.cashierId)?.name ?? '—',
+        openedAt: turno.openedAt,
+        closedAt: turno.closedAt,
+        summary: resumen,
+        countedCashCents: turno.countedCashCents,
+      }),
+    );
+    return 'error' in r ? r.error : null;
   }
 
   async function cancelar(
@@ -319,6 +382,19 @@ export function Mostrador(props: MostradorProps): ReactElement {
           <strong>{t.cobrada.titulo}</strong> · {t.cobrada.folioProvisional} {ultima.folio} ·{' '}
           {t.cobrada.guardada}
           {ultima.cambio > 0 ? ` · ${t.cobrada.cambio} ${formatearPesos(ultima.cambio)}` : ''}
+          {props.impresion !== undefined ? (
+            <Boton
+              variante="secundario"
+              onClick={() => {
+                const venta = ventas.find((v) => v.id === ultima.id);
+                if (venta !== undefined) {
+                  void imprimirVenta(venta, false);
+                }
+              }}
+            >
+              {t.cobrada.imprimir}
+            </Boton>
+          ) : null}
         </div>
       ) : null}
 
@@ -328,8 +404,11 @@ export function Mostrador(props: MostradorProps): ReactElement {
         personas={props.personas}
         autorizacion={props.autorizacion}
         version={version}
+        {...(props.impresion === undefined ? {} : { onImprimir: imprimirCorte })}
         {...(props.onPorEnviar === undefined ? {} : { onPorEnviar: props.onPorEnviar })}
       />
+
+      {props.impresion !== undefined ? <PanelDeImpresora impresion={props.impresion} /> : null}
 
       <h2>{t.venta.titulo}</h2>
       {elegido === null ? (
@@ -570,6 +649,16 @@ export function Mostrador(props: MostradorProps): ReactElement {
                 <td>{cobra(v.totalCents)}</td>
                 <td>{v.status === 'COMPLETED' ? t.hoy.completada : t.hoy.cancelada}</td>
                 <td>
+                  {props.impresion !== undefined ? (
+                    <Boton
+                      variante="secundario"
+                      onClick={() => {
+                        void imprimirVenta(v, true);
+                      }}
+                    >
+                      {t.hoy.reimprimir}
+                    </Boton>
+                  ) : null}
                   {v.status === 'COMPLETED' && dialogo === null ? (
                     <Boton
                       variante="peligro"
