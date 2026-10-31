@@ -488,7 +488,7 @@ describe('Mostrador · impresión', () => {
     await waitFor(() => {
       expect(impresos).toHaveLength(1);
     });
-    const texto = toPlainLines(impresos[0]!).join(' | ');
+    const texto = toPlainLines(impresos[0] ?? { title: '', width: 32, blocks: [] }).join(' | ');
     expect(texto).toContain('VENTA');
     expect(texto).toContain('Folio T1-0001');
     expect(texto).toContain('Atendió: Beto');
@@ -506,7 +506,9 @@ describe('Mostrador · impresión', () => {
     await waitFor(() => {
       expect(impresos).toHaveLength(1);
     });
-    expect(toPlainLines(impresos[0]!).join(' | ')).toContain('REIMPRESIÓN');
+    expect(toPlainLines(impresos[0] ?? { title: '', width: 32, blocks: [] }).join(' | ')).toContain(
+      'REIMPRESIÓN',
+    );
   });
 
   it('si el ticket no sale dice qué hacer y la venta sigue guardada', async () => {
