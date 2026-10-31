@@ -28,7 +28,7 @@ supabase/.branches/
 Thumbs.db
 *.log
 .stryker-tmp/
-reports/
+/reports/
 test-results/
 playwright-report/
 

@@ -299,6 +299,56 @@ h3 {
   color: var(--color-error);
 }
 
+/* Tablas que se apilan en el celular: cada fila es una tarjeta y cada celda lleva su rótulo, así no hay
+ * desplazamiento horizontal [RNF-31]. */
+@media (max-width: 40rem) {
+  .tabla--apilada thead {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .tabla--apilada,
+  .tabla--apilada tbody,
+  .tabla--apilada tr,
+  .tabla--apilada th,
+  .tabla--apilada td {
+    display: block;
+    inline-size: 100%;
+    box-sizing: border-box;
+  }
+
+  .tabla--apilada tr {
+    border-bottom: 1px solid var(--color-borde);
+    padding-block: 0.5rem;
+  }
+
+  .tabla--apilada th,
+  .tabla--apilada td {
+    border-bottom: 0;
+    padding: 0.25rem 0.75rem;
+    overflow-wrap: anywhere;
+  }
+
+  .tabla--apilada td {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .tabla--apilada td::before {
+    content: attr(data-label);
+    color: var(--color-texto-suave);
+  }
+}
+
+.reportes {
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+}
+
 .codigo-registro {
   font-family: var(--fuente-etiqueta);
   font-size: 2rem;
