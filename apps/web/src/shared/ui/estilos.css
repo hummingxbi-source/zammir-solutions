@@ -304,3 +304,108 @@ h3 {
   color: var(--color-fondo);
   text-align: center;
 }
+
+/* ---------- Cotizador ---------- */
+.cotizador__paneles {
+  display: grid;
+  gap: var(--espacio);
+}
+
+.pestanas {
+  display: flex;
+  gap: 0.5rem;
+  margin-block: var(--espacio);
+}
+
+/* En pantalla chica, una pestaña a la vez. */
+.cotizador__paneles[data-pestana='datos'] .cotizador__vista,
+.cotizador__paneles[data-pestana='vista'] .cotizador__datos {
+  display: none;
+}
+
+/* En pantalla grande: datos a la izquierda y documento a la derecha, sin pestañas. */
+@media (min-width: 900px) {
+  .pestanas {
+    display: none;
+  }
+
+  .cotizador__paneles {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+
+  .cotizador__paneles[data-pestana] .cotizador__vista,
+  .cotizador__paneles[data-pestana] .cotizador__datos {
+    display: block;
+  }
+}
+
+.lineas {
+  list-style: none;
+  padding: 0;
+}
+
+.lineas li {
+  padding-block: 0.75rem;
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.documento {
+  background: #fff;
+  color: #111;
+  border: 1px solid var(--color-borde);
+  padding: var(--espacio);
+  font-size: 0.9rem;
+}
+
+.documento__encabezado {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--espacio);
+}
+
+.documento__folio {
+  text-align: right;
+}
+
+.documento__borrador {
+  color: #b91c1c;
+  font-weight: 700;
+}
+
+.documento__tabla {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.documento__tabla th,
+.documento__tabla td {
+  padding: 0.4rem;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+}
+
+.documento__totales {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.25rem 1rem;
+  margin-block: var(--espacio);
+}
+
+.documento__totales dd {
+  margin: 0;
+  text-align: right;
+}
+
+.documento__firma {
+  margin-top: 3rem;
+  border-top: 1px solid #111;
+  width: 14rem;
+}
+
+.dialogo {
+  border: 2px solid var(--color-borde);
+  background: var(--color-superficie);
+  padding: var(--espacio);
+  margin-block: var(--espacio);
+}

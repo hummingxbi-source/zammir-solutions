@@ -58,6 +58,7 @@ export function supabaseLoginSource(cliente: SupabaseClient): LoginReplicaSource
         idle_lock_minutes,
         sync_stale_hours,
       } = ajustes.value;
+      const v = ajustes.value;
       const lockout: LockoutPolicy | null =
         pin_max_failed_attempts === null || pin_lock_seconds === null
           ? null
@@ -71,6 +72,12 @@ export function supabaseLoginSource(cliente: SupabaseClient): LoginReplicaSource
         lockout,
         idleLockMinutes: idle_lock_minutes,
         syncStaleHours: sync_stale_hours,
+        quote: {
+          taxRateBps: v.tax_rate_bps,
+          validityDays: v.quote_validity_days,
+          conditionsText: v.quote_conditions,
+        },
+        business: { name: v.business_name, phone: v.business_phone, address: v.business_address },
       });
     },
   };
