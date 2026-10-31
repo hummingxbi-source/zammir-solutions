@@ -83,6 +83,8 @@ function pago(id: string, orderId: string, centavos: number, changeSeq: number):
 
 function fuente(ordenes: ReplicatedWorkOrder[], pagos: ReplicatedPayment[]): DocumentReplicaSource {
   return {
+    shiftsChangedAfter: () => Promise.resolve(ok([])),
+    salesChangedAfter: () => Promise.resolve(ok([])),
     ordersChangedAfter: (seq, limit) =>
       Promise.resolve(ok(ordenes.filter((o) => o.changeSeq > seq).slice(0, limit))),
     paymentsChangedAfter: (seq, limit) =>
@@ -95,11 +97,11 @@ describe('réplica de órdenes y pagos', () => {
     const outbox = inMemorySyncOutbox({ clock: reloj });
     const origen = fuente([orden(ID_A, 1), orden(ID_B, 2)], [pago('p1', ID_A, 5_800, 1)]);
     const r = await refreshDocuments({ source: origen, outbox, clock: reloj });
-    expect(r).toEqual(ok({ orders: 2, payments: 1 }));
+    expect(r).toEqual(ok({ orders: 2, payments: 1, sales: 0, shifts: 0 }));
     expect(await outboxWorkOrderStore(outbox).list()).toHaveLength(2);
     expect(await outboxPaymentStore(outbox).listByTarget(ID_A)).toHaveLength(1);
     const otra = await refreshDocuments({ source: origen, outbox, clock: reloj });
-    expect(otra).toEqual(ok({ orders: 0, payments: 0 }));
+    expect(otra).toEqual(ok({ orders: 0, payments: 0, sales: 0, shifts: 0 }));
   });
 
   it('el documento local queda sin el número de cambio y marcado como enviado', async () => {
@@ -167,6 +169,8 @@ describe('réplica de órdenes y pagos', () => {
     const outbox = inMemorySyncOutbox({ clock: reloj });
     await refreshDocuments({ source: fuente([orden(ID_A, 1)], []), outbox, clock: reloj });
     const roto: DocumentReplicaSource = {
+      shiftsChangedAfter: () => Promise.resolve(err({ code: 'DOCUMENTS_UNAVAILABLE' })),
+      salesChangedAfter: () => Promise.resolve(err({ code: 'DOCUMENTS_UNAVAILABLE' })),
       ordersChangedAfter: () => Promise.resolve(err({ code: 'DOCUMENTS_UNAVAILABLE' })),
       paymentsChangedAfter: () => Promise.resolve(err({ code: 'DOCUMENTS_UNAVAILABLE' })),
     };

@@ -52,6 +52,8 @@ export type PaymentErrorCode =
   | 'MUST_COVER_BALANCE'
   | 'NOT_FOUND'
   | 'ORDER_CANCELLED'
+  /** Todo cobro se liga al turno abierto de quien cobra [RN-11, S3-16]. */
+  | 'NO_OPEN_SHIFT'
   | 'STORAGE_FAILED';
 
 export interface PaymentError {

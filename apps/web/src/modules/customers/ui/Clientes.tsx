@@ -10,6 +10,8 @@ import {
   searchCustomers,
   type Customer,
   type CustomerError,
+  type CustomerHistory,
+  type CustomerId,
   type ManageCustomersDeps,
 } from '@zammir/core';
 
@@ -19,16 +21,19 @@ import { Boton } from '../../../shared/ui/Boton';
 import { Campo, CampoNumerico } from '../../../shared/ui/Campo';
 import { Confirmacion } from '../../../shared/ui/Confirmacion';
 import { useSesionAdmin } from '../../identity/ui/SesionAdmin';
+import { FichaDelCliente } from './FichaDelCliente';
 
 const t = textos.clientes;
 
 export interface ClientesProps {
   readonly deps: ManageCustomersDeps;
+  /** Historial de un cliente desde lo guardado en la tablet; sin esto no se ofrece la ficha [S3-25]. */
+  readonly historial?: (id: CustomerId) => Promise<CustomerHistory>;
 }
 
 /** Clientes: lista y alta con lo mínimo (nombre y WhatsApp) [RF-M5-01]. La búsqueda y el aviso de
  *  duplicados llegan con S1-11. */
-export function Clientes({ deps }: ClientesProps): ReactElement {
+export function Clientes({ deps, historial }: ClientesProps): ReactElement {
   const { usuario } = useSesionAdmin();
   const actor = { role: usuario?.role ?? null };
 
@@ -47,6 +52,7 @@ export function Clientes({ deps }: ClientesProps): ReactElement {
   const [porAnonimizar, setPorAnonimizar] = useState<Customer | null>(null);
   const [avisoVigente, setAvisoVigente] = useState<LegalDocument | null>(null);
   const [repetidos, setRepetidos] = useState<readonly Customer[]>([]);
+  const [ficha, setFicha] = useState<Customer | null>(null);
 
   const cargar = useCallback(async () => {
     const resultado = await deps.customers.list();
@@ -261,6 +267,17 @@ export function Clientes({ deps }: ClientesProps): ReactElement {
                 <td>{cliente.phone}</td>
                 <td>{cliente.email ?? t.sinCorreo}</td>
                 <td>
+                  {historial !== undefined && cliente.anonymizedAt === null ? (
+                    <Boton
+                      variante="secundario"
+                      aria-label={`${t.ficha.ver} ${cliente.name}`}
+                      onClick={() => {
+                        setFicha(cliente);
+                      }}
+                    >
+                      {t.ficha.ver}
+                    </Boton>
+                  ) : null}
                   {cliente.anonymizedAt === null ? (
                     <Boton
                       variante="peligro"
@@ -278,6 +295,16 @@ export function Clientes({ deps }: ClientesProps): ReactElement {
           </tbody>
         </table>
       )}
+
+      {ficha !== null && historial !== undefined ? (
+        <FichaDelCliente
+          cliente={ficha}
+          cargar={() => historial(ficha.id)}
+          onCerrar={() => {
+            setFicha(null);
+          }}
+        />
+      ) : null}
 
       {porAnonimizar !== null ? (
         <Confirmacion

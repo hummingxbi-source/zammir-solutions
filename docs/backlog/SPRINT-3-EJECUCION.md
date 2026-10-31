@@ -58,6 +58,7 @@ Inventario del Sprint 1: [`SPRINT-1-EJECUCION.md`](SPRINT-1-EJECUCION.md) §2. D
 | Reconciliación y réplica | `reconcile-orders.ts` (`afterPass` del motor) y `replica-documents.ts` (`refreshDocuments`, `DocumentReplicaSource`); web: `orders/infra/supabase-document-replica.ts` y `composition.envio.actualizarDocumentos` (se llama en `ponerAlDia`) | Una orden con operación pendiente no se sobrescribe; un pago ya guardado no se toca |
 | Comprobante | `core/modules/documents/domain/work-order-document.ts` (`buildWorkOrderDocument`, `autoinvoiceUrl`); `QuoteDocument.receipt`; render en `pdf-lib-renderer.ts` (pagos, saldo, garantía, QR vectorial); `documents/infra/qr-matrix.ts`; `orders/ui/comprobante.ts` (`compartirComprobante`) | Nombre de archivo `Comprobante-<folio>.pdf`; prueba `acceptance/s3-comprobante.test.ts` lee el PDF con pdf.js y el QR con jsqr |
 | Fotos | `orders/application/order-photos.ts` (`attachOrderPhoto`, `uploadPendingPhotos`, `fitWithin`, límites); web: `dexie-photo-store.ts`, `canvas-image-compressor.ts`, `supabase-photo-uploader.ts`; `composition.envio.subirFotos` | No usa la cola de operaciones; la compresión con lienzo no se puede probar en jsdom |
+| Mostrador | migración `20261031120000_counter_sales.sql` (ventas, líneas, vista `counter_sales_for_device`, `CreateCounterSale`/`CancelCounterSale`); núcleo `core/modules/counter/` (`domain/ticket.ts` ticket puro, `domain/counter-sale.ts`, `application/counter-use-cases.ts`: `chargeCounterSale`, `cancelCounterSale`, `counter-sale-store.ts`, `reconcile-sales.ts`); pantalla `apps/web/src/modules/counter/ui/Mostrador.tsx`; `composition.prepararMostrador` | ADR-0026. Tras tocar `packages/core` hay que correr `pnpm funciones:empaquetar` antes de `pnpm test:integracion`: la función de borde usa el núcleo empaquetado |
 | Pantallas | `apps/web/src/modules/orders/ui/`: `Ordenes.tsx` (lista, filtro por estatus, cotizaciones por convertir), `DetalleDeOrden.tsx` (totales, pagos, datos, fotos, acciones), `DialogoDeCobro.tsx`, `DialogoDeAutorizacion.tsx`, `OrdenesEnLaTablet.tsx`; `composition.prepararOrdenes`; `LoginSnapshot.orders` | Textos en `textos.ordenes` y `textos.documento.comprobante` |
 
 ## 3. Cómo trabajar (resumen)
@@ -195,27 +196,36 @@ E1 (cotizar → aceptar → orden → anticipo → avanzar → entregar con sald
 | S3-07 Garantía | M | **hecha** (duración vacía mientras PD-06 no se defina) | `feat/s3-ordenes` |
 | S3-08 Cancelación de la orden | S | **hecha** | `feat/s3-ordenes` |
 | S3-09 Comprobante PDF con QR | L | **hecha** (PDF verificado con otro lector y QR decodificado; falta verla y escanearla desde la tablet) | `feat/s3-ordenes` |
-| S3-10 Tablero y lista | M | pendiente | |
-| S3-11 Venta rápida y ticket actual | M | pendiente | |
-| S3-12 Cobro (efectivo, transferencia, mixto) | M | pendiente | |
-| S3-13 Atribución y folio de la venta | S | pendiente | |
-| S3-14 Cobrar saldos desde Mostrador | S | pendiente | |
-| S3-15 Cancelar una venta | S | pendiente | |
-| S3-16 Turno de caja | M | pendiente | |
-| S3-17 Corte por cajero | L | pendiente | |
-| S3-18 Corte consolidado | M | pendiente | |
-| S3-19 Cierre con pendientes | S | pendiente | |
-| S3-20 Puerto, plantillas y adaptador falso | L | pendiente | |
-| S3-21 Web Bluetooth y ESC/POS | L | código sí; prueba real al final | |
-| S3-22 Adaptadores de respaldo | M | código sí; prueba real al final | |
-| S3-23 Estado, prueba y reimpresión | M | código sí; prueba real al final | |
-| S3-24 Ticket con QR y leyenda | M | pendiente | |
-| S3-25 Historial del cliente | M | pendiente | |
-| S3-26 Aceptación E1 | L | pendiente | |
-| S3-27 Aceptación E2 | M | pendiente | |
-| S3-28 Aceptación E3 (ventas) y E4 | M | pendiente | |
+| S3-10 Tablero y lista | M | **hecha** (conteo por estatus, filtros combinados por estatus, cliente, responsable y fechas; resumen para administradores) | `feat/s3-mostrador` |
+| S3-11 Venta rápida y ticket actual | M | **hecha** (ticket puro con mutación 100 %; falta el catálogo rápido PP-08, no aprobado) | `feat/s3-mostrador` |
+| S3-12 Cobro (efectivo, transferencia, mixto) | M | **hecha** | `feat/s3-mostrador` |
+| S3-13 Atribución y folio de la venta | S | **hecha** (usuario, dispositivo, hora UTC; folio provisional y `V-AAAA-NNNN`) | `feat/s3-mostrador` |
+| S3-14 Cobrar saldos desde Mostrador | S | **hecha** (mismo `registerWorkOrderPayment`) | `feat/s3-mostrador` |
+| S3-15 Cancelar una venta | S | **hecha** (PD-24: solo se registra) | `feat/s3-mostrador` |
+| S3-16 Turno de caja | M | **hecha** (un turno por persona; el cobro exige turno abierto; ADR-0027) | `feat/s3-mostrador` |
+| S3-17 Corte por cajero | L | **hecha** (esperado, contado y diferencia; el servidor lo recalcula) | `feat/s3-mostrador` |
+| S3-18 Corte consolidado | M | **hecha** (por método y por persona, día de apertura en hora de México) | `feat/s3-mostrador` |
+| S3-19 Cierre con pendientes | S | **hecha** (avisa cuántas operaciones faltan por enviar) | `feat/s3-mostrador` |
+| S3-20 Puerto, plantillas y adaptador falso | L | **hecha** (plantillas con versión aprobada y contrato de impresora) | `feat/s3-mostrador` |
+| S3-21 Web Bluetooth y ESC/POS | L | **hecha** en código (byte a byte); falta probar con la impresora real | `feat/s3-mostrador` |
+| S3-22 Adaptadores de respaldo | M | **hecha** en código; falta probar en la tablet | `feat/s3-mostrador` |
+| S3-23 Estado, prueba y reimpresión | M | **hecha** (estado, conectar, página de prueba y reimpresión) | `feat/s3-mostrador` |
+| S3-24 Ticket con QR y leyenda | M | **hecha** (QR con folio y código; leyenda configurable) | `feat/s3-mostrador` |
+| S3-25 Historial del cliente | M | **hecha** (ficha en Clientes y cliente recurrente) | `feat/s3-mostrador` |
+| S3-26 Aceptación E1 | L | **hecha** con servidor real (falta el recorrido físico en la tablet) | `feat/s3-mostrador` |
+| S3-27 Aceptación E2 | M | **hecha** con servidor real | `feat/s3-mostrador` |
+| S3-28 Aceptación E3 (ventas) y E4 | M | **hecha** con servidor real (10 ventas sin conexión; tres personas cobrando) | `feat/s3-mostrador` |
 | S3-29 Aceptación E10 | S | manual (tablet) | |
 | S3-30 Cierre del Sprint 3 | S | pendiente | |
+
+### Pruebas que quedan para la tablet y la impresora (al final del proyecto)
+
+- Cámara y compresión de las fotos de la medición.
+- Ver el comprobante PDF y escanear su QR desde la tablet.
+- Impresora Bluetooth: emparejar, imprimir ticket de venta, cobro de orden, corte y página de prueba; comprobar ancho de papel (37.3), acentos y corte de papel.
+- Impresión de Android y compartir el ticket como respaldo.
+- Medir tiempos (RNF-23 a RNF-27) y el costo de PBKDF2 en la tablet.
+- Recorrido físico de E1 y E10 con una persona del taller.
 
 ## 10. Lista de verificación al terminar cada historia
 

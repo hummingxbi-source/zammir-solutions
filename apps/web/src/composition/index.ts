@@ -3,6 +3,13 @@ import {
   authorizeWithAdminPin,
   createActiveUserSession,
   localProductReader,
+  loadCustomerHistory,
+  outboxCashShiftStore,
+  outboxWarrantyReader,
+  type CustomerHistory,
+  type CustomerId,
+  printWithFallback,
+  outboxCounterSaleStore,
   outboxCustomers,
   attachOrderPhoto,
   outboxPaymentStore,
@@ -10,6 +17,8 @@ import {
   outboxQuoteStore,
   reconcileOrders,
   reconcileQuotes,
+  reconcileSales,
+  reconcileShifts,
   refreshDocuments,
   uploadPendingPhotos,
   refreshCustomers,
@@ -32,6 +41,7 @@ import {
   type LegalDeps,
   type ManageCustomersDeps,
   type ManageUsersDeps,
+  type CashDeps,
   type OrderDeps,
   type PhotoStore,
   type QuoteConditionsStore,
@@ -66,12 +76,23 @@ import { supabaseLegal } from '../modules/legal/infra/supabase-legal';
 import { supabaseQuoteConditions } from '../modules/settings/infra/supabase-quote-conditions';
 import { pdfLibRenderer } from '../modules/documents/infra/pdf-lib-renderer';
 import { entornoDelNavegador, webShareService } from '../modules/documents/infra/web-share-service';
+import {
+  androidPrintPrinter,
+  imprimirDesdeElNavegador,
+} from '../modules/printing/infra/android-print-printer';
+import { shareTicketPrinter } from '../modules/printing/infra/share-ticket-printer';
+import {
+  webBluetoothPrinter,
+  type EntornoBluetooth,
+} from '../modules/printing/infra/web-bluetooth-printer';
+import type { ImpresionDeTickets } from '../modules/printing/ui/impresion';
 import type { PrepararCotizador } from '../modules/quotes/ui/CotizadorEnLaTablet';
 import { canvasImageCompressor } from '../modules/orders/infra/canvas-image-compressor';
 import { dexiePhotoStore } from '../modules/orders/infra/dexie-photo-store';
 import { supabasePhotoUploader } from '../modules/orders/infra/supabase-photo-uploader';
 import { compartirComprobante } from '../modules/orders/ui/comprobante';
 import { qrMatrix } from '../modules/documents/infra/qr-matrix';
+import type { PrepararMostrador } from '../modules/counter/ui/MostradorEnLaTablet';
 import type { PrepararOrdenes } from '../modules/orders/ui/OrdenesEnLaTablet';
 import { cryptoRandom } from '../shared/infra/crypto-random';
 import { browserTimer } from '../shared/infra/sync/browser-timer';
@@ -141,8 +162,11 @@ export interface Composition {
   } | null;
   /** Cómo reunir lo que el cotizador necesita; `null` si no hay servidor configurado. */
   readonly prepararCotizador: PrepararCotizador | null;
+  /** Cómo reunir lo que el mostrador necesita; `null` si no hay servidor configurado. */
+  readonly prepararMostrador: PrepararMostrador | null;
   /** Cómo reunir lo que las órdenes de trabajo necesitan; `null` si no hay servidor configurado. */
   readonly prepararOrdenes: PrepararOrdenes | null;
+  readonly historialDeCliente: ((id: CustomerId) => Promise<CustomerHistory>) | null;
   /** Altas, PIN y desactivación de personas; `null` si no hay servidor configurado. */
   readonly usuarios: ManageUsersDeps | null;
   /** Mínimo de dígitos del PIN de un administrador y vueltas de PBKDF2, de la configuración. */
@@ -237,6 +261,8 @@ function crearEnvio(
     afterPass: async () => {
       await reconcileQuotes(outbox);
       await reconcileOrders(outbox);
+      await reconcileSales(outbox);
+      await reconcileShifts(outbox);
     },
   });
   const fotos = dexiePhotoStore();
@@ -448,6 +474,7 @@ function crearPreparadorDeOrdenes(d: {
       orders: outboxWorkOrderStore(d.envio.outbox),
       payments: outboxPaymentStore(d.envio.outbox),
       quotes: outboxQuoteStore(d.envio.outbox),
+      shifts: outboxCashShiftStore(d.envio.outbox),
       outbox: d.envio.outbox,
       idGenerator: uuidIdGenerator,
       clock: systemClock,
@@ -542,6 +569,141 @@ function crearPreparadorDeOrdenes(d: {
   };
 }
 
+/** Lo que el mostrador toma de la tablet: catálogo local, configuración y personas bajadas, cola de salida
+ *  y lo ya guardado de ventas, órdenes y pagos [S3-11 a S3-15]. */
+function crearPreparadorDelMostrador(d: {
+  readonly envio: NonNullable<Composition['envio']>;
+  readonly catalogoLocal: NonNullable<Composition['catalogoLocal']>;
+  readonly entradaConPin: NonNullable<Composition['entradaConPin']>;
+  readonly credenciales: CredencialesDeLaTablet;
+  readonly reglas: NonNullable<typeof reglas>;
+}): PrepararMostrador {
+  const identidad = dexieIdentity();
+  return async () => {
+    const credenciales = await d.credenciales.load();
+    const copia = await identidad.store.load();
+    if (credenciales === null || copia?.orders === undefined || copia.quote === undefined) {
+      return null;
+    }
+    const personas = copia.users;
+    const usuarios = {
+      get: (id: UserId) => {
+        const p = personas.find((u: AppUser) => u.id === id);
+        return Promise.resolve(p === undefined ? err({ code: 'NOT_FOUND' as const }) : ok(p));
+      },
+    };
+    const dispositivo = { id: credenciales.device.id, series: credenciales.device.tempSeries };
+    const orderDeps: OrderDeps = {
+      orders: outboxWorkOrderStore(d.envio.outbox),
+      payments: outboxPaymentStore(d.envio.outbox),
+      quotes: outboxQuoteStore(d.envio.outbox),
+      shifts: outboxCashShiftStore(d.envio.outbox),
+      outbox: d.envio.outbox,
+      idGenerator: uuidIdGenerator,
+      clock: systemClock,
+      random: cryptoRandom,
+      device: dispositivo,
+      settings: {
+        depositPercentBps: copia.orders.depositPercentBps,
+        requireDepositToStart: copia.orders.requireDepositToStart,
+        warrantyMonthsDefault: copia.orders.warrantyMonthsDefault,
+      },
+    };
+    const cash: CashDeps = {
+      shifts: outboxCashShiftStore(d.envio.outbox),
+      payments: outboxPaymentStore(d.envio.outbox),
+      sales: outboxCounterSaleStore(d.envio.outbox),
+      outbox: d.envio.outbox,
+      idGenerator: uuidIdGenerator,
+      clock: systemClock,
+      device: { id: dispositivo.id },
+    };
+    const bluetooth = webBluetoothPrinter(
+      (navigator as Navigator & { bluetooth?: EntornoBluetooth }).bluetooth,
+    );
+    const respaldos = [
+      androidPrintPrinter(imprimirDesdeElNavegador(window)),
+      shareTicketPrinter(webShareService(entornoDelNavegador())),
+    ];
+    const impresion: ImpresionDeTickets = {
+      // 58 mm ≈ 32 caracteres; se cambia cuando se defina la impresora (PD-15).
+      width: 32,
+      business: {
+        name: copia.business?.name ?? 'ZAMMIR (datos de prueba)',
+        phone: copia.business?.phone ?? null,
+        address: copia.business?.address ?? null,
+      },
+      selfInvoicingLegend: copia.orders.selfInvoicingLegend ?? '',
+      publicBaseUrl: copia.orders.publicBaseUrl,
+      estado: () => bluetooth.status(),
+      conectar: async () => {
+        const r = await bluetooth.connect();
+        return r.ok ? null : r.error.code;
+      },
+      imprimir: async (documento) => {
+        const r = await printWithFallback([bluetooth, ...respaldos], documento);
+        return r.ok ? { via: r.value.via } : { error: r.error.code };
+      },
+    };
+    return {
+      cash,
+      impresion,
+      personas: personas
+        .filter((u: AppUser) => u.isActive)
+        .map((u: AppUser) => ({ id: u.id, name: u.name })),
+      deps: {
+        sales: outboxCounterSaleStore(d.envio.outbox),
+        payments: outboxPaymentStore(d.envio.outbox),
+        shifts: outboxCashShiftStore(d.envio.outbox),
+        outbox: d.envio.outbox,
+        idGenerator: uuidIdGenerator,
+        clock: systemClock,
+        random: cryptoRandom,
+        device: dispositivo,
+      },
+      orderDeps,
+      catalogo: localProductReader(d.catalogoLocal.store),
+      clientes: {
+        customers: outboxCustomers({
+          outbox: d.envio.outbox,
+          clock: systemClock,
+          idGenerator: uuidIdGenerator,
+          device: { id: credenciales.device.id },
+          currentUserId: () => {
+            const estado = d.entradaConPin.session.state();
+            return estado.kind === 'ACTIVE' ? estado.user.id : null;
+          },
+        }),
+        idGenerator: uuidIdGenerator,
+      },
+      registry: d.reglas,
+      taxRateBps: copia.quote.taxRateBps,
+      autorizacion: {
+        administradores: () =>
+          Promise.resolve(
+            personas
+              .filter((u: AppUser) => u.role === 'ADMIN' && u.isActive)
+              .map((u: AppUser) => ({ id: u.id, name: u.name })),
+          ),
+        autorizar: (adminId: string, pin: string) =>
+          authorizeWithAdminPin(
+            {
+              users: usuarios,
+              hasher: d.entradaConPin.deps.hasher,
+              guard: d.entradaConPin.deps.guard,
+              clock: systemClock,
+            },
+            { adminId: adminId as UserId, pin },
+          ),
+      },
+      alCambiarElEnvio: (aviso: () => void) => d.envio.engine.subscribe(aviso),
+      onPorEnviar: () => {
+        void d.envio.engine.trigger();
+      },
+    };
+  };
+}
+
 export function createComposition(entorno: EntornoSupabase = {}): Composition {
   const cliente = createSupabaseClient(entorno.url, entorno.anonKey);
   const ajustes = cliente === null ? null : supabaseSettingsRepository(cliente);
@@ -583,11 +745,39 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
           credenciales: credencialesDeLaTablet,
         });
 
+  const historialDeCliente =
+    envio === null
+      ? null
+      : (id: CustomerId) =>
+          loadCustomerHistory(
+            {
+              quotes: outboxQuoteStore(envio.outbox),
+              orders: outboxWorkOrderStore(envio.outbox),
+              sales: outboxCounterSaleStore(envio.outbox),
+              payments: outboxPaymentStore(envio.outbox),
+              warranties: outboxWarrantyReader(envio.outbox),
+            },
+            id,
+          );
+
+  const prepararMostrador: PrepararMostrador | null =
+    envio === null || catalogoLocal === null || entradaConPin === null || reglas === null
+      ? null
+      : crearPreparadorDelMostrador({
+          envio,
+          catalogoLocal,
+          entradaConPin,
+          credenciales: credencialesDeLaTablet,
+          reglas,
+        });
+
   return {
     clock: systemClock,
     idGenerator: uuidIdGenerator,
     prepararCotizador,
+    prepararMostrador,
     prepararOrdenes,
+    historialDeCliente,
     adminAuth: cliente === null ? adminAuthNoConfigurada : supabaseAdminAuth(cliente),
     dispositivos: cliente === null ? null : supabaseDeviceRepository(cliente),
     catalogo:

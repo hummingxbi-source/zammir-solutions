@@ -2,6 +2,8 @@ import type { ReactElement } from 'react';
 import { Route, Routes } from 'react-router';
 import type {
   ActiveUserSession,
+  CustomerHistory,
+  CustomerId,
   DeviceRepository,
   ImportCatalogDeps,
   LegalDeps,
@@ -23,6 +25,10 @@ import {
   CotizadorEnLaTablet,
   type PrepararCotizador,
 } from './modules/quotes/ui/CotizadorEnLaTablet';
+import {
+  MostradorEnLaTablet,
+  type PrepararMostrador,
+} from './modules/counter/ui/MostradorEnLaTablet';
 import { OrdenesEnLaTablet, type PrepararOrdenes } from './modules/orders/ui/OrdenesEnLaTablet';
 import { Dispositivos } from './modules/devices/ui/Dispositivos';
 import { Usuarios, type UsuariosProps } from './modules/identity/ui/Usuarios';
@@ -58,8 +64,12 @@ export interface AppProps {
   readonly catalogo?: ImportCatalogDeps | null;
   /** Cotizador de la tablet: cómo reunir lo que necesita; sin esto la sección queda vacía. */
   readonly prepararCotizador?: PrepararCotizador | null;
+  /** Mostrador de la tablet: cómo reunir lo que necesita; sin esto la sección queda vacía. */
+  readonly prepararMostrador?: PrepararMostrador | null;
   /** Órdenes de trabajo de la tablet: cómo reunir lo que necesita; sin esto la sección queda vacía. */
   readonly prepararOrdenes?: PrepararOrdenes | null;
+  /** Historial de un cliente desde lo guardado en la tablet (ficha en Clientes). */
+  readonly historialDeCliente?: ((id: CustomerId) => Promise<CustomerHistory>) | null;
   /** Estado del envío de lo guardado en la tablet ("N pendientes"). */
   readonly sincronizacion?: SincronizacionVisible | undefined;
   /** Vigencia sugerida del código de registro; sin ella la persona escribe los minutos. */
@@ -82,6 +92,8 @@ export function App({
   sincronizacion,
   prepararCotizador = null,
   prepararOrdenes = null,
+  historialDeCliente = null,
+  prepararMostrador = null,
   cargarVigenciaDeCodigo,
 }: AppProps): ReactElement {
   const secciones = [
@@ -148,6 +160,10 @@ export function App({
                 prepararCotizador !== null &&
                 entradaConPin !== null ? (
                 <CotizadorEnLaTablet preparar={prepararCotizador} session={entradaConPin.session} />
+              ) : seccion.id === 'mostrador' &&
+                prepararMostrador !== null &&
+                entradaConPin !== null ? (
+                <MostradorEnLaTablet preparar={prepararMostrador} session={entradaConPin.session} />
               ) : seccion.id === 'ordenes' && prepararOrdenes !== null && entradaConPin !== null ? (
                 <OrdenesEnLaTablet preparar={prepararOrdenes} session={entradaConPin.session} />
               ) : seccion.id === 'catalogo' && catalogo !== null ? (
@@ -159,7 +175,10 @@ export function App({
                 </ProtegidaAdmin>
               ) : seccion.id === 'clientes' && clientes !== null ? (
                 <ProtegidaAdmin>
-                  <Clientes deps={clientes} />
+                  <Clientes
+                    deps={clientes}
+                    {...(historialDeCliente === null ? {} : { historial: historialDeCliente })}
+                  />
                 </ProtegidaAdmin>
               ) : (
                 <SeccionVacia titulo={seccion.texto} />

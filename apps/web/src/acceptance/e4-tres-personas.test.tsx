@@ -12,7 +12,7 @@ import {
   type StaffRole,
 } from '@zammir/core';
 import { copiaDePrueba } from '@zammir/core/testing';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { App } from '../App';
 
@@ -20,6 +20,10 @@ import { App } from '../App';
  *  la tablet siempre sabe quién la usa, lo que cada quien tenía a medias se conserva al cambiar de
  *  usuario y, sin actividad, vuelve a la pantalla de personas. La atribución de cada acción en la base
  *  de datos depende de que las acciones de la tablet lleven a la persona activa (ver PENDIENTES). */
+
+// La pantalla completa se monta entera y, con todo el conjunto corriendo a la vez, puede pasar de los 5 s por
+// omisión: este archivo pide más margen solo para él (la configuración global no se toca).
+vi.setConfig({ testTimeout: 30_000 });
 
 const hasher = fakePinHasher();
 const gente = [

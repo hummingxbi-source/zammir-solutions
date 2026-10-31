@@ -47,6 +47,26 @@ operationReceiverContract('memoria', () => {
       almacen.state.knownCustomers.add(id);
       return Promise.resolve(id);
     },
+    shiftState: (id) => {
+      const turno = almacen.ordenesStore.turnos.get(id);
+      return Promise.resolve(
+        turno === undefined
+          ? undefined
+          : {
+              status: turno.status,
+              expectedCents: turno.expectedCents,
+              differenceCents: turno.differenceCents,
+            },
+      );
+    },
+    saleState: (id) => {
+      const venta = almacen.ordenesStore.ventas.get(id);
+      return Promise.resolve(
+        venta === undefined
+          ? undefined
+          : { status: venta.status, paidCents: venta.paidCents, folio: venta.folio },
+      );
+    },
     orderState: (id) => {
       const orden = almacen.ordenesStore.ordenes.get(id);
       return Promise.resolve(

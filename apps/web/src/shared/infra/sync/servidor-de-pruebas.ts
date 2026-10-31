@@ -142,6 +142,44 @@ export const harness: ReceptorDelContrato & {
     expect(r.ok).toBe(true);
     return id;
   },
+  async shiftState(id) {
+    const { data } = await servicio
+      .from('cash_shifts')
+      .select('status, server_expected_cash_cents, difference_cents')
+      .eq('id', id)
+      .limit(1);
+    const fila = data?.[0] as
+      | {
+          readonly status: string;
+          readonly server_expected_cash_cents: number | null;
+          readonly difference_cents: number | null;
+        }
+      | undefined;
+    return fila === undefined
+      ? undefined
+      : {
+          status: fila.status,
+          expectedCents: fila.server_expected_cash_cents,
+          differenceCents: fila.difference_cents,
+        };
+  },
+  async saleState(id) {
+    const { data } = await servicio
+      .from('counter_sales')
+      .select('status, folio')
+      .eq('id', id)
+      .limit(1);
+    const fila = data?.[0] as { readonly status: string; readonly folio: string } | undefined;
+    if (fila === undefined) {
+      return undefined;
+    }
+    const pagos = await servicio.from('payments').select('amount_cents').eq('counter_sale_id', id);
+    const pagado = ((pagos.data ?? []) as { readonly amount_cents: number }[]).reduce(
+      (suma, p) => suma + p.amount_cents,
+      0,
+    );
+    return { status: fila.status, folio: fila.folio, paidCents: pagado };
+  },
   async orderState(id) {
     const { data } = await servicio
       .from('work_orders')

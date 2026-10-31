@@ -248,7 +248,14 @@ export interface SharedStore {
   /** Órdenes y pagos del servidor en memoria. */
   readonly ordenesStore: Pick<
     OrderStore,
-    'ordenes' | 'pagado' | 'pagos' | 'convertidas' | 'codigosDeOrden'
+    | 'ordenes'
+    | 'pagado'
+    | 'pagos'
+    | 'convertidas'
+    | 'codigosDeOrden'
+    | 'ventas'
+    | 'codigosDeVenta'
+    | 'turnos'
   >;
   readonly ultimaSeq: Map<string, number>;
   porDispositivo<T>(deviceId: string, trabajo: () => Promise<T>): Promise<T>;
@@ -274,6 +281,9 @@ export function crearAlmacen(): SharedStore {
       pagos: new Set(),
       convertidas: new Set(),
       codigosDeOrden: new Set(),
+      ventas: new Map(),
+      turnos: new Map(),
+      codigosDeVenta: new Set(),
     },
     ultimaSeq: new Map(),
     porDispositivo<T>(deviceId: string, trabajo: () => Promise<T>): Promise<T> {

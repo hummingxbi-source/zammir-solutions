@@ -50,6 +50,8 @@ createRoot(root).render(
           entradaConPin={composition.entradaConPin}
           prepararCotizador={composition.prepararCotizador}
           prepararOrdenes={composition.prepararOrdenes}
+          historialDeCliente={composition.historialDeCliente}
+          prepararMostrador={composition.prepararMostrador}
           sincronizacion={composition.envio?.visible}
           catalogo={composition.catalogo}
           bitacora={
