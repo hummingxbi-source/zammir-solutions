@@ -505,10 +505,30 @@ export const textos = {
         mensaje: 'La venta se paga completa.',
         queHacer: 'Cobra el total.',
       },
+      IMAGE_UNREADABLE: {
+        mensaje: 'No se pudo leer la foto.',
+        queHacer: 'Toma la foto de nuevo o elige otra.',
+      },
+      PHOTO_TOO_LARGE: {
+        mensaje: 'La foto pesa demasiado, aun reducida.',
+        queHacer: 'Toma la foto de nuevo con menos detalle o más cerca.',
+      },
+      TOO_MANY_PHOTOS: {
+        mensaje: 'La orden ya tiene el máximo de fotos.',
+        queHacer: 'Quita las que no sirvan con soporte o agrega las nuevas a otra orden.',
+      },
       ORDER_CANCELLED: {
         mensaje: 'La orden está cancelada.',
         queHacer: 'No se puede cobrar una orden cancelada.',
       },
+    },
+    fotos: {
+      titulo: 'Fotos de la medición',
+      agregar: 'Agregar foto',
+      vacio: 'Todavía no hay fotos. Toma una desde la obra; se guarda en la tablet.',
+      guardada: 'Guardada en la tablet',
+      enviada: 'Enviada',
+      agregada: 'Foto guardada en la tablet.',
     },
     motivosDeRevision: {
       STARTED_WITHOUT_DEPOSIT: 'Se empezó sin anticipo ni autorización.',

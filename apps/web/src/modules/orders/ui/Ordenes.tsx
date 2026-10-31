@@ -20,7 +20,7 @@ import { Aviso } from '../../../shared/ui/Aviso';
 import { Boton } from '../../../shared/ui/Boton';
 import { formatearPesos } from '../../../shared/ui/formatos';
 import type { AutorizacionDeAdministrador } from '../../quotes/ui/DialogoDeDescuento';
-import { DetalleDeOrden, type Persona } from './DetalleDeOrden';
+import { DetalleDeOrden, type FotosDeLaOrden, type Persona } from './DetalleDeOrden';
 
 const t = textos.ordenes;
 
@@ -43,6 +43,8 @@ export interface OrdenesProps {
   readonly onPorEnviar?: () => void;
   /** Avisa cuando el envío cambia (llegó un folio definitivo o una orden de otra tablet). */
   readonly alCambiarElEnvio?: (aviso: () => void) => () => void;
+  /** Fotos de la medición (S3-03). */
+  readonly fotos?: FotosDeLaOrden;
   /** Comprobante de trabajo por WhatsApp (S3-09). */
   readonly onComprobante?: (orden: WorkOrder, cliente: Customer | null) => Promise<string | null>;
 }
@@ -120,6 +122,7 @@ export function Ordenes(props: OrdenesProps): ReactElement {
           setAbierta(null);
           void refrescar();
         }}
+        {...(props.fotos === undefined ? {} : { fotos: props.fotos })}
         {...(props.onComprobante === undefined
           ? {}
           : {

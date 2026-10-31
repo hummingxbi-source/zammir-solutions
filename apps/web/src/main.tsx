@@ -21,6 +21,7 @@ function ponerAlDia(): void {
   void composition.envio?.engine.trigger();
   void composition.envio?.actualizarClientes();
   void composition.envio?.actualizarDocumentos();
+  void composition.envio?.subirFotos();
   void composition.catalogoLocal?.actualizar();
   void composition.entradaConPin?.actualizar();
 }

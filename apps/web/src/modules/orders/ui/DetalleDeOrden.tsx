@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ReactElement, SyntheticEvent } from 'react';
 import {
   advanceWorkOrder,
@@ -9,6 +9,7 @@ import {
   updateWorkOrder,
   type Authorization,
   type Customer,
+  type OrderPhoto,
   type OrderDeps,
   type Payment,
   type PaymentRowInput,
@@ -35,6 +36,16 @@ export interface Persona {
   readonly name: string;
 }
 
+/** Fotos de la medición de una orden: se guardan en la tablet y se suben solas al volver la conexión. */
+export interface FotosDeLaOrden {
+  readonly listar: (orderId: string) => Promise<readonly OrderPhoto[]>;
+  /** Devuelve el código de error o `null` si se guardó. */
+  readonly agregar: (
+    orderId: string,
+    archivo: { readonly bytes: Uint8Array; readonly mimeType: string },
+  ) => Promise<string | null>;
+}
+
 export interface DetalleDeOrdenProps {
   readonly deps: OrderDeps;
   readonly actor: QuoteActor;
@@ -47,6 +58,8 @@ export interface DetalleDeOrdenProps {
   readonly onCambio: () => void;
   readonly onPorEnviar: () => void;
   readonly onVolver: () => void;
+  /** Fotos de la medición (S3-03); sin esto no se ofrecen. */
+  readonly fotos?: FotosDeLaOrden;
   /** Comprobante de trabajo por WhatsApp (S3-09); sin esto no se ofrece. */
   readonly onComprobante?: (orden: WorkOrder) => Promise<string | null>;
 }
@@ -66,6 +79,31 @@ export function DetalleDeOrden(props: DetalleDeOrdenProps): ReactElement {
   const [instala, setInstala] = useState<string>(orden.installedBy ?? SIN_ASIGNAR);
   const [fecha, setFecha] = useState(orden.estimatedDeliveryDate ?? '');
   const [notas, setNotas] = useState(orden.notes ?? '');
+  const [fotosDeLaOrden, setFotosDeLaOrden] = useState<readonly OrderPhoto[]>([]);
+  const fotos = props.fotos;
+
+  useEffect(() => {
+    void fotos?.listar(orden.id).then(setFotosDeLaOrden);
+  }, [fotos, orden.id]);
+
+  async function agregarFoto(archivo: File | undefined): Promise<void> {
+    if (fotos === undefined || archivo === undefined) {
+      return;
+    }
+    setError(null);
+    setAviso(null);
+    const falla = await fotos.agregar(orden.id, {
+      bytes: new Uint8Array(await archivo.arrayBuffer()),
+      mimeType: archivo.type,
+    });
+    if (falla !== null) {
+      mostrarError(falla);
+      return;
+    }
+    setFotosDeLaOrden(await fotos.listar(orden.id));
+    setAviso(t.fotos.agregada);
+    props.onPorEnviar();
+  }
 
   const pagado = pagos.reduce((suma, p) => suma + p.amountCents, 0);
   const saldo = balanceCents(orden.totalCents, pagos);
@@ -394,6 +432,31 @@ export function DetalleDeOrden(props: DetalleDeOrdenProps): ReactElement {
           />
           <Boton type="submit">{t.datos.guardar}</Boton>
         </form>
+      ) : null}
+
+      {fotos !== undefined && orden.status !== 'CANCELLED' ? (
+        <section aria-labelledby="titulo-fotos">
+          <h2 id="titulo-fotos">{t.fotos.titulo}</h2>
+          {fotosDeLaOrden.length === 0 ? <p>{t.fotos.vacio}</p> : null}
+          <ul className="lineas">
+            {fotosDeLaOrden.map((f, i) => (
+              <li key={f.id}>
+                {t.fotos.titulo} {String(i + 1)} · {String(Math.round(f.sizeBytes / 1024))} KB ·{' '}
+                {f.status === 'UPLOADED' ? t.fotos.enviada : t.fotos.guardada}
+              </li>
+            ))}
+          </ul>
+          <Campo
+            etiqueta={t.fotos.agregar}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={(e) => {
+              void agregarFoto(e.target.files?.[0]);
+              e.target.value = '';
+            }}
+          />
+        </section>
       ) : null}
 
       <Boton variante="secundario" onClick={props.onVolver}>

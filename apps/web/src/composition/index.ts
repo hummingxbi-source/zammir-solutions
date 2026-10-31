@@ -4,12 +4,14 @@ import {
   createActiveUserSession,
   localProductReader,
   outboxCustomers,
+  attachOrderPhoto,
   outboxPaymentStore,
   outboxWorkOrderStore,
   outboxQuoteStore,
   reconcileOrders,
   reconcileQuotes,
   refreshDocuments,
+  uploadPendingPhotos,
   refreshCustomers,
   err,
   ok,
@@ -31,6 +33,7 @@ import {
   type ManageCustomersDeps,
   type ManageUsersDeps,
   type OrderDeps,
+  type PhotoStore,
   type QuoteConditionsStore,
   type RegisterTabletDeps,
   type SignInWithPinDeps,
@@ -64,6 +67,9 @@ import { supabaseQuoteConditions } from '../modules/settings/infra/supabase-quot
 import { pdfLibRenderer } from '../modules/documents/infra/pdf-lib-renderer';
 import { entornoDelNavegador, webShareService } from '../modules/documents/infra/web-share-service';
 import type { PrepararCotizador } from '../modules/quotes/ui/CotizadorEnLaTablet';
+import { canvasImageCompressor } from '../modules/orders/infra/canvas-image-compressor';
+import { dexiePhotoStore } from '../modules/orders/infra/dexie-photo-store';
+import { supabasePhotoUploader } from '../modules/orders/infra/supabase-photo-uploader';
 import { compartirComprobante } from '../modules/orders/ui/comprobante';
 import { qrMatrix } from '../modules/documents/infra/qr-matrix';
 import type { PrepararOrdenes } from '../modules/orders/ui/OrdenesEnLaTablet';
@@ -122,6 +128,10 @@ export interface Composition {
     readonly actualizarClientes: () => Promise<void>;
     /** Baja las órdenes y los pagos hechos en otras tablets. */
     readonly actualizarDocumentos: () => Promise<void>;
+    /** Sube las fotos de medición que quedaron guardadas en la tablet. */
+    readonly subirFotos: () => Promise<void>;
+    /** Fotos de la medición guardadas en la tablet. */
+    readonly fotos: PhotoStore;
     /** Para el indicador de estado: horas sin enviar antes de avisar (de la configuración bajada). */
     readonly visible: {
       readonly engine: SyncEngine;
@@ -229,6 +239,7 @@ function crearEnvio(
       await reconcileOrders(outbox);
     },
   });
+  const fotos = dexiePhotoStore();
   const identidad = dexieIdentity();
   let horas: number | null = null;
   const leerHoras = (): void => {
@@ -246,6 +257,14 @@ function crearEnvio(
       const sesion = c === null ? null : await abrirSesionDeLaTablet(url, anonKey, credenciales, c);
       if (sesion !== null) {
         await refreshCustomers({ source: supabaseCustomerReplica(sesion), outbox });
+      }
+    },
+    fotos,
+    async subirFotos() {
+      const c = await credenciales.load();
+      const sesion = c === null ? null : await abrirSesionDeLaTablet(url, anonKey, credenciales, c);
+      if (sesion !== null) {
+        await uploadPendingPhotos({ photos: fotos, uploader: supabasePhotoUploader(sesion) });
       }
     },
     async actualizarDocumentos() {
@@ -475,6 +494,31 @@ function crearPreparadorDeOrdenes(d: {
             },
             { adminId: adminId as UserId, pin },
           ),
+      },
+      fotos: {
+        listar: (orderId) => d.envio.fotos.listByOrder(orderId),
+        agregar: async (orderId, archivo) => {
+          const estado = d.entradaConPin.session.state();
+          if (estado.kind !== 'ACTIVE') {
+            return 'NOT_AUTHORIZED';
+          }
+          const r = await attachOrderPhoto(
+            {
+              orders: orderDeps.orders,
+              photos: d.envio.fotos,
+              compressor: canvasImageCompressor(),
+              idGenerator: uuidIdGenerator,
+              clock: systemClock,
+            },
+            { userId: estado.user.id, role: estado.user.role },
+            orderId,
+            archivo,
+          );
+          if (r.ok) {
+            void d.envio.subirFotos();
+          }
+          return r.ok ? null : r.error.code;
+        },
       },
       onComprobante: compartirComprobante({
         orderDeps,

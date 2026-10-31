@@ -2,9 +2,11 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { MemoryRouter } from 'react-router';
 import {
   asId,
+  attachOrderPhoto,
   buildCustomer,
   err,
   fixedClock,
+  inMemoryPhotoStore,
   inMemorySyncOutbox,
   ok,
   outboxPaymentStore,
@@ -115,6 +117,7 @@ async function montar(opciones: { actor?: QuoteActor | null } = {}) {
     await customers.create(nuevo.value);
   }
   const clientes: ManageCustomersDeps = { customers, idGenerator: ids };
+  const photos = inMemoryPhotoStore();
   const cotizacion = aceptada();
   await deps.quotes.save(cotizacion);
   const porEnviar = vi.fn();
@@ -138,6 +141,26 @@ async function montar(opciones: { actor?: QuoteActor | null } = {}) {
             : err({ code: 'AUTH_FAILED' as const }),
         ),
     },
+    fotos: {
+      listar: (orderId) => photos.listByOrder(orderId),
+      agregar: async (orderId, archivo) => {
+        const r = await attachOrderPhoto(
+          {
+            orders: deps.orders,
+            photos,
+            compressor: {
+              compress: (o) => Promise.resolve(ok({ bytes: o.bytes, width: 800, height: 600 })),
+            },
+            idGenerator: ids,
+            clock: reloj,
+          },
+          opciones.actor === undefined ? cajero : (opciones.actor ?? cajero),
+          orderId,
+          archivo,
+        );
+        return r.ok ? null : r.error.code;
+      },
+    },
     onPorEnviar: porEnviar,
   };
   render(
@@ -145,7 +168,7 @@ async function montar(opciones: { actor?: QuoteActor | null } = {}) {
       <Ordenes {...props} />
     </MemoryRouter>,
   );
-  return { deps, outbox, porEnviar, cotizacion };
+  return { deps, outbox, porEnviar, cotizacion, photos };
 }
 
 async function crearOrden(): Promise<void> {
@@ -314,6 +337,19 @@ describe('Órdenes de trabajo', () => {
     expect(await screen.findByText('Datos guardados en la tablet.')).toBeTruthy();
     const ops = (await outbox.list()).map((o) => o.envelope.type);
     expect(ops).toEqual(['CreateWorkOrder', 'UpdateWorkOrder']);
+  });
+
+  it('guarda una foto de la medición en la tablet, sin tocar la cola de envío', async () => {
+    const { outbox, photos } = await montar();
+    await crearOrden();
+    expect(screen.getByText(/Todavía no hay fotos/)).toBeTruthy();
+    const antes = (await outbox.list()).length;
+    const archivo = new File([new Uint8Array([1, 2, 3, 4])], 'medicion.png', { type: 'image/png' });
+    fireEvent.change(screen.getByLabelText('Agregar foto'), { target: { files: [archivo] } });
+    expect(await screen.findByText('Foto guardada en la tablet.')).toBeTruthy();
+    expect(screen.getByText(/Fotos de la medición 1 · 0 KB · Guardada en la tablet/)).toBeTruthy();
+    expect(await photos.pending()).toHaveLength(1);
+    expect((await outbox.list()).length).toBe(antes);
   });
 
   it('la lista filtra por estatus y muestra el saldo de cada orden', async () => {
