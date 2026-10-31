@@ -76,3 +76,6 @@ export * from './modules/quotes/domain/quote';
 export * from './modules/quotes/domain/quote-line';
 export * from './modules/quotes/application/quote-store';
 export * from './modules/quotes/application/quote-use-cases';
+export * from './modules/documents/domain/quote-document';
+export * from './modules/documents/application/ports';
+export * from './modules/documents/application/share-quote';
