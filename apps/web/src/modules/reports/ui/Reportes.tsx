@@ -71,7 +71,11 @@ function Tendencia({ c }: { readonly c: Comparison }): ReactElement {
   }
   const flecha = c.trend === 'UP' ? '▲' : c.trend === 'DOWN' ? '▼' : '=';
   const palabra =
-    c.trend === 'UP' ? t.comparativo.sube : c.trend === 'DOWN' ? t.comparativo.baja : t.comparativo.igual;
+    c.trend === 'UP'
+      ? t.comparativo.sube
+      : c.trend === 'DOWN'
+        ? t.comparativo.baja
+        : t.comparativo.igual;
   return (
     <span>
       <span aria-hidden="true">{flecha} </span>
@@ -147,11 +151,17 @@ export function Reportes(props: ReportesProps): ReactElement {
     period: periodOf(ahora, periodoDeProductos),
   });
   const estatus = ordersByStatus(ordenes);
-  const antiguedad = receivablesAgingReport({ orders: ordenes, payments: pagos, now: ahora, overdueDays: umbral });
+  const antiguedad = receivablesAgingReport({
+    orders: ordenes,
+    payments: pagos,
+    now: ahora,
+    overdueDays: umbral,
+  });
   const cajeros = collectionsByCashier({ payments: pagos, sales: ventas, now: ahora });
   const periodoMetodo = periodOf(ahora, periodoDeMetodo);
   const metodos = collectionsByMethod({ payments: pagos, sales: ventas, period: periodoMetodo });
-  const nombre = (id: string): string => props.personas.find((p) => p.id === id)?.name ?? t.sinNombre;
+  const nombre = (id: string): string =>
+    props.personas.find((p) => p.id === id)?.name ?? t.sinNombre;
   const pendientes = estatus.filter((e) => e.pending);
 
   return (
@@ -288,7 +298,10 @@ export function Reportes(props: ReportesProps): ReactElement {
         </thead>
         <tbody>
           {antiguedad.map((b) => (
-            <tr key={`${String(b.fromDays)}-${String(b.undated)}`} className={b.overdue ? 'fila--atrasada' : undefined}>
+            <tr
+              key={`${String(b.fromDays)}-${String(b.undated)}`}
+              className={b.overdue ? 'fila--atrasada' : undefined}
+            >
               <th scope="row">
                 {b.undated
                   ? t.cuentas.sinFecha
@@ -334,9 +347,15 @@ export function Reportes(props: ReportesProps): ReactElement {
                 ))}
                 <tr>
                   <th scope="row">{t.cajeros.todos}</th>
-                  <td data-label={t.metodos.efectivo}>{formatearPesos(cajeros[k].totals.cashCents)}</td>
-                  <td data-label={t.metodos.transferencia}>{formatearPesos(cajeros[k].totals.transferCents)}</td>
-                  <td data-label={t.metodos.total}>{formatearPesos(cajeros[k].totals.totalCents)}</td>
+                  <td data-label={t.metodos.efectivo}>
+                    {formatearPesos(cajeros[k].totals.cashCents)}
+                  </td>
+                  <td data-label={t.metodos.transferencia}>
+                    {formatearPesos(cajeros[k].totals.transferCents)}
+                  </td>
+                  <td data-label={t.metodos.total}>
+                    {formatearPesos(cajeros[k].totals.totalCents)}
+                  </td>
                 </tr>
               </tbody>
             </table>

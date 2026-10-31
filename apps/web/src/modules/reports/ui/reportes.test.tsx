@@ -18,8 +18,14 @@ import { describe, expect, it } from 'vitest';
 
 import { formatearPorcentaje, Reportes } from './Reportes';
 
-const admin: QuoteActor = { userId: asId<'User'>('00000000-0000-4000-8000-00000000a0ad'), role: 'ADMIN' };
-const cajero: QuoteActor = { userId: asId<'User'>('00000000-0000-4000-8000-00000000a001'), role: 'STAFF' };
+const admin: QuoteActor = {
+  userId: asId<'User'>('00000000-0000-4000-8000-00000000a0ad'),
+  role: 'ADMIN',
+};
+const cajero: QuoteActor = {
+  userId: asId<'User'>('00000000-0000-4000-8000-00000000a001'),
+  role: 'STAFF',
+};
 
 const linea = (productId: string | null, name: string, quantity: number, total: number) => ({
   id: `${name}-${String(quantity)}`,
@@ -29,7 +35,12 @@ const linea = (productId: string | null, name: string, quantity: number, total: 
   lineTotalCents: total,
 });
 
-const orden = (id: string, estado: WorkOrder['status'], total: number, issuedAt: string): WorkOrder =>
+const orden = (
+  id: string,
+  estado: WorkOrder['status'],
+  total: number,
+  issuedAt: string,
+): WorkOrder =>
   ({
     id,
     status: estado,
@@ -44,7 +55,11 @@ const orden = (id: string, estado: WorkOrder['status'], total: number, issuedAt:
     updatedAt: issuedAt,
   }) as unknown as WorkOrder;
 
-const venta = (id: string, issuedAt: string, estado: CounterSale['status'] = 'COMPLETED'): CounterSale =>
+const venta = (
+  id: string,
+  issuedAt: string,
+  estado: CounterSale['status'] = 'COMPLETED',
+): CounterSale =>
   ({
     id,
     status: estado,
@@ -54,7 +69,13 @@ const venta = (id: string, issuedAt: string, estado: CounterSale['status'] = 'CO
     updatedAt: issuedAt,
   }) as unknown as CounterSale;
 
-const pago = (id: string, cobrador: string, centavos: number, paidAt: string, extra: object = {}) => ({
+const pago = (
+  id: string,
+  cobrador: string,
+  centavos: number,
+  paidAt: string,
+  extra: object = {},
+) => ({
   id,
   groupId: id,
   targetType: 'COUNTER_SALE',
@@ -165,7 +186,9 @@ describe('Reportes', () => {
 
   it('los trabajos por estatus dan conteo y valor, y suman los pendientes', async () => {
     await montar();
-    const tabla = (await screen.findAllByRole('table')).find((t) => t.textContent.includes('En proceso'));
+    const tabla = (await screen.findAllByRole('table')).find((t) =>
+      t.textContent.includes('En proceso'),
+    );
     if (tabla === undefined) {
       throw new Error('tabla de estatus');
     }
@@ -187,7 +210,9 @@ describe('Reportes', () => {
   it('los cobros por persona se suman por cajero con su nombre', async () => {
     await montar();
     const tablas = await screen.findAllByRole('table');
-    const deHoy = tablas.find((t) => t.textContent.includes('Persona') && t.textContent.includes('Ana'));
+    const deHoy = tablas.find(
+      (t) => t.textContent.includes('Persona') && t.textContent.includes('Ana'),
+    );
     if (deHoy === undefined) {
       throw new Error('tabla de cajeros');
     }
@@ -208,7 +233,9 @@ describe('Reportes', () => {
     expect(resumen()).toBe('$116.00');
     fireEvent.change(selector, { target: { value: 'DAY' } });
     expect(resumen()).toBe('$116.00');
-    expect(screen.getByText('Cobros', { selector: 'dt' }).nextElementSibling?.textContent).toBe('2');
+    expect(screen.getByText('Cobros', { selector: 'dt' }).nextElementSibling?.textContent).toBe(
+      '2',
+    );
   });
 
   it('sin datos todo sale en cero y con avisos claros', async () => {

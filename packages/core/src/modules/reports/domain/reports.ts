@@ -26,10 +26,14 @@ export function countedPayments<P extends Pick<Payment, 'targetType' | 'targetId
   pagos: readonly P[],
   ventasCanceladas: ReadonlySet<string>,
 ): readonly P[] {
-  return pagos.filter((p) => !(p.targetType === 'COUNTER_SALE' && ventasCanceladas.has(p.targetId)));
+  return pagos.filter(
+    (p) => !(p.targetType === 'COUNTER_SALE' && ventasCanceladas.has(p.targetId)),
+  );
 }
 
-export function cancelledSaleIds(ventas: readonly Pick<CounterSale, 'id' | 'status'>[]): Set<string> {
+export function cancelledSaleIds(
+  ventas: readonly Pick<CounterSale, 'id' | 'status'>[],
+): Set<string> {
   return new Set(ventas.filter((v) => v.status === 'CANCELLED').map((v) => v.id));
 }
 
@@ -150,7 +154,13 @@ export interface StatusRow {
   readonly pending: boolean;
 }
 
-const ESTATUS: readonly WorkOrderStatus[] = ['WAITING', 'IN_PROCESS', 'READY', 'DELIVERED', 'CANCELLED'];
+const ESTATUS: readonly WorkOrderStatus[] = [
+  'WAITING',
+  'IN_PROCESS',
+  'READY',
+  'DELIVERED',
+  'CANCELLED',
+];
 
 export function ordersByStatus(
   ordenes: readonly Pick<WorkOrder, 'status' | 'totalCents'>[],

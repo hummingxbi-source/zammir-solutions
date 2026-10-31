@@ -54,9 +54,7 @@ export function previousPeriod(periodo: Period): Period {
 function diasEntre(desde: string, hasta: string): number {
   const a = partes(desde);
   const b = partes(hasta);
-  return Math.round(
-    (Date.UTC(b.y, b.m - 1, b.d) - Date.UTC(a.y, a.m - 1, a.d)) / 86_400_000,
-  );
+  return Math.round((Date.UTC(b.y, b.m - 1, b.d) - Date.UTC(a.y, a.m - 1, a.d)) / 86_400_000);
 }
 
 /** Con qué se compara el periodo en curso. En `SAME_SPAN` solo cuentan los primeros días del anterior, tantos

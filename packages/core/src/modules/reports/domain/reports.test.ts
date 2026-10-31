@@ -2,13 +2,7 @@ import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 
 import { compareAmounts } from './comparison';
-import {
-  comparisonPeriod,
-  inPeriod,
-  periodContaining,
-  periodOf,
-  previousPeriod,
-} from './periods';
+import { comparisonPeriod, inPeriod, periodContaining, periodOf, previousPeriod } from './periods';
 import {
   collectionsByCashier,
   collectionsByMethod,
@@ -21,11 +15,7 @@ import {
 
 type Pago = Parameters<typeof salesReport>[0]['payments'][number];
 
-const pago = (
-  centavos: number,
-  paidAt: string,
-  cambios: Partial<Pago> = {},
-): Pago => ({
+const pago = (centavos: number, paidAt: string, cambios: Partial<Pago> = {}): Pago => ({
   targetType: 'COUNTER_SALE',
   targetId: 'v1',
   amountCents: centavos,
@@ -76,7 +66,9 @@ describe('periodos en hora de México', () => {
   });
 
   it('el periodo anterior de cada tipo, también al cruzar el año', () => {
-    expect(previousPeriod(periodContaining('2026-11-20', 'DAY'))).toMatchObject({ start: '2026-11-19' });
+    expect(previousPeriod(periodContaining('2026-11-20', 'DAY'))).toMatchObject({
+      start: '2026-11-19',
+    });
     expect(previousPeriod(periodContaining('2026-11-20', 'WEEK'))).toMatchObject({
       start: '2026-11-09',
       end: '2026-11-15',
@@ -94,7 +86,11 @@ describe('periodos en hora de México', () => {
   it('propiedad: el día cae dentro de su semana y su mes, y los anteriores no se traslapan con ellos', () => {
     fc.assert(
       fc.property(
-        fc.date({ min: new Date('2020-01-01T00:00:00Z'), max: new Date('2035-12-31T00:00:00Z'), noInvalidDate: true }),
+        fc.date({
+          min: new Date('2020-01-01T00:00:00Z'),
+          max: new Date('2035-12-31T00:00:00Z'),
+          noInvalidDate: true,
+        }),
         (d) => {
           const dia = periodOf(d, 'DAY').start;
           for (const kind of ['WEEK', 'MONTH'] as const) {
@@ -139,8 +135,16 @@ describe('periodos en hora de México', () => {
 
 describe('comparativo', () => {
   it('sube, baja o queda igual, con el porcentaje redondeado al más cercano', () => {
-    expect(compareAmounts(11_250, 10_000)).toMatchObject({ trend: 'UP', percentBps: 1250, deltaCents: 1250 });
-    expect(compareAmounts(7_500, 10_000)).toMatchObject({ trend: 'DOWN', percentBps: -2500, deltaCents: -2500 });
+    expect(compareAmounts(11_250, 10_000)).toMatchObject({
+      trend: 'UP',
+      percentBps: 1250,
+      deltaCents: 1250,
+    });
+    expect(compareAmounts(7_500, 10_000)).toMatchObject({
+      trend: 'DOWN',
+      percentBps: -2500,
+      deltaCents: -2500,
+    });
     expect(compareAmounts(10_000, 10_000)).toMatchObject({ trend: 'SAME', percentBps: 0 });
     expect(compareAmounts(30_010, 30_000).percentBps).toBe(3);
     expect(compareAmounts(29_990, 30_000).percentBps).toBe(-3);
@@ -164,12 +168,16 @@ describe('comparativo', () => {
 
   it('propiedad: el signo del porcentaje es el de la diferencia y nunca es NaN', () => {
     fc.assert(
-      fc.property(fc.integer({ min: 0, max: 10_000_000 }), fc.integer({ min: 1, max: 10_000_000 }), (a, b) => {
-        const c = compareAmounts(a, b);
-        expect(Number.isFinite(c.percentBps)).toBe(true);
-        if (c.deltaCents > 0) expect(c.percentBps).toBeGreaterThanOrEqual(0);
-        if (c.deltaCents < 0) expect(c.percentBps).toBeLessThanOrEqual(0);
-      }),
+      fc.property(
+        fc.integer({ min: 0, max: 10_000_000 }),
+        fc.integer({ min: 1, max: 10_000_000 }),
+        (a, b) => {
+          const c = compareAmounts(a, b);
+          expect(Number.isFinite(c.percentBps)).toBe(true);
+          if (c.deltaCents > 0) expect(c.percentBps).toBeGreaterThanOrEqual(0);
+          if (c.deltaCents < 0) expect(c.percentBps).toBeLessThanOrEqual(0);
+        },
+      ),
     );
   });
 });
@@ -209,7 +217,11 @@ describe('ventas del día, la semana y el mes (efectivo recibido)', () => {
   });
 
   it('el periodo anterior en cero no da porcentaje', () => {
-    const r = salesReport({ payments: [pago(1_000, '2026-11-20T15:00:00.000Z')], sales: ventas, now: ahora });
+    const r = salesReport({
+      payments: [pago(1_000, '2026-11-20T15:00:00.000Z')],
+      sales: ventas,
+      now: ahora,
+    });
     expect(r.MONTH.comparison).toMatchObject({ trend: 'NO_BASELINE', percentBps: null });
   });
 
@@ -220,7 +232,12 @@ describe('ventas del día, la semana y el mes (efectivo recibido)', () => {
       pago(200, '2026-10-03T15:00:00.000Z'), // 3 de octubre: dentro del tramo (20 días)
       pago(900, '2026-10-28T15:00:00.000Z'), // 28 de octubre: fuera del tramo
     ];
-    const completo = salesReport({ payments: base, sales: ventas, now: ahora, mode: 'FULL_PERIOD' });
+    const completo = salesReport({
+      payments: base,
+      sales: ventas,
+      now: ahora,
+      mode: 'FULL_PERIOD',
+    });
     const tramo = salesReport({ payments: base, sales: ventas, now: ahora, mode: 'SAME_SPAN' });
     expect(completo.MONTH.comparison.previousCents).toBe(1_100);
     expect(tramo.MONTH.comparison.previousCents).toBe(200);
@@ -299,7 +316,11 @@ describe('productos más vendidos', () => {
 
   it('el límite recorta, y a igual valor ordena por nombre', () => {
     const iguales = [
-      { status: 'COMPLETED' as const, issuedAt: '2026-11-10T18:00:00.000Z', lines: [linea('b', 'B', 1, 100), linea('a', 'A', 1, 100)] },
+      {
+        status: 'COMPLETED' as const,
+        issuedAt: '2026-11-10T18:00:00.000Z',
+        lines: [linea('b', 'B', 1, 100), linea('a', 'A', 1, 100)],
+      },
     ];
     const r = topProducts({ sales: iguales, orders: [], period: periodo, limit: 1 });
     expect(r.byAmount.map((x) => x.name)).toEqual(['A']);
@@ -335,7 +356,10 @@ describe('antigüedad de las cuentas por cobrar', () => {
     ({ daysOutstanding: dias, balanceCents: saldo }) as never;
 
   it('agrupa en tramos del tamaño del umbral y resalta del umbral en adelante', () => {
-    const r = receivablesAging([fila(0, 100), fila(9, 200), fila(10, 400), fila(19, 800), fila(20, 1_600), fila(90, 3_200)], 10);
+    const r = receivablesAging(
+      [fila(0, 100), fila(9, 200), fila(10, 400), fila(19, 800), fila(20, 1_600), fila(90, 3_200)],
+      10,
+    );
     expect(r.map((b) => [b.fromDays, b.toDays, b.count, b.balanceCents, b.overdue])).toEqual([
       [0, 9, 2, 300, false],
       [10, 19, 2, 1_200, true],
@@ -369,7 +393,10 @@ describe('antigüedad de las cuentas por cobrar', () => {
 
 describe('cobros por cajero y por método', () => {
   const ahora = new Date('2026-11-20T18:00:00.000Z');
-  const ventas = [{ id: 'v1', status: 'COMPLETED' as const }, { id: 'x', status: 'CANCELLED' as const }];
+  const ventas = [
+    { id: 'v1', status: 'COMPLETED' as const },
+    { id: 'x', status: 'CANCELLED' as const },
+  ];
   const pagos: Pago[] = [
     pago(10_000, '2026-11-20T15:00:00.000Z', { userId: 'ana', method: 'CASH' }),
     pago(4_000, '2026-11-20T16:00:00.000Z', { userId: 'ana', method: 'TRANSFER' }),
@@ -395,17 +422,28 @@ describe('cobros por cajero y por método', () => {
       ['beto', 9_000],
       ['carla', 2_500],
     ]);
-    expect(r.MONTH.totals).toEqual({ cashCents: 18_500, transferCents: 7_000, totalCents: 25_500, count: 5 });
+    expect(r.MONTH.totals).toEqual({
+      cashCents: 18_500,
+      transferCents: 7_000,
+      totalCents: 25_500,
+      count: 5,
+    });
   });
 
   it('a igual total ordena por persona y sin cobros hay listas vacías', () => {
     const r = collectionsByCashier({
-      payments: [pago(100, '2026-11-20T15:00:00.000Z', { userId: 'b' }), pago(100, '2026-11-20T15:00:00.000Z', { userId: 'a' })],
+      payments: [
+        pago(100, '2026-11-20T15:00:00.000Z', { userId: 'b' }),
+        pago(100, '2026-11-20T15:00:00.000Z', { userId: 'a' }),
+      ],
       sales: [],
       now: ahora,
     });
     expect(r.DAY.rows.map((x) => x.userId)).toEqual(['a', 'b']);
-    expect(collectionsByCashier({ payments: [], sales: [], now: ahora }).DAY).toMatchObject({ rows: [], totals: { totalCents: 0, count: 0 } });
+    expect(collectionsByCashier({ payments: [], sales: [], now: ahora }).DAY).toMatchObject({
+      rows: [],
+      totals: { totalCents: 0, count: 0 },
+    });
   });
 
   it('separa efectivo y transferencia en el periodo al centavo', () => {
@@ -417,7 +455,9 @@ describe('cobros por cajero y por método', () => {
       count: 5,
     });
     const hoy = periodContaining('2026-11-20', 'DAY');
-    expect(collectionsByMethod({ payments: pagos, sales: ventas, period: hoy }).totalCents).toBe(20_000);
+    expect(collectionsByMethod({ payments: pagos, sales: ventas, period: hoy }).totalCents).toBe(
+      20_000,
+    );
   });
 
   it('propiedad: la suma por cajero siempre es el total del periodo, y efectivo + transferencia = total', () => {
@@ -434,7 +474,10 @@ describe('cobros por cajero y por método', () => {
         ),
         (casos) => {
           const lista = casos.map((x) =>
-            pago(x.c, `2026-11-${String(x.dia).padStart(2, '0')}T18:00:00.000Z`, { userId: x.quien, method: x.metodo }),
+            pago(x.c, `2026-11-${String(x.dia).padStart(2, '0')}T18:00:00.000Z`, {
+              userId: x.quien,
+              method: x.metodo,
+            }),
           );
           const r = collectionsByCashier({ payments: lista, sales: [], now: ahora });
           for (const k of ['DAY', 'WEEK', 'MONTH'] as const) {
