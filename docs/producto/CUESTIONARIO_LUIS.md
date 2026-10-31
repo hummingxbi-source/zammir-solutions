@@ -73,6 +73,7 @@
 35. **Transferencias:** ¿cómo comprueban que llegó el dinero? ¿Quieren marcarlas como "confirmadas"? (PD-43)
 36. **Si se reimprime un ticket,** ¿que salga marcado "COPIA"? ☐ Sí ☐ No. (PP-14)
 37. **Productos de venta rápida:** ¿quieren una lista corta de los que más se venden en el mostrador? ☐ Sí ☐ No. (PP-08)
+- **37.1 Una caja o una por persona:** cuando dos personas cobran el mismo día, ¿cada quien abre y cierra **su propia caja** (y cuenta su efectivo), o hay **una sola caja** del local que se va relevando? *Si no sabes: cada persona tiene su caja.* (PD-36, Sprint 3)    - **37.2 Turno que cruza la medianoche:** si una caja se abre un día y se cierra al siguiente, ¿a qué día pertenece su corte? *Si no sabes: al día en que se abrió.*
 
 ## 5. Reportes y panel de inicio
 
@@ -136,3 +137,4 @@ Pendientes que no dependen de Luis, para no perderlos de vista:
 |---|---|
 | 29 oct 2026 | Primera versión: 60 preguntas de `PENDIENTES.md`, `CATEGORIAS_CATALOGO.md` y las propuestas PP-04 a PP-19. |
 | 31 oct 2026 | Sprint 2: preguntas 19.5 a 19.7 (cotizaciones entre tablets, cambios simultáneos a un cliente, condiciones). |
+| 31 oct 2026 | Sprint 3: preguntas 37.1 y 37.2 (una caja o una por persona; turno que cruza la medianoche). |
