@@ -401,10 +401,7 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
       : crearEnvio(entorno.url, entorno.anonKey, credencialesDeLaTablet);
 
   const prepararCotizador: PrepararCotizador | null =
-    envio === null ||
-    catalogoLocal === null ||
-    entradaConPin === null ||
-    reglas === null
+    envio === null || catalogoLocal === null || entradaConPin === null || reglas === null
       ? null
       : crearPreparadorDelCotizador({
           envio,

@@ -13,7 +13,7 @@ export function supabaseQuoteConditions(cliente: SupabaseClient): QuoteCondition
         .select('value')
         .eq('key', CLAVE)
         .limit(1);
-      const valor = (data as { readonly value: unknown }[] | null)?.[0]?.value;
+      const valor: unknown = data?.[0]?.value;
       if (error !== null) {
         return err({ code: 'SETTINGS_UNAVAILABLE' });
       }
@@ -28,7 +28,7 @@ export function supabaseQuoteConditions(cliente: SupabaseClient): QuoteCondition
       if (error !== null) {
         return err({ code: error.code === '42501' ? 'NOT_AUTHORIZED' : 'SETTINGS_UNAVAILABLE' });
       }
-      return (data ?? []).length === 0 ? err({ code: 'NOT_AUTHORIZED' }) : ok(undefined);
+      return data.length === 0 ? err({ code: 'NOT_AUTHORIZED' }) : ok(undefined);
     },
   };
 }

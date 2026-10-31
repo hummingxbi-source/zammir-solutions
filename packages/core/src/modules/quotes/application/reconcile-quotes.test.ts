@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { fixedClock } from '../../../shared-kernel/clock';
 import { inMemorySyncOutbox } from '../../sync/application/in-memory-sync-outbox';
+import type { OperationEnvelope } from '../../sync/domain/operation';
 import {
   codigoPublicoDePrueba,
   issueQuoteOperation,
@@ -21,6 +22,14 @@ const uuid = () => {
   return `00000000-0000-4000-8000-${String(contador + 500).padStart(12, '0')}`;
 };
 
+/** La cola pone el `seq` al encolar: la operación de prueba llega sin él. */
+function sinSeq(op: Record<string, unknown>): Omit<OperationEnvelope, 'seq'> {
+  return Object.fromEntries(Object.entries(op).filter(([clave]) => clave !== 'seq')) as Omit<
+    OperationEnvelope,
+    'seq'
+  >;
+}
+
 async function conCotizacionEmitida() {
   const outbox = inMemorySyncOutbox({ clock: fixedClock(new Date('2026-10-31T15:00:00.000Z')) });
   let ids = 0;
@@ -38,8 +47,7 @@ async function conCotizacionEmitida() {
     publicCode: codigoPublicoDePrueba(1),
   });
   await outbox.transaction(async (tx) => {
-    const { seq: _seq, ...sinSeq } = operacion;
-    await tx.enqueue(sinSeq as never);
+    await tx.enqueue(sinSeq(operacion));
     await tx.putDocument(QUOTES_COLLECTION, COTIZACION, {
       id: COTIZACION,
       status: 'SENT',
@@ -102,7 +110,7 @@ describe('reconciliar cotizaciones con lo que confirmó el servidor', () => {
       documentId: COTIZACION,
     });
     await outbox.transaction(async (tx) => {
-      const { seq: _seq, ...sinSeq } = markQuoteOperation({
+      const op = markQuoteOperation({
         opId: uuid(),
         deviceId: DISPOSITIVO,
         seq: 2,
@@ -110,7 +118,7 @@ describe('reconciliar cotizaciones con lo que confirmó el servidor', () => {
         quoteId: COTIZACION,
         accepted: true,
       });
-      await tx.enqueue(sinSeq as never);
+      await tx.enqueue(sinSeq(op));
     });
     await reconcileQuotes(outbox);
     const q = await cotizacion(outbox);

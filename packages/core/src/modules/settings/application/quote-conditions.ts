@@ -6,11 +6,7 @@ export const MAX_QUOTE_CONDITIONS = 10;
 export const MAX_CONDITION_LENGTH = 300;
 
 export type QuoteConditionsErrorCode =
-  | 'NOT_AUTHORIZED'
-  | 'EMPTY'
-  | 'TOO_MANY'
-  | 'TOO_LONG'
-  | SettingsError['code'];
+  'NOT_AUTHORIZED' | 'EMPTY' | 'TOO_MANY' | 'TOO_LONG' | SettingsError['code'];
 
 export interface QuoteConditionsError {
   readonly code: QuoteConditionsErrorCode;

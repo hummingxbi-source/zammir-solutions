@@ -26,7 +26,7 @@ export function supabaseCustomerReplica(cliente: SupabaseClient): CustomerReplic
       if (respuesta.error !== null) {
         return err({ code: 'CUSTOMERS_UNAVAILABLE' });
       }
-      const filas = (respuesta.data ?? []) as FilaReplicada[];
+      const filas = respuesta.data as FilaReplicada[];
       return ok(
         filas.map((f) => ({
           id: f.id,
@@ -36,7 +36,7 @@ export function supabaseCustomerReplica(cliente: SupabaseClient): CustomerReplic
           notes: f.notes,
           privacyNoticeVersion: f.privacy_notice_version,
           anonymizedAt: f.anonymized_at,
-          changeSeq: Number(f.change_seq),
+          changeSeq: f.change_seq,
         })),
       );
     },

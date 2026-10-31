@@ -664,6 +664,8 @@ export const textos = {
     historial: {
       titulo: 'Cotizaciones de este cliente',
       vacio: 'Este cliente todavía no tiene cotizaciones.',
+      filtrar: 'Buscar por cliente (nombre o WhatsApp)',
+      sinResultados: 'Ninguna cotización coincide con esa búsqueda.',
       folio: 'Folio',
       fecha: 'Fecha',
       estado: 'Estado',

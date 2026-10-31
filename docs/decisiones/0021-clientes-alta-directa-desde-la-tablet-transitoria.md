@@ -1,6 +1,6 @@
 # ADR-0021: La tablet da de alta clientes directo en la base (transitorio hasta el Sprint 2)
 
-- **Estado:** Aceptada como medida transitoria
+- **Estado:** Sustituida por [ADR-0024](0024-clientes-como-operacion-y-folio-reconciliado.md) (Sprint 2)
 - **Fecha:** 2026-10-30
 - **Decide:** Juanito (propuesta del desarrollador)
 

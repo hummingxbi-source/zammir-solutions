@@ -7,6 +7,7 @@ import {
   formatMoney,
   money,
   quoteTotals,
+  searchCustomers,
   type BusinessIdentity,
   type Customer,
   type CustomerId,
@@ -22,6 +23,7 @@ import {
 import { textos } from '../../../shared/i18n/textos';
 import { Aviso } from '../../../shared/ui/Aviso';
 import { Boton } from '../../../shared/ui/Boton';
+import { Campo } from '../../../shared/ui/Campo';
 import { ClienteEnCotizador } from './ClienteEnCotizador';
 import type { AutorizacionDeAdministrador } from './DialogoDeDescuento';
 import { EditorDeCotizacion } from './EditorDeCotizacion';
@@ -60,6 +62,7 @@ export function Cotizador(props: CotizadorProps): ReactElement {
   const [creando, setCreando] = useState(false);
   const [nombres, setNombres] = useState<ReadonlyMap<CustomerId, Customer>>(new Map());
   const [error, setError] = useState<string | null>(null);
+  const [filtro, setFiltro] = useState('');
 
   const refrescar = useCallback(async () => {
     const todas = await deps.store.list();
@@ -173,6 +176,13 @@ export function Cotizador(props: CotizadorProps): ReactElement {
 
   const borradores = lista.filter((q) => q.status === 'DRAFT' && q.userId === actor.userId);
   const ahora = deps.clock.now();
+  // El historial se puede acotar a un cliente (por nombre o WhatsApp), siempre desde lo guardado en la tablet [S2-16].
+  const emitidas = lista.filter((q) => q.status !== 'DRAFT');
+  const coincidentes = new Set(
+    searchCustomers([...nombres.values()], filtro).map((c) => c.id as string),
+  );
+  const visibles =
+    filtro.trim() === '' ? emitidas : emitidas.filter((q) => coincidentes.has(q.customerId));
 
   return (
     <section className="anima-entrada" aria-labelledby="titulo-cotizador">
@@ -208,9 +218,21 @@ export function Cotizador(props: CotizadorProps): ReactElement {
       )}
 
       <h2>{t.historial.titulo}</h2>
-      {lista.filter((q) => q.status !== 'DRAFT').length === 0 ? (
+      {emitidas.length === 0 ? (
         <p>{t.historial.vacio}</p>
       ) : (
+        <>
+          <Campo
+            etiqueta={t.historial.filtrar}
+            value={filtro}
+            onChange={(e) => {
+              setFiltro(e.target.value);
+            }}
+          />
+          {visibles.length === 0 ? <p>{t.historial.sinResultados}</p> : null}
+        </>
+      )}
+      {visibles.length > 0 ? (
         <table className="tabla">
           <thead>
             <tr>
@@ -222,29 +244,27 @@ export function Cotizador(props: CotizadorProps): ReactElement {
             </tr>
           </thead>
           <tbody>
-            {lista
-              .filter((q) => q.status !== 'DRAFT')
-              .map((q) => (
-                <tr key={q.id}>
-                  <td>
-                    <Boton
-                      variante="secundario"
-                      onClick={() => {
-                        void abrir(q);
-                      }}
-                    >
-                      {q.folio ?? q.tempFolio}
-                    </Boton>
-                  </td>
-                  <td>{nombres.get(q.customerId)?.name ?? '—'}</td>
-                  <td>{q.issuedAt?.slice(0, 10)}</td>
-                  <td>{t.estados[displayStatus(q, ahora)]}</td>
-                  <td>{cobra(quoteTotals(q.lines).totalCents)}</td>
-                </tr>
-              ))}
+            {visibles.map((q) => (
+              <tr key={q.id}>
+                <td>
+                  <Boton
+                    variante="secundario"
+                    onClick={() => {
+                      void abrir(q);
+                    }}
+                  >
+                    {q.folio ?? q.tempFolio}
+                  </Boton>
+                </td>
+                <td>{nombres.get(q.customerId)?.name ?? '—'}</td>
+                <td>{q.issuedAt?.slice(0, 10)}</td>
+                <td>{t.estados[displayStatus(q, ahora)]}</td>
+                <td>{cobra(quoteTotals(q.lines).totalCents)}</td>
+              </tr>
+            ))}
           </tbody>
         </table>
-      )}
+      ) : null}
     </section>
   );
 }

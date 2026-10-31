@@ -50,7 +50,9 @@ export async function reconcileQuotes(outbox: SyncOutbox): Promise<number> {
         folio: resultado.folio ?? actual.folio,
         syncStatus: conPendientes.has(id) ? 'SAVED_ON_TABLET' : 'SENT',
         reviewReason:
-          resultado.status === 'TO_REVIEW' ? (resultado.reason ?? actual.reviewReason) : actual.reviewReason,
+          resultado.status === 'TO_REVIEW'
+            ? (resultado.reason ?? actual.reviewReason)
+            : actual.reviewReason,
       };
       if (
         siguiente.folio === actual.folio &&

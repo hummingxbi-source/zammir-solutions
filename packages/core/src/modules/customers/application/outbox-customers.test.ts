@@ -154,7 +154,10 @@ describe('réplica de clientes', () => {
     await clientes.create(construir(ID1, { name: 'Capturado en la tablet' }));
     const op = (await outbox.list())[0];
     await outbox.markApplied(op?.envelope.opId ?? '', { ok: true, status: 'APPLIED' });
-    await refreshCustomers({ source: fuente([replicado(ID1, 5, 'Corregido en otra tablet')]), outbox });
+    await refreshCustomers({
+      source: fuente([replicado(ID1, 5, 'Corregido en otra tablet')]),
+      outbox,
+    });
     const leido = await clientes.get(asId<'Customer'>(ID1));
     expect(leido.ok && leido.value.name).toBe('Corregido en otra tablet');
   });

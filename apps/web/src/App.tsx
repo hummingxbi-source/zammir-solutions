@@ -119,7 +119,9 @@ export function App({
                     <section>
                       <h1>{seccion.texto}</h1>
                       <AvisoDePrivacidad deps={legal} />
-                      {condiciones !== null ? <CondicionesDeCotizacion store={condiciones} /> : null}
+                      {condiciones !== null ? (
+                        <CondicionesDeCotizacion store={condiciones} />
+                      ) : null}
                     </section>
                   ) : seccion.id === 'usuarios' &&
                     (dispositivos !== null || usuarios !== null || bitacora !== null) ? (

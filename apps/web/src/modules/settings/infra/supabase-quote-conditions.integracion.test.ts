@@ -54,7 +54,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await servicio.from('business_settings').update({ value: original }).eq('key', 'quote_conditions');
+  await servicio
+    .from('business_settings')
+    .update({ value: original })
+    .eq('key', 'quote_conditions');
   for (const id of cuentas) {
     await servicio.auth.admin.deleteUser(id);
   }

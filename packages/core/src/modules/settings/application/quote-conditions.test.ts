@@ -42,9 +42,9 @@ describe('condiciones de la cotización', () => {
     expect(await saveQuoteConditions(tienda, admin, muchas.join('\n'))).toEqual(
       err({ code: 'TOO_MANY' }),
     );
-    expect(
-      await saveQuoteConditions(tienda, admin, 'x'.repeat(MAX_CONDITION_LENGTH + 1)),
-    ).toEqual(err({ code: 'TOO_LONG' }));
+    expect(await saveQuoteConditions(tienda, admin, 'x'.repeat(MAX_CONDITION_LENGTH + 1))).toEqual(
+      err({ code: 'TOO_LONG' }),
+    );
     expect(tienda.current()).toBe('viejo');
   });
 

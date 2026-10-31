@@ -46,6 +46,9 @@
     - **19.2 Cotización cancelada:** ¿hace falta "cancelar" una cotización ya enviada además de marcarla "rechazada"? ☐ Basta con rechazada ☐ Necesitamos cancelada con motivo. *Si no sabes: basta con rechazada; el folio se conserva.*
     - **19.3 Historial en la tablet:** ¿cuántos días de cotizaciones, órdenes y ventas debe tener a la mano cada tablet sin internet? ☐ 30 ☐ 90 ☐ 180 ☐ Todo. *Si no sabes: 90 días.* (ventana de retención local)
     - **19.4 Aviso de documentos sin enviar:** ¿después de cuántas horas sin internet avisamos que hay documentos sin enviar? *Si no sabes: 6 horas.*
+    - **19.5 Cotizaciones de otra tablet:** si Ricardo hace una cotización en su tablet, ¿Luis debe poder verla desde otra tablet o desde la computadora? ☐ Sí, siempre ☐ Solo la que cada quien hizo. *Si no sabes: cada tablet ve las suyas; el administrador ve todas desde la computadora.* (PP-20)
+    - **19.6 Dos personas corrigen al mismo cliente:** si dos tablets cambian los datos de un mismo cliente al mismo tiempo, ¿queda bien que gane el último cambio que llegue (el anterior se guarda en la bitácora)? ☐ Sí ☐ No, avisar para decidir. *Si no sabes: gana el último.*
+    - **19.7 Condiciones de la cotización:** ¿las tres condiciones iniciales (anticipo, vigencia, precios sujetos a cambio) son las correctas o prefieren otras? Se pueden cambiar en Configuración cuando quieran, pero conviene que el primer texto lo revise Luis. (RN-13, S2-18)
 
 ## 3. Órdenes de trabajo y producción
 
@@ -132,3 +135,4 @@ Pendientes que no dependen de Luis, para no perderlos de vista:
 | Fecha | Cambio |
 |---|---|
 | 29 oct 2026 | Primera versión: 60 preguntas de `PENDIENTES.md`, `CATEGORIAS_CATALOGO.md` y las propuestas PP-04 a PP-19. |
+| 31 oct 2026 | Sprint 2: preguntas 19.5 a 19.7 (cotizaciones entre tablets, cambios simultáneos a un cliente, condiciones). |

@@ -127,10 +127,6 @@ export function inMemoryOperationReceiver(deps: {
           compartido.ultimaSeq.set(op.deviceId, op.seq);
           return resultado;
         }
-        if (op.type !== 'IssueQuote') {
-          // Los demás tipos del sprint se implementan en sus historias; hasta entonces no hay efecto.
-          return { ok: false, code: 'UNKNOWN_TYPE' } as const;
-        }
         const carga = issueQuotePayloadSchema.safeParse(op.payload);
         if (!carga.success) {
           return { ok: false, code: 'INVALID_PAYLOAD' } as const;

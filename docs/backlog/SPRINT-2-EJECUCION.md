@@ -282,21 +282,21 @@ Compuerta común en verde; concurrencia de folios 10 veces seguidas; totales del
 | S2-05 Folio temporal | S | **hecha** (PR de S2-02) | `feat/s2-02-cola-de-salida` |
 | S2-02 Cola de salida | L | **hecha** (PR #59) | `feat/s2-02-cola-de-salida` |
 | S2-06 Envío automático y estado | M | **hecha** (PR #60) | `feat/s2-06-envio-automatico` |
-| S2-07 Descarga y reconciliación | M | pendiente | |
-| S2-08 Conflictos | M | **hecha en servidor y núcleo** (falta pantalla de "por revisar" para administrador y `UpsertCustomer`, ver S2-10) | `feat/s2-quotes-dominio` |
+| S2-07 Descarga y reconciliación | M | **folio definitivo reconciliado en la tablet** (`reconcileQuotes`, ADR-0024); la descarga de cotizaciones propias por número de cambio queda como PP-20 | `feat/s2-cierre` |
+| S2-08 Conflictos | M | **hecha** en servidor y núcleo, incluido `UpsertCustomer`; la pantalla de "por revisar" queda como PP-22 | `feat/s2-quotes-dominio` |
 | S2-13 / S2-14 Emitir y estados (dominio) | M+S | **hecha** | `feat/s2-quotes-dominio` |
 | S2-09 Líneas y cálculo visible | L | **hecha** (dominio y pantalla) | `feat/s2-cotizador-pantalla` |
-| S2-10 Cliente en el cotizador | S | pendiente | |
+| S2-10 Cliente en el cotizador | S | **hecha**: el cliente se guarda en la tablet y sale como `UpsertCustomer`; réplica por número de cambio (ADR-0024). Falta anotar la versión del aviso de privacidad (PP-21) | `feat/s2-cierre` |
 | S2-11 Cargos y descuentos | M | **hecha** (núcleo, servidor y diálogo de PIN) | `feat/s2-cotizador-pantalla` |
-| S2-18 Condiciones editables | S | ajuste `quote_conditions` sembrado y copiado al emitir; **falta la pantalla del administrador** | `feat/s2-cotizador-pantalla` |
+| S2-18 Condiciones editables | S | **hecha** (pantalla en Configuración, solo administrador; prueba con base real) | `feat/s2-cierre` |
 | S2-12 Vista previa en vivo | M | **hecha** (dos paneles ≥ 900 px, pestañas en pantalla chica; falta probar en la tablet) | `feat/s2-cotizador-pantalla` |
 | S2-15 Duplicar y borradores | S | **hecha** (cada cambio se guarda en la tablet; los borradores se recuperan) | `feat/s2-cotizador-pantalla` |
-| S2-16 Historial | S | lista general **hecha**; falta el historial dentro de la ficha del cliente | `feat/s2-cotizador-pantalla` |
-| S2-17 Uso en campo | S | teclado numérico **hecho**; faltan pruebas de orientación en Playwright | `feat/s2-cotizador-pantalla` |
+| S2-16 Historial | S | **hecha**: historial general con búsqueda por cliente (nombre o WhatsApp) desde lo guardado en la tablet | `feat/s2-cierre` |
+| S2-17 Uso en campo | S | **hecha**: teclado numérico y pruebas de las dos orientaciones en Playwright | `feat/s2-cierre` |
 | S2-19 PDF carta | L | **hecha** (modelo, renderizador `pdf-lib` y contrato; falta medir en la tablet) | `feat/s2-documento-pdf` |
 | S2-20 Compartir por WhatsApp | M | **hecha** (botón en pantalla) | `feat/s2-cotizador-pantalla` |
-| S2-21 Aceptación E3 | M | pendiente | |
-| S2-22 Cierre del sprint | S | pendiente | |
+| S2-21 Aceptación E3 | M | **hecha en lo que no necesita la tablet**: prueba de integración con servidor real (cliente nuevo y 3 cotizaciones sin red, una aceptada; al volver la red: cero duplicados, folios consecutivos, totales exactos). Falta el recorrido en la tablet real | `feat/s2-cierre` |
+| S2-22 Cierre del sprint | S | **hecho salvo lo que necesita la tablet** (ver sección 11) | `feat/s2-cierre` |
 
 ## 10. Lista de verificación al terminar cada historia
 
@@ -307,3 +307,26 @@ Compuerta común en verde; concurrencia de folios 10 veces seguidas; totales del
 5. ADR escrito y fila en `DECISIONES.md` para cada decisión nueva (D1..D10 que se implementen).
 6. Dudas de negocio nuevas → `CUESTIONARIO_LUIS.md`; ideas nuevas → `PENDIENTES.md` (Propuestas).
 7. Esta tabla (sección 9) actualizada, con rama y PR.
+
+## 11. Cierre del Sprint 2 (S2-22)
+
+**Compuerta automática (31 oct 2026), todo en verde:** formato, `eslint --max-warnings 0`, TypeScript estricto, capas (`check:deps`), `.env.example`, pruebas unitarias y de componentes, pgTAP (251), integración con servidor real (202), pruebas de pantalla en horizontal y vertical (Playwright), mutación crítica (ver abajo) y concurrencia de folios repetida 10 veces.
+
+**Mutación crítica:** se agregó `quotes/domain/quote.ts` (totales y estados) al conjunto junto con dinero, IVA, precios y folios. El umbral sigue en 90 % y no se bajó.
+
+**Lo que NO se pudo probar sin la tablet (se deja para el final, junto con el cuestionario a Luis):**
+1. Instalar la PWA y cotizar en modo avión de verdad (cliente nuevo, 3 cotizaciones, PDF y compartir por WhatsApp).
+2. Medir el PDF en la tablet (meta < 3 s) y el PIN con 600 000 vueltas (PBKDF2).
+3. Comprobar con los dedos: teclado numérico, botones ≥ 44 px y las dos orientaciones.
+4. Compartir por WhatsApp desde la tablet (menú del dispositivo y respaldo con enlace).
+5. Bloqueo por inactividad y cambio de persona con una cotización a medias.
+
+**Qué quedó fuera a propósito (anotado en `PENDIENTES.md`):** PP-20 (bajar cotizaciones propias del servidor), PP-21 (versión del aviso de privacidad en clientes capturados sin internet), PP-22 (pantalla de "por revisar" para administradores). Ninguna bloquea el uso diario.
+
+**Retrospectiva (datos objetivos):**
+- Lo más grande fue el motor de envío (folios, idempotencia, orden, cortes): quedó probado contra el servidor real con 200 operaciones de dos tablets, cortes al azar, reenvíos y desorden, y la concurrencia pasó 10 rondas seguidas.
+- Dos fallas de pruebas intermitentes se resolvieron en su causa, sin bajar umbrales: años de folio que chocaban entre procesos, y una propiedad del anticipo que usaba números que pierden precisión por encima de 2⁵³ (ahora compara con enteros grandes).
+- El folio provisional (`T<serie>-NNNN`) y el definitivo conviven bien: la tablet siempre muestra el definitivo en cuanto el servidor lo confirma.
+- **Recalibración de `MEDICION.md` y `CAPACIDAD.md`:** necesita las horas con Juanito y de revisión que solo él puede declarar; no se inventan. Queda para que las llene al cerrar el sprint.
+
+**Nota honesta sobre la concurrencia:** en la primera corrida de `pnpm test:concurrencia` de este cierre falló 1 prueba en la ronda 7 de 10 y no quedó el detalle. Se repitió la compuerta completa 4 veces más (40 rondas) y pasó siempre. No se identificó la causa; la sospecha, sin confirmar, es el entorno de funciones de borde local bajo carga (ya había tumbado procesos con muchas peticiones simultáneas antes). Si vuelve a aparecer, guardar la salida completa de esa ronda antes de repetir.
