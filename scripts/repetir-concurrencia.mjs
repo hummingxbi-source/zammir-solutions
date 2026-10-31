@@ -1,4 +1,4 @@
-// Compuerta del Sprint 2: las pruebas de sincronización y folios contra el servidor real deben pasar
+// Compuerta de los Sprints 2 y 3: las pruebas de sincronización y folios contra el servidor real deben pasar
 // 10 veces seguidas, para descartar fallas intermitentes (docs/plan/fase-06). Se detiene en la primera
 // que falle. Requiere Supabase local encendido (`pnpm db:start`).
 import { spawnSync } from 'node:child_process';
@@ -8,7 +8,14 @@ for (let i = 1; i <= veces; i += 1) {
   process.stdout.write(`Ronda ${String(i)} de ${String(veces)}…\n`);
   const r = spawnSync(
     'pnpm',
-    ['test:integracion', 'sync.integracion', 'recibir-operacion', 'pg-folio-allocator'],
+    [
+      'test:integracion',
+      'sync.integracion',
+      'recibir-operacion',
+      'pg-folio-allocator',
+      'e1-e2-mostrador',
+      'e3-e4-ventas',
+    ],
     { stdio: 'inherit', shell: true },
   );
   if (r.status !== 0) {

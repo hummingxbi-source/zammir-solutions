@@ -32,5 +32,6 @@
 | [0024](docs/decisiones/0024-clientes-como-operacion-y-folio-reconciliado.md) | Clientes como operación en cola, réplica por número de cambio y folio reconciliado | Aceptada (propuesta) | 2026-10-31 |
 | [0025](docs/decisiones/0025-ordenes-pagos-y-fotos-en-la-tablet.md) | Órdenes de trabajo, pagos que solo se agregan y fotos de medición | Aceptada (propuesta) | 2026-10-31 |
 | [0026](docs/decisiones/0026-ventas-de-mostrador-en-una-operacion.md) | Ventas de mostrador en una sola operación | Aceptada (propuesta) | 2026-10-31 |
+| [0027](docs/decisiones/0027-turno-de-caja-e-impresion-de-tickets.md) | Turno de caja por persona e impresión de tickets por medios intercambiables | Aceptada (propuesta) | 2026-10-31 |
 
 Plantilla para una nueva decisión: [`docs/decisiones/0000-plantilla.md`](docs/decisiones/0000-plantilla.md).

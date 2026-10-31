@@ -193,3 +193,53 @@ describe('codificador ESC/POS', () => {
     expect(bytes.slice(5, 8)).toEqual([0x1b, 0x64, 255]);
   });
 });
+
+describe('refuerzo de ESC/POS y renglones', () => {
+  const bytesDe = (doc: PrintDocument) => Array.from(encodeEscPos(doc));
+  const sub = (a: number[], b: number[]) => a.join(',').includes(b.join(','));
+
+  it('negritas: solo se encienden cuando se piden, en texto y en dos columnas', () => {
+    const texto = (bold?: boolean): PrintDocument => ({
+      title: 't',
+      width: 32,
+      blocks: [{ kind: 'text', text: 'A', ...(bold === undefined ? {} : { bold }) }],
+    });
+    expect(sub(bytesDe(texto(true)), [0x1b, 0x45, 1])).toBe(true);
+    expect(sub(bytesDe(texto(false)), [0x1b, 0x45, 1])).toBe(false);
+    expect(sub(bytesDe(texto()), [0x1b, 0x45, 1])).toBe(false);
+    const par = (bold?: boolean): PrintDocument => ({
+      title: 't',
+      width: 32,
+      blocks: [{ kind: 'pair', left: 'A', right: 'B', ...(bold === undefined ? {} : { bold }) }],
+    });
+    expect(sub(bytesDe(par(true)), [0x1b, 0x61, 0, 0x1b, 0x45, 1])).toBe(true);
+    expect(sub(bytesDe(par(false)), [0x1b, 0x61, 0, 0x1b, 0x45, 0])).toBe(true);
+    expect(sub(bytesDe(par()), [0x1b, 0x45, 1])).toBe(false);
+    // y siempre se apagan al terminar la línea
+    expect(sub(bytesDe(par(true)), [0x0a, 0x1b, 0x45, 0])).toBe(true);
+  });
+
+  it('el texto grande parte a la mitad del ancho', () => {
+    const doc: PrintDocument = {
+      title: 't',
+      width: 10,
+      blocks: [{ kind: 'text', text: 'abcdefghij', large: true }],
+    };
+    const texto = String.fromCharCode(...bytesDe(doc).filter((b) => b >= 0x61 && b <= 0x6a));
+    expect(texto).toContain('abcde');
+    expect(bytesDe(doc).filter((b) => b === 0x0a)).toHaveLength(2);
+  });
+
+  it('los caracteres de control y el borrado salen como signo de pregunta; el espacio no', () => {
+    expect(encodeCp858('\u001f\u007f')).toEqual([0x3f, 0x3f]);
+    expect(encodeCp858(' ~')).toEqual([0x20, 0x7e]);
+  });
+
+  it('una palabra larga después de otra manda la anterior en su propio renglón', () => {
+    expect(wrapText('ab cdefghij', 4)).toEqual(['ab', 'cdef', 'ghij']);
+  });
+
+  it('los espacios de sobra no crean palabras vacías', () => {
+    expect(wrapText('  uno   dos  ', 20)).toEqual(['uno dos']);
+  });
+});

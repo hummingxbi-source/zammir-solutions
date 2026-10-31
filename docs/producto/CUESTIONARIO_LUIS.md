@@ -77,6 +77,10 @@
 36. **Si se reimprime un ticket,** ¿que salga marcado "COPIA"? ☐ Sí ☐ No. (PP-14)
 37. **Productos de venta rápida:** ¿quieren una lista corta de los que más se venden en el mostrador? ☐ Sí ☐ No. (PP-08)
 - **37.1 Una caja o una por persona:** cuando dos personas cobran el mismo día, ¿cada quien abre y cierra **su propia caja** (y cuenta su efectivo), o hay **una sola caja** del local que se va relevando? *Si no sabes: cada persona tiene su caja.* (PD-36, Sprint 3)    - **37.2 Turno que cruza la medianoche:** si una caja se abre un día y se cierra al siguiente, ¿a qué día pertenece su corte? *Si no sabes: al día en que se abrió.*
+- **37.3 Ancho del papel del ticket:** ¿la impresora usa papel de **58 mm** o de **80 mm**? *Si no sabes: 58 mm.* (PD-15, Sprint 3)
+- **37.4 Cliente recurrente:** ¿a partir de cuántos trabajos **entregados** un cliente es "recurrente"? *Si no sabes: 2.* (Sprint 3)
+- **37.5 Leyenda del ticket:** ¿qué texto quieren abajo del ticket sobre cómo y hasta cuándo pedir su factura? (PD-09, PD-10, Sprint 3)
+- **37.6 Retiros de efectivo:** durante el día, ¿sacan dinero del cajón (por ejemplo, para pagar a un proveedor)? ¿Se debe anotar en el corte? *Si no sabes: no se anotan.* (PD-37, Sprint 3)
 
 ## 5. Reportes y panel de inicio
 
@@ -142,3 +146,4 @@ Pendientes que no dependen de Luis, para no perderlos de vista:
 | 31 oct 2026 | Sprint 2: preguntas 19.5 a 19.7 (cotizaciones entre tablets, cambios simultáneos a un cliente, condiciones). |
 | 31 oct 2026 | Sprint 3: preguntas 37.1 y 37.2 (una caja o una por persona; turno que cruza la medianoche). |
 | 31 oct 2026 | Sprint 3 (primeras 10 historias): preguntas 29.1 a 29.3 (fotos, condiciones del comprobante, pago de más). |
+| 31 oct 2026 | Sprint 3 (cierre): preguntas 37.3 a 37.6 (ancho del papel, cliente recurrente, leyenda del ticket, retiros de efectivo). |

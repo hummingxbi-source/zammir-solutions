@@ -194,3 +194,53 @@ describe('cargar el historial de la tablet', () => {
     expect(h.warranties).toHaveLength(1);
   });
 });
+
+describe('refuerzo del historial', () => {
+  it('las ventas van de la más reciente a la más antigua y no se mezclan las de otros', () => {
+    const v = (id: string, c: string, issuedAt: string) =>
+      ({
+        id,
+        customerId: c,
+        status: 'COMPLETED',
+        totalCents: 1,
+        issuedAt,
+      }) as unknown as CounterSale;
+    const h = buildCustomerHistory(ANA, {
+      quotes: [],
+      orders: [],
+      sales: [
+        v('a', 'c-ana', '2026-10-01T10:00:00.000Z'),
+        v('b', 'c-ana', '2026-10-03T10:00:00.000Z'),
+        v('c', 'c-beto', '2026-10-02T10:00:00.000Z'),
+      ],
+      payments: [],
+      warranties: [],
+    });
+    expect(h.sales.map((x) => x.id)).toEqual(['b', 'a']);
+  });
+
+  it('las cotizaciones van de la más reciente a la más antigua', () => {
+    const h = buildCustomerHistory(ANA, {
+      quotes: [
+        cotizacion('viejo', 'c-ana', '2026-01-01T10:00:00.000Z'),
+        cotizacion('nuevo', 'c-ana', '2026-05-01T10:00:00.000Z'),
+      ],
+      orders: [],
+      sales: [],
+      payments: [],
+      warranties: [],
+    });
+    expect(h.quotes.map((x) => x.id)).toEqual(['nuevo', 'viejo']);
+  });
+
+  it('un pago de una orden con el id de una venta del cliente no cuenta como pago de venta', () => {
+    const h = buildCustomerHistory(ANA, {
+      quotes: [],
+      orders: [],
+      sales: [venta('v1', 'c-ana')],
+      payments: [pago('p', 'WORK_ORDER', 'v1')],
+      warranties: [],
+    });
+    expect(h.payments).toHaveLength(0);
+  });
+});
