@@ -11,5 +11,8 @@ export * from './modules/identity/contracts/user-repository.contract';
 export * from './modules/customers/contracts/customer-repository.contract';
 export * from './modules/legal/contracts/legal-repository.contract';
 export * from './modules/audit/contracts/audit-reader.contract';
+export * from './modules/catalog/contracts/catalog-local-store.contract';
+export * from './modules/identity/contracts/pin-attempt-guard.contract';
+export * from './modules/identity/contracts/local-login-store.contract';
 export * from './modules/sync/contracts/folio-allocator.contract';
 export * from './modules/sync/contracts/operation-receiver.contract';
