@@ -55,6 +55,38 @@ export interface QuoteDocumentLine {
   readonly amount: string;
 }
 
+/** Lo que agrega el comprobante de trabajo a un documento [RF-M3-06]: pagos y saldo, garantía y el QR de
+ *  autofacturación. Todo ya redactado; el renderizador solo lo dibuja. */
+export interface ReceiptExtras {
+  readonly labels: {
+    readonly payments: string;
+    readonly depositRequired: string;
+    readonly paid: string;
+    readonly balance: string;
+    readonly settled: string;
+    readonly warranty: string;
+    readonly selfInvoicing: string;
+    readonly verificationCode: string;
+  };
+  readonly status: string;
+  readonly depositRequired: string;
+  readonly paid: string;
+  /** `Liquidado` cuando el saldo es cero; si no, el importe. */
+  readonly balance: string;
+  readonly isSettled: boolean;
+  /** Un renglón por pago: `Anticipo · Efectivo · $580.00 · 31 oct 2026`. */
+  readonly paymentLines: readonly string[];
+  /** Renglones de la garantía; vacío mientras la orden no se entregue. */
+  readonly warrantyLines: readonly string[];
+  /** QR de autofacturación: matriz de módulos (true = oscuro), la dirección que contiene y el código. */
+  readonly qr: {
+    readonly matrix: readonly (readonly boolean[])[];
+    readonly url: string;
+    readonly code: string;
+    readonly legend: readonly string[];
+  };
+}
+
 /** Modelo de documento YA CALCULADO: lo recibe el renderizador y la vista previa. No conoce
  *  repositorios ni reglas: todo lo que dice viene de la cotización [S2-12, S2-19, principio I]. */
 export interface QuoteDocument {
@@ -79,6 +111,8 @@ export interface QuoteDocument {
   readonly privacyNotice: string;
   readonly isDraft: boolean;
   readonly labels: DocumentLabels;
+  /** Solo el comprobante de trabajo lo trae. */
+  readonly receipt?: ReceiptExtras;
 }
 
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];

@@ -96,7 +96,11 @@ async function montar(opciones: { actor?: QuoteActor | null } = {}) {
     clock: reloj,
     random: seededRandom(4),
     device: { id: '00000000-0000-4000-8000-0000000000d1', series: 1 },
-    settings: { depositPercentBps: 5_000, requireDepositToStart: true, warrantyMonthsDefault: null },
+    settings: {
+      depositPercentBps: 5_000,
+      requireDepositToStart: true,
+      warrantyMonthsDefault: null,
+    },
   };
   const { customers } = clientesEnMemoriaDePrueba();
   const nuevo = buildCustomer(CLIENTE, {
@@ -127,7 +131,10 @@ async function montar(opciones: { actor?: QuoteActor | null } = {}) {
       autorizar: (adminId, pin) =>
         Promise.resolve(
           pin === '482915'
-            ? ok({ adminId: asId<'User'>(adminId), authorizedAt: new Date('2026-10-31T18:00:00.000Z') })
+            ? ok({
+                adminId: asId<'User'>(adminId),
+                authorizedAt: new Date('2026-10-31T18:00:00.000Z'),
+              })
             : err({ code: 'AUTH_FAILED' as const }),
         ),
     },
@@ -204,7 +211,9 @@ describe('Órdenes de trabajo', () => {
     });
     expect(within(dialogo).getByRole('status').textContent).toContain('$42.00');
     fireEvent.click(within(dialogo).getByRole('button', { name: 'Registrar cobro' }));
-    expect(await screen.findByText(/Anticipo · Efectivo · \$58\.00 · Cambio \$42\.00/)).toBeTruthy();
+    expect(
+      await screen.findByText(/Anticipo · Efectivo · \$58\.00 · Cambio \$42\.00/),
+    ).toBeTruthy();
   });
 
   it('un cobro mayor al saldo dice qué hacer y no guarda nada', async () => {

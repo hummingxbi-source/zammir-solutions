@@ -30,6 +30,7 @@ import {
   type LegalDeps,
   type ManageCustomersDeps,
   type ManageUsersDeps,
+  type OrderDeps,
   type QuoteConditionsStore,
   type RegisterTabletDeps,
   type SignInWithPinDeps,
@@ -63,6 +64,8 @@ import { supabaseQuoteConditions } from '../modules/settings/infra/supabase-quot
 import { pdfLibRenderer } from '../modules/documents/infra/pdf-lib-renderer';
 import { entornoDelNavegador, webShareService } from '../modules/documents/infra/web-share-service';
 import type { PrepararCotizador } from '../modules/quotes/ui/CotizadorEnLaTablet';
+import { compartirComprobante } from '../modules/orders/ui/comprobante';
+import { qrMatrix } from '../modules/documents/infra/qr-matrix';
 import type { PrepararOrdenes } from '../modules/orders/ui/OrdenesEnLaTablet';
 import { cryptoRandom } from '../shared/infra/crypto-random';
 import { browserTimer } from '../shared/infra/sync/browser-timer';
@@ -422,22 +425,23 @@ function crearPreparadorDeOrdenes(d: {
         return Promise.resolve(p === undefined ? err({ code: 'NOT_FOUND' as const }) : ok(p));
       },
     };
-    return {
-      deps: {
-        orders: outboxWorkOrderStore(d.envio.outbox),
-        payments: outboxPaymentStore(d.envio.outbox),
-        quotes: outboxQuoteStore(d.envio.outbox),
-        outbox: d.envio.outbox,
-        idGenerator: uuidIdGenerator,
-        clock: systemClock,
-        random: cryptoRandom,
-        device: { id: credenciales.device.id, series: credenciales.device.tempSeries },
-        settings: {
-          depositPercentBps: copia.orders.depositPercentBps,
-          requireDepositToStart: copia.orders.requireDepositToStart,
-          warrantyMonthsDefault: copia.orders.warrantyMonthsDefault,
-        },
+    const orderDeps: OrderDeps = {
+      orders: outboxWorkOrderStore(d.envio.outbox),
+      payments: outboxPaymentStore(d.envio.outbox),
+      quotes: outboxQuoteStore(d.envio.outbox),
+      outbox: d.envio.outbox,
+      idGenerator: uuidIdGenerator,
+      clock: systemClock,
+      random: cryptoRandom,
+      device: { id: credenciales.device.id, series: credenciales.device.tempSeries },
+      settings: {
+        depositPercentBps: copia.orders.depositPercentBps,
+        requireDepositToStart: copia.orders.requireDepositToStart,
+        warrantyMonthsDefault: copia.orders.warrantyMonthsDefault,
       },
+    };
+    return {
+      deps: orderDeps,
       clientes: {
         customers: outboxCustomers({
           outbox: d.envio.outbox,
@@ -472,6 +476,20 @@ function crearPreparadorDeOrdenes(d: {
             { adminId: adminId as UserId, pin },
           ),
       },
+      onComprobante: compartirComprobante({
+        orderDeps,
+        renderer: pdfLibRenderer(),
+        share: webShareService(entornoDelNavegador()),
+        negocio: {
+          name: copia.business?.name ?? 'ZAMMIR (datos de prueba)',
+          phone: copia.business?.phone ?? null,
+          address: copia.business?.address ?? null,
+        },
+        condiciones: copia.quote?.conditionsText ?? '',
+        leyendaDeAutofacturacion: copia.orders.selfInvoicingLegend,
+        direccionBase: copia.orders.publicBaseUrl,
+        qrMatrix,
+      }),
       alCambiarElEnvio: (aviso: () => void) => d.envio.engine.subscribe(aviso),
       onPorEnviar: () => {
         void d.envio.engine.trigger();

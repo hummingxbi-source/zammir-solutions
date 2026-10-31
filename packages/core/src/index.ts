@@ -88,3 +88,4 @@ export * from './modules/orders/application/work-order-use-cases';
 export * from './modules/payments/domain/payment';
 export * from './modules/orders/application/reconcile-orders';
 export * from './modules/orders/application/replica-documents';
+export * from './modules/documents/domain/work-order-document';
