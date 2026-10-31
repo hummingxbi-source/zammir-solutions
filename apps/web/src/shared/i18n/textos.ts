@@ -336,6 +336,42 @@ export const textos = {
       },
     },
   },
+  cuentas: {
+    titulo: 'Cuentas por cobrar',
+    descripcion: (dias: number): string =>
+      `Órdenes con saldo pendiente, de la más atrasada a la más reciente. Se resaltan las que llevan ${String(dias)} días o más.`,
+    vacio: 'No hay cuentas por cobrar. Todas las órdenes están pagadas.',
+    sinCliente: 'Sin cliente',
+    sinFecha: 'Sin fecha',
+    atrasada: 'Atrasada',
+    registrarPago: 'Registrar pago',
+    resumen: {
+      porCobrar: 'Por cobrar',
+      cuentas: 'Cuentas con saldo',
+      atrasadas: 'Atrasadas',
+    },
+    columnas: {
+      cliente: 'Cliente',
+      folio: 'Folio',
+      saldo: 'Saldo',
+      dias: 'Días',
+      acciones: 'Acciones',
+    },
+    soloAdministradores: {
+      mensaje: 'Las cuentas por cobrar son solo para administradores.',
+      queHacer: 'Entra con el PIN de un administrador.',
+    },
+    recordatorio: {
+      boton: 'Recordatorio',
+      abierto: 'Se abrió WhatsApp con el recordatorio. Revísalo y envíalo.',
+      sinTelefono: {
+        mensaje: 'Este cliente no tiene WhatsApp registrado.',
+        queHacer: 'Agrega su número en Clientes y vuelve a intentar.',
+      },
+      mensaje:
+        'Hola {cliente}, te saluda {negocio}. Te recordamos con cariño que la orden {folio} tiene un saldo pendiente de {saldo}. Quedamos al pendiente para ayudarte con tu pago. ¡Gracias!',
+    },
+  },
   impresion: {
     titulo: 'Impresora de tickets',
     estado: {

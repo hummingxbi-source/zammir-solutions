@@ -85,6 +85,7 @@ import {
   webBluetoothPrinter,
   type EntornoBluetooth,
 } from '../modules/printing/infra/web-bluetooth-printer';
+import type { PrepararCuentas } from '../modules/receivables/ui/CuentasEnLaTablet';
 import type { ImpresionDeTickets } from '../modules/printing/ui/impresion';
 import type { PrepararCotizador } from '../modules/quotes/ui/CotizadorEnLaTablet';
 import { canvasImageCompressor } from '../modules/orders/infra/canvas-image-compressor';
@@ -166,6 +167,7 @@ export interface Composition {
   readonly prepararMostrador: PrepararMostrador | null;
   /** Cómo reunir lo que las órdenes de trabajo necesitan; `null` si no hay servidor configurado. */
   readonly prepararOrdenes: PrepararOrdenes | null;
+  readonly prepararCuentas: PrepararCuentas | null;
   readonly historialDeCliente: ((id: CustomerId) => Promise<CustomerHistory>) | null;
   /** Altas, PIN y desactivación de personas; `null` si no hay servidor configurado. */
   readonly usuarios: ManageUsersDeps | null;
@@ -760,6 +762,29 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
             id,
           );
 
+  const prepararCuentas: PrepararCuentas | null =
+    prepararOrdenes === null
+      ? null
+      : async () => {
+          const base = await prepararOrdenes();
+          if (base === null) {
+            return null;
+          }
+          const copia = await dexieIdentity().store.load();
+          return {
+            deps: base.deps,
+            clientes: base.clientes,
+            negocio: copia?.business?.name ?? 'ZAMMIR (datos de prueba)',
+            abrirEnlace: (url: string) => {
+              webShareService(entornoDelNavegador()).openLink(url);
+            },
+            ...(base.onPorEnviar === undefined ? {} : { onPorEnviar: base.onPorEnviar }),
+            ...(base.alCambiarElEnvio === undefined
+              ? {}
+              : { alCambiarElEnvio: base.alCambiarElEnvio }),
+          };
+        };
+
   const prepararMostrador: PrepararMostrador | null =
     envio === null || catalogoLocal === null || entradaConPin === null || reglas === null
       ? null
@@ -777,6 +802,7 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
     prepararCotizador,
     prepararMostrador,
     prepararOrdenes,
+    prepararCuentas,
     historialDeCliente,
     adminAuth: cliente === null ? adminAuthNoConfigurada : supabaseAdminAuth(cliente),
     dispositivos: cliente === null ? null : supabaseDeviceRepository(cliente),
