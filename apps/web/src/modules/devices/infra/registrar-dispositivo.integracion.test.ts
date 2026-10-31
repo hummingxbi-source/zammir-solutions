@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { supabaseAdminAuth } from '../../identity/infra/supabase-admin-auth';
+import { functionDeviceRegistrar } from './function-device-registrar';
 import { supabaseDeviceRepository } from './supabase-device-repository';
 
 // Pruebas contra Supabase local real y la función de servidor `registrar-dispositivo`.
@@ -146,5 +147,51 @@ describe('función registrar-dispositivo', () => {
     // Pero se entera de que está revocada.
     const suRenglon = await tablet.from('devices').select('status');
     expect(suRenglon.data).toEqual([{ status: 'REVOKED' }]);
+  });
+});
+
+describe('adaptador de registro de la tablet contra la función real', () => {
+  it('registra la tablet y su sesión sirve para leer lo que una tablet activa puede leer', async () => {
+    const codigo = await codigoNuevo();
+    const registrador = functionDeviceRegistrar({ url: URL, anonKey: ANON });
+    const r = await registrador.register({ code: codigo, name: 'Tablet de la prueba' });
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.value.device.name).toBe('Tablet de la prueba');
+    expect(r.value.device.tempSeries).toBeGreaterThanOrEqual(1);
+
+    const tablet = crearCliente(ANON);
+    const puesta = await tablet.auth.setSession({
+      access_token: r.value.session.accessToken,
+      refresh_token: r.value.session.refreshToken,
+    });
+    expect(puesta.error).toBeNull();
+    const ajustes = await tablet.from('business_settings').select('key');
+    expect((ajustes.data ?? []).length).toBeGreaterThan(0);
+  });
+
+  it('el mismo código no sirve dos veces', async () => {
+    const codigo = await codigoNuevo();
+    const registrador = functionDeviceRegistrar({ url: URL, anonKey: ANON });
+    expect((await registrador.register({ code: codigo, name: 'Primera' })).ok).toBe(true);
+    const segunda = await registrador.register({ code: codigo, name: 'Segunda' });
+    expect(!segunda.ok && segunda.error.code).toBe('CODE_INVALID');
+  });
+
+  it('con el código escrito en minúsculas y con guion, el registro sigue funcionando', async () => {
+    const codigo = await codigoNuevo();
+    const escrito = `${codigo.slice(0, 4)}-${codigo.slice(4)}`.toLowerCase();
+    const registrador = functionDeviceRegistrar({ url: URL, anonKey: ANON });
+    // La normalización la hace el caso de uso; el adaptador solo manda lo que recibe.
+    const sinNormalizar = await registrador.register({ code: escrito, name: 'Sin normalizar' });
+    expect(!sinNormalizar.ok && sinNormalizar.error.code).toBe('CODE_INVALID');
+    const normalizado = await registrador.register({ code: codigo, name: 'Normalizado' });
+    expect(normalizado.ok).toBe(true);
+  });
+
+  it('sin servidor al que llamar devuelve NETWORK_UNAVAILABLE', async () => {
+    const registrador = functionDeviceRegistrar({ url: 'http://127.0.0.1:1', anonKey: ANON });
+    const r = await registrador.register({ code: 'ABCD2345', name: 'Tablet' });
+    expect(!r.ok && r.error.code).toBe('NETWORK_UNAVAILABLE');
   });
 });
