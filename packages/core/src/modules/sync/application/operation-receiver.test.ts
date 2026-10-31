@@ -55,7 +55,7 @@ operationReceiverContract('memoria', () => {
     },
     newYear: () => {
       anio += 1;
-      return anio;
+      return Promise.resolve(anio);
     },
     // Cada prueba crea su propio servidor en memoria, así que cuenta todo lo que hay.
     countsFor: () =>

@@ -19,7 +19,7 @@ export interface ReceptorDelContrato {
   /** Un código público de 8 caracteres que nadie haya usado antes (el servidor real los conserva). */
   newPublicCode(): string;
   /** Un año que ninguna otra prueba haya usado: el servidor real conserva sus contadores. */
-  newYear(): number;
+  newYear(): Promise<number>;
   /** Cuántas cotizaciones y operaciones hay guardadas para esos dispositivos (lectura independiente). */
   countsFor(deviceIds: readonly string[]): Promise<{ quotes: number; operations: number }>;
 }
@@ -117,7 +117,7 @@ export function operationReceiverContract(
       const dispositivo = await h.newDevice();
       const usuario = await h.newUser(true);
       const cliente = await h.newCustomer();
-      const year = h.newYear();
+      const year = await h.newYear();
       const operacion = (
         d: DispositivoDelContrato,
         seq: number,
@@ -238,7 +238,7 @@ export function operationReceiverContract(
       const [d1, d2] = [await h.newDevice(), await h.newDevice()];
       const usuario = await h.newUser(true);
       const cliente = await h.newCustomer();
-      const year = h.newYear();
+      const year = await h.newYear();
       const enviar = (d: DispositivoDelContrato) =>
         (async () => {
           const folios: number[] = [];
