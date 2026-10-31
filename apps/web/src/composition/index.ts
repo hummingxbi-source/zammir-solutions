@@ -3,6 +3,7 @@ import {
   authorizeWithAdminPin,
   createActiveUserSession,
   localProductReader,
+  outboxCashShiftStore,
   outboxCounterSaleStore,
   outboxCustomers,
   attachOrderPhoto,
@@ -12,6 +13,7 @@ import {
   reconcileOrders,
   reconcileQuotes,
   reconcileSales,
+  reconcileShifts,
   refreshDocuments,
   uploadPendingPhotos,
   refreshCustomers,
@@ -34,6 +36,7 @@ import {
   type LegalDeps,
   type ManageCustomersDeps,
   type ManageUsersDeps,
+  type CashDeps,
   type OrderDeps,
   type PhotoStore,
   type QuoteConditionsStore,
@@ -243,6 +246,7 @@ function crearEnvio(
       await reconcileQuotes(outbox);
       await reconcileOrders(outbox);
       await reconcileSales(outbox);
+      await reconcileShifts(outbox);
     },
   });
   const fotos = dexiePhotoStore();
@@ -454,6 +458,7 @@ function crearPreparadorDeOrdenes(d: {
       orders: outboxWorkOrderStore(d.envio.outbox),
       payments: outboxPaymentStore(d.envio.outbox),
       quotes: outboxQuoteStore(d.envio.outbox),
+      shifts: outboxCashShiftStore(d.envio.outbox),
       outbox: d.envio.outbox,
       idGenerator: uuidIdGenerator,
       clock: systemClock,
@@ -576,6 +581,7 @@ function crearPreparadorDelMostrador(d: {
       orders: outboxWorkOrderStore(d.envio.outbox),
       payments: outboxPaymentStore(d.envio.outbox),
       quotes: outboxQuoteStore(d.envio.outbox),
+      shifts: outboxCashShiftStore(d.envio.outbox),
       outbox: d.envio.outbox,
       idGenerator: uuidIdGenerator,
       clock: systemClock,
@@ -587,10 +593,24 @@ function crearPreparadorDelMostrador(d: {
         warrantyMonthsDefault: copia.orders.warrantyMonthsDefault,
       },
     };
+    const cash: CashDeps = {
+      shifts: outboxCashShiftStore(d.envio.outbox),
+      payments: outboxPaymentStore(d.envio.outbox),
+      sales: outboxCounterSaleStore(d.envio.outbox),
+      outbox: d.envio.outbox,
+      idGenerator: uuidIdGenerator,
+      clock: systemClock,
+      device: { id: dispositivo.id },
+    };
     return {
+      cash,
+      personas: personas
+        .filter((u: AppUser) => u.isActive)
+        .map((u: AppUser) => ({ id: u.id, name: u.name })),
       deps: {
         sales: outboxCounterSaleStore(d.envio.outbox),
         payments: outboxPaymentStore(d.envio.outbox),
+        shifts: outboxCashShiftStore(d.envio.outbox),
         outbox: d.envio.outbox,
         idGenerator: uuidIdGenerator,
         clock: systemClock,

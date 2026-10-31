@@ -12,11 +12,13 @@ import {
   money,
   NO_FISCAL_PROFILE,
   ok,
+  outboxCashShiftStore,
   outboxCounterSaleStore,
   outboxPaymentStore,
   outboxQuoteStore,
   outboxWorkOrderStore,
   seededRandom,
+  type CashDeps,
   type CounterDeps,
   type ManageCustomersDeps,
   type OrderDeps,
@@ -188,9 +190,23 @@ async function montar(
     await convertQuoteToWorkOrder(orderDeps, cajero, q.id);
   }
   const porEnviar = vi.fn();
+  const cash: CashDeps = {
+    shifts: outboxCashShiftStore(outbox),
+    payments: deps.payments,
+    sales: deps.sales,
+    outbox,
+    idGenerator: ids,
+    clock: reloj,
+    device: { id: comunes.device.id },
+  };
   const props: MostradorProps = {
     deps,
     orderDeps,
+    cash,
+    personas: [
+      { id: cajero.userId, name: 'Beto' },
+      { id: ADMIN_ID, name: 'Luis' },
+    ],
     actor: opciones.actor === undefined ? cajero : opciones.actor,
     catalogo: catalogo(opciones.productos ?? [vidrio, chapa]),
     clientes,

@@ -17,6 +17,7 @@ import {
   setTicketQuantity,
   ticketTotals,
   type Authorization,
+  type CashDeps,
   type CounterDeps,
   type CounterSale,
   type Customer,
@@ -40,6 +41,7 @@ import { CampoNumerico } from '../../../shared/ui/Campo';
 import { Campo } from '../../../shared/ui/Campo';
 import { formatearPesos } from '../../../shared/ui/formatos';
 import { DialogoDeAutorizacion } from '../../orders/ui/DialogoDeAutorizacion';
+import { TurnoDeCaja, type Persona } from './TurnoDeCaja';
 import { DialogoDeCobro } from '../../orders/ui/DialogoDeCobro';
 import type { AutorizacionDeAdministrador } from '../../quotes/ui/DialogoDeDescuento';
 
@@ -50,6 +52,9 @@ const MEDIDA_MAXIMA_MM = 10_000;
 
 export interface MostradorProps {
   readonly deps: CounterDeps;
+  /** Turno de caja y corte [S3-16 a S3-19]. */
+  readonly cash: CashDeps;
+  readonly personas: readonly Persona[];
   /** Para cobrar el saldo de una orden desde el mostrador [RF-M4-05]. */
   readonly orderDeps: OrderDeps;
   /** Quién usa la tablet ahora; `null` si nadie ha entrado con su PIN. */
@@ -103,6 +108,7 @@ export function Mostrador(props: MostradorProps): ReactElement {
   const [ordenes, setOrdenes] = useState<readonly WorkOrder[]>([]);
   const [pagos, setPagos] = useState<readonly Payment[]>([]);
   const [clientes, setClientes] = useState<ReadonlyMap<CustomerId, Customer>>(new Map());
+  const [version, setVersion] = useState(0);
 
   const lineDeps = useMemo(() => ({ registry, taxRateBps }), [registry, taxRateBps]);
 
@@ -112,6 +118,7 @@ export function Mostrador(props: MostradorProps): ReactElement {
     setPagos(await orderDeps.payments.list());
     const c = await props.clientes.customers.list();
     setClientes(new Map((c.ok ? c.value : []).map((x) => [x.id, x])));
+    setVersion((v) => v + 1);
   }, [deps.sales, orderDeps, props.clientes]);
 
   useEffect(() => {
@@ -314,6 +321,15 @@ export function Mostrador(props: MostradorProps): ReactElement {
           {ultima.cambio > 0 ? ` · ${t.cobrada.cambio} ${formatearPesos(ultima.cambio)}` : ''}
         </div>
       ) : null}
+
+      <TurnoDeCaja
+        cash={props.cash}
+        actor={persona}
+        personas={props.personas}
+        autorizacion={props.autorizacion}
+        version={version}
+        {...(props.onPorEnviar === undefined ? {} : { onPorEnviar: props.onPorEnviar })}
+      />
 
       <h2>{t.venta.titulo}</h2>
       {elegido === null ? (

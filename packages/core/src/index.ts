@@ -96,3 +96,7 @@ export * from './modules/counter/domain/ticket';
 export * from './modules/counter/application/counter-sale-store';
 export * from './modules/counter/application/counter-use-cases';
 export * from './modules/counter/application/reconcile-sales';
+export * from './modules/cash/domain/cash-shift';
+export * from './modules/cash/application/cash-shift-store';
+export * from './modules/cash/application/cash-use-cases';
+export * from './modules/cash/application/reconcile-shifts';

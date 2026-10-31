@@ -17,6 +17,7 @@ import {
   type DocumentReplicaSource,
   type ReplicatedPayment,
   type ReplicatedSale,
+  type ReplicatedShift,
   type ReplicatedWorkOrder,
 } from './replica-documents';
 import {
@@ -127,6 +128,7 @@ function fuente(datos: {
   ordenes?: ReplicatedWorkOrder[];
   ventas?: ReplicatedSale[];
   pagos?: ReplicatedPayment[];
+  turnos?: ReplicatedShift[];
 }): DocumentReplicaSource & { llamadas: string[] } {
   const llamadas: string[] = [];
   const pagina =
@@ -138,6 +140,7 @@ function fuente(datos: {
   return {
     llamadas,
     ordersChangedAfter: pagina(datos.ordenes ?? [], 'ordenes'),
+    shiftsChangedAfter: pagina(datos.turnos ?? [], 'turnos'),
     salesChangedAfter: pagina(datos.ventas ?? [], 'ventas'),
     paymentsChangedAfter: pagina(datos.pagos ?? [], 'pagos'),
   };
@@ -209,7 +212,7 @@ describe('réplica · cursores y páginas', () => {
     const pagos = Array.from({ length: total }, (_, i) => pagoReplicado(`p${String(i)}`, i + 1));
     const origen = fuente({ ordenes, ventas, pagos });
     const r = await refreshDocuments({ source: origen, outbox, clock: reloj });
-    expect(r.ok && r.value).toEqual({ orders: total, payments: total, sales: total });
+    expect(r.ok && r.value).toEqual({ orders: total, payments: total, sales: total, shifts: 0 });
     expect(await outboxWorkOrderStore(outbox).list()).toHaveLength(total);
     expect(await outboxCounterSaleStore(outbox).list()).toHaveLength(total);
     expect(await outboxPaymentStore(outbox).list()).toHaveLength(total);

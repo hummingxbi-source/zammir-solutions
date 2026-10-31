@@ -6,6 +6,7 @@ import {
   type DocumentReplicaSource,
   type Payment,
   type ReplicatedSale,
+  type ReplicatedShift,
   type ReplicatedWorkOrder,
   type WorkOrderLine,
   type WorkOrderStatus,
@@ -65,6 +66,21 @@ interface FilaDeVenta {
   readonly change_seq: number;
   readonly lines: readonly WorkOrderLine[];
   readonly cash_shift_id: string | null;
+}
+
+interface FilaDeTurno {
+  readonly id: string;
+  readonly user_id: string;
+  readonly opened_at: string;
+  readonly opening_float_cents: number;
+  readonly status: 'OPEN' | 'CLOSED';
+  readonly closed_at: string | null;
+  readonly counted_cash_cents: number | null;
+  readonly expected_cash_cents: number | null;
+  readonly difference_cents: number | null;
+  readonly pending_at_close: number | null;
+  readonly review_reason: string | null;
+  readonly change_seq: number;
 }
 
 interface FilaDePago {
@@ -132,6 +148,37 @@ export function supabaseDocumentReplica(cliente: SupabaseClient): DocumentReplic
           cancelledFromStatus: f.cancelled_from_status,
           cancelDepositPaidCents: f.cancel_deposit_paid_cents,
           userId: asId<'User'>(f.user_id),
+          syncStatus: 'SENT',
+          reviewReason: f.review_reason,
+          changeSeq: f.change_seq,
+        })),
+      );
+    },
+
+    async shiftsChangedAfter(seq, limit) {
+      const r = await cliente
+        .from('cash_shifts_for_device')
+        .select('*')
+        .gt('change_seq', seq)
+        .order('change_seq')
+        .limit(limit);
+      if (r.error !== null) {
+        return err({ code: 'DOCUMENTS_UNAVAILABLE' });
+      }
+      return ok(
+        (r.data as FilaDeTurno[]).map((f): ReplicatedShift => ({
+          id: f.id,
+          cashierId: asId<'User'>(f.user_id),
+          deviceId: null,
+          status: f.status,
+          openedAt: f.opened_at,
+          openingFloatCents: f.opening_float_cents,
+          closedAt: f.closed_at,
+          countedCashCents: f.counted_cash_cents,
+          expectedCashCents: f.expected_cash_cents,
+          differenceCents: f.difference_cents,
+          pendingAtClose: f.pending_at_close,
+          reopenings: [],
           syncStatus: 'SENT',
           reviewReason: f.review_reason,
           changeSeq: f.change_seq,

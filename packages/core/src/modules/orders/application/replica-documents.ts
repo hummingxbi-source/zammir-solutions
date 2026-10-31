@@ -3,6 +3,8 @@ import type { Payment } from '../../payments/domain/payment';
 import type { Clock } from '../../../shared-kernel/clock';
 import type { CounterSale } from '../../counter/domain/counter-sale';
 import { COUNTER_SALES_COLLECTION } from '../../counter/application/counter-sale-store';
+import { CASH_SHIFTS_COLLECTION } from '../../cash/application/cash-shift-store';
+import type { CashShift } from '../../cash/domain/cash-shift';
 import type { SyncOutbox } from '../../sync/application/ports';
 import type { WorkOrder } from '../domain/work-order';
 import { PAYMENTS_COLLECTION, WORK_ORDERS_COLLECTION } from './work-order-store';
@@ -17,6 +19,7 @@ export interface ReplicaDocumentsError {
 export type ReplicatedWorkOrder = Omit<WorkOrder, 'updatedAt'> & { readonly changeSeq: number };
 export type ReplicatedPayment = Payment & { readonly changeSeq: number };
 export type ReplicatedSale = Omit<CounterSale, 'updatedAt'> & { readonly changeSeq: number };
+export type ReplicatedShift = Omit<CashShift, 'updatedAt'> & { readonly changeSeq: number };
 
 /** De dónde baja la tablet las órdenes y los pagos de las demás tablets (el servidor). */
 export interface DocumentReplicaSource {
@@ -24,6 +27,10 @@ export interface DocumentReplicaSource {
     seq: number,
     limit: number,
   ): Promise<Result<readonly ReplicatedWorkOrder[], ReplicaDocumentsError>>;
+  shiftsChangedAfter(
+    seq: number,
+    limit: number,
+  ): Promise<Result<readonly ReplicatedShift[], ReplicaDocumentsError>>;
   salesChangedAfter(
     seq: number,
     limit: number,
@@ -66,13 +73,19 @@ export async function refreshDocuments(deps: {
   readonly clock: Clock;
 }): Promise<
   Result<
-    { readonly orders: number; readonly payments: number; readonly sales: number },
+    {
+      readonly orders: number;
+      readonly payments: number;
+      readonly sales: number;
+      readonly shifts: number;
+    },
     ReplicaDocumentsError
   >
 > {
   let ordenes = 0;
   let pagos = 0;
   let ventas = 0;
+  let turnos = 0;
 
   for (;;) {
     const desde = await cursor(deps.outbox, 'orders');
@@ -143,6 +156,40 @@ export async function refreshDocuments(deps: {
   }
 
   for (;;) {
+    const desde = await cursor(deps.outbox, 'shifts');
+    const pagina = await deps.source.shiftsChangedAfter(desde, DOCUMENT_REPLICA_PAGE_SIZE);
+    if (!pagina.ok) {
+      return err(pagina.error);
+    }
+    if (pagina.value.length > 0) {
+      const pendientes = new Set(
+        (await deps.outbox.list())
+          .filter((o) => o.status === 'PENDING' || o.status === 'FAILED')
+          .map((o) => ordenDeOperacion(o.envelope.type, o.envelope.payload)),
+      );
+      const mayor = Math.max(...pagina.value.map((t) => t.changeSeq));
+      const instante = deps.clock.now().toISOString();
+      await deps.outbox.transaction(async (tx) => {
+        for (const completo of pagina.value) {
+          const turno = sinCambio(completo);
+          if (!pendientes.has(turno.id)) {
+            await tx.putDocument(CASH_SHIFTS_COLLECTION, turno.id, {
+              ...turno,
+              syncStatus: 'SENT',
+              updatedAt: instante,
+            });
+          }
+        }
+        await tx.putDocument(META, 'shifts', mayor);
+      });
+      turnos += pagina.value.length;
+    }
+    if (pagina.value.length < DOCUMENT_REPLICA_PAGE_SIZE) {
+      break;
+    }
+  }
+
+  for (;;) {
     const desde = await cursor(deps.outbox, 'payments');
     const pagina = await deps.source.paymentsChangedAfter(desde, DOCUMENT_REPLICA_PAGE_SIZE);
     if (!pagina.ok) {
@@ -165,5 +212,5 @@ export async function refreshDocuments(deps: {
       break;
     }
   }
-  return ok({ orders: ordenes, payments: pagos, sales: ventas });
+  return ok({ orders: ordenes, payments: pagos, sales: ventas, shifts: turnos });
 }
