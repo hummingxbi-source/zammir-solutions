@@ -13,3 +13,4 @@ export * from './modules/legal/contracts/legal-repository.contract';
 export * from './modules/audit/contracts/audit-reader.contract';
 export * from './modules/sync/contracts/folio-allocator.contract';
 export * from './modules/sync/contracts/operation-receiver.contract';
+export * from './modules/sync/contracts/sync-outbox.contract';
