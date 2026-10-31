@@ -12,6 +12,7 @@ const CARPETAS_CRITICAS = [
   'packages/core/src/modules/quotes/domain',
   'packages/core/src/modules/orders/domain',
   'packages/core/src/modules/payments/domain',
+  'packages/core/src/modules/counter/domain',
 ];
 
 const existentes = CARPETAS_CRITICAS.filter((carpeta) => existsSync(carpeta));

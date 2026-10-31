@@ -1,11 +1,12 @@
 import 'fake-indexeddb/auto';
 import {
   fixedClock,
+  outboxCounterSaleStore,
   outboxPaymentStore,
   outboxWorkOrderStore,
   refreshDocuments,
 } from '@zammir/core';
-import { createWorkOrderOperation } from '@zammir/core/testing';
+import { createCounterSaleOperation, createWorkOrderOperation } from '@zammir/core/testing';
 import { describe, expect, it } from 'vitest';
 
 import { dexieOperaciones } from '../../../shared/infra/sync/dexie-operaciones';
@@ -57,6 +58,22 @@ describe('réplica de órdenes y pagos con el servidor real', () => {
     });
     expect(cobrada.ok).toBe(true);
 
+    const ventaId = harness.newUuid();
+    const venta = await quien.receiver.receive(
+      createCounterSaleOperation({
+        opId: harness.newUuid(),
+        deviceId: quien.id,
+        seq: 3,
+        userId: usuario,
+        year,
+        newUuid: () => harness.newUuid(),
+        publicCode: harness.newPublicCode(),
+        saleId: ventaId,
+        mixto: true,
+      }),
+    );
+    expect(venta.ok).toBe(true);
+
     const reloj = fixedClock(new Date('2026-10-31T20:00:00.000Z'));
     const outbox = dexieOperaciones({ clock: reloj, nombre: `replica-${crypto.randomUUID()}` });
     const fuente = supabaseDocumentReplica(otra.session);
@@ -85,9 +102,19 @@ describe('réplica de órdenes y pagos con el servidor real', () => {
       changeCents: 200,
     });
 
+    const ventaLocal = await outboxCounterSaleStore(outbox).get(ventaId);
+    expect(ventaLocal).toMatchObject({
+      status: 'COMPLETED',
+      folio: `V-${String(year)}-0001`,
+      totalCents: 11_600,
+      syncStatus: 'SENT',
+    });
+    expect(await outboxPaymentStore(outbox).listByTarget(ventaId)).toHaveLength(2);
+
     const segunda = await refreshDocuments({ source: fuente, outbox, clock: reloj });
     expect(segunda.ok && segunda.value.orders).toBe(0);
     expect(segunda.ok && segunda.value.payments).toBe(0);
+    expect(segunda.ok && segunda.value.sales).toBe(0);
   }, 60_000);
 
   it('las vistas de la tablet no traen columnas fiscales ni de relleno', async () => {

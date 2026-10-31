@@ -298,7 +298,7 @@ export async function applyOrderOperation(ctx: {
           folio: folio.value,
           documentId: p.id,
           ...(reason === undefined ? {} : { reason }),
-        } as OperationResult;
+        };
       });
     }
 

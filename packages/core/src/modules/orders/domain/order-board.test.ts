@@ -24,17 +24,17 @@ function orden(id: string, c: Record<string, unknown> = {}): WorkOrder {
 }
 
 const todas = [
-  orden('a', { status: 'WAITING', customerId: 'c1', measuredBy: 'u1' as never }),
+  orden('a', { status: 'WAITING', customerId: 'c1', measuredBy: 'u1' }),
   orden('b', {
     status: 'IN_PROCESS',
     customerId: 'c2',
-    builtBy: 'u1' as never,
+    builtBy: 'u1',
     issuedAt: '2026-10-20T18:00:00.000Z',
   }),
   orden('c', {
     status: 'READY',
     customerId: 'c1',
-    installedBy: 'u2' as never,
+    installedBy: 'u2',
     issuedAt: '2026-11-02T18:00:00.000Z',
   }),
   orden('d', { status: 'DELIVERED', customerId: 'c3', issuedAt: '2026-11-03T05:30:00.000Z' }),

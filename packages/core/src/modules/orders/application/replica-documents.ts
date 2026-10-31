@@ -64,7 +64,12 @@ export async function refreshDocuments(deps: {
   readonly source: DocumentReplicaSource;
   readonly outbox: SyncOutbox;
   readonly clock: Clock;
-}): Promise<Result<{ readonly orders: number; readonly payments: number }, ReplicaDocumentsError>> {
+}): Promise<
+  Result<
+    { readonly orders: number; readonly payments: number; readonly sales: number },
+    ReplicaDocumentsError
+  >
+> {
   let ordenes = 0;
   let pagos = 0;
   let ventas = 0;

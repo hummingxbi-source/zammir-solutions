@@ -58,6 +58,7 @@ Inventario del Sprint 1: [`SPRINT-1-EJECUCION.md`](SPRINT-1-EJECUCION.md) §2. D
 | Reconciliación y réplica | `reconcile-orders.ts` (`afterPass` del motor) y `replica-documents.ts` (`refreshDocuments`, `DocumentReplicaSource`); web: `orders/infra/supabase-document-replica.ts` y `composition.envio.actualizarDocumentos` (se llama en `ponerAlDia`) | Una orden con operación pendiente no se sobrescribe; un pago ya guardado no se toca |
 | Comprobante | `core/modules/documents/domain/work-order-document.ts` (`buildWorkOrderDocument`, `autoinvoiceUrl`); `QuoteDocument.receipt`; render en `pdf-lib-renderer.ts` (pagos, saldo, garantía, QR vectorial); `documents/infra/qr-matrix.ts`; `orders/ui/comprobante.ts` (`compartirComprobante`) | Nombre de archivo `Comprobante-<folio>.pdf`; prueba `acceptance/s3-comprobante.test.ts` lee el PDF con pdf.js y el QR con jsqr |
 | Fotos | `orders/application/order-photos.ts` (`attachOrderPhoto`, `uploadPendingPhotos`, `fitWithin`, límites); web: `dexie-photo-store.ts`, `canvas-image-compressor.ts`, `supabase-photo-uploader.ts`; `composition.envio.subirFotos` | No usa la cola de operaciones; la compresión con lienzo no se puede probar en jsdom |
+| Mostrador | migración `20261031120000_counter_sales.sql` (ventas, líneas, vista `counter_sales_for_device`, `CreateCounterSale`/`CancelCounterSale`); núcleo `core/modules/counter/` (`domain/ticket.ts` ticket puro, `domain/counter-sale.ts`, `application/counter-use-cases.ts`: `chargeCounterSale`, `cancelCounterSale`, `counter-sale-store.ts`, `reconcile-sales.ts`); pantalla `apps/web/src/modules/counter/ui/Mostrador.tsx`; `composition.prepararMostrador` | ADR-0026. Tras tocar `packages/core` hay que correr `pnpm funciones:empaquetar` antes de `pnpm test:integracion`: la función de borde usa el núcleo empaquetado |
 | Pantallas | `apps/web/src/modules/orders/ui/`: `Ordenes.tsx` (lista, filtro por estatus, cotizaciones por convertir), `DetalleDeOrden.tsx` (totales, pagos, datos, fotos, acciones), `DialogoDeCobro.tsx`, `DialogoDeAutorizacion.tsx`, `OrdenesEnLaTablet.tsx`; `composition.prepararOrdenes`; `LoginSnapshot.orders` | Textos en `textos.ordenes` y `textos.documento.comprobante` |
 
 ## 3. Cómo trabajar (resumen)
@@ -195,12 +196,12 @@ E1 (cotizar → aceptar → orden → anticipo → avanzar → entregar con sald
 | S3-07 Garantía | M | **hecha** (duración vacía mientras PD-06 no se defina) | `feat/s3-ordenes` |
 | S3-08 Cancelación de la orden | S | **hecha** | `feat/s3-ordenes` |
 | S3-09 Comprobante PDF con QR | L | **hecha** (PDF verificado con otro lector y QR decodificado; falta verla y escanearla desde la tablet) | `feat/s3-ordenes` |
-| S3-10 Tablero y lista | M | pendiente | |
-| S3-11 Venta rápida y ticket actual | M | pendiente | |
-| S3-12 Cobro (efectivo, transferencia, mixto) | M | pendiente | |
-| S3-13 Atribución y folio de la venta | S | pendiente | |
-| S3-14 Cobrar saldos desde Mostrador | S | pendiente | |
-| S3-15 Cancelar una venta | S | pendiente | |
+| S3-10 Tablero y lista | M | **hecha** (conteo por estatus, filtros combinados por estatus, cliente, responsable y fechas; resumen para administradores) | `feat/s3-mostrador` |
+| S3-11 Venta rápida y ticket actual | M | **hecha** (ticket puro con mutación 100 %; falta el catálogo rápido PP-08, no aprobado) | `feat/s3-mostrador` |
+| S3-12 Cobro (efectivo, transferencia, mixto) | M | **hecha** | `feat/s3-mostrador` |
+| S3-13 Atribución y folio de la venta | S | **hecha** (usuario, dispositivo, hora UTC; folio provisional y `V-AAAA-NNNN`) | `feat/s3-mostrador` |
+| S3-14 Cobrar saldos desde Mostrador | S | **hecha** (mismo `registerWorkOrderPayment`) | `feat/s3-mostrador` |
+| S3-15 Cancelar una venta | S | **hecha** (PD-24: solo se registra) | `feat/s3-mostrador` |
 | S3-16 Turno de caja | M | pendiente | |
 | S3-17 Corte por cajero | L | pendiente | |
 | S3-18 Corte consolidado | M | pendiente | |

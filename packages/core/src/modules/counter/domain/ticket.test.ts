@@ -135,6 +135,48 @@ describe('ticket actual del mostrador', () => {
     expect(medidas.lines).toHaveLength(2);
   });
 
+  it('productos distintos con las mismas medidas no se mezclan', () => {
+    const t = con([pieza, {}], [servicio, {}]);
+    expect(t.lines).toHaveLength(2);
+    expect(t.lines.map((l) => l.name)).toEqual(['Chapa de baño', 'Instalación']);
+  });
+
+  it('el mismo vidrio con otro ancho, o con otro alto, es otra línea', () => {
+    const base = con([vidrio, { widthMm: 1000, heightMm: 1000 }]);
+    const otroAncho = addToTicket(base, vidrio, entrada({ widthMm: 1200, heightMm: 1000 }), deps);
+    const otroAlto = addToTicket(base, vidrio, entrada({ widthMm: 1000, heightMm: 1200 }), deps);
+    const igual = addToTicket(base, vidrio, entrada({ widthMm: 1000, heightMm: 1000 }), deps);
+    expect(otroAncho.ok && otroAncho.value.lines).toHaveLength(2);
+    expect(otroAlto.ok && otroAlto.value.lines).toHaveLength(2);
+    expect(igual.ok && igual.value.lines).toHaveLength(1);
+  });
+
+  it('una pieza con medidas y la misma sin ellas no se mezclan', () => {
+    const conMedidas = con([vidrio, { widthMm: 1000, heightMm: 1000 }]);
+    const sinMedidas = addToTicket(
+      conMedidas,
+      vidrio,
+      entrada({ widthMm: null, heightMm: null }),
+      deps,
+    );
+    expect(sinMedidas.ok).toBe(false);
+  });
+
+  it('el mismo producto a otro precio es otra línea', () => {
+    const barato: QuoteProduct = { ...pieza, listPrice: precio(10_000) };
+    const t = con([pieza, {}], [barato, {}]);
+    expect(t.lines).toHaveLength(2);
+    expect(t.lines.map((l) => l.unitPriceCents)).toEqual([11_600, 10_000]);
+  });
+
+  it('una cantidad de uno es válida y cambiar una línea no toca las demás', () => {
+    const t = con([pieza, { quantity: 4 }], [servicio, { quantity: 2 }]);
+    const [a, b] = t.lines;
+    const r = setTicketQuantity(t, a?.id ?? '', 1, deps);
+    expect(r.ok && r.value.lines[0]?.quantity).toBe(1);
+    expect(r.ok && r.value.lines[1]).toEqual(b);
+  });
+
   it('quitar una línea la saca del ticket y del total', () => {
     const t = con([pieza, {}], [servicio, {}]);
     const sin = removeFromTicket(t, t.lines[0]?.id ?? '');

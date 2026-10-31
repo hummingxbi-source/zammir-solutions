@@ -24,6 +24,10 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { Cotizador, type CotizadorProps } from './Cotizador';
 
+// La pantalla completa se monta entera y, con todo el conjunto corriendo a la vez, puede pasar de los 5 s por
+// omisión: este archivo pide más margen solo para él (la configuración global no se toca).
+vi.setConfig({ testTimeout: 30_000 });
+
 const registro = (() => {
   const r = createPriceRegistry(defaultRules);
   if (!r.ok) {
