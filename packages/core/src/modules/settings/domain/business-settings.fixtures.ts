@@ -31,6 +31,8 @@ export function filasValidas(cambios: Record<string, unknown> = {}): SettingRow[
     local_retention_days: null,
     sync_stale_hours: 6,
     quote_conditions: 'Condición uno.\nCondición dos.',
+    require_deposit_to_start: true,
+    public_base_url: null,
   };
   return Object.entries({ ...base, ...cambios }).map(([key, value]) => ({ key, value }));
 }

@@ -4,6 +4,8 @@ import {
   createActiveUserSession,
   localProductReader,
   outboxCustomers,
+  outboxPaymentStore,
+  outboxWorkOrderStore,
   outboxQuoteStore,
   reconcileOrders,
   reconcileQuotes,
@@ -61,6 +63,7 @@ import { supabaseQuoteConditions } from '../modules/settings/infra/supabase-quot
 import { pdfLibRenderer } from '../modules/documents/infra/pdf-lib-renderer';
 import { entornoDelNavegador, webShareService } from '../modules/documents/infra/web-share-service';
 import type { PrepararCotizador } from '../modules/quotes/ui/CotizadorEnLaTablet';
+import type { PrepararOrdenes } from '../modules/orders/ui/OrdenesEnLaTablet';
 import { cryptoRandom } from '../shared/infra/crypto-random';
 import { browserTimer } from '../shared/infra/sync/browser-timer';
 import { dexieOperaciones } from '../shared/infra/sync/dexie-operaciones';
@@ -125,6 +128,8 @@ export interface Composition {
   } | null;
   /** Cómo reunir lo que el cotizador necesita; `null` si no hay servidor configurado. */
   readonly prepararCotizador: PrepararCotizador | null;
+  /** Cómo reunir lo que las órdenes de trabajo necesitan; `null` si no hay servidor configurado. */
+  readonly prepararOrdenes: PrepararOrdenes | null;
   /** Altas, PIN y desactivación de personas; `null` si no hay servidor configurado. */
   readonly usuarios: ManageUsersDeps | null;
   /** Mínimo de dígitos del PIN de un administrador y vueltas de PBKDF2, de la configuración. */
@@ -396,6 +401,85 @@ function crearPreparadorDelCotizador(d: {
   };
 }
 
+/** Lo que las órdenes toman de la tablet: configuración y personas bajadas, la cola de salida y lo ya
+ *  guardado de órdenes y pagos [S3-*]. */
+function crearPreparadorDeOrdenes(d: {
+  readonly envio: NonNullable<Composition['envio']>;
+  readonly entradaConPin: NonNullable<Composition['entradaConPin']>;
+  readonly credenciales: CredencialesDeLaTablet;
+}): PrepararOrdenes {
+  const identidad = dexieIdentity();
+  return async () => {
+    const credenciales = await d.credenciales.load();
+    const copia = await identidad.store.load();
+    if (credenciales === null || copia?.orders === undefined) {
+      return null;
+    }
+    const personas = copia.users;
+    const usuarios = {
+      get: (id: UserId) => {
+        const p = personas.find((u: AppUser) => u.id === id);
+        return Promise.resolve(p === undefined ? err({ code: 'NOT_FOUND' as const }) : ok(p));
+      },
+    };
+    return {
+      deps: {
+        orders: outboxWorkOrderStore(d.envio.outbox),
+        payments: outboxPaymentStore(d.envio.outbox),
+        quotes: outboxQuoteStore(d.envio.outbox),
+        outbox: d.envio.outbox,
+        idGenerator: uuidIdGenerator,
+        clock: systemClock,
+        random: cryptoRandom,
+        device: { id: credenciales.device.id, series: credenciales.device.tempSeries },
+        settings: {
+          depositPercentBps: copia.orders.depositPercentBps,
+          requireDepositToStart: copia.orders.requireDepositToStart,
+          warrantyMonthsDefault: copia.orders.warrantyMonthsDefault,
+        },
+      },
+      clientes: {
+        customers: outboxCustomers({
+          outbox: d.envio.outbox,
+          clock: systemClock,
+          idGenerator: uuidIdGenerator,
+          device: { id: credenciales.device.id },
+          currentUserId: () => {
+            const estado = d.entradaConPin.session.state();
+            return estado.kind === 'ACTIVE' ? estado.user.id : null;
+          },
+        }),
+        idGenerator: uuidIdGenerator,
+      },
+      personas: personas
+        .filter((u: AppUser) => u.isActive)
+        .map((u: AppUser) => ({ id: u.id, name: u.name })),
+      autorizacion: {
+        administradores: () =>
+          Promise.resolve(
+            personas
+              .filter((u: AppUser) => u.role === 'ADMIN' && u.isActive)
+              .map((u: AppUser) => ({ id: u.id, name: u.name })),
+          ),
+        autorizar: (adminId: string, pin: string) =>
+          authorizeWithAdminPin(
+            {
+              users: usuarios,
+              hasher: d.entradaConPin.deps.hasher,
+              guard: d.entradaConPin.deps.guard,
+              clock: systemClock,
+            },
+            { adminId: adminId as UserId, pin },
+          ),
+      },
+      alCambiarElEnvio: (aviso: () => void) => d.envio.engine.subscribe(aviso),
+      onPorEnviar: () => {
+        void d.envio.engine.trigger();
+      },
+    };
+  };
+}
+
 export function createComposition(entorno: EntornoSupabase = {}): Composition {
   const cliente = createSupabaseClient(entorno.url, entorno.anonKey);
   const ajustes = cliente === null ? null : supabaseSettingsRepository(cliente);
@@ -428,10 +512,20 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
           reglas,
         });
 
+  const prepararOrdenes: PrepararOrdenes | null =
+    envio === null || entradaConPin === null
+      ? null
+      : crearPreparadorDeOrdenes({
+          envio,
+          entradaConPin,
+          credenciales: credencialesDeLaTablet,
+        });
+
   return {
     clock: systemClock,
     idGenerator: uuidIdGenerator,
     prepararCotizador,
+    prepararOrdenes,
     adminAuth: cliente === null ? adminAuthNoConfigurada : supabaseAdminAuth(cliente),
     dispositivos: cliente === null ? null : supabaseDeviceRepository(cliente),
     catalogo:
