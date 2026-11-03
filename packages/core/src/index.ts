@@ -108,3 +108,5 @@ export * from './modules/printing/application/print-ticket';
 export * from './modules/printing/infra/fake-ticket-printer';
 export * from './modules/customers/domain/customer-history';
 export * from './modules/customers/application/load-customer-history';
+export * from './modules/receivables/domain/receivables';
+export * from './modules/receivables/application/remind-receivable';

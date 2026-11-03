@@ -13,6 +13,7 @@ export default {
     'packages/core/src/modules/payments/domain/payment.ts',
     'packages/core/src/modules/counter/domain/ticket.ts',
     'packages/core/src/modules/cash/domain/cash-shift.ts',
+    'packages/core/src/modules/receivables/domain/receivables.ts',
     'packages/core/src/modules/customers/domain/customer-history.ts',
     'packages/core/src/modules/printing/domain/escpos.ts',
     'packages/core/src/modules/printing/domain/print-document.ts',

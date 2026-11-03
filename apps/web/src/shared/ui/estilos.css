@@ -290,6 +290,15 @@ h3 {
   text-align: left;
 }
 
+/* Cuenta atrasada: la franja ayuda, pero el aviso "Atrasada" va también en texto (no solo color). */
+.tabla .fila--atrasada th {
+  border-inline-start: 4px solid var(--color-error);
+}
+
+.tabla .fila--atrasada strong {
+  color: var(--color-error);
+}
+
 .codigo-registro {
   font-family: var(--fuente-etiqueta);
   font-size: 2rem;

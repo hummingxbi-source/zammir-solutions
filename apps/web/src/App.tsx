@@ -16,6 +16,10 @@ import type {
 import { Bitacora, type BitacoraProps } from './modules/audit/ui/Bitacora';
 import { ImportarCatalogo } from './modules/catalog/ui/ImportarCatalogo';
 import { Clientes } from './modules/customers/ui/Clientes';
+import {
+  CuentasEnLaTablet,
+  type PrepararCuentas,
+} from './modules/receivables/ui/CuentasEnLaTablet';
 import { CondicionesDeCotizacion } from './modules/quotes/ui/CondicionesDeCotizacion';
 import { AvisoDePrivacidad } from './modules/legal/ui/AvisoDePrivacidad';
 import { EntrarConPin } from './modules/identity/ui/EntrarConPin';
@@ -68,6 +72,8 @@ export interface AppProps {
   readonly prepararMostrador?: PrepararMostrador | null;
   /** Órdenes de trabajo de la tablet: cómo reunir lo que necesita; sin esto la sección queda vacía. */
   readonly prepararOrdenes?: PrepararOrdenes | null;
+  /** Cuentas por cobrar de la tablet: cómo reunir lo que necesitan; sin esto la sección queda como antes. */
+  readonly prepararCuentas?: PrepararCuentas | null;
   /** Historial de un cliente desde lo guardado en la tablet (ficha en Clientes). */
   readonly historialDeCliente?: ((id: CustomerId) => Promise<CustomerHistory>) | null;
   /** Estado del envío de lo guardado en la tablet ("N pendientes"). */
@@ -92,6 +98,7 @@ export function App({
   sincronizacion,
   prepararCotizador = null,
   prepararOrdenes = null,
+  prepararCuentas = null,
   historialDeCliente = null,
   prepararMostrador = null,
   cargarVigenciaDeCodigo,
@@ -129,7 +136,11 @@ export function App({
             key={seccion.id}
             path={seccion.ruta}
             element={
-              seccion.soloAdministrador === true ? (
+              seccion.id === 'cuentas-por-cobrar' &&
+              prepararCuentas !== null &&
+              entradaConPin !== null ? (
+                <CuentasEnLaTablet preparar={prepararCuentas} session={entradaConPin.session} />
+              ) : seccion.soloAdministrador === true ? (
                 <ProtegidaAdmin>
                   {seccion.id === 'configuracion' && legal !== null ? (
                     <section>
