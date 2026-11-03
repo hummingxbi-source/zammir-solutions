@@ -299,7 +299,6 @@ h3 {
   color: var(--color-error);
 }
 
-<<<<<<< HEAD
 /* Tablas que se apilan en el celular: cada fila es una tarjeta y cada celda lleva su rótulo, así no hay
  * desplazamiento horizontal [RNF-31]. */
 @media (max-width: 40rem) {
@@ -350,8 +349,6 @@ h3 {
   overflow-wrap: anywhere;
 }
 
-=======
->>>>>>> origin/main
 .codigo-registro {
   font-family: var(--fuente-etiqueta);
   font-size: 2rem;

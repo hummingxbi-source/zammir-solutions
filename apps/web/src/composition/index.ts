@@ -85,10 +85,7 @@ import {
   webBluetoothPrinter,
   type EntornoBluetooth,
 } from '../modules/printing/infra/web-bluetooth-printer';
-<<<<<<< HEAD
 import type { PrepararReportes } from '../modules/reports/ui/ReportesEnLaTablet';
-=======
->>>>>>> origin/main
 import type { PrepararCuentas } from '../modules/receivables/ui/CuentasEnLaTablet';
 import type { ImpresionDeTickets } from '../modules/printing/ui/impresion';
 import type { PrepararCotizador } from '../modules/quotes/ui/CotizadorEnLaTablet';
@@ -172,10 +169,7 @@ export interface Composition {
   /** Cómo reunir lo que las órdenes de trabajo necesitan; `null` si no hay servidor configurado. */
   readonly prepararOrdenes: PrepararOrdenes | null;
   readonly prepararCuentas: PrepararCuentas | null;
-<<<<<<< HEAD
   readonly prepararReportes: PrepararReportes | null;
-=======
->>>>>>> origin/main
   readonly historialDeCliente: ((id: CustomerId) => Promise<CustomerHistory>) | null;
   /** Altas, PIN y desactivación de personas; `null` si no hay servidor configurado. */
   readonly usuarios: ManageUsersDeps | null;
@@ -793,7 +787,6 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
           };
         };
 
-<<<<<<< HEAD
   const prepararReportes: PrepararReportes | null =
     prepararOrdenes === null || envio === null
       ? null
@@ -812,8 +805,6 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
           };
         };
 
-=======
->>>>>>> origin/main
   const prepararMostrador: PrepararMostrador | null =
     envio === null || catalogoLocal === null || entradaConPin === null || reglas === null
       ? null
@@ -832,10 +823,7 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
     prepararMostrador,
     prepararOrdenes,
     prepararCuentas,
-<<<<<<< HEAD
     prepararReportes,
-=======
->>>>>>> origin/main
     historialDeCliente,
     adminAuth: cliente === null ? adminAuthNoConfigurada : supabaseAdminAuth(cliente),
     dispositivos: cliente === null ? null : supabaseDeviceRepository(cliente),
