@@ -16,7 +16,10 @@ import type {
 import { Bitacora, type BitacoraProps } from './modules/audit/ui/Bitacora';
 import { ImportarCatalogo } from './modules/catalog/ui/ImportarCatalogo';
 import { Clientes } from './modules/customers/ui/Clientes';
+<<<<<<< HEAD
 import { ReportesEnLaTablet, type PrepararReportes } from './modules/reports/ui/ReportesEnLaTablet';
+=======
+>>>>>>> origin/main
 import {
   CuentasEnLaTablet,
   type PrepararCuentas,
@@ -75,8 +78,11 @@ export interface AppProps {
   readonly prepararOrdenes?: PrepararOrdenes | null;
   /** Cuentas por cobrar de la tablet: cómo reunir lo que necesitan; sin esto la sección queda como antes. */
   readonly prepararCuentas?: PrepararCuentas | null;
+<<<<<<< HEAD
   /** Reportes de la tablet: cómo reunir lo que necesitan; sin esto la sección queda como antes. */
   readonly prepararReportes?: PrepararReportes | null;
+=======
+>>>>>>> origin/main
   /** Historial de un cliente desde lo guardado en la tablet (ficha en Clientes). */
   readonly historialDeCliente?: ((id: CustomerId) => Promise<CustomerHistory>) | null;
   /** Estado del envío de lo guardado en la tablet ("N pendientes"). */
@@ -102,7 +108,10 @@ export function App({
   prepararCotizador = null,
   prepararOrdenes = null,
   prepararCuentas = null,
+<<<<<<< HEAD
   prepararReportes = null,
+=======
+>>>>>>> origin/main
   historialDeCliente = null,
   prepararMostrador = null,
   cargarVigenciaDeCodigo,
@@ -140,11 +149,17 @@ export function App({
             key={seccion.id}
             path={seccion.ruta}
             element={
+<<<<<<< HEAD
               seccion.id === 'reportes' && prepararReportes !== null && entradaConPin !== null ? (
                 <ReportesEnLaTablet preparar={prepararReportes} session={entradaConPin.session} />
               ) : seccion.id === 'cuentas-por-cobrar' &&
                 prepararCuentas !== null &&
                 entradaConPin !== null ? (
+=======
+              seccion.id === 'cuentas-por-cobrar' &&
+              prepararCuentas !== null &&
+              entradaConPin !== null ? (
+>>>>>>> origin/main
                 <CuentasEnLaTablet preparar={prepararCuentas} session={entradaConPin.session} />
               ) : seccion.soloAdministrador === true ? (
                 <ProtegidaAdmin>

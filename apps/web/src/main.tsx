@@ -51,7 +51,10 @@ createRoot(root).render(
           prepararCotizador={composition.prepararCotizador}
           prepararOrdenes={composition.prepararOrdenes}
           prepararCuentas={composition.prepararCuentas}
+<<<<<<< HEAD
           prepararReportes={composition.prepararReportes}
+=======
+>>>>>>> origin/main
           historialDeCliente={composition.historialDeCliente}
           prepararMostrador={composition.prepararMostrador}
           sincronizacion={composition.envio?.visible}

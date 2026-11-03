@@ -336,6 +336,7 @@ export const textos = {
       },
     },
   },
+<<<<<<< HEAD
   reportes: {
     titulo: 'Reportes',
     sinNombre: 'Persona desconocida',
@@ -414,6 +415,8 @@ export const textos = {
       cobros: 'Cobros',
     },
   },
+=======
+>>>>>>> origin/main
   cuentas: {
     titulo: 'Cuentas por cobrar',
     descripcion: (dias: number): string =>
