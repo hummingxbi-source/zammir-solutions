@@ -25,7 +25,9 @@ export interface CfdiConcept {
   readonly description: string;
   /** Cantidad, puede ser decimal (metros cuadrados). No es dinero. */
   readonly quantity: number;
-  readonly unitValueCents: number;
+  /** Valor unitario sin IVA en **millonésimas de peso** (el SAT admite hasta 6 decimales): así
+   *  cantidad × valor unitario cuadra con el importe aunque el precio por unidad no sea de centavos exactos. */
+  readonly unitValueMicros: number;
   readonly amountCents: number;
   readonly taxObject: TaxObject;
   /** IVA trasladado del concepto, en centavos. Cero cuando no es objeto de impuesto o está exento. */
@@ -110,6 +112,14 @@ export function invoiceTotals(concepts: readonly CfdiConcept[]): {
 
 const entero = (n: number): boolean => Number.isInteger(n) && n >= 0;
 
+const MICROS_POR_CENTAVO = 10_000;
+
+/** Valor unitario en millonésimas de peso de un concepto con ese importe y esa cantidad, redondeado al más
+ *  cercano. Con él, `cantidad × valor unitario` vuelve al importe del concepto. */
+export function unitValueMicros(amountCents: number, quantity: number): number {
+  return Math.round((amountCents * MICROS_POR_CENTAVO) / quantity);
+}
+
 /** Revisa en la frontera lo que se manda al PAC, para no gastar un timbre en una solicitud que va a fallar:
  *  RFC de 12 o 13 caracteres, código postal de 5 dígitos, datos del receptor completos y conceptos con
  *  importes enteros que cuadran (cantidad × valor unitario = importe) [RF-M10-13, RN-28]. Devuelve los
@@ -154,9 +164,11 @@ export function validateStampRequest(
     if (!(c.quantity > 0) || !Number.isFinite(c.quantity)) {
       fields.push(campo('quantity'));
     }
-    if (!entero(c.unitValueCents) || !entero(c.amountCents) || !entero(c.taxCents)) {
+    if (!entero(c.unitValueMicros) || !entero(c.amountCents) || !entero(c.taxCents)) {
       fields.push(campo('amountCents'));
-    } else if (Math.round(c.quantity * c.unitValueCents) !== c.amountCents) {
+    } else if (
+      Math.round((c.quantity * c.unitValueMicros) / MICROS_POR_CENTAVO) !== c.amountCents
+    ) {
       fields.push(campo('amountCents'));
     }
     if (c.taxObject === '01' && c.taxCents !== 0) {

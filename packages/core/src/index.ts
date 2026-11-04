@@ -123,3 +123,6 @@ export * from './modules/billing/domain/automation-signals';
 export * from './modules/billing/application/portal-lookup';
 export * from './modules/billing/application/portal-row';
 export * from './modules/billing/application/portal-client';
+export * from './modules/billing/domain/sat-catalogs';
+export * from './modules/billing/domain/invoice-concepts';
+export * from './modules/billing/application/issue-invoice';

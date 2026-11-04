@@ -52,6 +52,9 @@
 | PD-46 | ¿Se entregan trabajos por partes? (estatus por orden o por línea) | Luis | No, pero cambia el modelo | **Antes de Sprint 3** | Estatus por orden |
 | PD-47 | ¿Se quiere control de existencias de hojas o material, o solo de piezas estándar (P2)? | Luis | No | Antes de pruebas con el cliente | Fuera de alcance; P2 apagado. Relacionado con PD-14 (piezas estándar) |
 | PD-49 | Categorías del catálogo: validar con Luis la propuesta de `docs/producto/CATEGORIAS_CATALOGO.md` (laminado, plásticos, canceles y mamparas, herrajes juntos o separados, cargos de canto y perforación) | Luis | No | Antes de S1-05 con datos reales | Las 11 categorías de RF-M1-02 más las propuestas, editables desde el catálogo |
+| PD-50 | Cómo se envía el correo con la factura: lo manda el PAC o un servicio de correo propio, y con qué remitente (RF-M10-14, S4-19) | Juanito | No | Antes de producción | El portal ofrece descargar PDF y XML; el correo queda detrás de un puerto hasta decidirlo |
+| PD-51 | Cuenta de Cloudflare Turnstile del portal de autofacturación y sus llaves (ver PP-30) | Juanito | No | Antes de producción | Sin llaves rigen el campo trampa, el tiempo mínimo y el límite de intentos [ADR-0030] |
+| PD-52 | Orden de los regímenes fiscales y usos de CFDI en el portal: los que más piden los clientes de ZAMMIR primero (pregunta 62) | Luis | No | Antes de S4-19 con datos reales | Orden del SAT por omisión, ajustable en un solo lugar |
 
 ## Resueltos
 
