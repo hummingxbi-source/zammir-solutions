@@ -1,5 +1,6 @@
 import type { Clock } from '../../../shared-kernel/clock';
 import { looksAutomated } from '../domain/automation-signals';
+import type { InvoiceSourceLine } from '../domain/invoice-concepts';
 import {
   DEFAULT_RATE_LIMIT,
   evaluateRateLimit,
@@ -8,6 +9,7 @@ import {
   normalizeVerificationCode,
   type RateLimitPolicy,
   type SelfInvoicingBlock,
+  type SelfInvoicingPermit,
   type SelfInvoicingSource,
 } from '../domain/self-invoicing';
 
@@ -16,11 +18,9 @@ export interface PortalDocumentRecord extends SelfInvoicingSource {
   readonly id: string;
   /** Folio con el que se encontró: el definitivo o, si aún no llega, el provisional. */
   readonly folio: string;
-  readonly lines: readonly {
-    readonly name: string;
-    readonly quantity: number;
-    readonly lineTotalCents: number;
-  }[];
+  /** Con qué se pagó, para decidir la forma de pago de la factura (PD-28). */
+  readonly paymentMethods: readonly ('CASH' | 'TRANSFER')[];
+  readonly lines: readonly InvoiceSourceLine[];
 }
 
 /** Puerto del portal hacia la base: solo funciones del servidor, nunca tablas directas [S4-18]. */
@@ -64,7 +64,11 @@ export interface PortalDocument {
   readonly type: 'COUNTER_SALE' | 'WORK_ORDER';
   readonly folio: string;
   readonly totalCents: number;
-  readonly lines: PortalDocumentRecord['lines'];
+  readonly lines: readonly {
+    readonly name: string;
+    readonly quantity: number;
+    readonly lineTotalCents: number;
+  }[];
   /** Último día para facturar, `AAAA-MM-DD` [RN-26]. */
   readonly deadline: string;
 }
@@ -79,13 +83,28 @@ export type PortalLookupOutcome =
   | { readonly kind: 'INELIGIBLE'; readonly reason: SelfInvoicingBlock }
   | { readonly kind: 'UNAVAILABLE' };
 
-/** Atiende una consulta del portal `/factura`: valida formatos, frena automatización y exceso de intentos,
- *  busca el documento y decide si se puede facturar. Los datos solo salen cuando folio y código cuadran y la
- *  operación está liquidada, sin facturar y en plazo [RF-M10-09, RF-M10-10, RN-24, RN-25, RN-26]. */
-export async function lookupInvoiceDocument(
+/** Resultado de comprobar quién llama y qué documento pide, antes de decidir qué hacer con él. */
+export type PortalAccess =
+  | {
+      readonly kind: 'MATCHED';
+      /** El documento al que pertenece el código; solo lo ve el servidor. */
+      readonly record: PortalDocumentRecord;
+      /** Si se puede facturar ahora y hasta cuándo, o por qué no [RN-24 a RN-26]. */
+      readonly eligibility:
+        | { readonly ok: true; readonly permit: SelfInvoicingPermit }
+        | { readonly ok: false; readonly reason: SelfInvoicingBlock };
+    }
+  | { readonly kind: 'NOT_AVAILABLE' }
+  | { readonly kind: 'BLOCKED'; readonly retryAfterSeconds: number }
+  | { readonly kind: 'UNAVAILABLE' };
+
+/** La puerta del portal: valida formatos, frena automatización y exceso de intentos y busca el documento con
+ *  su folio y su código. Solo cuando cuadran entrega el documento; si no, siempre la misma respuesta
+ *  [RF-M10-09 a RF-M10-11]. La consulta, la solicitud de factura y la descarga pasan por aquí. */
+export async function accessPortalDocument(
   deps: PortalLookupDeps,
   entrada: PortalLookupInput,
-): Promise<PortalLookupOutcome> {
+): Promise<PortalAccess> {
   const politica = deps.rateLimit ?? DEFAULT_RATE_LIMIT;
   const folio = normalizeFolio(entrada.folio);
   const code = normalizeVerificationCode(entrada.code);
@@ -121,24 +140,46 @@ export async function lookupInvoiceDocument(
       return { kind: 'NOT_AVAILABLE' };
     }
 
-    const permiso = evaluateSelfInvoicing({
-      source: documento,
-      now: deps.clock.now(),
-    });
-    if (!permiso.ok) {
-      return { kind: 'INELIGIBLE', reason: permiso.error };
-    }
+    const permiso = evaluateSelfInvoicing({ source: documento, now: deps.clock.now() });
     return {
-      kind: 'OK',
-      document: {
-        type: documento.type,
-        folio: documento.folio,
-        totalCents: documento.totalCents,
-        lines: documento.lines,
-        deadline: permiso.value.deadline,
-      },
+      kind: 'MATCHED',
+      record: documento,
+      eligibility: permiso.ok
+        ? { ok: true, permit: permiso.value }
+        : { ok: false, reason: permiso.error },
     };
   } catch {
     return { kind: 'UNAVAILABLE' };
   }
+}
+
+/** Atiende una consulta del portal `/factura`: los datos solo salen cuando folio y código cuadran y la
+ *  operación está liquidada, sin facturar y en plazo, y entonces son únicamente conceptos y total
+ *  [RF-M10-09, RF-M10-10, RF-M10-12, RN-24, RN-25, RN-26]. */
+export async function lookupInvoiceDocument(
+  deps: PortalLookupDeps,
+  entrada: PortalLookupInput,
+): Promise<PortalLookupOutcome> {
+  const acceso = await accessPortalDocument(deps, entrada);
+  if (acceso.kind !== 'MATCHED') {
+    return acceso;
+  }
+  if (!acceso.eligibility.ok) {
+    return { kind: 'INELIGIBLE', reason: acceso.eligibility.reason };
+  }
+  const { record } = acceso;
+  return {
+    kind: 'OK',
+    document: {
+      type: record.type,
+      folio: record.folio,
+      totalCents: record.totalCents,
+      lines: record.lines.map((l) => ({
+        name: l.name,
+        quantity: l.quantity,
+        lineTotalCents: l.lineTotalCents,
+      })),
+      deadline: acceso.eligibility.permit.deadline,
+    },
+  };
 }

@@ -47,11 +47,23 @@ if (!(await responde())) {
     stdio: 'inherit',
   });
   if (empaquetado.status !== 0) process.exit(1);
-  servidor = spawn('pnpm', ['exec', 'supabase', 'functions', 'serve', '--no-verify-jwt'], {
-    shell: true,
-    stdio: 'ignore',
-    detached: process.platform !== 'win32',
-  });
+  servidor = spawn(
+    'pnpm',
+    [
+      'exec',
+      'supabase',
+      'functions',
+      'serve',
+      '--no-verify-jwt',
+      '--env-file',
+      'supabase/functions/pruebas.env',
+    ],
+    {
+      shell: true,
+      stdio: 'ignore',
+      detached: process.platform !== 'win32',
+    },
+  );
   const limite = Date.now() + 120_000;
   while (!(await responde())) {
     if (Date.now() > limite) {

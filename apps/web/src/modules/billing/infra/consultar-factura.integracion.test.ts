@@ -234,7 +234,7 @@ describe('portal de autofacturación (función de servidor consultar-factura)', 
   });
 
   it('demasiados intentos fallidos sobre un folio lo bloquean, incluso con el código bueno', async () => {
-    const folio = 'V-2098-0042';
+    const folio = `V-2098-${String(1000 + (Number.parseInt(sufijo.slice(0, 4), 16) % 8000))}`;
     for (let i = 0; i < 5; i += 1) {
       const r = await consultar({ folio, code: codigo(900 + i) });
       expect(r.estado).toBe(404);
@@ -246,9 +246,15 @@ describe('portal de autofacturación (función de servidor consultar-factura)', 
   });
 
   it('demasiados intentos fallidos desde una misma IP la bloquean aunque cambie de folio', async () => {
-    const ip = '203.0.113.200';
+    const ip = `203.0.113.${String(Number.parseInt(sufijo.slice(4, 6), 16) % 250)}`;
     for (let i = 0; i < 15; i += 1) {
-      const r = await consultar({ folio: `V-2097-${String(1000 + i)}`, code: codigo(800 + i) }, ip);
+      const r = await consultar(
+        {
+          folio: `V-2097-${String((Number.parseInt(sufijo.slice(0, 4), 16) % 3000) + i * 3000)}`,
+          code: codigo(800 + i),
+        },
+        ip,
+      );
       expect(r.estado).toBe(404);
     }
     const bloqueada = await consultar({ folio: FOLIO_VENTA, code: CODIGO_VENTA }, ip);

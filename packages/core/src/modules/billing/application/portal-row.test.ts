@@ -11,7 +11,19 @@ const buena = {
   paidCents: 100_000,
   settledAt: '2026-11-03T18:00:00.000Z',
   invoiced: false,
-  lines: [{ name: 'Cancel de baño', quantity: 2, lineTotalCents: 100_000 }],
+  paymentMethods: ['TRANSFER'],
+  lines: [
+    {
+      name: 'Cancel de baño',
+      quantity: 2,
+      lineTotalCents: 100_000,
+      baseCents: 86_207,
+      taxCents: 13_793,
+      productServiceKey: '01010101',
+      unitKey: 'MTK',
+      taxObject: '02',
+    },
+  ],
 };
 
 describe('lectura de lo que devuelve la base al portal', () => {

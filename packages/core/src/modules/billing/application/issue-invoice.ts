@@ -38,6 +38,7 @@ export interface InvoiceRequestStore {
       readonly uuid: string;
       readonly stampedAt: Date;
       readonly recipient: CfdiRecipient;
+      readonly paymentForm: PaymentForm;
       readonly xml: string;
       readonly pdf: Uint8Array;
     },
@@ -137,6 +138,7 @@ export async function issueInvoice(
       uuid: timbre.value.uuid,
       stampedAt: timbre.value.stampedAt,
       recipient: entrada.recipient,
+      paymentForm: entrada.paymentForm,
       xml: archivos.value.xml,
       pdf: archivos.value.pdf,
     });
