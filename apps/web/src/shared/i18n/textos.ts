@@ -515,6 +515,64 @@ export const textos = {
       },
     },
   },
+  /** Portal público de autofacturación (`/factura`) [S4-18, RF-M10-09 a RF-M10-17]. */
+  portal: {
+    titulo: 'Pide tu factura',
+    descripcion:
+      'Escribe el folio y el código que vienen en tu ticket o comprobante. Si escaneaste el QR, ya están puestos.',
+    folio: 'Folio de tu ticket',
+    folioAyuda: 'Por ejemplo V-2026-0001 u OT-2026-0001',
+    codigo: 'Código de verificación',
+    codigoAyuda: 'Son 8 letras y números, sin 0 ni 1',
+    continuar: 'Continuar',
+    consultando: 'Revisando…',
+    verificando: 'Un momento, estamos verificando que eres una persona.',
+    conceptos: 'Lo que compraste',
+    concepto: 'Concepto',
+    cantidad: 'Cantidad',
+    importe: 'Importe',
+    total: 'Total (con IVA)',
+    plazo: (fecha: string): string => `Puedes pedir tu factura hasta el ${fecha}.`,
+    errores: {
+      NOT_AVAILABLE: {
+        mensaje: 'No encontramos una compra con ese folio y ese código.',
+        queHacer:
+          'Revisa que estén escritos como en tu ticket. Si tu compra es muy reciente o se hizo sin internet, puede tardar un poco en aparecer: intenta de nuevo más tarde.',
+      },
+      BLOCKED: {
+        mensaje: 'Hiciste demasiados intentos.',
+        queHacer: (minutos: number): string =>
+          `Espera ${String(minutos)} minutos y vuelve a intentar con los datos de tu ticket.`,
+      },
+      UNAVAILABLE: {
+        mensaje: 'El servicio de facturas no está disponible en este momento.',
+        queHacer: 'Intenta de nuevo en unos minutos.',
+      },
+      NO_NETWORK: {
+        mensaje: 'No hay conexión a internet.',
+        queHacer: 'Conéctate a internet e intenta de nuevo.',
+      },
+    },
+    inelegible: {
+      CANCELLED: {
+        mensaje: 'Esta compra fue cancelada, por eso no se puede facturar.',
+        queHacer: 'Si crees que es un error, pregunta directamente en el negocio.',
+      },
+      ALREADY_INVOICED: {
+        mensaje: 'Esta compra ya tiene una factura.',
+        queHacer: 'Si necesitas otra copia, pídela directamente en el negocio.',
+      },
+      NOT_SETTLED: {
+        mensaje: 'Esta compra todavía tiene saldo pendiente.',
+        queHacer: 'Podrás pedir tu factura cuando quede liquidada.',
+      },
+      EXPIRED: {
+        mensaje: 'Ya pasó el plazo para pedir esta factura por aquí.',
+        queHacer:
+          'Se puede hasta el último día del mes de tu compra. Pídela directamente en el negocio y con gusto te la hacen.',
+      },
+    },
+  },
   /** Páginas públicas del aviso de privacidad y de los términos (`/aviso` y `/terminos`) [S4-11]. */
   legalPublico: {
     cargando: 'Cargando…',

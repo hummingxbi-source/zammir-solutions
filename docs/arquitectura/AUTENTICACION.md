@@ -71,7 +71,7 @@ Para acciones que piden un administrador (descuento, cambio de precio, factura p
 |---|---|---|
 | Administrador | Todo | Datos administrables; nunca borra lo contable [RN-18] |
 | Dispositivo | Solo datos de referencia para tablets (catálogo, reglas de precio, configuración, usuarios activos con verificador) | Nada directo: solo a través de la función que recibe operaciones |
-| Anónimo | Solo el aviso de privacidad y los términos que ya rigen, y el contacto del negocio (función `public_business_contact`) [ADR-0029] | Solo funciones públicas con código (P1, autofacturación) |
+| Anónimo | La función pública `consultar-factura` (portal `/factura`, ADR-0030), sin tablas ni funciones `portal_*`. Además, solo el aviso de privacidad y los términos que ya rigen, y el contacto del negocio (función `public_business_contact`) [ADR-0029] | Solo funciones públicas con código (P1, autofacturación) |
 
 Las pruebas de RLS por rol son obligatorias (`supabase/tests/`) [principios §4.1].
 

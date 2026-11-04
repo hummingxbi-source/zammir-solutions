@@ -35,5 +35,6 @@
 | [0027](docs/decisiones/0027-turno-de-caja-e-impresion-de-tickets.md) | Turno de caja por persona e impresión de tickets por medios intercambiables | Aceptada (propuesta) | 2026-10-31 |
 | [0028](docs/decisiones/0028-identidad-visual-v1-desde-la-demo.md) | Identidad visual v1 tomada de la demo, sin copiar código | Aceptada | 2026-11-03 |
 | [0029](docs/decisiones/0029-aviso-y-terminos-publicos-y-pie-legal-sin-internet.md) | Aviso y términos públicos, y pie legal de los documentos sin internet | Aceptada (propuesta) | 2026-11-03 |
+| [0030](docs/decisiones/0030-portal-de-autofacturacion-sin-sesion-y-con-limites.md) | Portal de autofacturación sin sesión, con respuesta uniforme y límites de intentos | Aceptada (propuesta) | 2026-11-04 |
 
 Plantilla para una nueva decisión: [`docs/decisiones/0000-plantilla.md`](docs/decisiones/0000-plantilla.md).

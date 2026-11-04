@@ -118,3 +118,8 @@ export * from './modules/billing/application/ports';
 export * from './modules/billing/application/simulated-billing';
 export * from './modules/legal/domain/document-legal';
 export * from './modules/billing/application/invoice-issue';
+export * from './modules/billing/domain/self-invoicing';
+export * from './modules/billing/domain/automation-signals';
+export * from './modules/billing/application/portal-lookup';
+export * from './modules/billing/application/portal-row';
+export * from './modules/billing/application/portal-client';
