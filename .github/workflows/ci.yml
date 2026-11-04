@@ -56,6 +56,9 @@ jobs:
         run: pnpm check:env
 
       - name: 7a. Supabase local, migraciones desde cero
+        # Las funciones de servidor de las pruebas usan el proveedor de timbrado simulado (sin validez fiscal).
+        env:
+          BILLING_PROVIDER: simulated
         run: |
           # Las funciones de servidor importan el núcleo ya empaquetado (S0-17); el archivo no se versiona.
           pnpm funciones:empaquetar
