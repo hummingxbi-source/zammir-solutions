@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { Route, Routes } from 'react-router';
+import { Route, Routes, useParams } from 'react-router';
 import type {
   ActiveUserSession,
   CustomerHistory,
@@ -11,6 +11,7 @@ import type {
   QuoteConditionsStore,
   RegisterTabletDeps,
   SignInWithPinDeps,
+  PortalConsulta,
 } from '@zammir/core';
 
 import { Bitacora, type BitacoraProps } from './modules/audit/ui/Bitacora';
@@ -24,6 +25,7 @@ import {
 } from './modules/receivables/ui/CuentasEnLaTablet';
 import { CondicionesDeCotizacion } from './modules/quotes/ui/CondicionesDeCotizacion';
 import { AvisoDePrivacidad, TerminosDelServicio } from './modules/legal/ui/AvisoDePrivacidad';
+import { PortalDeFactura } from './modules/billing/ui/PortalDeFactura';
 import { PaginaLegalPublica, type ContactoPublico } from './modules/legal/ui/PaginaLegalPublica';
 import { EntrarConPin } from './modules/identity/ui/EntrarConPin';
 import { PersonaActiva } from './modules/identity/ui/PersonaActiva';
@@ -56,6 +58,8 @@ export interface AppProps {
   readonly clientes?: ManageCustomersDeps | null;
   /** Aviso de privacidad versionado; aparece en Configuración. */
   readonly legal?: LegalDeps | null;
+  /** Portal público de autofacturación (`/factura` y `/f/:folio/:codigo`, la dirección del QR) [S4-18]. */
+  readonly portal?: { readonly consultar: PortalConsulta; readonly siteKey?: string | null } | null;
   /** Datos del negocio para el canal de derechos de las páginas públicas del aviso y los términos. */
   readonly contactoPublico?: (() => Promise<ContactoPublico | null>) | null;
   /** Condiciones que salen en cada cotización; aparecen en Configuración. */
@@ -100,6 +104,7 @@ export function App({
   clientes = null,
   legal = null,
   contactoPublico = null,
+  portal = null,
   condiciones = null,
   bitacora = null,
   conectarTablet = null,
@@ -247,6 +252,20 @@ export function App({
   const sinContacto = (): Promise<ContactoPublico | null> => Promise.resolve(null);
   return (
     <Routes>
+      {portal !== null ? (
+        <>
+          <Route
+            path="/factura"
+            element={
+              <PortalDeFactura consultar={portal.consultar} siteKey={portal.siteKey ?? null} />
+            }
+          />
+          <Route
+            path="/f/:folio/:codigo"
+            element={<PortalPorQr consultar={portal.consultar} siteKey={portal.siteKey ?? null} />}
+          />
+        </>
+      ) : null}
       {legal !== null ? (
         <>
           <Route
@@ -273,5 +292,19 @@ export function App({
       ) : null}
       <Route path="*" element={marco} />
     </Routes>
+  );
+}
+
+/** Entrada por el QR del ticket: el folio y el código vienen en la dirección y se le ponen a la persona. */
+function PortalPorQr({
+  consultar,
+  siteKey,
+}: {
+  readonly consultar: PortalConsulta;
+  readonly siteKey: string | null;
+}): ReactElement {
+  const { folio = '', codigo = '' } = useParams();
+  return (
+    <PortalDeFactura consultar={consultar} siteKey={siteKey} inicial={{ folio, code: codigo }} />
   );
 }

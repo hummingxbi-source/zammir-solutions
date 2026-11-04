@@ -1634,3 +1634,40 @@ h3.reportes__subtitulo:not(.rotulo) {
   padding-block-start: 1rem;
   border-block-start: 1px solid var(--borde-suave);
 }
+
+/* Portal público de autofacturación */
+.portal__ayuda {
+  margin: -0.25rem 0 0.75rem;
+  color: var(--tinta-suave);
+  font-size: 1rem;
+}
+
+/* Campo trampa: fuera de la pantalla, no se muestra ni se lee a las personas. */
+.portal__trampa {
+  position: absolute;
+  inset-inline-start: -10000px;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+}
+
+.portal__verificacion {
+  min-block-size: 4.5rem;
+  margin-block-end: 1rem;
+}
+
+.portal__total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  margin: 1.25rem 0 0.5rem;
+  padding-block-start: 0.75rem;
+  border-block-start: 1px solid var(--borde-suave);
+  font-size: 1.25rem;
+}
+
+.portal__plazo {
+  margin: 0;
+  color: var(--tinta-suave);
+}

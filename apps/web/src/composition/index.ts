@@ -55,6 +55,7 @@ import {
   type AppUser,
   type UserId,
   type UserPolicy,
+  type PortalConsulta,
 } from '@zammir/core';
 
 import {
@@ -76,6 +77,7 @@ import { supabaseDocumentReplica } from '../modules/orders/infra/supabase-docume
 import { supabaseCustomerReplica } from '../modules/customers/infra/supabase-customer-replica';
 import { supabaseCustomers } from '../modules/customers/infra/supabase-customers';
 import { textos } from '../shared/i18n/textos';
+import { functionPortalConsulta } from '../modules/billing/infra/function-portal-consulta';
 import type { ContactoPublico } from '../modules/legal/ui/PaginaLegalPublica';
 import { supabaseLegal } from '../modules/legal/infra/supabase-legal';
 import { supabaseQuoteConditions } from '../modules/settings/infra/supabase-quote-conditions';
@@ -133,6 +135,8 @@ export interface Composition {
   readonly legal: LegalDeps | null;
   /** Datos del negocio para el canal de derechos de las páginas públicas del aviso y los términos. */
   readonly contactoPublico: (() => Promise<ContactoPublico | null>) | null;
+  /** Portal público de autofacturación: solo habla con la función de servidor [S4-18]. */
+  readonly portal: { readonly consultar: PortalConsulta; readonly siteKey: string | null } | null;
   /** Condiciones de la cotización; `null` si no hay servidor configurado. */
   readonly condiciones: QuoteConditionsStore | null;
   /** Altas y correcciones de clientes; `null` si no hay servidor configurado. */
@@ -191,6 +195,8 @@ export interface Composition {
 export interface EntornoSupabase {
   readonly url?: string | undefined;
   readonly anonKey?: string | undefined;
+  /** Llave pública de Cloudflare Turnstile para el portal de autofacturación (opcional). */
+  readonly turnstileSiteKey?: string | undefined;
 }
 
 const registroDeReglas = createPriceRegistry(defaultRules);
@@ -881,6 +887,16 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
     },
     legal,
     contactoPublico: cliente === null ? null : contactoPublicoDelNegocio(cliente),
+    portal:
+      entorno.url === undefined || entorno.anonKey === undefined
+        ? null
+        : {
+            consultar: functionPortalConsulta({ url: entorno.url, anonKey: entorno.anonKey }),
+            siteKey:
+              entorno.turnstileSiteKey === undefined || entorno.turnstileSiteKey === ''
+                ? null
+                : entorno.turnstileSiteKey,
+          },
     condiciones: cliente === null ? null : supabaseQuoteConditions(cliente),
     clientes:
       cliente === null

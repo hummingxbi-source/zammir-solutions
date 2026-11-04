@@ -23,6 +23,7 @@ registerSW({ immediate: true });
 const composition = createComposition({
   url: import.meta.env.VITE_SUPABASE_URL,
   anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+  turnstileSiteKey: import.meta.env.VITE_TURNSTILE_SITE_KEY,
 });
 
 // Pone al día el catálogo guardado en la tablet al abrir y cada vez que vuelve la conexión.
@@ -55,6 +56,7 @@ createRoot(root).render(
           clientes={composition.clientes}
           legal={composition.legal}
           contactoPublico={composition.contactoPublico}
+          portal={composition.portal}
           condiciones={composition.condiciones}
           conectarTablet={composition.conectarTablet}
           entradaConPin={composition.entradaConPin}
