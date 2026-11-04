@@ -4,9 +4,11 @@ import { expect, test, type Page } from '@playwright/test';
 // de la aplicación en las dos orientaciones de la tablet [RNF-28, S2-12, S2-17].
 const MUESTRA = `
   <section id="muestra" class="cotizador">
-    <div class="pestanas" role="tablist">
-      <button class="boton boton--secundario" role="tab">Datos</button>
-      <button class="boton boton--secundario" role="tab">Vista previa</button>
+    <div class="cotizador__pestanas">
+      <div class="segmentos" role="tablist" aria-label="Vistas">
+        <button class="segmento" role="tab" aria-selected="true">Datos</button>
+        <button class="segmento" role="tab" aria-selected="false" tabindex="-1">Vista previa</button>
+      </div>
     </div>
     <div class="cotizador__paneles" data-pestana="datos">
       <div class="cotizador__datos">
@@ -49,7 +51,7 @@ test('en horizontal van lado a lado, sin pestañas, y en vertical una pestaña a
   if (ancho >= 900) {
     expect(await visible(page, '#muestra .cotizador__datos')).toBe(true);
     expect(await visible(page, '#muestra .cotizador__vista')).toBe(true);
-    expect(await visible(page, '#muestra .pestanas')).toBe(false);
+    expect(await visible(page, '#muestra .cotizador__pestanas')).toBe(false);
     const [datos, vista] = await page.evaluate(() =>
       ['.cotizador__datos', '.cotizador__vista'].map((s) => {
         const caja = document.querySelector(`#muestra ${s}`)?.getBoundingClientRect();
@@ -59,7 +61,7 @@ test('en horizontal van lado a lado, sin pestañas, y en vertical una pestaña a
     expect(vista?.x ?? 0).toBeGreaterThan(datos?.x ?? 0);
     expect(Math.abs((vista?.y ?? 0) - (datos?.y ?? 0))).toBeLessThan(2);
   } else {
-    expect(await visible(page, '#muestra .pestanas')).toBe(true);
+    expect(await visible(page, '#muestra .cotizador__pestanas')).toBe(true);
     expect(await visible(page, '#muestra .cotizador__datos')).toBe(true);
     expect(await visible(page, '#muestra .cotizador__vista')).toBe(false);
   }

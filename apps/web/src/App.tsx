@@ -139,7 +139,7 @@ export function App({
             element={<EntrarConPin deps={entradaConPin.deps} session={entradaConPin.session} />}
           />
         ) : null}
-        {muestras !== null ? <Route path="/muestras" element={muestras} /> : null}
+        {muestras !== null ? <Route path="/muestras/*" element={muestras} /> : null}
         {conectarTablet !== null ? (
           <Route path="/conectar" element={<ConectarTablet deps={conectarTablet} />} />
         ) : null}

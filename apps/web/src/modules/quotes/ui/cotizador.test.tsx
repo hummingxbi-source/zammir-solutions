@@ -367,7 +367,7 @@ describe('Cotizador', () => {
     await empezarConClienteNuevo();
     await agregarVidrio();
     fireEvent.click(screen.getByRole('button', { name: 'Volver a las cotizaciones' }));
-    const borrador = await screen.findByRole('button', { name: /Ana López · \$537\.60/ });
+    const borrador = await screen.findByRole('button', { name: /Ana López.*\$537\.60/ });
     fireEvent.click(borrador);
     expect(await screen.findByRole('heading', { name: /Cotizador · Ana López/ })).toBeTruthy();
     expect(screen.getAllByText(/1\.92 m²/).length).toBeGreaterThan(0);

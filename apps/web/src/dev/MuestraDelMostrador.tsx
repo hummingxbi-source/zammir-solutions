@@ -52,7 +52,7 @@ const base = {
   ruleParams: {},
 } as const;
 
-const PRODUCTOS: readonly SellableProduct[] = [
+export const PRODUCTOS: readonly SellableProduct[] = [
   {
     ...base,
     id: asId<'Product'>('00000000-0000-4000-8000-00000000f001'),
@@ -105,9 +105,9 @@ const PRODUCTOS: readonly SellableProduct[] = [
   },
 ];
 
-const CLIENTE = asId<'Customer'>('00000000-0000-4000-8000-00000000c001');
-const CAJERO = asId<'User'>('00000000-0000-4000-8000-00000000a001');
-const ADMIN = asId<'User'>('00000000-0000-4000-8000-00000000a0ad');
+export const CLIENTE = asId<'Customer'>('00000000-0000-4000-8000-00000000c001');
+export const CAJERO = asId<'User'>('00000000-0000-4000-8000-00000000a001');
+export const ADMIN = asId<'User'>('00000000-0000-4000-8000-00000000a0ad');
 
 async function armar(): Promise<MostradorProps> {
   const registro = createPriceRegistry(defaultRules);

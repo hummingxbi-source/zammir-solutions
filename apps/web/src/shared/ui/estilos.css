@@ -532,9 +532,7 @@
   gap: var(--espacio);
 }
 
-.pestanas {
-  display: flex;
-  gap: 0.5rem;
+.cotizador__pestanas {
   margin-block: var(--espacio);
 }
 
@@ -546,7 +544,7 @@
 
 /* En pantalla grande: datos a la izquierda y documento a la derecha, sin pestañas. */
 @media (min-width: 900px) {
-  .pestanas {
+  .cotizador__pestanas {
     display: none;
   }
 

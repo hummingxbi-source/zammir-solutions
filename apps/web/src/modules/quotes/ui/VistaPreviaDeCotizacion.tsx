@@ -53,9 +53,9 @@ export function VistaPreviaDeCotizacion({
           <tr>
             <th>#</th>
             <th>{l.concept}</th>
-            <th>{l.quantity}</th>
-            <th>{l.unitPrice}</th>
-            <th>{l.amount}</th>
+            <th className="documento__num">{l.quantity}</th>
+            <th className="documento__num">{l.unitPrice}</th>
+            <th className="documento__num">{l.amount}</th>
           </tr>
         </thead>
         <tbody>
@@ -67,9 +67,15 @@ export function VistaPreviaDeCotizacion({
                 <br />
                 <small>{linea.detail}</small>
               </td>
-              <td>{linea.quantity}</td>
-              <td>{linea.unitPrice}</td>
-              <td>{linea.amount}</td>
+              <td className="documento__num" data-label={l.quantity}>
+                {linea.quantity}
+              </td>
+              <td className="documento__num" data-label={l.unitPrice}>
+                {linea.unitPrice}
+              </td>
+              <td className="documento__num" data-label={l.amount}>
+                {linea.amount}
+              </td>
             </tr>
           ))}
         </tbody>

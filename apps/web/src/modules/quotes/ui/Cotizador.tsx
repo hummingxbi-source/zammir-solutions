@@ -5,6 +5,7 @@ import {
   createQuoteDraft,
   displayStatus,
   formatMoney,
+  mexicoDate,
   money,
   quoteTotals,
   searchCustomers,
@@ -23,6 +24,11 @@ import {
 import { textos } from '../../../shared/i18n/textos';
 import { Aviso } from '../../../shared/ui/Aviso';
 import { Boton } from '../../../shared/ui/Boton';
+import { EncabezadoDePagina } from '../../../shared/ui/EncabezadoDePagina';
+import { EstadoVacio } from '../../../shared/ui/EstadoVacio';
+import { EtiquetaDeEstado, type TonoDeEstado } from '../../../shared/ui/EtiquetaDeEstado';
+import { Icono } from '../../../shared/ui/Icono';
+import { Tarjeta } from '../../../shared/ui/Tarjeta';
 import { Campo } from '../../../shared/ui/Campo';
 import { ClienteEnCotizador } from './ClienteEnCotizador';
 import type { AutorizacionDeAdministrador } from './DialogoDeDescuento';
@@ -153,8 +159,20 @@ export function Cotizador(props: CotizadorProps): ReactElement {
 
   if (creando) {
     return (
-      <section>
-        <h1>{t.titulo}</h1>
+      <section className="anima-entrada">
+        <EncabezadoDePagina
+          titulo={t.titulo}
+          acciones={
+            <Boton
+              variante="secundario"
+              onClick={() => {
+                setCreando(false);
+              }}
+            >
+              {t.acciones.volver}
+            </Boton>
+          }
+        />
         <ClienteEnCotizador
           clientes={clientes}
           rol={actor.role}
@@ -162,14 +180,6 @@ export function Cotizador(props: CotizadorProps): ReactElement {
             void abrirPara(c, obra);
           }}
         />
-        <Boton
-          variante="secundario"
-          onClick={() => {
-            setCreando(false);
-          }}
-        >
-          {t.acciones.volver}
-        </Boton>
       </section>
     );
   }
@@ -183,88 +193,130 @@ export function Cotizador(props: CotizadorProps): ReactElement {
   );
   const visibles =
     filtro.trim() === '' ? emitidas : emitidas.filter((q) => coincidentes.has(q.customerId));
+  const tonoDe = (estado: ReturnType<typeof displayStatus>): TonoDeEstado =>
+    estado === 'DRAFT'
+      ? 'espera'
+      : estado === 'SENT'
+        ? 'proceso'
+        : estado === 'ACCEPTED'
+          ? 'listo'
+          : estado === 'REJECTED'
+            ? 'cancelado'
+            : 'aviso';
 
   return (
-    <section className="anima-entrada" aria-labelledby="titulo-cotizador">
-      <h1 id="titulo-cotizador">{t.titulo}</h1>
-      <p>{t.descripcion}</p>
-      {error !== null ? <Aviso tipo="error">{error}</Aviso> : null}
-      <Boton
-        onClick={() => {
-          setCreando(true);
-        }}
-      >
-        {t.nueva}
-      </Boton>
-
-      <h2>{t.borradores}</h2>
-      {borradores.length === 0 ? (
-        <p>{t.sinBorradores}</p>
-      ) : (
-        <ul className="accesos">
-          {borradores.map((q) => (
-            <li key={q.id}>
-              <Boton
-                variante="secundario"
-                onClick={() => {
-                  void abrir(q);
-                }}
-              >
-                {nombres.get(q.customerId)?.name ?? '—'} · {cobra(quoteTotals(q.lines).totalCents)}
-              </Boton>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <h2>{t.historial.titulo}</h2>
-      {emitidas.length === 0 ? (
-        <p>{t.historial.vacio}</p>
-      ) : (
-        <>
-          <Campo
-            etiqueta={t.historial.filtrar}
-            value={filtro}
-            onChange={(e) => {
-              setFiltro(e.target.value);
+    <section className="anima-entrada">
+      <EncabezadoDePagina
+        titulo={t.titulo}
+        descripcion={t.descripcion}
+        acciones={
+          <Boton
+            onClick={() => {
+              setCreando(true);
             }}
-          />
-          {visibles.length === 0 ? <p>{t.historial.sinResultados}</p> : null}
-        </>
-      )}
-      {visibles.length > 0 ? (
-        <table className="tabla">
-          <thead>
-            <tr>
-              <th>{t.historial.folio}</th>
-              <th>{textos.cotizador.cliente.titulo}</th>
-              <th>{t.historial.fecha}</th>
-              <th>{t.historial.estado}</th>
-              <th>{t.historial.total}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {visibles.map((q) => (
-              <tr key={q.id}>
-                <td>
-                  <Boton
-                    variante="secundario"
+          >
+            <Icono nombre="cotizador" />
+            {t.nueva}
+          </Boton>
+        }
+      />
+      {error !== null ? <Aviso tipo="error">{error}</Aviso> : null}
+
+      <div className="cotizador__lista">
+        <Tarjeta rotulo={t.borradores}>
+          {borradores.length === 0 ? (
+            <p className="mostrador__vacio">{t.sinBorradores}</p>
+          ) : (
+            <ul className="productos productos--filas">
+              {borradores.map((q) => (
+                <li key={q.id}>
+                  <button
+                    type="button"
+                    className="producto producto--fila"
                     onClick={() => {
                       void abrir(q);
                     }}
                   >
-                    {q.folio ?? q.tempFolio}
-                  </Boton>
-                </td>
-                <td>{nombres.get(q.customerId)?.name ?? '—'}</td>
-                <td>{q.issuedAt?.slice(0, 10)}</td>
-                <td>{t.estados[displayStatus(q, ahora)]}</td>
-                <td>{cobra(quoteTotals(q.lines).totalCents)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      ) : null}
+                    <span className="producto__nombre">
+                      {nombres.get(q.customerId)?.name ?? '—'}
+                    </span>
+                    <span className="producto__precio">
+                      {cobra(quoteTotals(q.lines).totalCents)}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Tarjeta>
+
+        <Tarjeta rotulo={t.historial.titulo}>
+          {emitidas.length === 0 ? (
+            <EstadoVacio
+              titulo={t.historial.vacioTitulo}
+              descripcion={t.historial.vacio}
+              icono="cotizador"
+            />
+          ) : (
+            <>
+              <Campo
+                etiqueta={t.historial.filtrar}
+                value={filtro}
+                onChange={(e) => {
+                  setFiltro(e.target.value);
+                }}
+              />
+              {visibles.length === 0 ? <p>{t.historial.sinResultados}</p> : null}
+            </>
+          )}
+          {visibles.length > 0 ? (
+            <table className="tabla tabla--apilada" aria-label={t.historial.titulo}>
+              <thead>
+                <tr>
+                  <th scope="col">{t.historial.folio}</th>
+                  <th scope="col">{textos.cotizador.cliente.titulo}</th>
+                  <th scope="col">{t.historial.fecha}</th>
+                  <th scope="col">{t.historial.estado}</th>
+                  <th scope="col" className="tabla__num">
+                    {t.historial.total}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {visibles.map((q) => (
+                  <tr key={q.id}>
+                    <th scope="row">
+                      <Boton
+                        variante="secundario"
+                        onClick={() => {
+                          void abrir(q);
+                        }}
+                      >
+                        {q.folio ?? q.tempFolio}
+                      </Boton>
+                    </th>
+                    <td data-label={textos.cotizador.cliente.titulo}>
+                      {nombres.get(q.customerId)?.name ?? '—'}
+                    </td>
+                    <td data-label={t.historial.fecha}>
+                      {q.issuedAt === null ? '' : mexicoDate(new Date(q.issuedAt))}
+                    </td>
+                    <td data-label={t.historial.estado}>
+                      <EtiquetaDeEstado
+                        tono={tonoDe(displayStatus(q, ahora))}
+                        texto={t.estados[displayStatus(q, ahora)]}
+                      />
+                    </td>
+                    <td data-label={t.historial.total} className="tabla__num">
+                      {cobra(quoteTotals(q.lines).totalCents)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : null}
+        </Tarjeta>
+      </div>
     </section>
   );
 }

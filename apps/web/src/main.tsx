@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router';
 
 import { App } from './App';
-import { MuestraDelMostrador } from './dev/MuestraDelMostrador';
+import { Muestras } from './dev/Muestras';
 import { createComposition } from './composition';
 import { ProveedorSesionAdmin } from './modules/identity/ui/SesionAdmin';
 import { registerSW } from 'virtual:pwa-register';
@@ -61,7 +61,7 @@ createRoot(root).render(
           prepararOrdenes={composition.prepararOrdenes}
           prepararCuentas={composition.prepararCuentas}
           prepararReportes={composition.prepararReportes}
-          muestras={import.meta.env.DEV ? <MuestraDelMostrador /> : null}
+          muestras={import.meta.env.DEV ? <Muestras /> : null}
           historialDeCliente={composition.historialDeCliente}
           prepararMostrador={composition.prepararMostrador}
           sincronizacion={composition.envio?.visible}
