@@ -1,8 +1,9 @@
 # ADR-0028: Identidad visual v1 tomada de la demo, sin copiar código
 
-- **Estado:** Propuesta (por aprobar por Juanito)
+- **Estado:** Aceptada (Juanito aprobó el plan y las decisiones D1 a D7 el 2026-11-03)
 - **Fecha:** 2026-11-03
 - **Decide:** Juanito
+- **Modifica:** [RNF-28] (excepción de 14 px solo para rótulos de tarjeta en mayúsculas; ver decisión 4)
 - **Concreta:** [ADR-0002], PD-35, [RNF-28], [RF-UX-01 a RF-UX-10]
 
 ## Contexto
@@ -13,7 +14,7 @@ La revisión de la demo (ver `docs/producto/PLAN_UI_UX.md`) encontró cosas que 
 
 ## Decisión
 
-1. **La identidad visual v1 se deriva de la demo y se redefine en tokens propios**: papel `#F4F1EC`, tinta `#26241F`, acento azul `#0F4C81` (a confirmar, D1 del plan), tipografías Fraunces, Source Serif 4 e IBM Plex Mono.
+1. **La identidad visual v1 se deriva de la demo y se redefine en tokens propios**: papel `#F4F1EC`, tinta `#26241F`, acento azul `#0F4C81` (D1 aprobada), tipografías Fraunces, Source Serif 4 e IBM Plex Mono.
 2. **No se copia código de la demo.** Se reescriben componentes con clases y tokens, con pruebas.
 3. **Las fuentes se empaquetan con la aplicación** (latín, 400 y 700, `woff2`, ≤ 250 KB) y se guardan para uso sin internet.
 4. **Se cumple [RNF-28] con ajustes a los valores de la demo:** texto de 16 px, objetivos de 44 px, contraste AA. Única excepción propuesta: rótulos de tarjeta en mayúsculas a 14 px (requiere modificar [RNF-28] por escrito).

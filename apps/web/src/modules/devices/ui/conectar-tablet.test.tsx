@@ -14,6 +14,10 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { App } from '../../../App';
 
+// La primera pantalla de cada archivo arma toda la aplicación y, con cientos de pruebas en paralelo, puede
+// pasar de los 5 s por omisión. Solo cambia cuánto se espera, no lo que se comprueba.
+vi.setConfig({ testTimeout: 30_000 });
+
 const instante = new Date('2026-10-30T18:00:00.000Z');
 const credenciales: DeviceCredentials = {
   device: { id: asId<'Device'>('d-1'), name: 'Mostrador', tempSeries: 1 },

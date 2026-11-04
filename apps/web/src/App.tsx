@@ -113,7 +113,11 @@ export function App({
   ];
 
   return (
-    <Layout interruptores={interruptores} sincronizacion={sincronizacion}>
+    <Layout
+      interruptores={interruptores}
+      sincronizacion={sincronizacion}
+      session={entradaConPin?.session}
+    >
       {entradaConPin !== null ? <PersonaActiva session={entradaConPin.session} /> : null}
       <Routes>
         <Route

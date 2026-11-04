@@ -16,11 +16,15 @@ import {
   type WorkOrder,
 } from '@zammir/core';
 import { clientesEnMemoriaDePrueba } from '@zammir/core/testing';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { App } from '../../../App';
 import { ProveedorSesionAdmin } from '../../identity/ui/SesionAdmin';
 import { FichaDelCliente } from './FichaDelCliente';
+
+// La primera pantalla de cada archivo arma toda la aplicación y, con cientos de pruebas en paralelo, puede
+// pasar de los 5 s por omisión. Solo cambia cuánto se espera, no lo que se comprueba.
+vi.setConfig({ testTimeout: 30_000 });
 
 const cliente = { id: 'c-ana', name: 'Ana López' } as unknown as Customer;
 

@@ -1,0 +1,163 @@
+/* Identidad visual v1 [ADR-0028]: papel, tinta y acento azul; Fraunces para títulos y cifras, Source Serif 4
+ * para leer e IBM Plex Mono para rótulos y folios. Las fuentes viajan con la aplicación (se importan en
+ * main.tsx) para que se vean sin internet.
+ *
+ * Contraste de cada pareja de texto (WCAG, calculado): tinta sobre papel 13.8:1, tinta suave 6.8:1,
+ * acento sobre papel 7.9:1, blanco sobre acento 8.9:1. La tinta apagada (3.1:1) es solo decoración. */
+
+:root {
+  /* Papel y superficies */
+  --papel: #f4f1ec;
+  --panel: #ece8e0;
+  --panel-oscuro: #e0dbd1;
+  --superficie: #ffffff;
+
+  /* Tinta */
+  --tinta: #26241f;
+  --tinta-suave: #57534a;
+  --tinta-apagada: #8c8880;
+
+  /* Acento (D1: azul de la demo) y secundario (latón oscuro) */
+  --acento: #0f4c81;
+  --acento-oscuro: #0a3153;
+  --acento-claro: #4a7dab;
+  --acento-tinte: rgb(15 76 129 / 8%);
+  --acento-tinte-fuerte: rgb(15 76 129 / 14%);
+  --laton: #7a5f2d;
+  --laton-decorativo: #9c7a3c;
+  --vidrio: #b9c6cc;
+  --vidrio-claro: #d6e1e5;
+  --aluminio: #7c8592;
+  --oliva: #5c6b4f;
+
+  /* Estados: más oscuros que los de la demo para pasar 4.5:1 como texto */
+  --exito: #2e6b45;
+  --exito-fondo: #ebf4ee;
+  --peligro: #8b3a3a;
+  --peligro-fondo: #f9ebeb;
+  --aviso-color: #8a5a12;
+  --aviso-fondo: #fdf4e3;
+  --info: #2f5f82;
+  --info-fondo: #ebf2f9;
+
+  /* Bordes: el de los controles pasa 3:1; el de las tarjetas es solo decorativo */
+  --borde-control: #7c7466;
+  --borde-suave: rgb(124 133 146 / 28%);
+  --borde-fuerte: rgb(124 133 146 / 45%);
+
+  /* Tipografía */
+  --fuente-titulo: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --fuente-base: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  --fuente-etiqueta: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+
+  --texto-base: 1rem;
+  --texto-grande: 1.125rem;
+  --texto-rotulo: 0.875rem;
+  --texto-cifra: clamp(1.75rem, 2.4vw, 2.25rem);
+  --texto-titulo: clamp(1.75rem, 2.6vw, 2.25rem);
+
+  /* Forma */
+  --radio-chico: 4px;
+  --radio: 8px;
+  --radio-medio: 12px;
+  --radio-grande: 16px;
+  --radio-pildora: 999px;
+  --tactil-minimo: 44px;
+  --espacio: 1rem;
+
+  --sombra-1: 0 1px 3px rgb(38 36 31 / 8%);
+  --sombra-2: 0 4px 12px rgb(38 36 31 / 10%);
+  --sombra-3: 0 12px 32px rgb(38 36 31 / 14%);
+  --sombra-acento: 0 4px 16px rgb(15 76 129 / 22%);
+
+  /* Movimiento: solo transform y opacity, y se apaga con "reducir movimiento" [RF-UX-09] */
+  --t-rapida: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --t-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Nombres anteriores: siguen funcionando mientras las pantallas se van renovando */
+  --color-fondo: var(--papel);
+  --color-superficie: var(--superficie);
+  --color-texto: var(--tinta);
+  --color-texto-suave: var(--tinta-suave);
+  --color-borde: var(--borde-control);
+  --color-acento: var(--acento);
+  --color-acento-texto: #ffffff;
+  --color-error: var(--peligro);
+  --color-exito: var(--exito);
+}
+
+html {
+  font-size: 100%;
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+  background: var(--papel);
+  color: var(--tinta);
+  font-family: var(--fuente-base);
+  font-size: var(--texto-base);
+  line-height: 1.6;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin-block: 0 0.5em;
+  color: var(--tinta);
+  font-family: var(--fuente-titulo);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+h1 {
+  font-size: var(--texto-titulo);
+}
+
+h2 {
+  font-size: 1.5rem;
+}
+
+h3 {
+  font-size: 1.25rem;
+}
+
+p {
+  margin-block: 0 0.75em;
+}
+
+a {
+  color: var(--acento);
+}
+
+::selection {
+  background: var(--acento-claro);
+  color: #ffffff;
+}
+
+:focus-visible {
+  outline: 3px solid var(--acento);
+  outline-offset: 2px;
+  border-radius: var(--radio-chico);
+}
+
+/* Rótulo de tarjeta: mayúsculas y monoespaciada. Única excepción de tamaño de [RNF-28] (14 px) [ADR-0028]. */
+.rotulo {
+  font-family: var(--fuente-etiqueta);
+  font-size: var(--texto-rotulo);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tinta-suave);
+}
+
+/* Importes y cifras alineados */
+.cifra {
+  font-family: var(--fuente-titulo);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums lining-nums;
+}

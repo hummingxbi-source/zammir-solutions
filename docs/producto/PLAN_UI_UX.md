@@ -1,6 +1,6 @@
 # Plan de UI y UX
 
-> **Estado:** propuesta por el desarrollador, **por aprobar por Juanito**. Nada de esto se construye hasta que se contesten las decisiones de la sección 9.
+> **Estado:** **aprobado por Juanito el 2026-11-03** (decisiones D1 a D7 de la sección 9, con la recomendación del desarrollador en cada una). Se construye en las historias U0 a U9.
 > **Origen:** Juanito pidió que la interfaz se parezca más a la demo (`HummingX-BI/formularios`, carpeta `demos/zammir-demo`), cuya UI y UX le gustan más que las del sistema actual.
 > **Complementa** a [`DEMO_REFERENCIA.md`](DEMO_REFERENCIA.md), que cubre *qué funciones* mostró la demo; este documento cubre *cómo se ve y se siente*.
 > **Reglas que se respetan:** [ADR-0002] (la demo es referencia, **no se copia código**; la identidad visual sí se puede adoptar redefiniéndola dentro del sistema de diseño propio), [RNF-28] (táctil de 44 px, texto de 16 px, buen contraste), [RF-UX-01 a RF-UX-10], [RN-23] (sin datos de relleno) y el modo sin internet.
@@ -180,3 +180,14 @@ Si el calendario aprieta, se recorta en este orden: U8 (guía de inicio), U7 (ca
 ## 11. Cómo se cita
 
 `[PLAN-UX §n]` para este documento; las historias son `U0` a `U9`.
+
+## 12. Estado de las historias
+
+| Historia | Estado | Notas |
+|---|---|---|
+| U0 Identidad y tokens | **hecha** | Tokens en `tokens.css`; Fraunces, Source Serif 4 e IBM Plex Mono empaquetadas (≈107 KB, latín) y guardadas para uso sin internet; sin llamadas a Google Fonts (comprobado en navegador real) |
+| U1 Marco y navegación | **hecha** | Barra lateral en tablet horizontal y computadora; barra superior desplazable en tablet vertical y teléfono; encabezado con fecha de México y saludo por nombre; sin desplazamiento horizontal (comprobado a 375, 800 y 1280 px) |
+| U2 Componentes base | **hecha** | Tarjeta, Indicador, Etiqueta de estado, Pestañas, Ventana, Ayuda táctil, Aviso cerrable, Estado vacío, Tabla apilada, Flecha de comparación, Barras, Línea, Encabezado de página e Íconos, con 66 pruebas, axe estructural en jsdom y axe con contraste en navegador real |
+| U3 a U9 | pendientes | Siguen el orden de la sección 7 |
+
+Ajuste respecto al plan: las barras se dibujan con la lista misma (texto + barra de CSS), no con SVG, porque así el valor siempre está en texto; la línea sí es SVG, con su tabla equivalente.

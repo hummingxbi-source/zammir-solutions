@@ -10,6 +10,9 @@ export const textos = {
     principal: 'Secciones del trabajo',
     secundaria: 'Otras secciones',
     mas: 'Más',
+    flujoDeTrabajo: 'Flujo de trabajo',
+    administracion: 'Administración',
+    saludo: (nombre: string): string => `Hola, ${nombre}.`,
     yaVisitada: 'ya visitada',
     secciones: {
       catalogo: 'Catálogo',
@@ -413,6 +416,12 @@ export const textos = {
       total: 'Total',
       cobros: 'Cobros',
     },
+  },
+  componentes: {
+    cerrar: 'Cerrar',
+    cerrarAviso: 'Cerrar este aviso',
+    ayudaSobre: 'Ayuda sobre',
+    maximo: 'Máximo',
   },
   cuentas: {
     titulo: 'Cuentas por cobrar',

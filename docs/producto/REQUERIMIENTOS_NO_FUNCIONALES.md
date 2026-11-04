@@ -83,7 +83,7 @@ Volúmenes pequeños: cientos de operaciones por mes.
 
 ## Usabilidad y accesibilidad [DC §10.5]
 
-**RNF-28** Botones y objetivos táctiles de **al menos 44 px**; texto de **al menos 16 px**; buen contraste.
+**RNF-28** Botones y objetivos táctiles de **al menos 44 px**; texto de **al menos 16 px**; buen contraste. *Única excepción [ADR-0028]: los rótulos de tarjeta en mayúsculas y monoespaciada pueden ser de 14 px (nunca texto que se lea como contenido, botones ni campos); contraste de al menos 4.5:1.*
 
 **RNF-29** Navegación en el orden real del trabajo y ayuda contextual [RF-UX-01 a RF-UX-05].
 
