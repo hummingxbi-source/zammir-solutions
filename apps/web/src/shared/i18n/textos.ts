@@ -533,6 +533,71 @@ export const textos = {
     importe: 'Importe',
     total: 'Total (con IVA)',
     plazo: (fecha: string): string => `Puedes pedir tu factura hasta el ${fecha}.`,
+    pasos: {
+      etiqueta: 'Pasos para pedir tu factura',
+      ticket: 'Tu ticket',
+      datos: 'Tus datos',
+      factura: 'Tu factura',
+      actual: 'Paso actual',
+    },
+    datos: {
+      titulo: 'Tus datos fiscales',
+      descripcion:
+        'Escríbelos tal como aparecen en tu constancia de situación fiscal. Si no coinciden, el SAT rechaza la factura.',
+      rfc: 'RFC',
+      rfcAyuda: '12 caracteres si eres empresa y 13 si eres persona',
+      nombre: 'Nombre o razón social',
+      nombreAyuda: 'Tal como aparece en tu constancia, sin cambiarlo',
+      codigoPostal: 'Código postal fiscal',
+      codigoPostalAyuda: 'Son 5 números, el de tu constancia',
+      regimen: 'Régimen fiscal',
+      uso: 'Uso de la factura',
+      elige: 'Elige una opción',
+      aviso:
+        'Acepto el aviso de privacidad, incluida la transferencia de mis datos fiscales al proveedor que timbra la factura.',
+      leerAviso: 'Leer el aviso de privacidad',
+      pedir: 'Pedir mi factura',
+      pidiendo: 'Pidiendo tu factura…',
+      volver: 'Cambiar mi ticket',
+      errores: {
+        'recipient.rfc': 'El RFC no tiene el formato correcto (12 o 13 caracteres).',
+        'recipient.name': 'Falta tu nombre o razón social.',
+        'recipient.fiscalZip': 'El código postal debe tener 5 números.',
+        'recipient.regime': 'Elige tu régimen fiscal.',
+        'recipient.cfdiUse': 'Elige el uso de la factura.',
+        privacy: 'Para continuar debes aceptar el aviso de privacidad.',
+      },
+    },
+    resultado: {
+      titulo: 'Tu factura está lista',
+      folio: 'Folio de tu factura',
+      guardar:
+        'Descárgala y guárdala. Son dos archivos: el PDF para leer y el XML para tu contador.',
+      pdf: 'Descargar PDF',
+      xml: 'Descargar XML',
+      descargando: 'Descargando…',
+      descargada: (nombre: string): string => `Se descargó ${nombre}.`,
+      procesando: {
+        mensaje: 'Tu factura se está procesando.',
+        queHacer: 'Espera un momento y vuelve a tocar el botón; no se genera dos veces.',
+      },
+      revisar: 'Revisar de nuevo',
+    },
+    solicitud: {
+      PAYMENT_FORM_UNDEFINED: {
+        mensaje: 'Esta compra se pagó de una forma que no podemos facturar por aquí.',
+        queHacer: 'Pide tu factura directamente en el negocio.',
+      },
+      NOT_BILLABLE: {
+        mensaje: 'No pudimos preparar tu factura por aquí.',
+        queHacer: 'Pídela directamente en el negocio y con gusto te la hacen.',
+      },
+      REJECTED: {
+        mensaje: 'No se pudo emitir la factura con esos datos.',
+        queHacer:
+          'Revisa tu RFC, tu nombre y tu código postal tal como aparecen en tu constancia, o pídela directamente en el negocio.',
+      },
+    },
     errores: {
       NOT_AVAILABLE: {
         mensaje: 'No encontramos una compra con ese folio y ese código.',

@@ -12,6 +12,9 @@ export default defineConfig({
           name: 'core',
           environment: 'node',
           include: ['packages/core/src/**/*.test.ts'],
+          // Las pruebas de propiedades recorren muchas fechas y, con todo corriendo en paralelo, alguna puede
+          // pasar de los 5 s por omisión. Solo cambia cuánto se espera, no lo que se comprueba.
+          testTimeout: 30_000,
         },
       },
       {
@@ -22,6 +25,9 @@ export default defineConfig({
           include: ['apps/web/src/**/*.test.{ts,tsx}'],
           exclude: [...configDefaults.exclude, '**/*.integracion.test.ts'],
           setupFiles: ['apps/web/src/test/setup.ts'],
+          // Montar `App` arma casi toda la aplicación y, con cientos de pruebas en paralelo, la primera de cada
+          // archivo puede pasar de los 5 s por omisión. Solo cambia cuánto se espera, no lo que se comprueba.
+          testTimeout: 30_000,
         },
       },
       ...(conSupabase

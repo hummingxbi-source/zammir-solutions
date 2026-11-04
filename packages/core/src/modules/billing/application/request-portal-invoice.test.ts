@@ -271,7 +271,7 @@ describe('pedir la factura desde el portal', () => {
   it('un catálogo sin claves del SAT no se factura y no abre solicitud', async () => {
     const { deps, filas } = entorno({
       ...venta,
-      lines: [{ ...(venta.lines[0] ?? venta.lines[0]!), productServiceKey: null }],
+      lines: venta.lines.map((l) => ({ ...l, productServiceKey: null })),
     });
     expect(await requestPortalInvoice(deps, bien)).toEqual({
       kind: 'NOT_BILLABLE',
