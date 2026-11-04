@@ -22,6 +22,7 @@ export default {
     'packages/core/src/modules/printing/domain/print-document.ts',
     'packages/core/src/modules/billing/domain/invoice.ts',
     'packages/core/src/modules/billing/application/simulated-billing.ts',
+    'packages/core/src/modules/billing/application/invoice-issue.ts',
     'packages/core/src/modules/legal/domain/document-legal.ts',
     '!packages/core/src/**/*.test.ts',
   ],

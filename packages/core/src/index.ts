@@ -117,3 +117,4 @@ export * from './modules/billing/domain/invoice';
 export * from './modules/billing/application/ports';
 export * from './modules/billing/application/simulated-billing';
 export * from './modules/legal/domain/document-legal';
+export * from './modules/billing/application/invoice-issue';
