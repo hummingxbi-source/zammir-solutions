@@ -126,3 +126,6 @@ export * from './modules/billing/application/portal-client';
 export * from './modules/billing/domain/sat-catalogs';
 export * from './modules/billing/domain/invoice-concepts';
 export * from './modules/billing/application/issue-invoice';
+export * from './modules/billing/domain/payment-form';
+export * from './modules/billing/application/request-portal-invoice';
+export * from './modules/billing/application/download-portal-invoice';

@@ -22,7 +22,19 @@ const venta: PortalDocumentRecord = {
   paidCents: 11_600,
   settledAt: '2026-11-03T18:00:00.000Z',
   invoiced: false,
-  lines: [{ name: 'Chapa', quantity: 1, lineTotalCents: 11_600 }],
+  paymentMethods: ['CASH'],
+  lines: [
+    {
+      name: 'Chapa',
+      quantity: 1,
+      lineTotalCents: 11_600,
+      baseCents: 10_000,
+      taxCents: 1_600,
+      productServiceKey: '30171500',
+      unitKey: 'H87',
+      taxObject: '02',
+    },
+  ],
 };
 
 interface Almacen extends PortalStore {

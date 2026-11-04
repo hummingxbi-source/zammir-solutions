@@ -13,11 +13,17 @@ const fila = z.object({
   paidCents: entero,
   settledAt: z.string().nullable(),
   invoiced: z.boolean(),
+  paymentMethods: z.array(z.enum(['CASH', 'TRANSFER'])),
   lines: z.array(
     z.object({
       name: z.string(),
       quantity: z.number().int().positive(),
       lineTotalCents: entero,
+      baseCents: entero,
+      taxCents: entero,
+      productServiceKey: z.string().nullable(),
+      unitKey: z.string().nullable(),
+      taxObject: z.string().nullable(),
     }),
   ),
 });

@@ -56,6 +56,8 @@ import {
   type UserId,
   type UserPolicy,
   type PortalConsulta,
+  type PortalDescarga,
+  type PortalSolicitud,
 } from '@zammir/core';
 
 import {
@@ -78,6 +80,10 @@ import { supabaseCustomerReplica } from '../modules/customers/infra/supabase-cus
 import { supabaseCustomers } from '../modules/customers/infra/supabase-customers';
 import { textos } from '../shared/i18n/textos';
 import { functionPortalConsulta } from '../modules/billing/infra/function-portal-consulta';
+import {
+  functionPortalDescarga,
+  functionPortalSolicitud,
+} from '../modules/billing/infra/function-portal-solicitud';
 import type { ContactoPublico } from '../modules/legal/ui/PaginaLegalPublica';
 import { supabaseLegal } from '../modules/legal/infra/supabase-legal';
 import { supabaseQuoteConditions } from '../modules/settings/infra/supabase-quote-conditions';
@@ -136,7 +142,12 @@ export interface Composition {
   /** Datos del negocio para el canal de derechos de las páginas públicas del aviso y los términos. */
   readonly contactoPublico: (() => Promise<ContactoPublico | null>) | null;
   /** Portal público de autofacturación: solo habla con la función de servidor [S4-18]. */
-  readonly portal: { readonly consultar: PortalConsulta; readonly siteKey: string | null } | null;
+  readonly portal: {
+    readonly consultar: PortalConsulta;
+    readonly solicitar: PortalSolicitud;
+    readonly descargar: PortalDescarga;
+    readonly siteKey: string | null;
+  } | null;
   /** Condiciones de la cotización; `null` si no hay servidor configurado. */
   readonly condiciones: QuoteConditionsStore | null;
   /** Altas y correcciones de clientes; `null` si no hay servidor configurado. */
@@ -892,6 +903,8 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
         ? null
         : {
             consultar: functionPortalConsulta({ url: entorno.url, anonKey: entorno.anonKey }),
+            solicitar: functionPortalSolicitud({ url: entorno.url, anonKey: entorno.anonKey }),
+            descargar: functionPortalDescarga({ url: entorno.url, anonKey: entorno.anonKey }),
             siteKey:
               entorno.turnstileSiteKey === undefined || entorno.turnstileSiteKey === ''
                 ? null

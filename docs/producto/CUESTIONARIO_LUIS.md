@@ -106,7 +106,7 @@
 
 50. ⭐ **Trámite del certificado de sello digital (CSD):** ¿ya tienen e.firma vigente? ¿Pueden iniciar el trámite del CSD ahora? Puede tardar. Necesitamos RFC, régimen fiscal, y los archivos `.cer`, `.key` y su contraseña **que ZAMMIR sube directo al proveedor de timbrado, no a nosotros**. (PD-04)
 51. **Anticipos:** ¿se factura **una sola vez al liquidar**, o se emite una factura por el anticipo y otra al final? (PD-27)
-52. **Pago mixto** (parte efectivo, parte transferencia): ¿qué forma de pago debe llevar la factura? (PD-28)
+52. **Pago mixto** (parte efectivo, parte transferencia): ¿qué forma de pago debe llevar la factura? Mientras no se responda, el portal **no factura** las compras con pago mixto y manda a pedir la factura en el negocio. (PD-28)
 53. **Autofacturación:** el cliente puede pedir su factura hasta el **último día del mes** de su compra. ¿Está bien? (PD-09)
 54. **Claves del SAT** de cada categoría de producto (producto o servicio, unidad, objeto de impuesto): ¿las revisa su contador cuando tengamos las categorías cerradas? (PD-29)
 

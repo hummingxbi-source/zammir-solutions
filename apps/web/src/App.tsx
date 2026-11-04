@@ -12,6 +12,8 @@ import type {
   RegisterTabletDeps,
   SignInWithPinDeps,
   PortalConsulta,
+  PortalDescarga,
+  PortalSolicitud,
 } from '@zammir/core';
 
 import { Bitacora, type BitacoraProps } from './modules/audit/ui/Bitacora';
@@ -59,7 +61,12 @@ export interface AppProps {
   /** Aviso de privacidad versionado; aparece en Configuración. */
   readonly legal?: LegalDeps | null;
   /** Portal público de autofacturación (`/factura` y `/f/:folio/:codigo`, la dirección del QR) [S4-18]. */
-  readonly portal?: { readonly consultar: PortalConsulta; readonly siteKey?: string | null } | null;
+  readonly portal?: {
+    readonly consultar: PortalConsulta;
+    readonly solicitar: PortalSolicitud;
+    readonly descargar: PortalDescarga;
+    readonly siteKey?: string | null;
+  } | null;
   /** Datos del negocio para el canal de derechos de las páginas públicas del aviso y los términos. */
   readonly contactoPublico?: (() => Promise<ContactoPublico | null>) | null;
   /** Condiciones que salen en cada cotización; aparecen en Configuración. */
@@ -256,13 +263,11 @@ export function App({
         <>
           <Route
             path="/factura"
-            element={
-              <PortalDeFactura consultar={portal.consultar} siteKey={portal.siteKey ?? null} />
-            }
+            element={<PortalDeFactura {...portal} siteKey={portal.siteKey ?? null} />}
           />
           <Route
             path="/f/:folio/:codigo"
-            element={<PortalPorQr consultar={portal.consultar} siteKey={portal.siteKey ?? null} />}
+            element={<PortalPorQr {...portal} siteKey={portal.siteKey ?? null} />}
           />
         </>
       ) : null}
@@ -298,13 +303,23 @@ export function App({
 /** Entrada por el QR del ticket: el folio y el código vienen en la dirección y se le ponen a la persona. */
 function PortalPorQr({
   consultar,
+  solicitar,
+  descargar,
   siteKey,
 }: {
   readonly consultar: PortalConsulta;
+  readonly solicitar: PortalSolicitud;
+  readonly descargar: PortalDescarga;
   readonly siteKey: string | null;
 }): ReactElement {
   const { folio = '', codigo = '' } = useParams();
   return (
-    <PortalDeFactura consultar={consultar} siteKey={siteKey} inicial={{ folio, code: codigo }} />
+    <PortalDeFactura
+      consultar={consultar}
+      solicitar={solicitar}
+      descargar={descargar}
+      siteKey={siteKey}
+      inicial={{ folio, code: codigo }}
+    />
   );
 }
