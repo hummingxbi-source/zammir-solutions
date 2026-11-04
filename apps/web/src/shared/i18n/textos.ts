@@ -705,6 +705,7 @@ export const textos = {
     sinPersona: 'Para trabajar con órdenes, elige quién eres.',
     elegirPersona: 'Entrar con PIN',
     cargando: 'Cargando órdenes…',
+    vacioTitulo: 'Todavía no hay órdenes',
     vacio:
       'Todavía no hay órdenes. Cuando un cliente acepte una cotización, créala aquí en un toque.',
     porConvertir: {
@@ -743,6 +744,7 @@ export const textos = {
       saldo: 'Saldo',
     },
     detalle: {
+      resumen: 'Cobro y saldo',
       volver: 'Volver a las órdenes',
       cliente: 'Cliente',
       obra: 'Domicilio de la obra',

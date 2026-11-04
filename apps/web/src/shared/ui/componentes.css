@@ -1209,3 +1209,127 @@ a.boton {
     color: var(--tinta-suave);
   }
 }
+
+/* ---------- Órdenes ---------- */
+.ordenes__lista {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: 1.25rem;
+}
+
+.filtros__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.chip {
+  min-height: var(--tactil-minimo);
+  padding: 0.375rem 1rem;
+  border: 1px solid var(--borde-control);
+  border-radius: var(--radio-pildora);
+  background: var(--superficie);
+  color: var(--tinta-suave);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background var(--t-rapida),
+    color var(--t-rapida),
+    border-color var(--t-rapida);
+}
+
+.chip:hover {
+  border-color: var(--acento);
+  color: var(--acento);
+}
+
+.chip[aria-pressed='true'] {
+  border-color: var(--acento);
+  background: var(--acento);
+  color: #ffffff;
+}
+
+.filtros__campos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.porconvertir {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--borde-suave);
+  border-radius: var(--radio-medio);
+  background: var(--superficie);
+}
+
+.porconvertir__texto {
+  display: grid;
+  gap: 0.125rem;
+}
+
+.porconvertir__folio {
+  color: var(--tinta-suave);
+  font-family: var(--fuente-etiqueta);
+  font-size: var(--texto-rotulo);
+}
+
+/* Detalle de una orden: conceptos y datos a la izquierda; cobro y acciones a la derecha, a la vista */
+.orden__rejilla {
+  display: grid;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.orden__principal,
+.orden__lateral {
+  display: grid;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+@media (min-width: 64rem) {
+  .orden__rejilla {
+    grid-template-columns: minmax(0, 1.4fr) minmax(20rem, 1fr);
+  }
+
+  .orden__lateral {
+    position: sticky;
+    top: 1rem;
+  }
+}
+
+.orden__obra {
+  margin: 1rem 0 0;
+  color: var(--tinta-suave);
+}
+
+.orden__saldo {
+  color: var(--peligro);
+}
+
+.orden__saldo--cero {
+  color: var(--exito);
+}
+
+.orden__comprobante {
+  margin-top: 0.75rem;
+}
+
+.orden__comprobante .boton {
+  width: 100%;
+}
+
+/* En pantalla angosta el cobro y las acciones van primero: son lo que más se toca */
+@media (max-width: 63.99rem) {
+  .orden__lateral {
+    order: -1;
+  }
+}

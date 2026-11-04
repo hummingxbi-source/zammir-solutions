@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within, configure } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import {
   buildCustomerHistory,
@@ -25,6 +25,7 @@ import { FichaDelCliente } from './FichaDelCliente';
 // La primera pantalla de cada archivo arma toda la aplicación y, con cientos de pruebas en paralelo, puede
 // pasar de los 5 s por omisión. Solo cambia cuánto se espera, no lo que se comprueba.
 vi.setConfig({ testTimeout: 30_000 });
+configure({ asyncUtilTimeout: 5_000 });
 
 const cliente = { id: 'c-ana', name: 'Ana López' } as unknown as Customer;
 

@@ -1,5 +1,5 @@
 import 'fake-indexeddb/auto';
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within, configure } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import {
   asId,
@@ -19,6 +19,7 @@ import { App } from '../../../App';
 // La primera pantalla de cada archivo arma toda la aplicación y, con cientos de pruebas en paralelo, puede
 // pasar de los 5 s por omisión. Solo cambia cuánto se espera, no lo que se comprueba.
 vi.setConfig({ testTimeout: 30_000 });
+configure({ asyncUtilTimeout: 5_000 });
 
 const ana = asId<'User'>('u-ana');
 const luis = asId<'User'>('u-luis');

@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import { Link, Route, Routes } from 'react-router';
 
 import { EncabezadoDePagina } from '../shared/ui/EncabezadoDePagina';
+import { MuestraDeOrdenes } from './MuestraDeOrdenes';
 import { MuestraDelCotizador } from './MuestraDelCotizador';
 import { MuestraDelMostrador } from './MuestraDelMostrador';
 
@@ -12,6 +13,7 @@ export function Muestras(): ReactElement {
     <Routes>
       <Route path="mostrador" element={<MuestraDelMostrador />} />
       <Route path="cotizador" element={<MuestraDelCotizador />} />
+      <Route path="ordenes" element={<MuestraDeOrdenes />} />
       <Route
         index
         element={
@@ -26,6 +28,9 @@ export function Muestras(): ReactElement {
               </li>
               <li>
                 <Link to="cotizador">Cotizador</Link>
+              </li>
+              <li>
+                <Link to="ordenes">Órdenes</Link>
               </li>
             </ul>
           </section>
