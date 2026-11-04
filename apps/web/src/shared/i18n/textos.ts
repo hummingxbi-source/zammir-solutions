@@ -515,6 +515,64 @@ export const textos = {
       },
     },
   },
+  /** Páginas públicas del aviso de privacidad y de los términos (`/aviso` y `/terminos`) [S4-11]. */
+  legalPublico: {
+    cargando: 'Cargando…',
+    version: 'Versión',
+    rigeDesde: 'vigente desde',
+    derechos: 'Para ejercer tus derechos sobre tus datos',
+    porWhatsApp: (telefono: string): string => `Escríbenos por WhatsApp al ${telefono}.`,
+    enPersona: (domicilio: string): string => `También puedes acudir a ${domicilio}.`,
+    sinCanal: 'Pregunta a tu vendedor cómo comunicarte con el negocio.',
+    error: {
+      mensaje: 'No pudimos cargar el documento.',
+      queHacer: 'Revisa tu conexión a internet e intenta de nuevo.',
+    },
+    aviso: {
+      titulo: 'Aviso de privacidad',
+      vacio: 'Todavía no hay un aviso de privacidad publicado. Pídelo a tu vendedor.',
+    },
+    terminos: {
+      titulo: 'Términos del servicio',
+      vacio: 'Todavía no hay términos del servicio publicados. Pídelos a tu vendedor.',
+    },
+  },
+  terminos: {
+    titulo: 'Términos del servicio',
+    descripcion:
+      'Anticipo, garantía, cancelación y tiempos de entrega. Salen en las cotizaciones y los comprobantes; escribe un punto por renglón. Editarlos crea una versión nueva con su fecha; las anteriores se conservan.',
+    cargando: 'Cargando términos…',
+    vigente: 'Versión vigente',
+    versionN: 'Versión',
+    desde: 'rige desde',
+    sinAviso:
+      'Todavía no hay términos publicados. Los documentos salen sin ellos hasta que publiques el primero.',
+    borradorAviso: 'Este texto es un borrador y falta que lo revise el asesor de ZAMMIR.',
+    nuevaVersion: 'Publicar términos nuevos',
+    texto: 'Texto de los términos',
+    publicar: 'Publicar términos nuevos',
+    publicando: 'Publicando…',
+    publicado: 'Términos publicados.',
+    historial: 'Versiones anteriores',
+    errores: {
+      BODY_REQUIRED: {
+        mensaje: 'Falta el texto de los términos.',
+        queHacer: 'Escríbelo antes de publicar.',
+      },
+      NOT_FOUND: {
+        mensaje: 'Todavía no hay términos publicados.',
+        queHacer: 'Publica los primeros.',
+      },
+      NOT_AUTHORIZED: {
+        mensaje: 'Tu cuenta no puede editar los términos del servicio.',
+        queHacer: 'Entra con una cuenta de administrador.',
+      },
+      LEGAL_UNAVAILABLE: {
+        mensaje: 'No hay conexión con el servidor.',
+        queHacer: 'Conéctate a internet e intenta de nuevo.',
+      },
+    },
+  },
   reportes: {
     titulo: 'Reportes',
     sinNombre: 'Persona desconocida',
@@ -1613,6 +1671,18 @@ export const textos = {
         `Hola ${nombre}, te comparto el comprobante de tu trabajo ${folio}. Saldo: ${saldo}. Cualquier duda, con gusto te ayudamos.`,
     },
     folioProvisional: 'Folio provisional',
+    /** Pie legal de cotizaciones y comprobantes [RF-M9-01, RF-M9-02, RF-M9-04]. */
+    legal: {
+      noNotice: 'El aviso de privacidad completo está disponible con tu vendedor.',
+      notice: (version: number, desde: string): string =>
+        `Aviso de privacidad, versión ${String(version)}, vigente desde ${desde}.`,
+      readFull: (enlace: string): string => `Léelo completo en ${enlace}.`,
+      rights: (canal: string): string =>
+        `Para ejercer tus derechos sobre tus datos (acceso, corrección, cancelación u oposición) escribe a ${canal}.`,
+      termsTitle: (version: number): string => `Términos del servicio (versión ${String(version)})`,
+      termsLink: (enlace: string): string => `Términos completos en ${enlace}`,
+      canalPorWhatsApp: (telefono: string): string => `WhatsApp ${telefono}`,
+    },
     avisoAbreviado:
       'Aviso de privacidad (versión de prueba): tus datos se usan solo para atender esta cotización y no se comparten. El aviso completo está disponible con tu vendedor.',
     mensajeWhatsApp: (nombre: string, folio: string, total: string): string =>

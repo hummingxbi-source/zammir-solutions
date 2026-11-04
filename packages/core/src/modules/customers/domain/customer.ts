@@ -59,6 +59,16 @@ const RFC = /^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/;
 const CODIGO_POSTAL = /^\d{5}$/;
 const CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/** ¿Tiene el formato de un RFC de persona física (13) o moral (12)? Ya en mayúsculas y sin espacios. */
+export function isValidRfc(rfc: string): boolean {
+  return RFC.test(rfc);
+}
+
+/** ¿Es un código postal de 5 dígitos? */
+export function isValidZip(zip: string): boolean {
+  return CODIGO_POSTAL.test(zip);
+}
+
 function vacioANull(texto: string | null): string | null {
   const limpio = texto?.trim() ?? '';
   return limpio === '' ? null : limpio;

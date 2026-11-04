@@ -4,11 +4,14 @@ import {
   err,
   ok,
   type AppUser,
+  type LegalSnapshot,
+  type LegalVersionSnapshot,
   type LockoutPolicy,
   type LoginReplicaSource,
   type StaffRole,
 } from '@zammir/core';
 
+import { supabaseLegal } from '../../legal/infra/supabase-legal';
 import { supabaseSettingsRepository } from '../../settings/infra/supabase-settings-repository';
 
 interface FilaDeLogin {
@@ -20,6 +23,27 @@ interface FilaDeLogin {
   readonly pin_iterations: number;
   readonly pin_hash: string;
   readonly pin_version: number;
+}
+
+/** Aviso de privacidad y términos con todas sus versiones, para que los documentos los lleven sin internet.
+ *  Si no se pueden leer no se detiene la entrada con PIN: la tablet sigue con la copia anterior o sin pie
+ *  legal propio. */
+async function bajarLegal(cliente: SupabaseClient): Promise<LegalSnapshot | null> {
+  const repo = supabaseLegal(cliente);
+  const [aviso, terminos] = await Promise.all([repo.list('PRIVACY_NOTICE'), repo.list('TERMS')]);
+  if (!aviso.ok || !terminos.ok) {
+    return null;
+  }
+  const aCopia = (v: {
+    version: number;
+    effectiveFrom: Date;
+    body: string;
+  }): LegalVersionSnapshot => ({
+    version: v.version,
+    effectiveFrom: v.effectiveFrom.toISOString(),
+    body: v.body,
+  });
+  return { privacy: aviso.value.map(aCopia), terms: terminos.value.map(aCopia) };
 }
 
 function aPersona(fila: FilaDeLogin): AppUser {
@@ -48,6 +72,7 @@ export function supabaseLoginSource(cliente: SupabaseClient): LoginReplicaSource
         return err({ code: 'USERS_UNAVAILABLE' });
       }
       const ajustes = await supabaseSettingsRepository(cliente).load();
+      const legal = await bajarLegal(cliente);
       if (!ajustes.ok) {
         return err({ code: 'USERS_UNAVAILABLE' });
       }
@@ -85,6 +110,7 @@ export function supabaseLoginSource(cliente: SupabaseClient): LoginReplicaSource
           publicBaseUrl: v.public_base_url,
         },
         business: { name: v.business_name, phone: v.business_phone, address: v.business_address },
+        ...(legal === null ? {} : { legal }),
       });
     },
   };

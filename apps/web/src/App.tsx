@@ -23,7 +23,8 @@ import {
   type PrepararCuentas,
 } from './modules/receivables/ui/CuentasEnLaTablet';
 import { CondicionesDeCotizacion } from './modules/quotes/ui/CondicionesDeCotizacion';
-import { AvisoDePrivacidad } from './modules/legal/ui/AvisoDePrivacidad';
+import { AvisoDePrivacidad, TerminosDelServicio } from './modules/legal/ui/AvisoDePrivacidad';
+import { PaginaLegalPublica, type ContactoPublico } from './modules/legal/ui/PaginaLegalPublica';
 import { EntrarConPin } from './modules/identity/ui/EntrarConPin';
 import { PersonaActiva } from './modules/identity/ui/PersonaActiva';
 import { ConectarTablet } from './modules/devices/ui/ConectarTablet';
@@ -55,6 +56,8 @@ export interface AppProps {
   readonly clientes?: ManageCustomersDeps | null;
   /** Aviso de privacidad versionado; aparece en Configuración. */
   readonly legal?: LegalDeps | null;
+  /** Datos del negocio para el canal de derechos de las páginas públicas del aviso y los términos. */
+  readonly contactoPublico?: (() => Promise<ContactoPublico | null>) | null;
   /** Condiciones que salen en cada cotización; aparecen en Configuración. */
   readonly condiciones?: QuoteConditionsStore | null;
   /** Bitácora consultable; aparece en Usuarios. */
@@ -96,6 +99,7 @@ export function App({
   usuarios = null,
   clientes = null,
   legal = null,
+  contactoPublico = null,
   condiciones = null,
   bitacora = null,
   conectarTablet = null,
@@ -116,7 +120,7 @@ export function App({
     ...seccionesVisibles('secundaria', interruptores),
   ];
 
-  return (
+  const marco = (
     <Layout
       interruptores={interruptores}
       sincronizacion={sincronizacion}
@@ -169,6 +173,7 @@ export function App({
                     <section>
                       <h1>{seccion.texto}</h1>
                       <AvisoDePrivacidad deps={legal} />
+                      <TerminosDelServicio deps={legal} />
                       {condiciones !== null ? (
                         <CondicionesDeCotizacion store={condiciones} />
                       ) : null}
@@ -237,5 +242,36 @@ export function App({
         />
       </Routes>
     </Layout>
+  );
+
+  const sinContacto = (): Promise<ContactoPublico | null> => Promise.resolve(null);
+  return (
+    <Routes>
+      {legal !== null ? (
+        <>
+          <Route
+            path="/aviso"
+            element={
+              <PaginaLegalPublica
+                deps={legal}
+                tipo="PRIVACY_NOTICE"
+                cargarContacto={contactoPublico ?? sinContacto}
+              />
+            }
+          />
+          <Route
+            path="/terminos"
+            element={
+              <PaginaLegalPublica
+                deps={legal}
+                tipo="TERMS"
+                cargarContacto={contactoPublico ?? sinContacto}
+              />
+            }
+          />
+        </>
+      ) : null}
+      <Route path="*" element={marco} />
+    </Routes>
   );
 }

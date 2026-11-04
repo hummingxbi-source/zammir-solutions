@@ -110,6 +110,14 @@ describe('buildQuoteDocument', () => {
     ]);
     expect(splitConditions('')).toEqual([]);
   });
+
+  it('lleva los términos vigentes y el aviso que se le den; sin términos, ninguno', () => {
+    const terms = { title: 'Términos (versión 2)', lines: ['Anticipo.', 'Garantía.'] };
+    const con = buildQuoteDocument({ ...entrada, quote: enviada, terms });
+    expect(con.terms).toEqual(terms);
+    expect(con.privacyNotice).toBe('Aviso');
+    expect(buildQuoteDocument({ ...entrada, quote: enviada }).terms).toBeNull();
+  });
 });
 
 describe('formatos [RN-22]', () => {

@@ -19,6 +19,7 @@ import {
   type Quote,
   type QuoteActor,
   type ShareService,
+  type DocumentLegal,
 } from '@zammir/core';
 
 import { textos } from '../../../shared/i18n/textos';
@@ -46,6 +47,8 @@ export interface CotizadorProps {
   readonly share: ShareService;
   readonly negocio: BusinessIdentity;
   readonly condicionesPorDefecto: string;
+  /** Aviso y términos para el pie del documento; sin esto se usa el aviso abreviado de prueba. */
+  readonly legal?: DocumentLegal;
   readonly autorizacion: AutorizacionDeAdministrador;
   /** Pide que se envíe lo guardado (al emitir o marcar una cotización). */
   readonly onPorEnviar?: () => void;
@@ -139,6 +142,7 @@ export function Cotizador(props: CotizadorProps): ReactElement {
         share={props.share}
         negocio={props.negocio}
         condicionesPorDefecto={props.condicionesPorDefecto}
+        {...(props.legal === undefined ? {} : { legal: props.legal })}
         autorizacion={props.autorizacion}
         onCambio={(q) => {
           setAbierta(q);

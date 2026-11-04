@@ -54,6 +54,7 @@ createRoot(root).render(
           dispositivos={composition.dispositivos}
           clientes={composition.clientes}
           legal={composition.legal}
+          contactoPublico={composition.contactoPublico}
           condiciones={composition.condiciones}
           conectarTablet={composition.conectarTablet}
           entradaConPin={composition.entradaConPin}

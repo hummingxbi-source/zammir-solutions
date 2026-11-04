@@ -1,5 +1,6 @@
 import type { UserId } from '../../../shared-kernel/id';
 import { err, ok, type Result } from '../../../shared-kernel/result';
+import type { LegalSnapshot } from '../../legal/domain/document-legal';
 import type { LockoutPolicy } from '../domain/pin-lockout';
 import type { AppUser, StaffRole, UserError } from '../domain/user';
 import type { PinAttemptGuard } from './pin-attempt-guard';
@@ -34,6 +35,8 @@ export interface LoginSnapshot {
     readonly selfInvoicingLegend: string | null;
     readonly publicBaseUrl: string | null;
   };
+  /** Aviso de privacidad y términos con todas sus versiones, para el pie de los documentos [S4-11]. */
+  readonly legal?: LegalSnapshot;
   /** Identidad del negocio para los documentos [RN-21]; nulos mientras no se definan (PD-11). */
   readonly business?: {
     readonly name: string | null;
@@ -64,7 +67,14 @@ export async function refreshLogin(deps: {
   if (!bajada.ok) {
     return err(bajada.error);
   }
-  await deps.store.replace(bajada.value);
+  // Si esta bajada no trajo el aviso y los términos (no se pudieron leer), se conservan los de la copia
+  // anterior: los documentos no deben perder su pie legal por una falla pasajera.
+  const anterior = await deps.store.load();
+  const copia =
+    bajada.value.legal === undefined && anterior?.legal !== undefined
+      ? { ...bajada.value, legal: anterior.legal }
+      : bajada.value;
+  await deps.store.replace(copia);
   return ok({ users: bajada.value.users.length });
 }
 

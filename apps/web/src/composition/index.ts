@@ -29,7 +29,10 @@ import {
   createPriceRegistry,
   defaultRules,
   refreshLogin,
+  buildDocumentLegal,
   type ActiveUserSession,
+  type DocumentLegal,
+  type LoginSnapshot,
   type AdminAuth,
   type AuditReader,
   type CatalogLocalStore,
@@ -72,6 +75,8 @@ import { supabaseCatalog } from '../modules/catalog/infra/supabase-catalog';
 import { supabaseDocumentReplica } from '../modules/orders/infra/supabase-document-replica';
 import { supabaseCustomerReplica } from '../modules/customers/infra/supabase-customer-replica';
 import { supabaseCustomers } from '../modules/customers/infra/supabase-customers';
+import { textos } from '../shared/i18n/textos';
+import type { ContactoPublico } from '../modules/legal/ui/PaginaLegalPublica';
 import { supabaseLegal } from '../modules/legal/infra/supabase-legal';
 import { supabaseQuoteConditions } from '../modules/settings/infra/supabase-quote-conditions';
 import { pdfLibRenderer } from '../modules/documents/infra/pdf-lib-renderer';
@@ -126,6 +131,8 @@ export interface Composition {
   readonly cargarNombres: () => Promise<ReadonlyMap<string, string>>;
   /** Aviso de privacidad versionado; `null` si no hay servidor configurado. */
   readonly legal: LegalDeps | null;
+  /** Datos del negocio para el canal de derechos de las páginas públicas del aviso y los términos. */
+  readonly contactoPublico: (() => Promise<ContactoPublico | null>) | null;
   /** Condiciones de la cotización; `null` si no hay servidor configurado. */
   readonly condiciones: QuoteConditionsStore | null;
   /** Altas y correcciones de clientes; `null` si no hay servidor configurado. */
@@ -219,6 +226,32 @@ async function abrirSesionDeLaTablet(
     });
   }
   return cliente;
+}
+
+/** Pie legal de los documentos con lo que la tablet tiene guardado: la versión vigente del aviso de
+ *  privacidad con su enlace, el canal para ejercer derechos (WhatsApp del negocio) y los términos [S4-11]. */
+function pieLegal(copia: LoginSnapshot): DocumentLegal {
+  const telefono = copia.business?.phone ?? null;
+  return buildDocumentLegal({
+    legal: copia.legal ?? null,
+    now: systemClock.now(),
+    publicBaseUrl: copia.orders?.publicBaseUrl ?? null,
+    rightsContact: telefono === null ? null : textos.documento.legal.canalPorWhatsApp(telefono),
+    labels: textos.documento.legal,
+  });
+}
+
+/** Nombre, WhatsApp y domicilio del negocio, que la base entrega aun a quien no ha entrado [S4-11]. */
+function contactoPublicoDelNegocio(cliente: SupabaseClient): () => Promise<ContactoPublico | null> {
+  return async () => {
+    const respuesta = await cliente.rpc('public_business_contact');
+    const filas: unknown = respuesta.data;
+    if (respuesta.error !== null || !Array.isArray(filas) || filas.length === 0) {
+      return null;
+    }
+    const fila = filas[0] as ContactoPublico;
+    return { name: fila.name, phone: fila.phone, address: fila.address };
+  };
 }
 
 function crearCatalogoLocal(
@@ -427,6 +460,7 @@ function crearPreparadorDelCotizador(d: {
         address: copia.business?.address ?? null,
       },
       condicionesPorDefecto: copia.quote.conditionsText,
+      legal: pieLegal(copia),
       autorizacion: {
         administradores: () =>
           Promise.resolve(
@@ -564,6 +598,7 @@ function crearPreparadorDeOrdenes(d: {
         leyendaDeAutofacturacion: copia.orders.selfInvoicingLegend,
         direccionBase: copia.orders.publicBaseUrl,
         qrMatrix,
+        legal: pieLegal(copia),
       }),
       alCambiarElEnvio: (aviso: () => void) => d.envio.engine.subscribe(aviso),
       onPorEnviar: () => {
@@ -845,6 +880,7 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
       return new Map(personas.ok ? personas.value.map((p) => [p.id, p.name]) : []);
     },
     legal,
+    contactoPublico: cliente === null ? null : contactoPublicoDelNegocio(cliente),
     condiciones: cliente === null ? null : supabaseQuoteConditions(cliente),
     clientes:
       cliente === null

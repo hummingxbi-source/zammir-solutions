@@ -113,3 +113,7 @@ export * from './modules/receivables/application/remind-receivable';
 export * from './modules/reports/domain/periods';
 export * from './modules/reports/domain/comparison';
 export * from './modules/reports/domain/reports';
+export * from './modules/billing/domain/invoice';
+export * from './modules/billing/application/ports';
+export * from './modules/billing/application/simulated-billing';
+export * from './modules/legal/domain/document-legal';
