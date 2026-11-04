@@ -62,6 +62,28 @@ describe('pdfLibRenderer', () => {
     expect(texto).toMatch(/Página 2 de /);
   });
 
+  it('dibuja los términos del servicio después de las condiciones', async () => {
+    const r = await pdfLibRenderer().render(
+      documentoDePrueba(1, {
+        terms: {
+          title: 'Términos del servicio (versión 2)',
+          lines: ['El anticipo no es reembolsable.'],
+        },
+      }),
+    );
+    if (!r.ok) {
+      throw new Error('no se generó');
+    }
+    const texto = await textoDe(r.value);
+    expect(texto).toContain('Términos del servicio (versión 2)');
+    expect(texto).toContain('El anticipo no es reembolsable.');
+    const sinTerminos = await pdfLibRenderer().render(documentoDePrueba(1));
+    if (!sinTerminos.ok) {
+      throw new Error('no se generó');
+    }
+    expect(await textoDe(sinTerminos.value)).not.toContain('Términos del servicio');
+  });
+
   it('un carácter que la fuente no dibuja no tira el documento', async () => {
     const r = await pdfLibRenderer().render(
       documentoDePrueba(1, { customer: { name: 'Cliente 😀 ≈ 中', phone: '5512345678' } }),

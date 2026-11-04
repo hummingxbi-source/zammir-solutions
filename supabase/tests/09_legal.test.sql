@@ -1,6 +1,6 @@
 -- Pruebas del aviso de privacidad y términos versionados [S1-13].
 begin;
-select plan(20);
+select plan(25);
 
 select has_table('public', 'legal_documents', 'existe la tabla de documentos legales');
 select ok((select relrowsecurity from pg_class where oid = 'public.legal_documents'::regclass), 'tiene RLS');
@@ -10,6 +10,10 @@ select is(
 );
 select matches((select body from public.legal_documents where type = 'PRIVACY_NOTICE' and version = 1),
   'BORRADOR', 'el borrador dice que está pendiente de revisión');
+select matches((select body from public.legal_documents where type = 'PRIVACY_NOTICE' and version = 2),
+  'Vercel.*Supabase.*Cloudflare', 'la versión 2 declara a los proveedores técnicos [RNF-17]');
+select matches((select body from public.legal_documents where type = 'PRIVACY_NOTICE' and version = 2),
+  'PAC.*transfieren|transfieren.*PAC', 'y la transferencia de datos fiscales al PAC [RF-M9-05]');
 
 insert into public.devices (name, temp_series, auth_user_id)
 values ('Tablet de prueba', 1, '00000000-0000-0000-0000-0000000000d1');
@@ -26,7 +30,7 @@ select lives_ok(
 );
 select is(
   (select version from public.legal_documents where id = '60000000-0000-0000-0000-000000000001'),
-  2, 'la base le asigna la versión siguiente'
+  3, 'la base le asigna la versión siguiente (la 2 es el borrador con proveedores)'
 );
 select lives_ok(
   $$ insert into public.legal_documents (id, type, body, version)
@@ -35,7 +39,7 @@ select lives_ok(
 );
 select is(
   (select version from public.legal_documents where id = '60000000-0000-0000-0000-000000000002'),
-  3, 'y asigna la que sigue'
+  4, 'y asigna la que sigue'
 );
 select lives_ok(
   $$ insert into public.legal_documents (id, type, body)
@@ -80,14 +84,26 @@ select throws_ok($$ insert into public.legal_documents (type, body) values ('PRI
   '42501', null, 'la tablet no publica');
 reset role;
 
--- ---------- Un cajero sin dispositivo y un anónimo no ven nada ----------
+-- Una versión con vigencia futura y un teléfono del negocio, para lo que lee un anónimo.
+insert into public.legal_documents (type, body, effective_from)
+values ('TERMS', 'Versión futura', '2999-01-01T00:00:00Z');
+update public.business_settings set value = '"5500000000"'::jsonb where key = 'business_phone';
+
+-- ---------- Un cajero sin dispositivo ve nada; un anónimo solo lo que ya rige ----------
 select set_config('request.jwt.claims',
   '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated","app_metadata":{"rol":"STAFF"}}', true);
 set local role authenticated;
 select is((select count(*)::int from public.legal_documents), 0, 'un cajero sin dispositivo no los ve');
 reset role;
 set local role anon;
-select throws_ok($$ select * from public.legal_documents $$, '42501', null, 'un anónimo tampoco');
+select ok((select count(*) from public.legal_documents where type = 'PRIVACY_NOTICE') >= 2,
+  'un anónimo sí lee el aviso que ya rige');
+select is((select count(*)::int from public.legal_documents where body = 'Versión futura'), 0,
+  'pero no las versiones con vigencia futura');
+select throws_ok($$ insert into public.legal_documents (type, body) values ('TERMS', 'Intento anónimo') $$,
+  '42501', null, 'y un anónimo no publica');
+select is((select phone from public.public_business_contact()), '5500000000',
+  'el canal de contacto sale de los datos del negocio [RF-M9-04]');
 reset role;
 
 select * from finish();

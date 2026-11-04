@@ -152,6 +152,29 @@ describe('refreshLogin', () => {
     expect((await store.load())?.users).toHaveLength(1);
   });
 
+  it('si la bajada no trae el aviso y los términos, conserva los que ya tenía', async () => {
+    const store = inMemoryLoginStore();
+    const legal = {
+      privacy: [{ version: 1, effectiveFrom: '2026-10-30T00:00:00.000Z', body: 'aviso' }],
+      terms: [],
+    };
+    await store.replace({ ...copiaDePrueba([await persona(ana, 'Ana', '4829')]), legal });
+    const sinLegal: LoginReplicaSource = {
+      load: async () => ok(copiaDePrueba([await persona(ana, 'Ana', '4829')])),
+    };
+    await refreshLogin({ source: sinLegal, store });
+    expect((await store.load())?.legal).toEqual(legal);
+    const conLegalNuevo: LoginReplicaSource = {
+      load: async () =>
+        ok({
+          ...copiaDePrueba([await persona(ana, 'Ana', '4829')]),
+          legal: { privacy: [], terms: [] },
+        }),
+    };
+    await refreshLogin({ source: conLegalNuevo, store });
+    expect((await store.load())?.legal).toEqual({ privacy: [], terms: [] });
+  });
+
   it('sin conexión conserva lo guardado', async () => {
     const store = inMemoryLoginStore();
     await store.replace(copiaDePrueba([await persona(ana, 'Ana', '4829')]));

@@ -23,6 +23,7 @@ export function documentToLines(d: QuoteDocument): string[] {
     `${nl.total} ${d.total}`,
     nl.conditions,
     ...d.conditions,
+    ...(d.terms === null || d.terms === undefined ? [] : [d.terms.title, ...d.terms.lines]),
     nl.signature,
     d.privacyNotice,
   ].filter((l) => l !== '');

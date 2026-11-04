@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useId, useState } from 'react';
 import type { ReactElement, SyntheticEvent } from 'react';
 import {
   currentVersion,
   publishLegalDocument,
   type LegalDeps,
   type LegalDocument,
+  type LegalDocumentType,
   type LegalError,
 } from '@zammir/core';
 
@@ -15,15 +16,20 @@ import { Boton } from '../../../shared/ui/Boton';
 import { formatearFecha } from '../../../shared/ui/formatos';
 import { useSesionAdmin } from '../../identity/ui/SesionAdmin';
 
-const t = textos.legal;
-
 export interface AvisoDePrivacidadProps {
   readonly deps: LegalDeps;
+  /** Qué documento se edita; por omisión, el aviso de privacidad. */
+  readonly tipo?: LegalDocumentType;
 }
 
 /** Editor del aviso de privacidad: muestra la versión vigente y las anteriores, y publica una versión
  *  nueva en lugar de modificar la existente [RF-M9-01]. */
-export function AvisoDePrivacidad({ deps }: AvisoDePrivacidadProps): ReactElement {
+export function AvisoDePrivacidad({
+  deps,
+  tipo = 'PRIVACY_NOTICE',
+}: AvisoDePrivacidadProps): ReactElement {
+  const t = tipo === 'TERMS' ? textos.terminos : textos.legal;
+  const idTitulo = useId();
   const { usuario } = useSesionAdmin();
   const actor = { role: usuario?.role ?? null };
 
@@ -34,13 +40,13 @@ export function AvisoDePrivacidad({ deps }: AvisoDePrivacidadProps): ReactElemen
   const [publicando, setPublicando] = useState(false);
 
   const cargar = useCallback(async () => {
-    const resultado = await deps.legal.list('PRIVACY_NOTICE');
+    const resultado = await deps.legal.list(tipo);
     if (resultado.ok) {
       setVersiones(resultado.value);
     } else {
       setError(resultado.error);
     }
-  }, [deps.legal]);
+  }, [deps.legal, tipo]);
 
   useEffect(() => {
     void cargar();
@@ -52,7 +58,7 @@ export function AvisoDePrivacidad({ deps }: AvisoDePrivacidadProps): ReactElemen
     setAviso(null);
     setPublicando(true);
     const resultado = await publishLegalDocument(deps, actor, {
-      type: 'PRIVACY_NOTICE',
+      type: tipo,
       body: texto,
     });
     setPublicando(false);
@@ -70,8 +76,8 @@ export function AvisoDePrivacidad({ deps }: AvisoDePrivacidadProps): ReactElemen
   const esBorrador = vigente?.body.includes('BORRADOR') === true;
 
   return (
-    <section className="anima-entrada" aria-labelledby="titulo-aviso">
-      <h2 id="titulo-aviso">{t.titulo}</h2>
+    <section className="anima-entrada" aria-labelledby={idTitulo}>
+      <h2 id={idTitulo}>{t.titulo}</h2>
       <p>{t.descripcion}</p>
 
       {error !== null ? (
@@ -128,4 +134,10 @@ export function AvisoDePrivacidad({ deps }: AvisoDePrivacidadProps): ReactElemen
       ) : null}
     </section>
   );
+}
+
+/** Editor de los términos del servicio: el mismo mecanismo de versiones que el aviso de privacidad
+ *  [RF-M9-02]. */
+export function TerminosDelServicio({ deps }: { readonly deps: LegalDeps }): ReactElement {
+  return <AvisoDePrivacidad deps={deps} tipo="TERMS" />;
 }

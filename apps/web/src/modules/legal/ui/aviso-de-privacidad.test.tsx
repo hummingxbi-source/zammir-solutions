@@ -96,6 +96,25 @@ describe('pantalla del aviso de privacidad', () => {
     expect(lista.ok && lista.value.map((v) => v.body)).toEqual(['Texto uno', 'Texto dos']);
   });
 
+  it('los términos del servicio se publican aparte del aviso, con su propia numeración', async () => {
+    const deps = entorno();
+    mostrar(deps);
+    await entrar();
+    expect(await screen.findByText(/Todavía no hay términos publicados/)).toBeTruthy();
+    fireEvent.change(await screen.findByLabelText('Texto de los términos'), {
+      target: { value: 'Anticipo del 50 %.' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Publicar términos nuevos' }));
+    expect(await screen.findByText('Términos publicados.')).toBeTruthy();
+    expect(screen.getByText('Anticipo del 50 %.')).toBeTruthy();
+    const terminos = await deps.legal.list('TERMS');
+    expect(terminos.ok && terminos.value.map((v) => [v.version, v.body])).toEqual([
+      [1, 'Anticipo del 50 %.'],
+    ]);
+    const aviso = await deps.legal.list('PRIVACY_NOTICE');
+    expect(aviso.ok && aviso.value).toHaveLength(0);
+  });
+
   it('un texto en blanco no se publica y dice qué hacer', async () => {
     mostrar(entorno());
     await entrar();

@@ -107,8 +107,10 @@ export interface QuoteDocument {
   readonly tax: string;
   readonly total: string;
   readonly conditions: readonly string[];
-  /** Aviso de privacidad abreviado (texto de prueba hasta PD-12). */
+  /** Aviso de privacidad abreviado: versión, enlace y canal para ejercer derechos [RF-M9-01, RF-M9-04]. */
   readonly privacyNotice: string;
+  /** Términos del servicio vigentes, si ya se publicaron [RF-M9-02]. */
+  readonly terms?: { readonly title: string; readonly lines: readonly string[] } | null;
   readonly isDraft: boolean;
   readonly labels: DocumentLabels;
   /** Solo el comprobante de trabajo lo trae. */
@@ -157,6 +159,7 @@ export interface BuildDocumentInput {
   readonly customer: DocumentCustomer;
   readonly business: BusinessIdentity;
   readonly privacyNotice: string;
+  readonly terms?: { readonly title: string; readonly lines: readonly string[] } | null;
   /** Condiciones de un borrador que aún no tiene copia propia. */
   readonly defaultConditions: string;
   readonly now: Date;
@@ -192,6 +195,7 @@ export function buildQuoteDocument(entrada: BuildDocumentInput): QuoteDocument {
     total: dinero(totales.totalCents),
     conditions: splitConditions(quote.conditionsText ?? entrada.defaultConditions),
     privacyNotice: entrada.privacyNotice,
+    terms: entrada.terms ?? null,
     isDraft: esBorrador,
     labels: entrada.labels,
   };

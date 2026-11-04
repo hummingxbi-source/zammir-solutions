@@ -54,6 +54,7 @@ export interface BuildReceiptInput {
   readonly warranty: Warranty | null;
   readonly conditions: string;
   readonly privacyNotice: string;
+  readonly terms?: { readonly title: string; readonly lines: readonly string[] } | null;
   /** Leyenda del plazo de autofacturación, una por renglón (PD-09, configurable). */
   readonly selfInvoicingLegend: string;
   readonly publicBaseUrl: string | null;
@@ -120,6 +121,7 @@ export function buildWorkOrderDocument(entrada: BuildReceiptInput): QuoteDocumen
     total: dinero(order.totalCents),
     conditions: splitConditions(entrada.conditions),
     privacyNotice: entrada.privacyNotice,
+    terms: entrada.terms ?? null,
     isDraft: false,
     labels: labels.document,
     receipt: {

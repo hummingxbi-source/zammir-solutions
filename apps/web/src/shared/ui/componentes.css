@@ -1593,3 +1593,44 @@ h3.reportes__subtitulo:not(.rotulo) {
 .marco__contenido {
   padding-block-end: 5rem;
 }
+
+/* Páginas públicas del aviso de privacidad y los términos: se leen en el teléfono del cliente. */
+.publica {
+  display: grid;
+  justify-items: center;
+  min-block-size: 100vh;
+  padding: 1.5rem 1rem 3rem;
+  background: var(--papel);
+}
+
+.publica__hoja {
+  inline-size: min(100%, 42rem);
+  box-sizing: border-box;
+  padding: 1.5rem 1.25rem;
+  border: 1px solid var(--borde-suave);
+  border-radius: var(--radio-medio);
+  background: var(--superficie);
+  box-shadow: var(--sombra-1);
+}
+
+.publica__negocio {
+  margin: 0 0 0.5rem;
+  color: var(--laton);
+}
+
+.publica__version {
+  margin: 0 0 1rem;
+  color: var(--tinta-suave);
+}
+
+.publica__texto {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
+.publica__pie {
+  margin-block-start: 2rem;
+  padding-block-start: 1rem;
+  border-block-start: 1px solid var(--borde-suave);
+}

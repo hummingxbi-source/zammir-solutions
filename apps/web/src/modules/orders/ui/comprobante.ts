@@ -9,6 +9,7 @@ import {
   type ReceiptLabels,
   type ShareService,
   type WorkOrder,
+  type DocumentLegal,
 } from '@zammir/core';
 
 import { textos } from '../../../shared/i18n/textos';
@@ -42,6 +43,8 @@ export interface ComprobanteDeps {
   /** Dirección base del QR (PD-10); `null` usa un dominio de prueba. */
   readonly direccionBase: string | null;
   readonly qrMatrix: (texto: string) => readonly (readonly boolean[])[];
+  /** Aviso y términos para el pie del comprobante; sin esto se usa el aviso abreviado de prueba. */
+  readonly legal?: DocumentLegal;
 }
 
 /** Genera el comprobante de trabajo en la tablet y lo comparte por WhatsApp [RF-M3-06, ADR-0005].
@@ -59,7 +62,8 @@ export function compartirComprobante(
       business: deps.negocio,
       warranty: garantia,
       conditions: deps.condiciones,
-      privacyNotice: textos.documento.avisoAbreviado,
+      privacyNotice: deps.legal?.privacyNotice ?? textos.documento.avisoAbreviado,
+      terms: deps.legal?.terms ?? null,
       selfInvoicingLegend: deps.leyendaDeAutofacturacion ?? c.leyendaPorOmision,
       publicBaseUrl: deps.direccionBase,
       qrMatrix: deps.qrMatrix,

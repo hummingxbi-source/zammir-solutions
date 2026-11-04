@@ -28,6 +28,7 @@ import {
   type QuoteError,
   type SellableProduct,
   type ShareService,
+  type DocumentLegal,
 } from '@zammir/core';
 
 import { textos } from '../../../shared/i18n/textos';
@@ -56,6 +57,7 @@ export interface EditorDeCotizacionProps {
   readonly share: ShareService;
   readonly negocio: BusinessIdentity;
   readonly condicionesPorDefecto: string;
+  readonly legal?: DocumentLegal;
   readonly autorizacion: AutorizacionDeAdministrador;
   /** La cotización cambió (para refrescar la lista). */
   readonly onCambio: (quote: Quote) => void;
@@ -81,6 +83,7 @@ export function EditorDeCotizacion({
   share,
   negocio,
   condicionesPorDefecto,
+  legal,
   autorizacion,
   onCambio,
   onPorEnviar,
@@ -120,13 +123,14 @@ export function EditorDeCotizacion({
         quote,
         customer: { name: cliente.name, phone: cliente.phone },
         business: negocio,
-        privacyNotice: textos.documento.avisoAbreviado,
+        privacyNotice: legal?.privacyNotice ?? textos.documento.avisoAbreviado,
+        terms: legal?.terms ?? null,
         defaultConditions: condicionesPorDefecto,
         now: deps.clock.now(),
         provisionalNote: textos.documento.folioProvisional,
         labels: textos.documento.rotulos,
       }),
-    [quote, cliente, negocio, condicionesPorDefecto, deps.clock],
+    [quote, cliente, negocio, condicionesPorDefecto, legal, deps.clock],
   );
 
   const totales = quoteTotals(quote.lines);

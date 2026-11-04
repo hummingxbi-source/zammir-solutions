@@ -293,12 +293,26 @@ function condicionesYFirma(e: Estado): void {
   const renglones = doc.conditions.flatMap((c, i) =>
     envolver(`${String(i + 1)}. ${c}`, fuentes.normal, 9, UTIL),
   );
-  asegurarEspacio(e, 24 + renglones.length * 11 + 70, false);
+  const renglonesDeTerminos = (doc.terms?.lines ?? []).flatMap((t) =>
+    envolver(t, fuentes.normal, 9, UTIL),
+  );
+  const espacioDeTerminos =
+    doc.terms === null || doc.terms === undefined ? 0 : 20 + renglonesDeTerminos.length * 11;
+  asegurarEspacio(e, 24 + renglones.length * 11 + espacioDeTerminos + 70, false);
   texto(e, doc.labels.conditions, MARGEN, e.y, { size: 10, bold: true });
   e.y -= 14;
   for (const renglon of renglones) {
     texto(e, renglon, MARGEN, e.y, { size: 9 });
     e.y -= 11;
+  }
+  if (doc.terms !== null && doc.terms !== undefined) {
+    e.y -= 6;
+    texto(e, doc.terms.title, MARGEN, e.y, { size: 10, bold: true });
+    e.y -= 14;
+    for (const renglon of renglonesDeTerminos) {
+      texto(e, renglon, MARGEN, e.y, { size: 9 });
+      e.y -= 11;
+    }
   }
   e.y -= 38;
   e.page.drawLine({ start: { x: MARGEN, y: e.y }, end: { x: MARGEN + 220, y: e.y }, color: NEGRO });
