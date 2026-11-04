@@ -567,3 +567,117 @@
   justify-content: space-between;
   margin: 0.5rem 0 0;
 }
+
+/* ---------- Panel de inicio: mosaicos ---------- */
+.tablero__titulo {
+  margin: 1.75rem 0 0.75rem;
+}
+
+.tablero {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tablero--chico {
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+}
+
+.mosaico {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 5.5rem;
+  padding: 1.125rem 1.25rem;
+  border: 1px solid var(--borde-suave);
+  border-radius: var(--radio-medio);
+  background: var(--superficie);
+  box-shadow: var(--sombra-1);
+  color: var(--tinta);
+  text-decoration: none;
+  transition:
+    transform var(--t-base),
+    box-shadow var(--t-base),
+    border-color var(--t-base);
+}
+
+.mosaico:hover {
+  transform: translateY(-2px);
+  border-color: rgb(15 76 129 / 35%);
+  box-shadow: var(--sombra-2);
+}
+
+.mosaico:active {
+  transform: none;
+}
+
+.mosaico__icono {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: var(--acento-tinte-fuerte);
+  color: var(--acento);
+  transition:
+    background var(--t-base),
+    color var(--t-base);
+}
+
+.mosaico:hover .mosaico__icono {
+  background: var(--acento);
+  color: #ffffff;
+}
+
+.mosaico__texto {
+  display: grid;
+  flex: 1;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.mosaico__titulo {
+  font-family: var(--fuente-titulo);
+  font-size: 1.1875rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.mosaico__descripcion {
+  color: var(--tinta-suave);
+  line-height: 1.4;
+}
+
+.mosaico__flecha {
+  display: inline-flex;
+  color: var(--tinta-apagada);
+  transition:
+    transform var(--t-base),
+    color var(--t-base);
+}
+
+.mosaico:hover .mosaico__flecha {
+  transform: translateX(3px);
+  color: var(--acento);
+}
+
+.inicio__nota {
+  margin: 0;
+  color: var(--tinta-suave);
+}
+
+.tablero__titulo + .tablero {
+  margin-bottom: 0.5rem;
+}
+
+/* Un enlace con aspecto de botón (por ejemplo "Entrar con PIN") */
+a.boton {
+  text-decoration: none;
+}

@@ -105,7 +105,7 @@ describe('App y navegación', () => {
 
   it('al elegir un acceso del panel de inicio abre esa sección', () => {
     mostrar('/');
-    fireEvent.click(within(screen.getByRole('main')).getByRole('link', { name: 'Cotizador' }));
+    fireEvent.click(within(screen.getByRole('main')).getByRole('link', { name: /^Cotizador/ }));
     expect(screen.getByRole('heading', { name: 'Cotizador' })).toBeInTheDocument();
   });
 

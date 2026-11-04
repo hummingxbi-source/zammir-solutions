@@ -21,6 +21,7 @@ const TRAZOS = {
     'M12 21a9 9 0 100-18 9 9 0 000 18z M9.5 9.5a2.5 2.5 0 114 2c-.9.6-1.5 1.1-1.5 2.5 M12 17.2v.1',
   cerrar: 'M6 6l12 12 M18 6L6 18',
   verificar: 'M5 12.5l4.5 4.5L19 7.5',
+  flechaDerecha: 'M5 12h14 M13 6l6 6-6 6',
   flechaArriba: 'M12 19V5 M6 11l6-6 6 6',
   flechaAbajo: 'M12 5v14 M6 13l6 6 6-6',
   igual: 'M5 9h14 M5 15h14',

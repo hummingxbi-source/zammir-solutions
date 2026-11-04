@@ -28,7 +28,19 @@ export const textos = {
   },
   inicio: {
     titulo: 'Panel de inicio',
-    descripcion: 'Elige por dónde quieres empezar.',
+    descripcion: 'Elige por dónde quieres empezar. Cada sección sigue el orden real del trabajo.',
+    nota: 'Todo lo que captures se guarda en la tablet y sale solo cuando hay internet. Puedes seguir trabajando sin conexión.',
+    descripciones: {
+      catalogo: 'Tus productos y precios, siempre al día.',
+      cotizador: 'Calcula con el cliente enfrente y mándale el PDF por WhatsApp.',
+      ordenes: 'Da seguimiento a cada trabajo, del anticipo a la entrega.',
+      mostrador: 'Cobra al momento, imprime el ticket y haz tu corte.',
+      reportes: 'Cómo va el negocio: ventas, producción y cobros.',
+      clientes: 'Tus clientes y su historial.',
+      'cuentas-por-cobrar': 'Lo que te deben y desde cuándo.',
+      usuarios: 'Personas, PIN y tablets.',
+      configuracion: 'Condiciones, aviso de privacidad y más.',
+    },
   },
   entrada: {
     titulo: 'Entrar',
@@ -1443,6 +1455,7 @@ export const textos = {
     necesitaInternet: 'Para hacer esto necesitas internet.',
   },
   seccionVacia: {
+    titulo: 'Todavía no hay nada aquí',
     descripcion: 'Esta sección estará lista pronto.',
   },
 } as const;
