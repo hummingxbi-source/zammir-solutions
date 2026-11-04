@@ -5,6 +5,9 @@ import { testPage, type PrinterStatus } from '@zammir/core';
 import { textos } from '../../../shared/i18n/textos';
 import { Aviso } from '../../../shared/ui/Aviso';
 import { Boton } from '../../../shared/ui/Boton';
+import { EtiquetaDeEstado } from '../../../shared/ui/EtiquetaDeEstado';
+import { Icono } from '../../../shared/ui/Icono';
+import { Tarjeta } from '../../../shared/ui/Tarjeta';
 import type { ImpresionDeTickets } from './impresion';
 
 const t = textos.impresion;
@@ -55,12 +58,20 @@ export function PanelDeImpresora(props: { readonly impresion: ImpresionDeTickets
     }
   }
 
+  const tono =
+    estado?.state === 'READY' ? 'listo' : estado?.state === 'DISCONNECTED' ? 'aviso' : 'neutro';
+
   return (
-    <section aria-labelledby="titulo-impresora">
-      <h2 id="titulo-impresora">{t.titulo}</h2>
-      <p>
-        {estado === null ? '…' : t.estado[estado.state]}
-        {estado?.name !== null && estado?.name !== undefined ? ` · ${estado.name}` : ''}
+    <Tarjeta rotulo={t.titulo}>
+      <p className="impresora__estado">
+        {estado === null ? (
+          '…'
+        ) : (
+          <>
+            <EtiquetaDeEstado tono={tono} texto={t.estado[estado.state]} />
+            {estado.name !== null ? <span className="impresora__nombre">{estado.name}</span> : null}
+          </>
+        )}
       </p>
       {error !== null ? (
         <Aviso tipo="error" queHacer={error.queHacer}>
@@ -68,22 +79,25 @@ export function PanelDeImpresora(props: { readonly impresion: ImpresionDeTickets
         </Aviso>
       ) : null}
       {aviso !== null ? <Aviso tipo="exito">{aviso}</Aviso> : null}
-      <Boton
-        variante="secundario"
-        onClick={() => {
-          void conectar();
-        }}
-      >
-        {t.conectar}
-      </Boton>
-      <Boton
-        variante="secundario"
-        onClick={() => {
-          void probar();
-        }}
-      >
-        {t.probar}
-      </Boton>
-    </section>
+      <div className="impresora__acciones">
+        <Boton
+          variante="secundario"
+          onClick={() => {
+            void conectar();
+          }}
+        >
+          {t.conectar}
+        </Boton>
+        <Boton
+          variante="secundario"
+          onClick={() => {
+            void probar();
+          }}
+        >
+          <Icono nombre="imprimir" />
+          {t.probar}
+        </Boton>
+      </div>
+    </Tarjeta>
   );
 }

@@ -77,6 +77,8 @@ export interface AppProps {
   readonly prepararCuentas?: PrepararCuentas | null;
   /** Reportes de la tablet: cómo reunir lo que necesitan; sin esto la sección queda como antes. */
   readonly prepararReportes?: PrepararReportes | null;
+  /** Solo en desarrollo: página de muestras con datos de ejemplo (`/muestras`). */
+  readonly muestras?: ReactElement | null;
   /** Historial de un cliente desde lo guardado en la tablet (ficha en Clientes). */
   readonly historialDeCliente?: ((id: CustomerId) => Promise<CustomerHistory>) | null;
   /** Estado del envío de lo guardado en la tablet ("N pendientes"). */
@@ -103,6 +105,7 @@ export function App({
   prepararOrdenes = null,
   prepararCuentas = null,
   prepararReportes = null,
+  muestras = null,
   historialDeCliente = null,
   prepararMostrador = null,
   cargarVigenciaDeCodigo,
@@ -136,6 +139,7 @@ export function App({
             element={<EntrarConPin deps={entradaConPin.deps} session={entradaConPin.session} />}
           />
         ) : null}
+        {muestras !== null ? <Route path="/muestras" element={muestras} /> : null}
         {conectarTablet !== null ? (
           <Route path="/conectar" element={<ConectarTablet deps={conectarTablet} />} />
         ) : null}

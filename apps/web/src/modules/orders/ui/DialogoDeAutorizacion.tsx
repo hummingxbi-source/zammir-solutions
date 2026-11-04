@@ -6,6 +6,7 @@ import { textos } from '../../../shared/i18n/textos';
 import { Aviso } from '../../../shared/ui/Aviso';
 import { AreaDeTexto } from '../../../shared/ui/AreaDeTexto';
 import { Boton } from '../../../shared/ui/Boton';
+import { Ventana } from '../../../shared/ui/Ventana';
 import { Campo } from '../../../shared/ui/Campo';
 import { Seleccion } from '../../../shared/ui/Seleccion';
 import type { AutorizacionDeAdministrador } from '../../quotes/ui/DialogoDeDescuento';
@@ -86,59 +87,60 @@ export function DialogoDeAutorizacion({
   }
 
   return (
-    <form
-      role="dialog"
-      aria-label={titulo}
-      className="dialogo"
-      onSubmit={(e) => {
-        void continuar(e);
-      }}
-    >
-      <h3>{titulo}</h3>
-      <p>{explicacion}</p>
-      {error !== null ? (
-        <Aviso tipo="error" queHacer={error.queHacer}>
-          {error.mensaje}
-        </Aviso>
-      ) : null}
-      {pedirMotivo ? (
-        <AreaDeTexto
-          etiqueta={t.motivo}
-          rows={3}
-          value={motivo}
-          onChange={(e) => {
-            setMotivo(e.target.value);
-          }}
-        />
-      ) : null}
-      {pedirPin ? (
-        <>
-          <Seleccion
-            etiqueta={t.administrador}
-            value={adminId}
-            opciones={admins.map((a) => ({ valor: a.id, texto: a.name }))}
+    <Ventana titulo={titulo} onCerrar={onCancelar}>
+      <form
+        className="formulario"
+        onSubmit={(e) => {
+          void continuar(e);
+        }}
+      >
+        <p>{explicacion}</p>
+        {error !== null ? (
+          <Aviso tipo="error" queHacer={error.queHacer}>
+            {error.mensaje}
+          </Aviso>
+        ) : null}
+        {pedirMotivo ? (
+          <AreaDeTexto
+            etiqueta={t.motivo}
+            rows={3}
+            value={motivo}
             onChange={(e) => {
-              setAdminId(e.target.value);
+              setMotivo(e.target.value);
             }}
           />
-          <Campo
-            etiqueta={t.pin}
-            type="password"
-            inputMode="numeric"
-            autoComplete="off"
-            value={pin}
-            onChange={(e) => {
-              setPin(e.target.value);
-            }}
-          />
-        </>
-      ) : null}
-      <Boton type="submit" disabled={trabajando}>
-        {t.continuar}
-      </Boton>
-      <Boton variante="secundario" onClick={onCancelar}>
-        {t.cancelar}
-      </Boton>
-    </form>
+        ) : null}
+        {pedirPin ? (
+          <>
+            <Seleccion
+              etiqueta={t.administrador}
+              value={adminId}
+              opciones={admins.map((a) => ({ valor: a.id, texto: a.name }))}
+              onChange={(e) => {
+                setAdminId(e.target.value);
+              }}
+            />
+            <Campo
+              etiqueta={t.pin}
+              type="password"
+              inputMode="numeric"
+              autoComplete="off"
+              value={pin}
+              onChange={(e) => {
+                setPin(e.target.value);
+              }}
+            />
+          </>
+        ) : null}
+        <div className="formulario__acciones">
+          <Boton type="submit" disabled={trabajando}>
+            {t.continuar}
+          </Boton>
+          <Boton variante="secundario" onClick={onCancelar}>
+            {t.cancelar}
+          </Boton>
+        </div>
+      </form>
+    </Ventana>
   );
 }

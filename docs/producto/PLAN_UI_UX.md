@@ -188,6 +188,7 @@ Si el calendario aprieta, se recorta en este orden: U8 (guía de inicio), U7 (ca
 | U0 Identidad y tokens | **hecha** | Tokens en `tokens.css`; Fraunces, Source Serif 4 e IBM Plex Mono empaquetadas (≈107 KB, latín) y guardadas para uso sin internet; sin llamadas a Google Fonts (comprobado en navegador real) |
 | U1 Marco y navegación | **hecha** | Barra lateral en tablet horizontal y computadora; barra superior desplazable en tablet vertical y teléfono; encabezado con fecha de México y saludo por nombre; sin desplazamiento horizontal (comprobado a 375, 800 y 1280 px) |
 | U2 Componentes base | **hecha** | Tarjeta, Indicador, Etiqueta de estado, Pestañas, Ventana, Ayuda táctil, Aviso cerrable, Estado vacío, Tabla apilada, Flecha de comparación, Barras, Línea, Encabezado de página e Íconos, con 66 pruebas, axe estructural en jsdom y axe con contraste en navegador real |
-| U3 a U9 | pendientes | Siguen el orden de la sección 7 |
+| U3 Mostrador | **hecha** | Turno con indicadores, ventas con mosaicos de producto, ticket fijo a la derecha con total grande, cobro y autorización en ventana modal, ventas de hoy con etiquetas de estado, estado de la impresora; `/muestras` (solo en desarrollo) arma la pantalla con datos de ejemplo para verla sin registrar una tablet. Corrige un error: la lista de turnos mostraba el día en UTC y no el de México |
+| U4 a U9 | pendientes | Siguen el orden de la sección 7 |
 
 Ajuste respecto al plan: las barras se dibujan con la lista misma (texto + barra de CSS), no con SVG, porque así el valor siempre está en texto; la línea sí es SVG, con su tabla equivalente.

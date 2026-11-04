@@ -367,15 +367,13 @@ describe('Mostrador', () => {
   it('cobra el saldo de una orden desde el mostrador con el mismo cobro y cuenta a quien lo recibió', async () => {
     const { orderDeps } = await montar({ conOrden: true });
     const boton = await screen.findByRole('button', {
-      name: /Cobrar saldo · T1-0001 · Ana López · \$116\.00/,
+      name: /Cobrar saldo · T1-0001 · Ana López.*\$116\.00/,
     });
     fireEvent.click(boton);
     const dialogo = await screen.findByRole('dialog', { name: 'Cobrar' });
     fireEvent.change(within(dialogo).getByLabelText('Transferencia'), { target: { value: '58' } });
     fireEvent.click(within(dialogo).getByRole('button', { name: 'Registrar cobro' }));
-    expect(
-      await screen.findByRole('button', { name: /Cobrar saldo · .* · \$58\.00/ }),
-    ).toBeTruthy();
+    expect(await screen.findByRole('button', { name: /Cobrar saldo · .*\$58\.00/ })).toBeTruthy();
     const pagos = await orderDeps.payments.list();
     expect(pagos).toHaveLength(1);
     expect(pagos[0]).toMatchObject({ userId: cajero.userId, kind: 'DEPOSIT', amountCents: 5_800 });
@@ -474,7 +472,8 @@ describe('Mostrador · impresión', () => {
   it('muestra el estado de la impresora y manda una página de prueba', async () => {
     const { impresion, impresos } = impresionFalsa();
     await montar({ impresion });
-    expect(await screen.findByText(/Lista · PT-210/)).toBeTruthy();
+    expect(await screen.findByText('Lista')).toBeTruthy();
+    expect(screen.getByText('PT-210')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Imprimir prueba' }));
     expect(await screen.findByText(/Ticket enviado a la impresora/)).toBeTruthy();
     expect(impresos[0]?.title).toBe('PRUEBA DE IMPRESORA');

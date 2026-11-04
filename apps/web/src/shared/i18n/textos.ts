@@ -645,7 +645,9 @@ export const textos = {
     },
     hoy: {
       titulo: 'Ventas de hoy',
+      vacioTitulo: 'Sin ventas por ahora',
       vacio: 'Todavía no hay ventas hoy.',
+      acciones: 'Acciones',
       folio: 'Folio',
       hora: 'Hora',
       cobro: 'Cobró',
