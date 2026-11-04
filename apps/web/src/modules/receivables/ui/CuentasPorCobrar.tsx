@@ -20,6 +20,13 @@ import {
 import { textos } from '../../../shared/i18n/textos';
 import { Aviso } from '../../../shared/ui/Aviso';
 import { Boton } from '../../../shared/ui/Boton';
+import { EncabezadoDePagina } from '../../../shared/ui/EncabezadoDePagina';
+import { EstadoVacio } from '../../../shared/ui/EstadoVacio';
+import { EtiquetaDeEstado } from '../../../shared/ui/EtiquetaDeEstado';
+import { Icono } from '../../../shared/ui/Icono';
+import { Indicador } from '../../../shared/ui/Indicador';
+import { Tabla } from '../../../shared/ui/Tabla';
+import { Tarjeta } from '../../../shared/ui/Tarjeta';
 import { formatearPesos } from '../../../shared/ui/formatos';
 import { DialogoDeCobro } from '../../orders/ui/DialogoDeCobro';
 
@@ -140,9 +147,8 @@ export function CuentasPorCobrar(props: CuentasPorCobrarProps): ReactElement {
   }
 
   return (
-    <section className="anima-entrada" aria-labelledby="titulo-cuentas">
-      <h1 id="titulo-cuentas">{t.titulo}</h1>
-      <p>{t.descripcion(umbral)}</p>
+    <section className="anima-entrada cuentas">
+      <EncabezadoDePagina titulo={t.titulo} descripcion={t.descripcion(umbral)} />
       {error !== null ? (
         <Aviso tipo="error" queHacer={error.queHacer}>
           {error.mensaje}
@@ -150,73 +156,86 @@ export function CuentasPorCobrar(props: CuentasPorCobrarProps): ReactElement {
       ) : null}
       {aviso !== null ? <Aviso tipo="exito">{aviso}</Aviso> : null}
 
-      <dl className="documento__totales">
-        <dt>{t.resumen.porCobrar}</dt>
-        <dd>{formatearPesos(resumen.totalBalanceCents)}</dd>
-        <dt>{t.resumen.cuentas}</dt>
-        <dd>{String(resumen.count)}</dd>
-        <dt>{t.resumen.atrasadas}</dt>
-        <dd>
-          {String(resumen.overdueCount)} · {formatearPesos(resumen.overdueBalanceCents)}
-        </dd>
-      </dl>
+      <div className="indicadores">
+        <Indicador rotulo={t.resumen.porCobrar} valor={formatearPesos(resumen.totalBalanceCents)} />
+        <Indicador rotulo={t.resumen.cuentas} valor={String(resumen.count)} />
+        <Indicador
+          rotulo={t.resumen.atrasadas}
+          valor={`${String(resumen.overdueCount)} · ${formatearPesos(resumen.overdueBalanceCents)}`}
+          tono={resumen.overdueCount > 0 ? 'peligro' : 'neutro'}
+        />
+      </div>
 
-      {filas.length === 0 ? (
-        <p>{t.vacio}</p>
-      ) : (
-        <table className="tabla">
-          <thead>
-            <tr>
-              <th scope="col">{t.columnas.cliente}</th>
-              <th scope="col">{t.columnas.folio}</th>
-              <th scope="col">{t.columnas.saldo}</th>
-              <th scope="col">{t.columnas.dias}</th>
-              <th scope="col">{t.columnas.acciones}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filas.map((fila) => {
-              const cliente = nombres.get(fila.customerId);
-              return (
-                <tr key={fila.orderId} className={fila.overdue ? 'fila--atrasada' : undefined}>
-                  <th scope="row">{cliente?.name ?? t.sinCliente}</th>
-                  <td>{fila.folio}</td>
-                  <td>{formatearPesos(fila.balanceCents)}</td>
-                  <td>
-                    {fila.daysOutstanding === null ? t.sinFecha : String(fila.daysOutstanding)}
-                    {fila.overdue ? <strong> · {t.atrasada}</strong> : null}
-                  </td>
-                  <td>
-                    {cobrando === null ? (
+      <Tarjeta rotulo={t.titulo}>
+        {filas.length === 0 ? (
+          <EstadoVacio titulo={t.vacioTitulo} descripcion={t.vacio} icono="cuentas" />
+        ) : (
+          <Tabla
+            descripcion={t.titulo}
+            claveDeFila={(f) => f.orderId}
+            filas={filas}
+            resaltada={(f) => f.overdue}
+            columnas={[
+              {
+                clave: 'cliente',
+                rotulo: t.columnas.cliente,
+                celda: (f) => nombres.get(f.customerId)?.name ?? t.sinCliente,
+              },
+              { clave: 'folio', rotulo: t.columnas.folio, celda: (f) => f.folio },
+              {
+                clave: 'saldo',
+                rotulo: t.columnas.saldo,
+                numerica: true,
+                celda: (f) => formatearPesos(f.balanceCents),
+              },
+              {
+                clave: 'dias',
+                rotulo: t.columnas.dias,
+                celda: (f) => (
+                  <>
+                    {f.daysOutstanding === null ? t.sinFecha : String(f.daysOutstanding)}
+                    {f.overdue ? (
                       <>
-                        <Boton
-                          aria-label={`${t.registrarPago} ${fila.folio}`}
-                          onClick={() => {
-                            setError(null);
-                            setAviso(null);
-                            setCobrando(fila);
-                          }}
-                        >
-                          {t.registrarPago}
-                        </Boton>
-                        <Boton
-                          variante="secundario"
-                          aria-label={`${t.recordatorio.boton} ${fila.folio}`}
-                          onClick={() => {
-                            recordar(fila);
-                          }}
-                        >
-                          {t.recordatorio.boton}
-                        </Boton>
+                        {' '}
+                        <EtiquetaDeEstado tono="peligro" texto={t.atrasada} />
                       </>
                     ) : null}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      )}
+                  </>
+                ),
+              },
+              {
+                clave: 'acciones',
+                rotulo: t.columnas.acciones,
+                celda: (f) =>
+                  cobrando === null ? (
+                    <span className="tabla__acciones">
+                      <Boton
+                        aria-label={`${t.registrarPago} ${f.folio}`}
+                        onClick={() => {
+                          setError(null);
+                          setAviso(null);
+                          setCobrando(f);
+                        }}
+                      >
+                        {t.registrarPago}
+                      </Boton>
+                      <Boton
+                        variante="secundario"
+                        aria-label={`${t.recordatorio.boton} ${f.folio}`}
+                        onClick={() => {
+                          recordar(f);
+                        }}
+                      >
+                        <Icono nombre="whatsapp" />
+                        {t.recordatorio.boton}
+                      </Boton>
+                    </span>
+                  ) : null,
+              },
+            ]}
+          />
+        )}
+      </Tarjeta>
 
       {cobrando !== null ? (
         <DialogoDeCobro

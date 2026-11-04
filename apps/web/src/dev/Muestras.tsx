@@ -3,6 +3,7 @@ import { Link, Route, Routes } from 'react-router';
 
 import { EncabezadoDePagina } from '../shared/ui/EncabezadoDePagina';
 import { MuestraDeOrdenes } from './MuestraDeOrdenes';
+import { MuestraDeCuentas, MuestraDeReportes } from './MuestraDeReportes';
 import { MuestraDelCotizador } from './MuestraDelCotizador';
 import { MuestraDelMostrador } from './MuestraDelMostrador';
 
@@ -14,6 +15,8 @@ export function Muestras(): ReactElement {
       <Route path="mostrador" element={<MuestraDelMostrador />} />
       <Route path="cotizador" element={<MuestraDelCotizador />} />
       <Route path="ordenes" element={<MuestraDeOrdenes />} />
+      <Route path="reportes" element={<MuestraDeReportes />} />
+      <Route path="cuentas" element={<MuestraDeCuentas />} />
       <Route
         index
         element={
@@ -31,6 +34,12 @@ export function Muestras(): ReactElement {
               </li>
               <li>
                 <Link to="ordenes">Órdenes</Link>
+              </li>
+              <li>
+                <Link to="reportes">Reportes</Link>
+              </li>
+              <li>
+                <Link to="cuentas">Cuentas por cobrar</Link>
               </li>
             </ul>
           </section>

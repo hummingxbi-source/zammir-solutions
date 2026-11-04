@@ -412,6 +412,9 @@ export const textos = {
       atrasadas: 'Atrasadas',
       sinFecha: 'Sin fecha válida',
       desde: (dias: number): string => `${String(dias)} días o más`,
+      cuantas: (n: number): string => (n === 1 ? '1 cuenta' : `${String(n)} cuentas`),
+      leyenda: (dias: number): string =>
+        `Atrasadas (en rojo): las que llevan ${String(dias)} días o más sin pagarse.`,
       entre: (de: number, a: number): string => `De ${String(de)} a ${String(a)} días`,
     },
     cajeros: {
@@ -439,6 +442,7 @@ export const textos = {
     titulo: 'Cuentas por cobrar',
     descripcion: (dias: number): string =>
       `Órdenes con saldo pendiente, de la más atrasada a la más reciente. Se resaltan las que llevan ${String(dias)} días o más.`,
+    vacioTitulo: 'Todo está cobrado',
     vacio: 'No hay cuentas por cobrar. Todas las órdenes están pagadas.',
     sinCliente: 'Sin cliente',
     sinFecha: 'Sin fecha',

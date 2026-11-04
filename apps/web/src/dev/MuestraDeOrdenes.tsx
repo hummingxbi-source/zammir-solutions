@@ -33,7 +33,7 @@ const CLIENTES: readonly [string, string, string][] = [
   ['00000000-0000-4000-8000-00000000c003', 'Carpintería Los Pinos', '5544332211'],
 ];
 
-async function armar(): Promise<OrdenesProps> {
+export async function armarOrdenes(): Promise<OrdenesProps> {
   const outbox = inMemorySyncOutbox({ clock: systemClock });
   const ids = uuidIdGenerator;
   const turnos = outboxCashShiftStore(outbox);
@@ -174,7 +174,7 @@ async function armar(): Promise<OrdenesProps> {
 export function MuestraDeOrdenes(): ReactElement {
   const [props, setProps] = useState<OrdenesProps | null>(null);
   useEffect(() => {
-    void armar().then(setProps);
+    void armarOrdenes().then(setProps);
   }, []);
   return props === null ? <p role="status">Armando la muestra…</p> : <Ordenes {...props} />;
 }

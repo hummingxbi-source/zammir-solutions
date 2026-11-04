@@ -8,6 +8,8 @@ export interface DatoDeBarra {
   readonly etiqueta: string;
   readonly valor: number;
   readonly tono?: TonoDeGrafica;
+  /** Línea de apoyo bajo la etiqueta (por ejemplo, cuántas cuentas hay). */
+  readonly nota?: string;
 }
 
 export interface GraficaDeBarrasProps {
@@ -32,7 +34,10 @@ export function GraficaDeBarras({
         const ancho = maximo === 0 ? 0 : Math.max(0, Math.min(100, (d.valor / maximo) * 100));
         return (
           <li key={d.etiqueta} className="barras__fila">
-            <span className="barras__etiqueta">{d.etiqueta}</span>
+            <span className="barras__etiqueta">
+              {d.etiqueta}
+              {d.nota !== undefined ? <small className="barras__nota">{d.nota}</small> : null}
+            </span>
             <span className="barras__pista" aria-hidden="true">
               <span
                 className={`barras__barra barras__barra--${d.tono ?? 'acento'}`}
