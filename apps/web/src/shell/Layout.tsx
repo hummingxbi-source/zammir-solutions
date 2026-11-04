@@ -7,6 +7,7 @@ import { textos } from '../shared/i18n/textos';
 import { Icono, iconoDeSeccion } from '../shared/ui/Icono';
 import { IndicadorDeConexion, type SincronizacionVisible } from './IndicadorDeConexion';
 import { seccionesVisibles, SECCIONES, type Interruptor, type Seccion } from './secciones';
+import { BotonPorDondeEmpiezo } from './PrimerosPasos';
 import { useSeccionesVisitadas } from './useSeccionesVisitadas';
 
 export interface LayoutProps {
@@ -153,6 +154,7 @@ export function Layout({
         </header>
 
         <main className="marco__contenido">{children}</main>
+        <BotonPorDondeEmpiezo interruptores={interruptores} visitadas={visitadas} />
       </div>
     </div>
   );

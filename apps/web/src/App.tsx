@@ -16,6 +16,7 @@ import type {
 import { Bitacora, type BitacoraProps } from './modules/audit/ui/Bitacora';
 import { CatalogoDelAdministrador } from './modules/catalog/ui/Catalogo';
 import { Clientes } from './modules/customers/ui/Clientes';
+import { ResumenDelInicioEnLaTablet } from './modules/reports/ui/ResumenDelInicioEnLaTablet';
 import { ReportesEnLaTablet, type PrepararReportes } from './modules/reports/ui/ReportesEnLaTablet';
 import {
   CuentasEnLaTablet,
@@ -130,6 +131,14 @@ export function App({
               interruptores={interruptores}
               conectar={conectarTablet !== null}
               entrar={entradaConPin !== null}
+              resumen={
+                prepararReportes !== null && entradaConPin !== null ? (
+                  <ResumenDelInicioEnLaTablet
+                    preparar={prepararReportes}
+                    session={entradaConPin.session}
+                  />
+                ) : null
+              }
             />
           }
         />
@@ -215,6 +224,14 @@ export function App({
               interruptores={interruptores}
               conectar={conectarTablet !== null}
               entrar={entradaConPin !== null}
+              resumen={
+                prepararReportes !== null && entradaConPin !== null ? (
+                  <ResumenDelInicioEnLaTablet
+                    preparar={prepararReportes}
+                    session={entradaConPin.session}
+                  />
+                ) : null
+              }
             />
           }
         />

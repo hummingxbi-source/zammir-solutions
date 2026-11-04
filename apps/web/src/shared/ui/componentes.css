@@ -1462,3 +1462,134 @@ h3.reportes__subtitulo:not(.rotulo) {
 .ficha__subtitulo {
   margin: 1.5rem 0 0.5rem;
 }
+
+/* U8 · Panel de inicio con cifras, Primeros pasos y "¿Por dónde empiezo?" */
+.resumen {
+  display: grid;
+  gap: 1.25rem;
+  margin-block-end: 1.5rem;
+}
+
+.guia {
+  margin-block-end: 1.5rem;
+}
+
+.guia__descripcion {
+  margin: 0 0 1rem;
+  color: var(--tinta-suave);
+}
+
+.guia__pasos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.guia__paso {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  box-sizing: border-box;
+  block-size: 100%;
+  min-block-size: 44px;
+  padding: 1rem;
+  border: 1px solid var(--borde-suave);
+  border-radius: var(--radio-medio);
+  background: var(--superficie);
+  color: var(--tinta);
+  text-decoration: none;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.guia__paso:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--sombra-2);
+}
+
+.guia__paso--siguiente {
+  border-color: var(--acento);
+  box-shadow: 0 0 0 1px var(--acento);
+}
+
+.guia__paso--hecho {
+  background: var(--acento-tinte-fuerte);
+}
+
+.guia__numero {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2rem;
+  block-size: 2rem;
+  border-radius: 50%;
+  background: var(--acento);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.guia__paso--hecho .guia__numero {
+  background: var(--exito);
+}
+
+.guia__texto {
+  display: grid;
+  gap: 0.125rem;
+  min-inline-size: 0;
+}
+
+.guia__rotulo {
+  color: var(--tinta-suave);
+}
+
+.guia__titulo {
+  font-family: var(--fuente-titulo);
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.guia__detalle {
+  color: var(--tinta-suave);
+  font-size: 1rem;
+}
+
+.por-donde {
+  position: fixed;
+  inset-block-end: 1rem;
+  inset-inline-end: 1rem;
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-block-size: 44px;
+  padding: 0.625rem 1.125rem;
+  border: 1px solid var(--acento);
+  border-radius: 999px;
+  background: var(--superficie);
+  box-shadow: var(--sombra-2);
+  color: var(--acento);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.por-donde:hover {
+  background: var(--acento);
+  color: #ffffff;
+}
+
+@media print {
+  .por-donde {
+    display: none;
+  }
+}
+
+/* El botón fijo no debe tapar lo último de cada pantalla. */
+.marco__contenido {
+  padding-block-end: 5rem;
+}

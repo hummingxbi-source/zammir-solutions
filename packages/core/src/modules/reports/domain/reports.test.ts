@@ -7,6 +7,8 @@ import {
   collectionsByCashier,
   collectionsByMethod,
   countedPayments,
+  dailyIncomeTrend,
+  TREND_DAYS,
   ordersByStatus,
   receivablesAging,
   salesReport,
@@ -484,6 +486,71 @@ describe('cobros por cajero y por método', () => {
             expect(r[k].rows.reduce((s, x) => s + x.totalCents, 0)).toBe(r[k].totals.totalCents);
             expect(r[k].totals.cashCents + r[k].totals.transferCents).toBe(r[k].totals.totalCents);
           }
+        },
+      ),
+    );
+  });
+});
+
+describe('tendencia de ingresos por día', () => {
+  const ahora = new Date('2026-11-20T18:00:00.000Z');
+
+  it('abarca 31 días terminando hoy, del más viejo al más reciente, con ceros', () => {
+    const t = dailyIncomeTrend({ payments: [], sales: [], now: ahora });
+    expect(TREND_DAYS).toBe(31);
+    expect(t).toHaveLength(31);
+    expect(t[0]?.day).toBe('2026-10-21');
+    expect(t[30]?.day).toBe('2026-11-20');
+    expect(t.every((d) => d.totalCents === 0)).toBe(true);
+  });
+
+  it('suma por día de México y deja fuera ventas canceladas y días fuera de la ventana', () => {
+    const t = dailyIncomeTrend({
+      payments: [
+        pago(11_600, '2026-11-20T15:00:00.000Z'),
+        pago(30_000, '2026-11-20T16:00:00.000Z', { method: 'TRANSFER' }),
+        pago(5_000, '2026-11-20T16:30:00.000Z', { targetId: 'vx' }),
+        // 21 nov 03:00 UTC es todavía 20 nov en México.
+        pago(1_000, '2026-11-21T03:00:00.000Z'),
+        pago(2_000, '2026-10-21T20:00:00.000Z'),
+        pago(9_999, '2026-10-20T20:00:00.000Z'),
+      ],
+      sales: [{ id: 'vx', status: 'CANCELLED' }],
+      now: ahora,
+    });
+    expect(t.at(-1)).toEqual({ day: '2026-11-20', totalCents: 42_600 });
+    expect(t[0]).toEqual({ day: '2026-10-21', totalCents: 2_000 });
+    expect(t.reduce((s, d) => s + d.totalCents, 0)).toBe(44_600);
+  });
+
+  it('un pago con fecha inválida no cuenta y la ventana mínima es de un día', () => {
+    const t = dailyIncomeTrend({
+      payments: [pago(500, 'no-es-fecha'), pago(700, '2026-11-20T18:00:00.000Z')],
+      sales: [],
+      now: ahora,
+      days: 0,
+    });
+    expect(t).toEqual([{ day: '2026-11-20', totalCents: 700 }]);
+  });
+
+  it('la suma del último día coincide con las ventas de hoy', () => {
+    fc.assert(
+      fc.property(
+        fc.array(
+          fc.record({
+            centavos: fc.integer({ min: 1, max: 1_000_000 }),
+            dia: fc.integer({ min: 0, max: 40 }),
+          }),
+          { maxLength: 20 },
+        ),
+        (lista) => {
+          const pagos = lista.map((x) =>
+            pago(x.centavos, new Date(ahora.getTime() - x.dia * 86_400_000).toISOString()),
+          );
+          const t = dailyIncomeTrend({ payments: pagos, sales: [], now: ahora });
+          const hoy = salesReport({ payments: pagos, sales: [], now: ahora }).DAY.comparison
+            .currentCents;
+          expect(t.at(-1)?.totalCents).toBe(hoy);
         },
       ),
     );

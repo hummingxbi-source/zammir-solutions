@@ -4,6 +4,7 @@ import { Link, Route, Routes } from 'react-router';
 import { EncabezadoDePagina } from '../shared/ui/EncabezadoDePagina';
 import { MuestraDeOrdenes } from './MuestraDeOrdenes';
 import { MuestraDeCuentas, MuestraDeReportes } from './MuestraDeReportes';
+import { MuestraDelInicio } from './MuestraDelInicio';
 import { MuestraDelCatalogo } from './MuestraDelCatalogo';
 import { MuestraDelCotizador } from './MuestraDelCotizador';
 import { MuestraDelMostrador } from './MuestraDelMostrador';
@@ -19,6 +20,8 @@ export function Muestras(): ReactElement {
       <Route path="reportes" element={<MuestraDeReportes />} />
       <Route path="cuentas" element={<MuestraDeCuentas />} />
       <Route path="catalogo" element={<MuestraDelCatalogo />} />
+      <Route path="inicio" element={<MuestraDelInicio />} />
+      <Route path="inicio-cajero" element={<MuestraDelInicio comoCajero />} />
       <Route
         index
         element={
@@ -45,6 +48,12 @@ export function Muestras(): ReactElement {
               </li>
               <li>
                 <Link to="catalogo">Catálogo</Link>
+              </li>
+              <li>
+                <Link to="inicio">Inicio (administrador)</Link>
+              </li>
+              <li>
+                <Link to="inicio-cajero">Inicio (cajero)</Link>
               </li>
             </ul>
           </section>

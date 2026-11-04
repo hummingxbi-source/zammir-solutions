@@ -1,4 +1,4 @@
-import { mexicoDate } from '../../../shared-kernel/date/mx-date';
+import { addDays, mexicoDate } from '../../../shared-kernel/date/mx-date';
 import type { CounterSale } from '../../counter/domain/counter-sale';
 import type { WorkOrder, WorkOrderStatus } from '../../orders/domain/work-order';
 import type { Payment } from '../../payments/domain/payment';
@@ -73,6 +73,45 @@ export function salesReport(entrada: {
     };
   };
   return { DAY: hacer('DAY'), WEEK: hacer('WEEK'), MONTH: hacer('MONTH') };
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// U8 · Tendencia de ingresos por día (panel de inicio)
+// ---------------------------------------------------------------------------------------------------------
+
+/** Días que abarca la tendencia del panel de inicio: el último mes, no 10 como la demo [PP-02]. */
+export const TREND_DAYS = 31;
+
+export interface DailyIncome {
+  /** Día de México, `AAAA-MM-DD`. */
+  readonly day: string;
+  readonly totalCents: number;
+}
+
+/** Ingreso recibido cada día de los últimos `days` (el de hoy incluido), del más viejo al más reciente. Los
+ *  días sin cobros salen con cero para que la línea no tenga huecos. Mismo criterio que `salesReport`:
+ *  efectivo recibido, sin ventas canceladas, por día de México [RN-17, RN-20]. */
+export function dailyIncomeTrend(entrada: {
+  readonly payments: readonly PagoDeReporte[];
+  readonly sales: readonly Pick<CounterSale, 'id' | 'status'>[];
+  readonly now: Date;
+  readonly days?: number;
+}): readonly DailyIncome[] {
+  const dias = Math.max(1, Math.trunc(entrada.days ?? TREND_DAYS));
+  const hoy = mexicoDate(entrada.now);
+  const porDia = new Map<string, number>();
+  for (const p of countedPayments(entrada.payments, cancelledSaleIds(entrada.sales))) {
+    const instante = new Date(p.paidAt);
+    if (Number.isNaN(instante.getTime())) {
+      continue;
+    }
+    const dia = mexicoDate(instante);
+    porDia.set(dia, (porDia.get(dia) ?? 0) + p.amountCents);
+  }
+  return Array.from({ length: dias }, (_, i) => {
+    const day = addDays(hoy, i - (dias - 1));
+    return { day, totalCents: porDia.get(day) ?? 0 };
+  });
 }
 
 // ---------------------------------------------------------------------------------------------------------

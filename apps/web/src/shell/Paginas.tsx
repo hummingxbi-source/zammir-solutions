@@ -1,11 +1,14 @@
-import type { ReactElement } from 'react';
-import { Link } from 'react-router';
+import type { ReactElement, ReactNode } from 'react';
+import { Link, useNavigate } from 'react-router';
 
 import { textos } from '../shared/i18n/textos';
+import { AvisoCerrable } from '../shared/ui/AvisoCerrable';
 import { EncabezadoDePagina } from '../shared/ui/EncabezadoDePagina';
 import { EstadoVacio } from '../shared/ui/EstadoVacio';
 import { Icono, iconoDeSeccion } from '../shared/ui/Icono';
 import { Tarjeta } from '../shared/ui/Tarjeta';
+import { PrimerosPasos } from './PrimerosPasos';
+import { useSeccionesVisitadas } from './useSeccionesVisitadas';
 import { seccionesVisibles, type Interruptor, type Seccion } from './secciones';
 
 const DESCRIPCIONES: Readonly<Record<string, string>> = textos.inicio.descripciones;
@@ -27,19 +30,24 @@ function Mosaico({ seccion }: { readonly seccion: Seccion }): ReactElement {
   );
 }
 
-/** Panel de inicio: accesos a las secciones con su ícono y una línea que dice para qué sirven, sin cifras
- *  (el contenido por rol llega con U8 y PD-31). */
+/** Panel de inicio: las cifras del día según quien entró, la guía de primeros pasos y los accesos a las
+ *  secciones con su ícono y una línea que dice para qué sirven [RF-UX-01 a RF-UX-03, RF-UX-05]. */
 export function PanelDeInicio({
   interruptores,
   conectar = false,
   entrar = false,
+  resumen = null,
 }: {
   readonly interruptores: ReadonlySet<Interruptor>;
   /** Muestra el acceso para conectar esta tablet con un código de registro. */
   readonly conectar?: boolean;
   /** Muestra el acceso para entrar con PIN. */
   readonly entrar?: boolean;
+  /** Cifras del día según quien entró; sin ellas, el inicio solo muestra los accesos. */
+  readonly resumen?: ReactNode;
 }): ReactElement {
+  const { visitadas } = useSeccionesVisitadas();
+  const irA = useNavigate();
   const principales = seccionesVisibles('principal', interruptores);
   const secundarias = seccionesVisibles('secundaria', interruptores);
 
@@ -67,6 +75,24 @@ export function PanelDeInicio({
           ) : undefined
         }
       />
+
+      {!visitadas.has('catalogo') ? (
+        <AvisoCerrable
+          id="revisar-catalogo"
+          accion={{
+            texto: textos.inicio.guia.irAlCatalogo,
+            alTocar: () => {
+              void irA('/catalogo');
+            },
+          }}
+        >
+          {textos.inicio.guia.avisoCatalogo}
+        </AvisoCerrable>
+      ) : null}
+
+      {resumen}
+
+      <PrimerosPasos interruptores={interruptores} visitadas={visitadas} />
 
       <h2 className="rotulo tablero__titulo">{textos.navegacion.flujoDeTrabajo}</h2>
       <ul className="tablero">
