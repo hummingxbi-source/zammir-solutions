@@ -110,3 +110,6 @@ export * from './modules/customers/domain/customer-history';
 export * from './modules/customers/application/load-customer-history';
 export * from './modules/receivables/domain/receivables';
 export * from './modules/receivables/application/remind-receivable';
+export * from './modules/reports/domain/periods';
+export * from './modules/reports/domain/comparison';
+export * from './modules/reports/domain/reports';

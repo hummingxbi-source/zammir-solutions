@@ -19,5 +19,5 @@ export default {
   reporters: ['clear-text', 'progress'],
   coverageAnalysis: 'perTest',
   thresholds: { high: 90, low: 80, break: 80 },
-  ignorePatterns: ['coverage', 'dist', '.stryker-tmp', 'reports'],
+  ignorePatterns: ['coverage', 'dist', '.stryker-tmp', '/reports'],
 };

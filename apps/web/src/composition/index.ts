@@ -85,6 +85,7 @@ import {
   webBluetoothPrinter,
   type EntornoBluetooth,
 } from '../modules/printing/infra/web-bluetooth-printer';
+import type { PrepararReportes } from '../modules/reports/ui/ReportesEnLaTablet';
 import type { PrepararCuentas } from '../modules/receivables/ui/CuentasEnLaTablet';
 import type { ImpresionDeTickets } from '../modules/printing/ui/impresion';
 import type { PrepararCotizador } from '../modules/quotes/ui/CotizadorEnLaTablet';
@@ -168,6 +169,7 @@ export interface Composition {
   /** Cómo reunir lo que las órdenes de trabajo necesitan; `null` si no hay servidor configurado. */
   readonly prepararOrdenes: PrepararOrdenes | null;
   readonly prepararCuentas: PrepararCuentas | null;
+  readonly prepararReportes: PrepararReportes | null;
   readonly historialDeCliente: ((id: CustomerId) => Promise<CustomerHistory>) | null;
   /** Altas, PIN y desactivación de personas; `null` si no hay servidor configurado. */
   readonly usuarios: ManageUsersDeps | null;
@@ -785,6 +787,24 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
           };
         };
 
+  const prepararReportes: PrepararReportes | null =
+    prepararOrdenes === null || envio === null
+      ? null
+      : async () => {
+          const base = await prepararOrdenes();
+          if (base === null) {
+            return null;
+          }
+          return {
+            deps: base.deps,
+            sales: outboxCounterSaleStore(envio.outbox),
+            personas: base.personas,
+            ...(base.alCambiarElEnvio === undefined
+              ? {}
+              : { alCambiarElEnvio: base.alCambiarElEnvio }),
+          };
+        };
+
   const prepararMostrador: PrepararMostrador | null =
     envio === null || catalogoLocal === null || entradaConPin === null || reglas === null
       ? null
@@ -803,6 +823,7 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
     prepararMostrador,
     prepararOrdenes,
     prepararCuentas,
+    prepararReportes,
     historialDeCliente,
     adminAuth: cliente === null ? adminAuthNoConfigurada : supabaseAdminAuth(cliente),
     dispositivos: cliente === null ? null : supabaseDeviceRepository(cliente),
