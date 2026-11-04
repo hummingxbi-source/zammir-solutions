@@ -58,12 +58,14 @@ describe('App y navegación', () => {
     expect(enlaces).toEqual(['Clientes', 'Cuentas por cobrar', 'Usuarios', 'Configuración']);
   });
 
-  it('el panel de inicio ofrece accesos a las secciones, sin cifras', () => {
+  it('el panel de inicio ofrece accesos a las secciones y la guía, sin cifras de dinero', () => {
     mostrar();
     expect(screen.getByRole('heading', { name: 'Panel de inicio' })).toBeInTheDocument();
     const main = screen.getByRole('main');
-    expect(within(main).getAllByRole('link')).toHaveLength(9);
-    expect(main.textContent).not.toMatch(/\$|\d/);
+    expect(main.querySelectorAll('.tablero a')).toHaveLength(9);
+    expect(within(main).getByRole('heading', { name: 'Primeros pasos' })).toBeInTheDocument();
+    expect(main.querySelectorAll('.guia__paso')).toHaveLength(5);
+    expect(main.textContent).not.toMatch(/\$/);
   });
 
   it('una sección nueva muestra un estado vacío sin datos de relleno', () => {
@@ -105,7 +107,7 @@ describe('App y navegación', () => {
 
   it('al elegir un acceso del panel de inicio abre esa sección', () => {
     mostrar('/');
-    fireEvent.click(within(screen.getByRole('main')).getByRole('link', { name: 'Cotizador' }));
+    fireEvent.click(within(screen.getByRole('main')).getByRole('link', { name: /^Cotizador/ }));
     expect(screen.getByRole('heading', { name: 'Cotizador' })).toBeInTheDocument();
   });
 

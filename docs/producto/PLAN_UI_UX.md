@@ -1,6 +1,6 @@
 # Plan de UI y UX
 
-> **Estado:** propuesta por el desarrollador, **por aprobar por Juanito**. Nada de esto se construye hasta que se contesten las decisiones de la sección 9.
+> **Estado:** **aprobado por Juanito el 2026-11-03** (decisiones D1 a D7 de la sección 9, con la recomendación del desarrollador en cada una). Se construye en las historias U0 a U9.
 > **Origen:** Juanito pidió que la interfaz se parezca más a la demo (`HummingX-BI/formularios`, carpeta `demos/zammir-demo`), cuya UI y UX le gustan más que las del sistema actual.
 > **Complementa** a [`DEMO_REFERENCIA.md`](DEMO_REFERENCIA.md), que cubre *qué funciones* mostró la demo; este documento cubre *cómo se ve y se siente*.
 > **Reglas que se respetan:** [ADR-0002] (la demo es referencia, **no se copia código**; la identidad visual sí se puede adoptar redefiniéndola dentro del sistema de diseño propio), [RNF-28] (táctil de 44 px, texto de 16 px, buen contraste), [RF-UX-01 a RF-UX-10], [RN-23] (sin datos de relleno) y el modo sin internet.
@@ -180,3 +180,20 @@ Si el calendario aprieta, se recorta en este orden: U8 (guía de inicio), U7 (ca
 ## 11. Cómo se cita
 
 `[PLAN-UX §n]` para este documento; las historias son `U0` a `U9`.
+
+## 12. Estado de las historias
+
+| Historia | Estado | Notas |
+|---|---|---|
+| U0 Identidad y tokens | **hecha** | Tokens en `tokens.css`; Fraunces, Source Serif 4 e IBM Plex Mono empaquetadas (≈107 KB, latín) y guardadas para uso sin internet; sin llamadas a Google Fonts (comprobado en navegador real) |
+| U1 Marco y navegación | **hecha** | Barra lateral en tablet horizontal y computadora; barra superior desplazable en tablet vertical y teléfono; encabezado con fecha de México y saludo por nombre; sin desplazamiento horizontal (comprobado a 375, 800 y 1280 px) |
+| U2 Componentes base | **hecha** | Tarjeta, Indicador, Etiqueta de estado, Pestañas, Ventana, Ayuda táctil, Aviso cerrable, Estado vacío, Tabla apilada, Flecha de comparación, Barras, Línea, Encabezado de página e Íconos, con 66 pruebas, axe estructural en jsdom y axe con contraste en navegador real |
+| U3 Mostrador | **hecha** | Turno con indicadores, ventas con mosaicos de producto, ticket fijo a la derecha con total grande, cobro y autorización en ventana modal, ventas de hoy con etiquetas de estado, estado de la impresora; `/muestras` (solo en desarrollo) arma la pantalla con datos de ejemplo para verla sin registrar una tablet. Corrige un error: la lista de turnos mostraba el día en UTC y no el de México |
+| U4 Cotizador | **hecha** | Lista con borradores y tabla de cotizaciones con etiquetas de estado; editor con tarjetas, mosaicos de producto, líneas estilo ticket y total grande; hoja de documento junto a los datos (fija al desplazarse), que se apila por contenedor cuando queda angosta; pestañas accesibles en tablet vertical y teléfono; `/muestras/cotizador` (solo desarrollo). Corrige la fecha del historial, que se mostraba en UTC y no en México |
+| U5 Órdenes | **hecha** | Indicadores de valor en producción y por cobrar (administrador), cotizaciones por convertir en filas, filtros por estatus como pastillas con conteo, tabla con etiquetas de estado; detalle con conceptos, pagos, datos y fotos a la izquierda y tarjeta de cobro y saldo (total y saldo grandes, acciones a todo lo ancho) a la derecha, que en pantalla angosta sube al principio; `/muestras/ordenes` (solo desarrollo) |
+| U6 Cuentas y Reportes | **hecha** | Cuentas por cobrar con tres indicadores, tabla con fila resaltada y etiqueta "Atrasada" en texto, acciones con ícono; Reportes con tres tarjetas de ventas (cifra, periodo anterior y flecha con porcentaje o el texto de "sin periodo anterior"), lo más vendido en barras con pestañas de periodo, trabajos por estatus con etiquetas, antigüedad de cuentas en barras (rojo desde el umbral), cobros por persona y por método; `/muestras/reportes` y `/muestras/cuentas` (solo desarrollo) |
+| U7 Catálogo y Clientes | **hecha** | El Catálogo no existía como lista: se construyó (productos agrupados por categoría con resumen de activos, inactivos y categorías, búsqueda y filtros, alta y edición en ventana con historial de precios, activar y desactivar sin borrar, importación en ventana); Clientes con tarjetas, tabla con el nombre como encabezado de fila, estado vacío y datos fiscales plegables; ficha del cliente con indicadores y etiquetas; `/muestras/catalogo` (solo desarrollo) |
+| U8 Panel de inicio y guía | **hecha** | Inicio con cifras por rol (D5): el administrador ve ventas de hoy contra ayer, por cobrar con atrasadas, producción pendiente, cobros por medio de pago y la tendencia de 31 días (nueva función `dailyIncomeTrend`, mutación 97 %); el cajero ve lo que cobró él hoy y la producción. Sin datos, estado vacío que enseña qué hacer. "Primeros pasos" con cinco tarjetas numeradas que se marcan al visitar y se ocultan al completarlas, botón fijo "¿Por dónde empiezo?", aviso cerrable "revisa primero tu catálogo" y ayudas "?" en las tarjetas; `/muestras/inicio` e `/muestras/inicio-cajero` (solo desarrollo). **Pendiente de U8:** el turno abierto y las operaciones por enviar del cajero en el inicio (por ahora las muestra la franja de estado) y el aviso cerrable en Cotizador y Mostrador |
+| U9 | pendiente | Autofactura pública, junto con la facturación |
+
+Ajuste respecto al plan: las barras se dibujan con la lista misma (texto + barra de CSS), no con SVG, porque así el valor siempre está en texto; la línea sí es SVG, con su tabla equivalente.

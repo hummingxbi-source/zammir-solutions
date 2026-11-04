@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within, configure } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import {
   createPriceRegistry,
@@ -10,10 +10,15 @@ import {
   sequentialIdGenerator,
   type ImportCatalogDeps,
 } from '@zammir/core';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { App } from '../../../App';
 import { ProveedorSesionAdmin } from '../../identity/ui/SesionAdmin';
+
+// La primera pantalla de cada archivo arma toda la aplicación y, con cientos de pruebas en paralelo, puede
+// pasar de los 5 s por omisión. Solo cambia cuánto se espera, no lo que se comprueba.
+vi.setConfig({ testTimeout: 30_000 });
+configure({ asyncUtilTimeout: 5_000 });
 
 const instante = new Date('2026-10-30T18:00:00.000Z');
 const ENCABEZADO =
@@ -62,6 +67,10 @@ async function entrar(): Promise<void> {
   fireEvent.click(screen.getByRole('button', { name: 'Entrar' }));
 }
 
+async function abrirImportacion(): Promise<void> {
+  fireEvent.click(await screen.findByRole('button', { name: 'Importar desde archivo' }));
+}
+
 async function subir(contenido: string): Promise<void> {
   const archivo = new File([contenido], 'catalogo.csv', { type: 'text/csv' });
   fireEvent.change(await screen.findByLabelText('Archivo CSV con tus productos'), {
@@ -73,6 +82,7 @@ describe('pantalla de importación del catálogo', () => {
   it('explica que es todo o nada y ofrece la plantilla', async () => {
     mostrar(entorno());
     await entrar();
+    await abrirImportacion();
     expect(await screen.findByText(/no se importa nada: corrige el archivo/)).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Descargar plantilla' })).toBeTruthy();
   });
@@ -81,6 +91,7 @@ describe('pantalla de importación del catálogo', () => {
     const deps = entorno();
     mostrar(deps);
     await entrar();
+    await abrirImportacion();
     await subir(
       `${ENCABEZADO}\nA-1,Vidrio claro,Vidrio claro / flotado,a medida,m2,280,no,,,\nA-2,Espejo con ñandú,Espejo,a medida,m2,"1,350.50",no,,,6`,
     );
@@ -103,6 +114,7 @@ describe('pantalla de importación del catálogo', () => {
     const deps = entorno();
     mostrar(deps);
     await entrar();
+    await abrirImportacion();
     await subir(
       `${ENCABEZADO}\nA-1,Bien,Espejo,a medida,m2,100,no,,,\nA-2,,Telas,a medida,m2,-5,no,,,\nA-3,Repetido,Espejo,a medida,m2,100,no,,,\nA-3,Repetido,Espejo,a medida,m2,100,no,,,`,
     );
@@ -127,6 +139,7 @@ describe('pantalla de importación del catálogo', () => {
   it('avisa qué columnas obligatorias faltan', async () => {
     mostrar(entorno());
     await entrar();
+    await abrirImportacion();
     await subir('nombre,categoria\nVidrio,Espejo');
     expect(
       await screen.findByText(/Faltan columnas obligatorias: tipo, unidad, precio/),
@@ -136,6 +149,7 @@ describe('pantalla de importación del catálogo', () => {
   it('un archivo sin filas dice que está vacío', async () => {
     mostrar(entorno());
     await entrar();
+    await abrirImportacion();
     await subir(ENCABEZADO);
     expect(await screen.findByText(/solo trae el encabezado/)).toBeTruthy();
   });
@@ -143,6 +157,7 @@ describe('pantalla de importación del catálogo', () => {
   it('avisa si el archivo no está en UTF-8 (caracteres de reemplazo)', async () => {
     mostrar(entorno());
     await entrar();
+    await abrirImportacion();
     await subir(`${ENCABEZADO}\nA-1,Vidrio �,Espejo,a medida,m2,100,no,,,`);
     expect(await screen.findByText(/no estar en UTF-8/)).toBeTruthy();
   });
@@ -151,6 +166,7 @@ describe('pantalla de importación del catálogo', () => {
     const deps = entorno();
     mostrar(deps);
     await entrar();
+    await abrirImportacion();
     await subir(`${ENCABEZADO}\nA-1,Vidrio,Espejo,a medida,m2,100,no,,,`);
     await screen.findByText(/1 filas, 0 con errores/);
     await waitFor(async () => {

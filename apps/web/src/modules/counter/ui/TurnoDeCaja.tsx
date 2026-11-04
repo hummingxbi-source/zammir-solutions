@@ -22,7 +22,11 @@ import { textos } from '../../../shared/i18n/textos';
 import { Aviso } from '../../../shared/ui/Aviso';
 import { Boton } from '../../../shared/ui/Boton';
 import { Campo, CampoNumerico } from '../../../shared/ui/Campo';
+import { EtiquetaDeEstado } from '../../../shared/ui/EtiquetaDeEstado';
 import { formatearPesos } from '../../../shared/ui/formatos';
+import { Icono } from '../../../shared/ui/Icono';
+import { Indicador } from '../../../shared/ui/Indicador';
+import { Tarjeta } from '../../../shared/ui/Tarjeta';
 import { DialogoDeAutorizacion } from '../../orders/ui/DialogoDeAutorizacion';
 import type { AutorizacionDeAdministrador } from '../../quotes/ui/DialogoDeDescuento';
 
@@ -67,12 +71,13 @@ function aCentavos(texto: string): number | null {
 function Diferencia({ centavos }: { readonly centavos: number }): ReactElement {
   const c = textos.mostrador.corte;
   if (centavos === 0) {
-    return <strong>{c.exacto}</strong>;
+    return <EtiquetaDeEstado tono="listo" texto={c.exacto} />;
   }
   return (
-    <strong>
-      {centavos > 0 ? c.sobrante : c.faltante} {formatearPesos(Math.abs(centavos))}
-    </strong>
+    <EtiquetaDeEstado
+      tono={centavos > 0 ? 'aviso' : 'peligro'}
+      texto={`${centavos > 0 ? c.sobrante : c.faltante} ${formatearPesos(Math.abs(centavos))}`}
+    />
   );
 }
 
@@ -188,175 +193,260 @@ export function TurnoDeCaja(props: TurnoDeCajaProps): ReactElement {
   const nombre = (id: string): string => personas.find((p) => p.id === id)?.name ?? '—';
 
   return (
-    <section aria-labelledby="titulo-turno">
-      <h2 id="titulo-turno">{t.turno.titulo}</h2>
-      {error !== null ? (
-        <Aviso tipo="error" queHacer={error.queHacer}>
-          {error.mensaje}
-        </Aviso>
-      ) : null}
-      {aviso !== null ? <Aviso tipo="exito">{aviso}</Aviso> : null}
+    <div className="turno">
+      <Tarjeta
+        rotulo={t.turno.titulo}
+        acciones={
+          turno === null ? (
+            <EtiquetaDeEstado tono="neutro" texto={t.turnos.cerrado} />
+          ) : (
+            <EtiquetaDeEstado tono="listo" texto={t.turnos.abierto} />
+          )
+        }
+      >
+        {error !== null ? (
+          <Aviso tipo="error" queHacer={error.queHacer}>
+            {error.mensaje}
+          </Aviso>
+        ) : null}
+        {aviso !== null ? <Aviso tipo="exito">{aviso}</Aviso> : null}
 
-      {turno === null ? (
-        <form
-          onSubmit={(e) => {
-            void abrir(e);
-          }}
-        >
-          <p>{t.turno.sinTurno}</p>
-          <CampoNumerico
-            etiqueta={t.turno.fondo}
-            value={fondo}
-            onChange={(e) => {
-              setFondo(e.target.value);
+        {turno === null ? (
+          <form
+            className="turno__abrir"
+            onSubmit={(e) => {
+              void abrir(e);
             }}
-          />
-          <Boton type="submit">{t.turno.abrir}</Boton>
-        </form>
-      ) : (
-        <>
-          <p>
-            {t.turno.abierto} {horaDeMexico(turno.openedAt)} · {t.turno.conFondo}{' '}
-            {formatearPesos(turno.openingFloatCents)}
-          </p>
-          {resumen !== null ? (
-            <dl className="documento__totales">
-              <dt>{t.turno.cobrado}</dt>
-              <dd>{formatearPesos(resumen.cashCents)}</dd>
-              <dt>{t.turno.cobradoBanco}</dt>
-              <dd>{formatearPesos(resumen.transferCents)}</dd>
-              <dt>{t.turno.esperado}</dt>
-              <dd>{formatearPesos(resumen.expectedCashCents)}</dd>
-            </dl>
-          ) : null}
-          {cerrando ? (
-            <form
-              onSubmit={(e) => {
-                void cerrar(e);
-              }}
-              aria-label={t.turno.cerrar}
-            >
-              {pendientes > 0 ? <Aviso tipo="error">{t.turno.pendientes(pendientes)}</Aviso> : null}
+          >
+            <p className="turno__aviso">{t.turno.sinTurno}</p>
+            <div className="turno__fila">
               <CampoNumerico
-                etiqueta={t.turno.contado}
-                value={contado}
+                etiqueta={t.turno.fondo}
+                value={fondo}
                 onChange={(e) => {
-                  setContado(e.target.value);
+                  setFondo(e.target.value);
                 }}
               />
-              <Boton type="submit">{t.turno.confirmarCierre}</Boton>
+              <Boton type="submit">{t.turno.abrir}</Boton>
+            </div>
+          </form>
+        ) : (
+          <>
+            <p className="turno__aviso">
+              {t.turno.abierto} {horaDeMexico(turno.openedAt)} · {t.turno.conFondo}{' '}
+              {formatearPesos(turno.openingFloatCents)}
+            </p>
+            {resumen !== null ? (
+              <div className="indicadores">
+                <Indicador rotulo={t.turno.cobrado} valor={formatearPesos(resumen.cashCents)} />
+                <Indicador
+                  rotulo={t.turno.cobradoBanco}
+                  valor={formatearPesos(resumen.transferCents)}
+                />
+                <Indicador
+                  rotulo={t.turno.esperado}
+                  valor={formatearPesos(resumen.expectedCashCents)}
+                  tono="exito"
+                />
+              </div>
+            ) : null}
+            {cerrando ? (
+              <form
+                className="turno__cerrar"
+                onSubmit={(e) => {
+                  void cerrar(e);
+                }}
+                aria-label={t.turno.cerrar}
+              >
+                {pendientes > 0 ? (
+                  <Aviso tipo="error">{t.turno.pendientes(pendientes)}</Aviso>
+                ) : null}
+                <div className="turno__fila">
+                  <CampoNumerico
+                    etiqueta={t.turno.contado}
+                    value={contado}
+                    onChange={(e) => {
+                      setContado(e.target.value);
+                    }}
+                  />
+                  <Boton type="submit">{t.turno.confirmarCierre}</Boton>
+                  <Boton
+                    variante="secundario"
+                    onClick={() => {
+                      setCerrando(false);
+                    }}
+                  >
+                    {t.turno.cancelar}
+                  </Boton>
+                </div>
+              </form>
+            ) : (
+              <div className="turno__acciones">
+                <Boton
+                  variante="secundario"
+                  onClick={() => {
+                    void empezarCierre();
+                  }}
+                >
+                  {t.turno.cerrar}
+                </Boton>
+              </div>
+            )}
+          </>
+        )}
+
+        {corte !== null ? (
+          <section aria-label={t.corte.titulo} role="status" className="turno__corte">
+            <h3 className="turno__corte-titulo">
+              <Icono nombre="verificar" />
+              {t.corte.cerrado} · {horaDeMexico(corte.turno.closedAt ?? corte.turno.updatedAt)}
+            </h3>
+            <dl className="turno__lista">
+              <dt>{t.corte.efectivo}</dt>
+              <dd>{formatearPesos(corte.resumen.cashCents)}</dd>
+              <dt>{t.corte.transferencia}</dt>
+              <dd>{formatearPesos(corte.resumen.transferCents)}</dd>
+              <dt>{t.corte.total}</dt>
+              <dd>{formatearPesos(corte.resumen.cashCents + corte.resumen.transferCents)}</dd>
+              <dt>{t.corte.esperado}</dt>
+              <dd>{formatearPesos(corte.resumen.expectedCashCents)}</dd>
+              <dt>{t.corte.contado}</dt>
+              <dd>{formatearPesos(corte.turno.countedCashCents ?? 0)}</dd>
+              <dt>{t.corte.diferencia}</dt>
+              <dd>
+                <Diferencia centavos={corte.resumen.differenceCents ?? 0} />
+              </dd>
+              {corte.resumen.cancelledSalesCents > 0 ? (
+                <>
+                  <dt>{t.corte.canceladas}</dt>
+                  <dd>{formatearPesos(corte.resumen.cancelledSalesCents)}</dd>
+                </>
+              ) : null}
+            </dl>
+            {props.onImprimir !== undefined ? (
               <Boton
                 variante="secundario"
                 onClick={() => {
-                  setCerrando(false);
+                  void props.onImprimir?.(corte.turno, corte.resumen).then((falla) => {
+                    if (falla !== null) {
+                      mostrarError(falla);
+                    }
+                  });
                 }}
               >
-                {t.turno.cancelar}
+                <Icono nombre="imprimir" />
+                {t.corte.imprimir}
               </Boton>
-            </form>
-          ) : (
-            <Boton
-              variante="secundario"
-              onClick={() => {
-                void empezarCierre();
-              }}
-            >
-              {t.turno.cerrar}
-            </Boton>
-          )}
-        </>
-      )}
-
-      {corte !== null ? (
-        <section aria-label={t.corte.titulo} role="status" className="aviso aviso--exito">
-          <h3>
-            {t.corte.cerrado} · {horaDeMexico(corte.turno.closedAt ?? corte.turno.updatedAt)}
-          </h3>
-          <dl className="documento__totales">
-            <dt>{t.corte.efectivo}</dt>
-            <dd>{formatearPesos(corte.resumen.cashCents)}</dd>
-            <dt>{t.corte.transferencia}</dt>
-            <dd>{formatearPesos(corte.resumen.transferCents)}</dd>
-            <dt>{t.corte.total}</dt>
-            <dd>{formatearPesos(corte.resumen.cashCents + corte.resumen.transferCents)}</dd>
-            <dt>{t.corte.esperado}</dt>
-            <dd>{formatearPesos(corte.resumen.expectedCashCents)}</dd>
-            <dt>{t.corte.contado}</dt>
-            <dd>{formatearPesos(corte.turno.countedCashCents ?? 0)}</dd>
-            <dt>{t.corte.diferencia}</dt>
-            <dd>
-              <Diferencia centavos={corte.resumen.differenceCents ?? 0} />
-            </dd>
-            {corte.resumen.cancelledSalesCents > 0 ? (
-              <>
-                <dt>{t.corte.canceladas}</dt>
-                <dd>{formatearPesos(corte.resumen.cancelledSalesCents)}</dd>
-              </>
             ) : null}
-          </dl>
-          {props.onImprimir !== undefined ? (
-            <Boton
-              variante="secundario"
-              onClick={() => {
-                void props.onImprimir?.(corte.turno, corte.resumen).then((falla) => {
-                  if (falla !== null) {
-                    mostrarError(falla);
-                  }
-                });
-              }}
-            >
-              {t.corte.imprimir}
-            </Boton>
-          ) : null}
-        </section>
-      ) : null}
+          </section>
+        ) : null}
+      </Tarjeta>
 
-      <h3>{t.turnos.titulo}</h3>
-      {turnos.length === 0 ? (
-        <p>{t.turnos.vacio}</p>
-      ) : (
-        <table className="tabla">
-          <thead>
-            <tr>
-              <th>{t.turnos.persona}</th>
-              <th>{t.turnos.apertura}</th>
-              <th>{t.turnos.estado}</th>
-              <th>{t.corte.diferencia}</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {turnos.map((x) => (
-              <tr key={x.id}>
-                <td>{nombre(x.cashierId)}</td>
-                <td>
-                  {x.openedAt.slice(0, 10)} {horaDeMexico(x.openedAt)}
-                </td>
-                <td>
-                  {x.status === 'OPEN' ? t.turnos.abierto : t.turnos.cerrado}
-                  {x.reviewReason !== null ? ` · ${t.corte.revisar} ${x.reviewReason}` : ''}
-                </td>
-                <td>
-                  {x.differenceCents === null ? '—' : <Diferencia centavos={x.differenceCents} />}
-                </td>
-                <td>
-                  {x.status === 'CLOSED' && reabrir === null ? (
-                    <Boton
-                      variante="secundario"
-                      onClick={() => {
-                        setError(null);
-                        setReabrir(x);
-                      }}
-                    >
-                      {t.turnos.reabrir}
-                    </Boton>
-                  ) : null}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+      <div className="turno__rejilla">
+        <Tarjeta rotulo={t.turnos.titulo}>
+          {turnos.length === 0 ? (
+            <p className="mostrador__vacio">{t.turnos.vacio}</p>
+          ) : (
+            <table className="tabla tabla--apilada" aria-label={t.turnos.titulo}>
+              <thead>
+                <tr>
+                  <th scope="col">{t.turnos.persona}</th>
+                  <th scope="col">{t.turnos.apertura}</th>
+                  <th scope="col">{t.turnos.estado}</th>
+                  <th scope="col">{t.corte.diferencia}</th>
+                  <th scope="col">
+                    <span className="solo-lectores">{t.hoy.acciones}</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {turnos.map((x) => (
+                  <tr key={x.id}>
+                    <th scope="row">{nombre(x.cashierId)}</th>
+                    <td data-label={t.turnos.apertura}>
+                      {mexicoDate(new Date(x.openedAt))} {horaDeMexico(x.openedAt)}
+                    </td>
+                    <td data-label={t.turnos.estado}>
+                      <EtiquetaDeEstado
+                        tono={x.status === 'OPEN' ? 'listo' : 'entregado'}
+                        texto={x.status === 'OPEN' ? t.turnos.abierto : t.turnos.cerrado}
+                      />
+                      {x.reviewReason !== null ? (
+                        <span className="turno__revisar">
+                          {' '}
+                          {t.corte.revisar} {x.reviewReason}
+                        </span>
+                      ) : null}
+                    </td>
+                    <td data-label={t.corte.diferencia}>
+                      {x.differenceCents === null ? (
+                        '—'
+                      ) : (
+                        <Diferencia centavos={x.differenceCents} />
+                      )}
+                    </td>
+                    <td className="tabla__acciones">
+                      {x.status === 'CLOSED' && reabrir === null ? (
+                        <Boton
+                          variante="secundario"
+                          onClick={() => {
+                            setError(null);
+                            setReabrir(x);
+                          }}
+                        >
+                          {t.turnos.reabrir}
+                        </Boton>
+                      ) : null}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </Tarjeta>
+
+        {actor.role === 'ADMIN' ? (
+          <Tarjeta rotulo={t.dia.titulo}>
+            <Campo
+              etiqueta={t.dia.fecha}
+              type="date"
+              value={fecha}
+              onChange={(e) => {
+                setFecha(e.target.value);
+              }}
+            />
+            {dia === null || dia.shiftCount === 0 ? (
+              <p className="mostrador__vacio">{t.dia.sinTurnos}</p>
+            ) : (
+              <>
+                <div className="indicadores">
+                  <Indicador rotulo={t.dia.turnos} valor={String(dia.shiftCount)} />
+                  <Indicador rotulo={t.dia.efectivo} valor={formatearPesos(dia.cashCents)} />
+                  <Indicador
+                    rotulo={t.dia.transferencia}
+                    valor={formatearPesos(dia.transferCents)}
+                  />
+                  <Indicador
+                    rotulo={t.dia.total}
+                    valor={formatearPesos(dia.totalCents)}
+                    tono="exito"
+                  />
+                </div>
+                <h3 className="rotulo turno__subtitulo">{t.dia.porCajero}</h3>
+                <ul className="lineas">
+                  {dia.byCashier.map((c) => (
+                    <li key={c.cashierId}>
+                      {nombre(c.cashierId)} · {t.dia.efectivo} {formatearPesos(c.cashCents)} ·{' '}
+                      {t.dia.transferencia} {formatearPesos(c.transferCents)} · {t.dia.total}{' '}
+                      {formatearPesos(c.totalCents)}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </Tarjeta>
+        ) : null}
+      </div>
 
       {reabrir !== null ? (
         <DialogoDeAutorizacion
@@ -371,46 +461,6 @@ export function TurnoDeCaja(props: TurnoDeCajaProps): ReactElement {
           }}
         />
       ) : null}
-
-      {actor.role === 'ADMIN' ? (
-        <section aria-labelledby="titulo-dia">
-          <h3 id="titulo-dia">{t.dia.titulo}</h3>
-          <Campo
-            etiqueta={t.dia.fecha}
-            type="date"
-            value={fecha}
-            onChange={(e) => {
-              setFecha(e.target.value);
-            }}
-          />
-          {dia === null || dia.shiftCount === 0 ? (
-            <p>{t.dia.sinTurnos}</p>
-          ) : (
-            <>
-              <dl className="documento__totales">
-                <dt>{t.dia.turnos}</dt>
-                <dd>{String(dia.shiftCount)}</dd>
-                <dt>{t.dia.efectivo}</dt>
-                <dd>{formatearPesos(dia.cashCents)}</dd>
-                <dt>{t.dia.transferencia}</dt>
-                <dd>{formatearPesos(dia.transferCents)}</dd>
-                <dt>{t.dia.total}</dt>
-                <dd>{formatearPesos(dia.totalCents)}</dd>
-              </dl>
-              <h4>{t.dia.porCajero}</h4>
-              <ul className="lineas">
-                {dia.byCashier.map((c) => (
-                  <li key={c.cashierId}>
-                    {nombre(c.cashierId)} · {t.dia.efectivo} {formatearPesos(c.cashCents)} ·{' '}
-                    {t.dia.transferencia} {formatearPesos(c.transferCents)} · {t.dia.total}{' '}
-                    {formatearPesos(c.totalCents)}
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
-        </section>
-      ) : null}
-    </section>
+    </div>
   );
 }

@@ -22,8 +22,8 @@ export default defineConfig({
         scope: '/',
         display: 'standalone',
         orientation: 'any',
-        theme_color: '#1f3a5f',
-        background_color: '#f6f1e9',
+        theme_color: '#0f4c81',
+        background_color: '#f4f1ec',
         icons: [
           { src: 'icono-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'icono-512.png', sizes: '512x512', type: 'image/png' },
@@ -36,7 +36,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,png,svg,ico,webmanifest}'],
+        globPatterns: ['**/*.{js,css,html,png,svg,ico,webmanifest,woff2}'],
         // Cualquier ruta de la aplicación abre la misma página, también sin internet.
         navigateFallback: '/index.html',
         cleanupOutdatedCaches: true,

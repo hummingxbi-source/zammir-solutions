@@ -22,6 +22,10 @@ import { textos } from '../../../shared/i18n/textos';
 import { Aviso } from '../../../shared/ui/Aviso';
 import { AreaDeTexto } from '../../../shared/ui/AreaDeTexto';
 import { Boton } from '../../../shared/ui/Boton';
+import { EncabezadoDePagina } from '../../../shared/ui/EncabezadoDePagina';
+import { EtiquetaDeEstado, type TonoDeEstado } from '../../../shared/ui/EtiquetaDeEstado';
+import { Icono } from '../../../shared/ui/Icono';
+import { Tarjeta } from '../../../shared/ui/Tarjeta';
 import { Campo } from '../../../shared/ui/Campo';
 import { Seleccion } from '../../../shared/ui/Seleccion';
 import { formatearPesos } from '../../../shared/ui/formatos';
@@ -178,16 +182,29 @@ export function DetalleDeOrden(props: DetalleDeOrdenProps): ReactElement {
         ? t.estados.READY
         : null;
 
+  const rotulo = `${orden.folio === null ? `${t.detalle.folioProvisional} ${orden.tempFolio} · ` : ''}${t.detalle.codigo} ${orden.publicCode}`;
+  const tonoDeEstado: Record<typeof orden.status, TonoDeEstado> = {
+    WAITING: 'espera',
+    IN_PROCESS: 'proceso',
+    READY: 'listo',
+    DELIVERED: 'entregado',
+    CANCELLED: 'cancelado',
+  };
+
   return (
-    <section className="anima-entrada" aria-labelledby="titulo-detalle-orden">
-      <h1 id="titulo-detalle-orden">
-        {orden.folio ?? orden.tempFolio} · {cliente?.name ?? '—'}
-      </h1>
-      <p>
-        <strong>{t.estados[orden.status]}</strong>
-        {orden.folio === null ? ` · ${t.detalle.folioProvisional} ${orden.tempFolio}` : ''} ·{' '}
-        {t.detalle.codigo} {orden.publicCode}
-      </p>
+    <section className="anima-entrada orden">
+      <EncabezadoDePagina
+        rotulo={rotulo}
+        titulo={`${orden.folio ?? orden.tempFolio} · ${cliente?.name ?? '—'}`}
+        acciones={
+          <>
+            <EtiquetaDeEstado tono={tonoDeEstado[orden.status]} texto={t.estados[orden.status]} />
+            <Boton variante="secundario" onClick={props.onVolver}>
+              {t.detalle.volver}
+            </Boton>
+          </>
+        }
+      />
       {orden.reviewReason !== null ? (
         <Aviso tipo="error">
           {t.detalle.revisar} {t.motivosDeRevision[orden.reviewReason] ?? orden.reviewReason}
@@ -200,268 +217,293 @@ export function DetalleDeOrden(props: DetalleDeOrdenProps): ReactElement {
       ) : null}
       {aviso !== null ? <Aviso tipo="exito">{aviso}</Aviso> : null}
 
-      <h2>{t.detalle.conceptos}</h2>
-      <ul className="lineas">
-        {orden.lines.map((l) => (
-          <li key={l.id}>
-            <strong>{l.name}</strong> · {l.detail} · {formatearPesos(l.lineTotalCents)}
-          </li>
-        ))}
-      </ul>
-      {orden.siteAddress !== null ? (
-        <p>
-          {t.detalle.obra}: {orden.siteAddress}
-        </p>
-      ) : null}
-      <dl className="documento__totales">
-        <dt>{t.detalle.subtotal}</dt>
-        <dd>{formatearPesos(orden.subtotalCents)}</dd>
-        <dt>{t.detalle.iva}</dt>
-        <dd>{formatearPesos(orden.taxCents)}</dd>
-        <dt>{t.detalle.total}</dt>
-        <dd>{formatearPesos(orden.totalCents)}</dd>
-        <dt>{t.detalle.anticipoExigido}</dt>
-        <dd>{formatearPesos(orden.depositRequiredCents)}</dd>
-        <dt>{t.detalle.pagado}</dt>
-        <dd>{formatearPesos(pagado)}</dd>
-        <dt>{t.detalle.saldo}</dt>
-        <dd>{saldo === 0 ? t.detalle.saldoCero : formatearPesos(saldo)}</dd>
-      </dl>
+      <div className="orden__rejilla">
+        <div className="orden__principal">
+          <Tarjeta rotulo={t.detalle.conceptos}>
+            <ul className="ticket">
+              {orden.lines.map((l) => (
+                <li key={l.id} className="ticket__linea">
+                  <div className="ticket__datos">
+                    <strong className="ticket__nombre">{l.name}</strong>
+                    <span className="ticket__detalle">{l.detail}</span>
+                  </div>
+                  <span className="ticket__importe">{formatearPesos(l.lineTotalCents)}</span>
+                </li>
+              ))}
+            </ul>
+            {orden.siteAddress !== null ? (
+              <p className="orden__obra">
+                {t.detalle.obra}: {orden.siteAddress}
+              </p>
+            ) : null}
+          </Tarjeta>
 
-      <h2>{t.detalle.pagos}</h2>
-      {pagos.length === 0 ? (
-        <p>{t.detalle.sinPagos}</p>
-      ) : (
-        <ul className="lineas">
-          {pagos.map((p) => (
-            <li key={p.id}>
-              {p.kind === 'DEPOSIT' ? t.detalle.anticipo : t.detalle.saldoPago} ·{' '}
-              {p.method === 'CASH' ? t.detalle.efectivo : t.detalle.transferencia} ·{' '}
-              {formatearPesos(p.amountCents)}
-              {p.changeCents !== null && p.changeCents > 0
-                ? ` · ${t.detalle.cambio} ${formatearPesos(p.changeCents)}`
-                : ''}
-            </li>
-          ))}
-        </ul>
-      )}
+          <Tarjeta rotulo={t.detalle.pagos}>
+            {pagos.length === 0 ? (
+              <p className="mostrador__vacio">{t.detalle.sinPagos}</p>
+            ) : (
+              <ul className="lineas">
+                {pagos.map((p) => (
+                  <li key={p.id}>
+                    {p.kind === 'DEPOSIT' ? t.detalle.anticipo : t.detalle.saldoPago} ·{' '}
+                    {p.method === 'CASH' ? t.detalle.efectivo : t.detalle.transferencia} ·{' '}
+                    {formatearPesos(p.amountCents)}
+                    {p.changeCents !== null && p.changeCents > 0
+                      ? ` · ${t.detalle.cambio} ${formatearPesos(p.changeCents)}`
+                      : ''}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Tarjeta>
 
-      {dialogo === 'cobro' ? (
-        <DialogoDeCobro
-          saldoCents={saldo}
-          sugeridoCents={pagado === 0 ? Math.min(orden.depositRequiredCents, saldo) : null}
-          onRegistrar={registrar}
-          onCancelar={() => {
-            setDialogo(null);
-          }}
-        />
-      ) : null}
-      {dialogo === 'avanzar' ? (
-        <DialogoDeAutorizacion
-          titulo={`${t.acciones.avanzar} ${siguiente ?? ''}`}
-          explicacion={t.autorizacion.pedirPinEmpezar}
-          pedirMotivo={false}
-          pedirPin={!esAdmin}
-          autorizacion={autorizacion}
-          onContinuar={(_motivo, permiso) => avanzar(permiso)}
-          onCancelar={() => {
-            setDialogo(null);
-          }}
-        />
-      ) : null}
-      {dialogo === 'entregar' ? (
-        <DialogoDeAutorizacion
-          titulo={t.acciones.entregar}
-          explicacion={t.autorizacion.pedirPinEntregar}
-          pedirMotivo
-          pedirPin={!esAdmin}
-          autorizacion={autorizacion}
-          onContinuar={async (motivo, permiso) => {
-            const r = await deliverWorkOrder(deps, actor, orden.id, {
-              reason: motivo,
-              ...(permiso === undefined ? {} : { authorization: permiso }),
-            });
-            return terminado(r.ok ? null : r.error.code);
-          }}
-          onCancelar={() => {
-            setDialogo(null);
-          }}
-        />
-      ) : null}
-      {dialogo === 'cancelar' ? (
-        <DialogoDeAutorizacion
-          titulo={t.acciones.cancelar}
-          explicacion={t.autorizacion.pedirPinCancelar}
-          pedirMotivo
-          pedirPin={!esAdmin}
-          autorizacion={autorizacion}
-          onContinuar={async (motivo, permiso) => {
-            const r = await cancelWorkOrder(deps, actor, orden.id, motivo, permiso);
-            return terminado(r.ok ? null : r.error.code);
-          }}
-          onCancelar={() => {
-            setDialogo(null);
-          }}
-        />
-      ) : null}
+          {orden.status !== 'CANCELLED' ? (
+            <Tarjeta rotulo={t.datos.titulo}>
+              <form
+                className="formulario"
+                onSubmit={(e) => {
+                  void guardarDatos(e);
+                }}
+                aria-label={t.datos.titulo}
+              >
+                <div className="formulario__par">
+                  <Seleccion
+                    etiqueta={t.datos.mide}
+                    value={mide}
+                    opciones={opcionesPersona}
+                    onChange={(e) => {
+                      setMide(e.target.value);
+                    }}
+                  />
+                  <Seleccion
+                    etiqueta={t.datos.fabrica}
+                    value={fabrica}
+                    opciones={opcionesPersona}
+                    onChange={(e) => {
+                      setFabrica(e.target.value);
+                    }}
+                  />
+                  <Seleccion
+                    etiqueta={t.datos.instala}
+                    value={instala}
+                    opciones={opcionesPersona}
+                    onChange={(e) => {
+                      setInstala(e.target.value);
+                    }}
+                  />
+                  <Campo
+                    etiqueta={t.datos.fecha}
+                    type="date"
+                    value={fecha}
+                    onChange={(e) => {
+                      setFecha(e.target.value);
+                    }}
+                  />
+                </div>
+                <AreaDeTexto
+                  etiqueta={t.datos.notas}
+                  rows={3}
+                  value={notas}
+                  onChange={(e) => {
+                    setNotas(e.target.value);
+                  }}
+                />
+                <div className="formulario__acciones">
+                  <Boton type="submit">{t.datos.guardar}</Boton>
+                </div>
+              </form>
+            </Tarjeta>
+          ) : null}
 
-      {!final && dialogo === null ? (
-        <div className="acciones">
-          {saldo > 0 ? (
-            <Boton
-              onClick={() => {
-                setDialogo('cobro');
-              }}
-            >
-              {t.acciones.cobrar}
-            </Boton>
+          {fotos !== undefined && orden.status !== 'CANCELLED' ? (
+            <Tarjeta rotulo={t.fotos.titulo}>
+              {fotosDeLaOrden.length === 0 ? (
+                <p className="mostrador__vacio">{t.fotos.vacio}</p>
+              ) : null}
+              <ul className="lineas">
+                {fotosDeLaOrden.map((f, i) => (
+                  <li key={f.id}>
+                    {t.fotos.titulo} {String(i + 1)} · {String(Math.round(f.sizeBytes / 1024))} KB ·{' '}
+                    {f.status === 'UPLOADED' ? t.fotos.enviada : t.fotos.guardada}
+                  </li>
+                ))}
+              </ul>
+              <Campo
+                etiqueta={t.fotos.agregar}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={(e) => {
+                  void agregarFoto(e.target.files?.[0]);
+                  e.target.value = '';
+                }}
+              />
+            </Tarjeta>
           ) : null}
-          {siguiente !== null ? (
-            <Boton
-              variante="secundario"
-              onClick={() => {
-                setError(null);
-                void avanzar().then((codigo) => {
-                  if (codigo !== null) {
-                    mostrarError(codigo);
-                  }
-                });
-              }}
-            >
-              {t.acciones.avanzar} {siguiente}
-            </Boton>
-          ) : null}
-          {orden.status === 'READY' ? (
-            <Boton
-              variante="secundario"
-              onClick={() => {
-                setError(null);
-                if (saldo > 0) {
-                  setDialogo('entregar');
-                  return;
-                }
-                void deliverWorkOrder(deps, actor, orden.id).then((r) => {
-                  if (!r.ok) {
-                    mostrarError(r.error.code);
-                    return;
-                  }
-                  void terminado(null);
-                });
-              }}
-            >
-              {t.acciones.entregar}
-            </Boton>
-          ) : null}
-          <Boton
-            variante="peligro"
-            onClick={() => {
-              setDialogo('cancelar');
-            }}
-          >
-            {t.acciones.cancelar}
-          </Boton>
         </div>
-      ) : null}
 
-      {props.onComprobante !== undefined && orden.status !== 'CANCELLED' ? (
-        <Boton
-          variante="secundario"
-          onClick={() => {
-            setAviso(t.acciones.preparando);
-            void props.onComprobante?.(orden).then((falla) => {
-              if (falla === null) {
-                setAviso(t.acciones.compartido);
-              } else {
-                setAviso(null);
-                mostrarError(falla);
-              }
-            });
-          }}
-        >
-          {t.acciones.comprobante}
-        </Boton>
-      ) : null}
+        <div className="orden__lateral">
+          <Tarjeta rotulo={t.detalle.resumen}>
+            <dl className="ticket__totales">
+              <dt>{t.detalle.subtotal}</dt>
+              <dd>{formatearPesos(orden.subtotalCents)}</dd>
+              <dt>{t.detalle.iva}</dt>
+              <dd>{formatearPesos(orden.taxCents)}</dd>
+              <dt className="ticket__total-rotulo">{t.detalle.total}</dt>
+              <dd className="cifra ticket__total">{formatearPesos(orden.totalCents)}</dd>
+              <dt>{t.detalle.anticipoExigido}</dt>
+              <dd>{formatearPesos(orden.depositRequiredCents)}</dd>
+              <dt>{t.detalle.pagado}</dt>
+              <dd>{formatearPesos(pagado)}</dd>
+              <dt className="ticket__total-rotulo">{t.detalle.saldo}</dt>
+              <dd
+                className={`cifra ticket__total ${saldo === 0 ? 'orden__saldo--cero' : 'orden__saldo'}`}
+              >
+                {saldo === 0 ? t.detalle.saldoCero : formatearPesos(saldo)}
+              </dd>
+            </dl>
 
-      {orden.status !== 'CANCELLED' ? (
-        <form
-          onSubmit={(e) => {
-            void guardarDatos(e);
-          }}
-          aria-label={t.datos.titulo}
-        >
-          <h2>{t.datos.titulo}</h2>
-          <Seleccion
-            etiqueta={t.datos.mide}
-            value={mide}
-            opciones={opcionesPersona}
-            onChange={(e) => {
-              setMide(e.target.value);
-            }}
-          />
-          <Seleccion
-            etiqueta={t.datos.fabrica}
-            value={fabrica}
-            opciones={opcionesPersona}
-            onChange={(e) => {
-              setFabrica(e.target.value);
-            }}
-          />
-          <Seleccion
-            etiqueta={t.datos.instala}
-            value={instala}
-            opciones={opcionesPersona}
-            onChange={(e) => {
-              setInstala(e.target.value);
-            }}
-          />
-          <Campo
-            etiqueta={t.datos.fecha}
-            type="date"
-            value={fecha}
-            onChange={(e) => {
-              setFecha(e.target.value);
-            }}
-          />
-          <AreaDeTexto
-            etiqueta={t.datos.notas}
-            rows={3}
-            value={notas}
-            onChange={(e) => {
-              setNotas(e.target.value);
-            }}
-          />
-          <Boton type="submit">{t.datos.guardar}</Boton>
-        </form>
-      ) : null}
+            {dialogo === 'cobro' ? (
+              <DialogoDeCobro
+                saldoCents={saldo}
+                sugeridoCents={pagado === 0 ? Math.min(orden.depositRequiredCents, saldo) : null}
+                onRegistrar={registrar}
+                onCancelar={() => {
+                  setDialogo(null);
+                }}
+              />
+            ) : null}
+            {dialogo === 'avanzar' ? (
+              <DialogoDeAutorizacion
+                titulo={`${t.acciones.avanzar} ${siguiente ?? ''}`}
+                explicacion={t.autorizacion.pedirPinEmpezar}
+                pedirMotivo={false}
+                pedirPin={!esAdmin}
+                autorizacion={autorizacion}
+                onContinuar={(_motivo, permiso) => avanzar(permiso)}
+                onCancelar={() => {
+                  setDialogo(null);
+                }}
+              />
+            ) : null}
+            {dialogo === 'entregar' ? (
+              <DialogoDeAutorizacion
+                titulo={t.acciones.entregar}
+                explicacion={t.autorizacion.pedirPinEntregar}
+                pedirMotivo
+                pedirPin={!esAdmin}
+                autorizacion={autorizacion}
+                onContinuar={async (motivo, permiso) => {
+                  const r = await deliverWorkOrder(deps, actor, orden.id, {
+                    reason: motivo,
+                    ...(permiso === undefined ? {} : { authorization: permiso }),
+                  });
+                  return terminado(r.ok ? null : r.error.code);
+                }}
+                onCancelar={() => {
+                  setDialogo(null);
+                }}
+              />
+            ) : null}
+            {dialogo === 'cancelar' ? (
+              <DialogoDeAutorizacion
+                titulo={t.acciones.cancelar}
+                explicacion={t.autorizacion.pedirPinCancelar}
+                pedirMotivo
+                pedirPin={!esAdmin}
+                autorizacion={autorizacion}
+                onContinuar={async (motivo, permiso) => {
+                  const r = await cancelWorkOrder(deps, actor, orden.id, motivo, permiso);
+                  return terminado(r.ok ? null : r.error.code);
+                }}
+                onCancelar={() => {
+                  setDialogo(null);
+                }}
+              />
+            ) : null}
 
-      {fotos !== undefined && orden.status !== 'CANCELLED' ? (
-        <section aria-labelledby="titulo-fotos">
-          <h2 id="titulo-fotos">{t.fotos.titulo}</h2>
-          {fotosDeLaOrden.length === 0 ? <p>{t.fotos.vacio}</p> : null}
-          <ul className="lineas">
-            {fotosDeLaOrden.map((f, i) => (
-              <li key={f.id}>
-                {t.fotos.titulo} {String(i + 1)} · {String(Math.round(f.sizeBytes / 1024))} KB ·{' '}
-                {f.status === 'UPLOADED' ? t.fotos.enviada : t.fotos.guardada}
-              </li>
-            ))}
-          </ul>
-          <Campo
-            etiqueta={t.fotos.agregar}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            onChange={(e) => {
-              void agregarFoto(e.target.files?.[0]);
-              e.target.value = '';
-            }}
-          />
-        </section>
-      ) : null}
+            {!final && dialogo === null ? (
+              <div className="ticket__cobrar">
+                {saldo > 0 ? (
+                  <Boton
+                    onClick={() => {
+                      setDialogo('cobro');
+                    }}
+                  >
+                    {t.acciones.cobrar}
+                  </Boton>
+                ) : null}
+                {siguiente !== null ? (
+                  <Boton
+                    variante="secundario"
+                    onClick={() => {
+                      setError(null);
+                      void avanzar().then((codigo) => {
+                        if (codigo !== null) {
+                          mostrarError(codigo);
+                        }
+                      });
+                    }}
+                  >
+                    {t.acciones.avanzar} {siguiente}
+                  </Boton>
+                ) : null}
+                {orden.status === 'READY' ? (
+                  <Boton
+                    variante="secundario"
+                    onClick={() => {
+                      setError(null);
+                      if (saldo > 0) {
+                        setDialogo('entregar');
+                        return;
+                      }
+                      void deliverWorkOrder(deps, actor, orden.id).then((r) => {
+                        if (!r.ok) {
+                          mostrarError(r.error.code);
+                          return;
+                        }
+                        void terminado(null);
+                      });
+                    }}
+                  >
+                    {t.acciones.entregar}
+                  </Boton>
+                ) : null}
+                <Boton
+                  variante="peligro"
+                  onClick={() => {
+                    setDialogo('cancelar');
+                  }}
+                >
+                  {t.acciones.cancelar}
+                </Boton>
+              </div>
+            ) : null}
 
-      <Boton variante="secundario" onClick={props.onVolver}>
-        {t.detalle.volver}
-      </Boton>
+            {props.onComprobante !== undefined && orden.status !== 'CANCELLED' ? (
+              <div className="orden__comprobante">
+                <Boton
+                  variante="secundario"
+                  onClick={() => {
+                    setAviso(t.acciones.preparando);
+                    void props.onComprobante?.(orden).then((falla) => {
+                      if (falla === null) {
+                        setAviso(t.acciones.compartido);
+                      } else {
+                        setAviso(null);
+                        mostrarError(falla);
+                      }
+                    });
+                  }}
+                >
+                  <Icono nombre="whatsapp" />
+                  {t.acciones.comprobante}
+                </Boton>
+              </div>
+            ) : null}
+          </Tarjeta>
+        </div>
+      </div>
     </section>
   );
 }

@@ -19,6 +19,10 @@ const t = textos.importar;
 
 export interface ImportarCatalogoProps {
   readonly deps: ImportCatalogDeps;
+  /** Sin el título de arriba: la ventana donde se muestra ya lo trae. */
+  readonly sinTitulo?: boolean;
+  /** Avisa cuando se importó el archivo, para refrescar el catálogo. */
+  readonly onImportado?: () => void;
 }
 
 /** Lee el archivo como texto UTF-8. Devuelve también si hay caracteres de reemplazo (�), señal de que
@@ -49,7 +53,11 @@ function descargarPlantilla(): void {
 
 /** Importación del catálogo desde un archivo CSV con vista previa. Todo o nada: con un solo error en el
  *  archivo no se importa ninguna fila, y cada error se muestra con su fila [RF-M1-05]. */
-export function ImportarCatalogo({ deps }: ImportarCatalogoProps): ReactElement {
+export function ImportarCatalogo({
+  deps,
+  sinTitulo = false,
+  onImportado,
+}: ImportarCatalogoProps): ReactElement {
   const { usuario } = useSesionAdmin();
   const actor = { role: usuario?.role ?? null };
 
@@ -93,6 +101,7 @@ export function ImportarCatalogo({ deps }: ImportarCatalogoProps): ReactElement 
     setTrabajando(false);
     if (resultado.ok) {
       setImportados(resultado.value.length);
+      onImportado?.();
       setAnalisis(null);
       setFilas(null);
     } else {
@@ -106,8 +115,11 @@ export function ImportarCatalogo({ deps }: ImportarCatalogoProps): ReactElement 
   const conErrores = analisis?.rows.filter((f) => f.errors.length > 0).length ?? 0;
 
   return (
-    <section className="anima-entrada" aria-labelledby="titulo-importar">
-      <h2 id="titulo-importar">{t.titulo}</h2>
+    <section
+      className="anima-entrada"
+      {...(sinTitulo ? { 'aria-label': t.titulo } : { 'aria-labelledby': 'titulo-importar' })}
+    >
+      {sinTitulo ? null : <h2 id="titulo-importar">{t.titulo}</h2>}
       <p>{t.descripcion}</p>
       <p>
         <strong>{t.reglaTodoONada}</strong>

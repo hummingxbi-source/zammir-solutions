@@ -33,6 +33,11 @@ import {
 import { textos } from '../../../shared/i18n/textos';
 import { Aviso } from '../../../shared/ui/Aviso';
 import { Boton } from '../../../shared/ui/Boton';
+import { EncabezadoDePagina } from '../../../shared/ui/EncabezadoDePagina';
+import { EtiquetaDeEstado, type TonoDeEstado } from '../../../shared/ui/EtiquetaDeEstado';
+import { Icono } from '../../../shared/ui/Icono';
+import { Pestanas } from '../../../shared/ui/Pestanas';
+import { Tarjeta } from '../../../shared/ui/Tarjeta';
 import { Campo, CampoNumerico } from '../../../shared/ui/Campo';
 import { DialogoDeDescuento, type AutorizacionDeAdministrador } from './DialogoDeDescuento';
 import { VistaPreviaDeCotizacion } from './VistaPreviaDeCotizacion';
@@ -257,27 +262,36 @@ export function EditorDeCotizacion({
     defaultPermissionPolicy.check(actor.role, 'PRICE_OVERRIDE') === 'NEEDS_ADMIN_AUTHORIZATION';
   const medidas = elegido?.chargeUnit === 'SQUARE_METER' || elegido?.chargeUnit === 'LINEAR_METER';
 
+  const rotulo =
+    quote.tempFolio !== null
+      ? `${quote.folio ?? `${t.emitir.folioProvisional} ${quote.tempFolio}`} · ${
+          quote.syncStatus === 'SENT'
+            ? textos.sincronizacion.enviado
+            : textos.sincronizacion.guardadoEnLaTablet
+        }`
+      : undefined;
+  const tonoDeEstado: Record<typeof estado, TonoDeEstado> = {
+    DRAFT: 'espera',
+    SENT: 'proceso',
+    ACCEPTED: 'listo',
+    REJECTED: 'cancelado',
+    EXPIRED: 'aviso',
+  };
+
   return (
-    <section className="cotizador" aria-labelledby="titulo-editor-cotizacion">
-      <Boton variante="secundario" onClick={onVolver}>
-        {t.acciones.volver}
-      </Boton>
-      <h2 id="titulo-editor-cotizacion">
-        {t.titulo} · {cliente.name}
-      </h2>
-      <p>
-        <strong>{t.estados[estado]}</strong>
-        {quote.tempFolio !== null ? (
+    <section className="cotizador anima-entrada">
+      <EncabezadoDePagina
+        {...(rotulo === undefined ? {} : { rotulo })}
+        titulo={`${t.titulo} · ${cliente.name}`}
+        acciones={
           <>
-            {' · '}
-            {quote.folio ?? `${t.emitir.folioProvisional} ${quote.tempFolio}`}
-            {' · '}
-            {quote.syncStatus === 'SENT'
-              ? textos.sincronizacion.enviado
-              : textos.sincronizacion.guardadoEnLaTablet}
+            <EtiquetaDeEstado tono={tonoDeEstado[estado]} texto={t.estados[estado]} />
+            <Boton variante="secundario" onClick={onVolver}>
+              {t.acciones.volver}
+            </Boton>
           </>
-        ) : null}
-      </p>
+        }
+      />
 
       {error !== null ? (
         <Aviso tipo="error" queHacer={error.queHacer}>
@@ -286,33 +300,24 @@ export function EditorDeCotizacion({
       ) : null}
       {aviso !== null ? <Aviso tipo="exito">{aviso}</Aviso> : null}
 
-      <div className="pestanas" role="tablist">
-        <Boton
-          variante={pestana === 'datos' ? 'primario' : 'secundario'}
-          role="tab"
-          aria-selected={pestana === 'datos'}
-          onClick={() => {
-            setPestana('datos');
+      <div className="cotizador__pestanas">
+        <Pestanas
+          etiqueta={t.vistaPrevia.titulo}
+          pestanas={[
+            { id: 'datos', texto: t.vistaPrevia.pestanaDatos },
+            { id: 'vista', texto: t.vistaPrevia.pestanaDocumento },
+          ]}
+          activa={pestana}
+          onCambiar={(id) => {
+            setPestana(id === 'vista' ? 'vista' : 'datos');
           }}
-        >
-          {t.vistaPrevia.pestanaDatos}
-        </Boton>
-        <Boton
-          variante={pestana === 'vista' ? 'primario' : 'secundario'}
-          role="tab"
-          aria-selected={pestana === 'vista'}
-          onClick={() => {
-            setPestana('vista');
-          }}
-        >
-          {t.vistaPrevia.pestanaDocumento}
-        </Boton>
+        />
       </div>
 
       <div className="cotizador__paneles" data-pestana={pestana}>
         <div className="cotizador__datos">
           {esBorrador ? (
-            <>
+            <Tarjeta rotulo={t.producto.titulo}>
               {productos !== null && productos.length === 0 && !avisoCatalogoCerrado ? (
                 <Aviso tipo="error">
                   {t.catalogoVacio}{' '}
@@ -326,7 +331,6 @@ export function EditorDeCotizacion({
                   </Boton>
                 </Aviso>
               ) : null}
-              <h3>{t.producto.titulo}</h3>
               {elegido === null ? (
                 <>
                   <Campo
@@ -339,24 +343,26 @@ export function EditorDeCotizacion({
                   {busqueda !== '' && encontrados.length === 0 ? (
                     <p>{t.producto.sinResultados}</p>
                   ) : null}
-                  <ul className="accesos">
+                  <ul className="productos">
                     {encontrados.map((p) => (
                       <li key={p.id}>
-                        <Boton
-                          variante="secundario"
+                        <button
+                          type="button"
+                          className="producto"
                           onClick={() => {
                             setElegido(p);
                           }}
                         >
-                          {p.name} · {cobra(p.listPrice)}
-                        </Boton>
+                          <span className="producto__nombre">{p.name}</span>
+                          <span className="producto__precio">{cobra(p.listPrice)}</span>
+                        </button>
                       </li>
                     ))}
                   </ul>
                 </>
               ) : (
-                <form onSubmit={(e) => void agregar(e)}>
-                  <p>
+                <form className="formulario" onSubmit={(e) => void agregar(e)}>
+                  <p className="mostrador__elegido">
                     <strong>{elegido.name}</strong> · {cobra(elegido.listPrice)}
                   </p>
                   {medidas ? (
@@ -367,6 +373,7 @@ export function EditorDeCotizacion({
                         </label>
                         <select
                           id="unidad-medidas"
+                          className="campo__entrada"
                           value={unidad}
                           onChange={(e) => {
                             setUnidad(e.target.value === 'm' ? 'm' : 'cm');
@@ -376,20 +383,22 @@ export function EditorDeCotizacion({
                           <option value="m">{t.producto.m}</option>
                         </select>
                       </div>
-                      <CampoNumerico
-                        etiqueta={`${t.producto.ancho} (${unidad})`}
-                        value={ancho}
-                        onChange={(e) => {
-                          setAncho(e.target.value);
-                        }}
-                      />
-                      <CampoNumerico
-                        etiqueta={`${t.producto.alto} (${unidad})`}
-                        value={alto}
-                        onChange={(e) => {
-                          setAlto(e.target.value);
-                        }}
-                      />
+                      <div className="formulario__par">
+                        <CampoNumerico
+                          etiqueta={`${t.producto.ancho} (${unidad})`}
+                          value={ancho}
+                          onChange={(e) => {
+                            setAncho(e.target.value);
+                          }}
+                        />
+                        <CampoNumerico
+                          etiqueta={`${t.producto.alto} (${unidad})`}
+                          value={alto}
+                          onChange={(e) => {
+                            setAlto(e.target.value);
+                          }}
+                        />
+                      </div>
                     </>
                   ) : null}
                   <CampoNumerico
@@ -400,116 +409,124 @@ export function EditorDeCotizacion({
                       setCantidad(e.target.value);
                     }}
                   />
-                  <Boton type="submit">{t.producto.agregar}</Boton>
-                  <Boton
-                    variante="secundario"
-                    onClick={() => {
-                      setElegido(null);
-                    }}
-                  >
-                    {t.descuento.cancelar}
-                  </Boton>
+                  <div className="formulario__acciones">
+                    <Boton type="submit">{t.producto.agregar}</Boton>
+                    <Boton
+                      variante="secundario"
+                      onClick={() => {
+                        setElegido(null);
+                      }}
+                    >
+                      {t.descuento.cancelar}
+                    </Boton>
+                  </div>
                 </form>
               )}
-            </>
+            </Tarjeta>
           ) : null}
 
-          <h3>{t.lineas.titulo}</h3>
-          {quote.lines.length === 0 ? (
-            <p>{t.lineas.vacio}</p>
-          ) : (
-            <ul className="lineas">
-              {quote.lines.map((l) => (
-                <li key={l.id}>
-                  <strong>{l.name}</strong>
-                  <br />
-                  <small>{l.detail}</small>
-                  {l.unitPriceCents < l.catalogPriceCents ? (
-                    <small> · {t.lineas.conDescuento}</small>
-                  ) : null}
-                  {esBorrador ? (
-                    <div>
-                      <Boton
-                        variante="secundario"
-                        onClick={() => {
-                          setDescuentoDe(l.id);
-                        }}
-                      >
-                        {t.descuento.boton}
-                      </Boton>
-                      <Boton
-                        variante="peligro"
-                        onClick={() => {
-                          void quitar(l.id);
-                        }}
-                      >
-                        {t.producto.quitar}
-                      </Boton>
+          <Tarjeta rotulo={t.lineas.titulo}>
+            {quote.lines.length === 0 ? (
+              <p className="mostrador__vacio">{t.lineas.vacio}</p>
+            ) : (
+              <ul className="ticket">
+                {quote.lines.map((l) => (
+                  <li key={l.id} className="ticket__linea">
+                    <div className="ticket__datos">
+                      <strong className="ticket__nombre">{l.name}</strong>
+                      <span className="ticket__detalle">
+                        {l.detail}
+                        {l.unitPriceCents < l.catalogPriceCents
+                          ? ` · ${t.lineas.conDescuento}`
+                          : ''}
+                      </span>
                     </div>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          )}
-          <dl className="documento__totales">
-            <dt>{t.lineas.subtotal}</dt>
-            <dd>{cobra(totales.subtotalCents)}</dd>
-            <dt>{t.lineas.iva}</dt>
-            <dd>{cobra(totales.taxCents)}</dd>
-            <dt>
-              <strong>{t.lineas.total}</strong>
-            </dt>
-            <dd>
-              <strong>{cobra(totales.totalCents)}</strong>
-            </dd>
-          </dl>
+                    <span className="ticket__importe">{cobra(l.lineTotalCents)}</span>
+                    {esBorrador ? (
+                      <div className="ticket__acciones">
+                        <Boton
+                          variante="secundario"
+                          onClick={() => {
+                            setDescuentoDe(l.id);
+                          }}
+                        >
+                          {t.descuento.boton}
+                        </Boton>
+                        <Boton
+                          variante="peligro"
+                          onClick={() => {
+                            void quitar(l.id);
+                          }}
+                        >
+                          {t.producto.quitar}
+                        </Boton>
+                      </div>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <dl className="ticket__totales">
+              <dt>{t.lineas.subtotal}</dt>
+              <dd>{cobra(totales.subtotalCents)}</dd>
+              <dt>{t.lineas.iva}</dt>
+              <dd>{cobra(totales.taxCents)}</dd>
+              <dt className="ticket__total-rotulo">{t.lineas.total}</dt>
+              <dd className="cifra ticket__total">{cobra(totales.totalCents)}</dd>
+            </dl>
 
-          {lineaConDescuento !== undefined ? (
-            <DialogoDeDescuento
-              linea={lineaConDescuento}
-              pedirPin={pedirPin}
-              autorizacion={autorizacion}
-              onAplicar={(precio, permiso) =>
-                aplicarDescuento(lineaConDescuento.id, precio, permiso)
-              }
-              onCancelar={() => {
-                setDescuentoDe(null);
-              }}
-            />
-          ) : null}
+            {lineaConDescuento !== undefined ? (
+              <DialogoDeDescuento
+                linea={lineaConDescuento}
+                pedirPin={pedirPin}
+                autorizacion={autorizacion}
+                onAplicar={(precio, permiso) =>
+                  aplicarDescuento(lineaConDescuento.id, precio, permiso)
+                }
+                onCancelar={() => {
+                  setDescuentoDe(null);
+                }}
+              />
+            ) : null}
 
-          {esBorrador ? (
-            <Boton disabled={ocupado || quote.lines.length === 0} onClick={() => void emitir()}>
-              {ocupado ? t.emitir.emitiendo : t.emitir.boton}
-            </Boton>
-          ) : (
-            <div>
-              <Boton onClick={() => void compartir()}>{t.acciones.compartir}</Boton>
-              {quote.status === 'SENT' ? (
-                <>
-                  <Boton
-                    variante="secundario"
-                    onClick={() => {
-                      void marcar('ACCEPTED');
-                    }}
-                  >
-                    {t.acciones.aceptada}
-                  </Boton>
-                  <Boton
-                    variante="secundario"
-                    onClick={() => {
-                      void marcar('REJECTED');
-                    }}
-                  >
-                    {t.acciones.rechazada}
-                  </Boton>
-                </>
-              ) : null}
-              <Boton variante="secundario" onClick={() => void duplicar()}>
-                {t.acciones.duplicar}
-              </Boton>
-            </div>
-          )}
+            {esBorrador ? (
+              <div className="ticket__cobrar">
+                <Boton disabled={ocupado || quote.lines.length === 0} onClick={() => void emitir()}>
+                  {ocupado ? t.emitir.emitiendo : t.emitir.boton}
+                </Boton>
+              </div>
+            ) : (
+              <div className="formulario__acciones">
+                <Boton onClick={() => void compartir()}>
+                  <Icono nombre="whatsapp" />
+                  {t.acciones.compartir}
+                </Boton>
+                {quote.status === 'SENT' ? (
+                  <>
+                    <Boton
+                      variante="secundario"
+                      onClick={() => {
+                        void marcar('ACCEPTED');
+                      }}
+                    >
+                      {t.acciones.aceptada}
+                    </Boton>
+                    <Boton
+                      variante="secundario"
+                      onClick={() => {
+                        void marcar('REJECTED');
+                      }}
+                    >
+                      {t.acciones.rechazada}
+                    </Boton>
+                  </>
+                ) : null}
+                <Boton variante="secundario" onClick={() => void duplicar()}>
+                  {t.acciones.duplicar}
+                </Boton>
+              </div>
+            )}
+          </Tarjeta>
         </div>
 
         <div className="cotizador__vista">

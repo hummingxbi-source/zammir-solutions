@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within, configure } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import {
   asId,
@@ -27,6 +27,7 @@ import { Cotizador, type CotizadorProps } from './Cotizador';
 // La pantalla completa se monta entera y, con todo el conjunto corriendo a la vez, puede pasar de los 5 s por
 // omisión: este archivo pide más margen solo para él (la configuración global no se toca).
 vi.setConfig({ testTimeout: 30_000 });
+configure({ asyncUtilTimeout: 5_000 });
 
 const registro = (() => {
   const r = createPriceRegistry(defaultRules);
@@ -367,7 +368,7 @@ describe('Cotizador', () => {
     await empezarConClienteNuevo();
     await agregarVidrio();
     fireEvent.click(screen.getByRole('button', { name: 'Volver a las cotizaciones' }));
-    const borrador = await screen.findByRole('button', { name: /Ana López · \$537\.60/ });
+    const borrador = await screen.findByRole('button', { name: /Ana López.*\$537\.60/ });
     fireEvent.click(borrador);
     expect(await screen.findByRole('heading', { name: /Cotizador · Ana López/ })).toBeTruthy();
     expect(screen.getAllByText(/1\.92 m²/).length).toBeGreaterThan(0);

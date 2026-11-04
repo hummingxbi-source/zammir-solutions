@@ -1,146 +1,157 @@
-/* Sistema de diseño base [S0-10].
- * Identidad PROVISIONAL según la guía general del documento de construcción (PD-35):
- * fondo cálido claro, tarjetas blancas, acento azul marino, títulos con serifa y etiquetas en monoespaciada.
+/* Componentes base [S0-10, ADR-0028]. Los valores salen de tokens.css.
  * Objetivos táctiles de al menos 44 px y texto de al menos 16 px [RNF-28]. */
-
-:root {
-  --color-fondo: #f6f1e9;
-  --color-superficie: #ffffff;
-  --color-texto: #1d1d1b;
-  --color-texto-suave: #55524c;
-  --color-borde: #8c8577;
-  --color-acento: #1f3a5f;
-  --color-acento-texto: #ffffff;
-  --color-error: #9c1c14;
-  --color-exito: #1e6b3a;
-
-  --tactil-minimo: 44px;
-  --texto-base: 1rem;
-
-  --fuente-base: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --fuente-titulo: Georgia, 'Times New Roman', serif;
-  --fuente-etiqueta: ui-monospace, 'Cascadia Mono', Consolas, monospace;
-
-  --radio: 0.5rem;
-  --espacio: 1rem;
-}
-
-html {
-  font-size: 100%;
-}
-
-body {
-  margin: 0;
-  background: var(--color-fondo);
-  color: var(--color-texto);
-  font-family: var(--fuente-base);
-  font-size: var(--texto-base);
-  line-height: 1.5;
-}
-
-h1,
-h2,
-h3 {
-  font-family: var(--fuente-titulo);
-  font-weight: 700;
-}
 
 /* Botones */
 .boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   min-height: var(--tactil-minimo);
   min-width: var(--tactil-minimo);
   padding: 0.5rem 1.25rem;
-  border: 1px solid var(--color-acento);
+  border: 1px solid var(--acento);
   border-radius: var(--radio);
-  background: var(--color-acento);
-  color: var(--color-acento-texto);
+  background: var(--acento);
+  color: #ffffff;
+  box-shadow: var(--sombra-1);
   font: inherit;
   font-size: var(--texto-base);
+  font-weight: 600;
+  line-height: 1.2;
   cursor: pointer;
+  transition:
+    background var(--t-rapida),
+    box-shadow var(--t-rapida),
+    transform var(--t-rapida);
+}
+
+.boton:hover:not(:disabled) {
+  background: var(--acento-oscuro);
+  border-color: var(--acento-oscuro);
+  box-shadow: var(--sombra-acento);
+}
+
+.boton:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: none;
 }
 
 .boton--secundario {
-  background: var(--color-superficie);
-  color: var(--color-acento);
+  background: var(--superficie);
+  color: var(--acento);
+  box-shadow: none;
+}
+
+.boton--secundario:hover:not(:disabled) {
+  background: var(--acento-tinte);
+  border-color: var(--acento);
+  box-shadow: none;
 }
 
 .boton--peligro {
-  border-color: var(--color-error);
-  background: var(--color-error);
-  color: var(--color-acento-texto);
+  border-color: var(--peligro);
+  background: var(--peligro);
+  color: #ffffff;
+}
+
+.boton--peligro:hover:not(:disabled) {
+  background: #6f2c2c;
+  border-color: #6f2c2c;
+  box-shadow: 0 4px 16px rgb(139 58 58 / 22%);
 }
 
 .boton:disabled {
-  opacity: 0.6;
+  opacity: 0.55;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 .boton:focus-visible,
 .campo__entrada:focus-visible {
-  outline: 3px solid var(--color-acento);
+  outline: 3px solid var(--acento);
   outline-offset: 2px;
 }
 
 /* Campos */
 .campo {
   display: grid;
-  gap: 0.25rem;
+  gap: 0.375rem;
 }
 
 .campo__etiqueta {
-  font-family: var(--fuente-etiqueta);
+  color: var(--tinta-suave);
   font-size: var(--texto-base);
-  color: var(--color-texto-suave);
+  font-weight: 600;
 }
 
 .campo__entrada {
   box-sizing: border-box;
   min-height: var(--tactil-minimo);
   padding: 0.5rem 0.75rem;
-  border: 1px solid var(--color-borde);
+  border: 1px solid var(--borde-control);
   border-radius: var(--radio);
-  background: var(--color-superficie);
-  color: var(--color-texto);
+  background: var(--superficie);
+  color: var(--tinta);
   font: inherit;
   font-size: var(--texto-base);
+  transition:
+    border-color var(--t-rapida),
+    box-shadow var(--t-rapida);
+}
+
+.campo__entrada:hover {
+  border-color: var(--tinta-suave);
+}
+
+.campo__entrada:focus {
+  border-color: var(--acento);
+  box-shadow: 0 0 0 3px var(--acento-tinte-fuerte);
 }
 
 .campo__entrada[aria-invalid='true'] {
-  border-color: var(--color-error);
+  border-color: var(--peligro);
 }
 
 .campo__error {
-  color: var(--color-error);
+  color: var(--peligro);
   font-size: var(--texto-base);
 }
 
 /* Avisos y confirmaciones */
 .aviso {
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--color-borde);
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--borde-suave);
+  border-left-width: 6px;
   border-radius: var(--radio);
-  background: var(--color-superficie);
+  background: var(--superficie);
+  box-shadow: var(--sombra-1);
 }
 
 .aviso--error {
-  border-left: 6px solid var(--color-error);
+  border-color: rgb(139 58 58 / 30%);
+  border-left-color: var(--peligro);
+  background: var(--peligro-fondo);
 }
 
 .aviso--exito {
-  border-left: 6px solid var(--color-exito);
+  border-color: rgb(46 107 69 / 30%);
+  border-left-color: var(--exito);
+  background: var(--exito-fondo);
 }
 
 .aviso__que-hacer {
   margin: 0.25rem 0 0;
-  color: var(--color-texto-suave);
+  color: var(--tinta-suave);
 }
 
 .confirmacion {
   max-width: 28rem;
-  padding: 1.25rem;
-  border: 1px solid var(--color-borde);
-  border-radius: var(--radio);
-  background: var(--color-superficie);
+  padding: 1.5rem;
+  border: 1px solid var(--borde-suave);
+  border-radius: var(--radio-medio);
+  background: var(--superficie);
+  box-shadow: var(--sombra-2);
 }
 
 .confirmacion__acciones {
@@ -176,7 +187,7 @@ h3 {
   }
 }
 
-/* Marco y navegación [S0-12] */
+/* Marco y navegación [S0-12, ADR-0028] */
 .solo-lectores {
   position: absolute;
   width: 1px;
@@ -186,33 +197,74 @@ h3 {
   white-space: nowrap;
 }
 
-.marco__encabezado {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.75rem 1.5rem;
-  padding: 0.5rem var(--espacio);
-  border-bottom: 1px solid var(--color-borde);
-  background: var(--color-superficie);
+.marco {
+  display: grid;
+  grid-template-columns: 17rem minmax(0, 1fr);
+  min-height: 100vh;
 }
 
-.marco__logo {
+.marco__cuerpo {
+  min-width: 0;
+}
+
+/* Barra lateral: fija a la altura de la pantalla en tablet horizontal y computadora */
+.barra {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  box-sizing: border-box;
+  height: 100vh;
+  padding: 1.75rem 1rem 1.25rem;
+  overflow-y: auto;
+  border-right: 1px solid var(--borde-suave);
+  background: var(--superficie);
+}
+
+.barra__logo {
   display: inline-flex;
   align-items: center;
+  align-self: flex-start;
   min-height: var(--tactil-minimo);
+  padding-inline: 0.75rem;
+  color: var(--tinta);
   font-family: var(--fuente-titulo);
-  font-size: 1.5rem;
+  font-size: 1.625rem;
   font-weight: 700;
-  color: var(--color-acento);
+  letter-spacing: 0.02em;
   text-decoration: none;
 }
 
-.marco__contenido {
-  padding: var(--espacio);
+.barra__logo::after {
+  content: '';
+  align-self: flex-end;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin: 0 0 0.6rem 0.25rem;
+  border-radius: 50%;
+  background: var(--acento);
+}
+
+.barra__navs {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.barra__grupo {
+  display: grid;
+  gap: 0.375rem;
+}
+
+.barra__titulo {
+  margin: 0;
+  padding-inline: 0.75rem;
+  color: var(--tinta-suave);
 }
 
 .nav,
-.nav-mas__lista,
 .accesos {
   display: flex;
   flex-wrap: wrap;
@@ -222,58 +274,168 @@ h3 {
   list-style: none;
 }
 
+.barra .nav {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  gap: 0.125rem;
+}
+
 .nav__enlace,
 .acceso {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
   min-height: var(--tactil-minimo);
   padding: 0.5rem 0.75rem;
   border: 1px solid transparent;
   border-radius: var(--radio);
-  color: var(--color-acento);
+  color: var(--tinta-suave);
   font-size: var(--texto-base);
   text-decoration: none;
+  transition:
+    background var(--t-rapida),
+    color var(--t-rapida);
 }
 
-.acceso {
-  border-color: var(--color-borde);
-  background: var(--color-superficie);
+.nav__enlace {
+  position: relative;
+  display: flex;
+}
+
+.nav__enlace:hover {
+  background: var(--acento-tinte);
+  color: var(--tinta);
 }
 
 .nav__enlace[aria-current='page'] {
-  border-color: var(--color-acento);
-  background: var(--color-fondo);
-  font-weight: 700;
+  background: var(--acento-tinte-fuerte);
+  color: var(--acento);
+  font-weight: 600;
+}
+
+.nav__enlace[aria-current='page']::before {
+  content: '';
+  position: absolute;
+  inset-block: 0.5rem;
+  inset-inline-start: 0;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--acento);
+}
+
+.nav__texto {
+  flex: 1;
+}
+
+.acceso {
+  border-color: var(--borde-control);
+  background: var(--superficie);
+  color: var(--acento);
+}
+
+.acceso:hover {
+  background: var(--acento-tinte);
 }
 
 .nav__enlace:focus-visible,
 .acceso:focus-visible,
-.marco__logo:focus-visible,
-.nav-mas__resumen:focus-visible {
-  outline: 3px solid var(--color-acento);
+.barra__logo:focus-visible {
+  outline: 3px solid var(--acento);
   outline-offset: 2px;
 }
 
 .nav__numero {
   font-family: var(--fuente-etiqueta);
-  font-size: var(--texto-base);
-  color: var(--color-texto-suave);
+  font-size: var(--texto-rotulo);
+  color: var(--tinta-suave);
 }
 
 .nav__visitada {
-  color: var(--color-exito);
+  color: var(--exito);
+  font-weight: 700;
 }
 
-.nav-mas__resumen {
-  display: inline-flex;
-  align-items: center;
-  min-height: var(--tactil-minimo);
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--color-borde);
-  border-radius: var(--radio);
-  color: var(--color-acento);
-  cursor: pointer;
+.icono {
+  flex: none;
+}
+
+/* Encabezado: fecha en monoespaciada y saludo */
+.marco__cabecera {
+  display: grid;
+  gap: 0.25rem;
+  padding: 1.75rem clamp(1rem, 3vw, 2.5rem) 0;
+}
+
+.marco__fecha {
+  margin: 0;
+}
+
+.marco__saludo {
+  margin: 0;
+  font-family: var(--fuente-titulo);
+  font-size: 1.125rem;
+  color: var(--tinta-suave);
+}
+
+.marco__contenido {
+  box-sizing: border-box;
+  max-width: 80rem;
+  padding: 1rem clamp(1rem, 3vw, 2.5rem) 3rem;
+}
+
+/* Pantallas angostas (teléfono y tablet vertical): la barra pasa arriba y se desplaza sola */
+@media (max-width: 63.99rem) {
+  .marco {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .barra {
+    position: static;
+    height: auto;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem 0;
+    border-right: 0;
+    border-bottom: 1px solid var(--borde-suave);
+    overflow: visible;
+  }
+
+  .barra__navs {
+    flex-direction: row;
+    gap: 1.25rem;
+    padding-bottom: 0.5rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
+  }
+
+  .barra__navs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .barra__grupo {
+    flex: none;
+    scroll-snap-align: start;
+  }
+
+  .barra__titulo {
+    display: none;
+  }
+
+  .barra .nav {
+    flex-direction: row;
+  }
+
+  .nav__enlace {
+    white-space: nowrap;
+  }
+
+  .nav__enlace[aria-current='page']::before {
+    inset-block: auto 0;
+    inset-inline: 0.5rem;
+    width: auto;
+    height: 3px;
+    border-radius: 3px 3px 0 0;
+  }
 }
 
 .tabla {
@@ -370,9 +532,7 @@ h3 {
   gap: var(--espacio);
 }
 
-.pestanas {
-  display: flex;
-  gap: 0.5rem;
+.cotizador__pestanas {
   margin-block: var(--espacio);
 }
 
@@ -384,7 +544,7 @@ h3 {
 
 /* En pantalla grande: datos a la izquierda y documento a la derecha, sin pestañas. */
 @media (min-width: 900px) {
-  .pestanas {
+  .cotizador__pestanas {
     display: none;
   }
 

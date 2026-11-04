@@ -10,6 +10,9 @@ export const textos = {
     principal: 'Secciones del trabajo',
     secundaria: 'Otras secciones',
     mas: 'Más',
+    flujoDeTrabajo: 'Flujo de trabajo',
+    administracion: 'Administración',
+    saludo: (nombre: string): string => `Hola, ${nombre}.`,
     yaVisitada: 'ya visitada',
     secciones: {
       catalogo: 'Catálogo',
@@ -25,7 +28,63 @@ export const textos = {
   },
   inicio: {
     titulo: 'Panel de inicio',
-    descripcion: 'Elige por dónde quieres empezar.',
+    descripcion: 'Elige por dónde quieres empezar. Cada sección sigue el orden real del trabajo.',
+    nota: 'Todo lo que captures se guarda en la tablet y sale solo cuando hay internet. Puedes seguir trabajando sin conexión.',
+    resumen: {
+      ayudaVentas:
+        '"Ventas" es el efectivo recibido hoy: ventas de mostrador más los pagos de las órdenes, con IVA. Una venta cancelada no suma.',
+      ayudaPorCobrar:
+        'Lo que los clientes todavía deben de sus órdenes. Se resalta lo que ya pasó del plazo.',
+      ayudaTendencia: 'Lo que entró cada día en el último mes, en hora de México.',
+      ayudaTuTurno: 'Lo que cobraste tú hoy. El corte de caja se hace en el Mostrador.',
+      hoy: 'Ventas de hoy',
+      ayer: 'Ayer',
+      mediosDePago: 'Cobros de hoy por medio de pago',
+      efectivo: 'Efectivo',
+      transferencia: 'Transferencia',
+      cobros: (n: number): string => (n === 1 ? '1 cobro' : `${String(n)} cobros`),
+      porCobrar: 'Por cobrar',
+      cuentas: (n: number): string => (n === 1 ? '1 cuenta' : `${String(n)} cuentas`),
+      atrasadas: (n: number): string => (n === 1 ? '1 atrasada' : `${String(n)} atrasadas`),
+      sinDeudas: 'Nadie te debe nada',
+      produccion: 'En producción',
+      trabajos: (n: number): string => (n === 1 ? '1 trabajo' : `${String(n)} trabajos`),
+      tendencia: 'Ingresos de los últimos 31 días',
+      tuTurno: 'Tus cobros de hoy',
+      vacioTitulo: 'Todavía no hay movimiento',
+      vacio:
+        'Cuando cotices, cobres o abras una orden, aquí verás cómo va el día. Empieza por revisar tu catálogo.',
+      cargando: 'Cargando el resumen…',
+    },
+    guia: {
+      titulo: 'Primeros pasos',
+      descripcion: 'Cinco pasos en el orden real del trabajo. Se marcan solos al visitarlos.',
+      paso: (n: number): string => `Paso ${String(n)}`,
+      hecho: 'Ya lo visitaste',
+      pendiente: 'Pendiente',
+      completado: 'Ya conoces las cinco secciones. Esta guía se oculta sola.',
+      boton: '¿Por dónde empiezo?',
+      ventanaTitulo: '¿Por dónde empiezo?',
+      siguiente: (nombre: string): string => `Sigue por ${nombre}.`,
+      todoVisto:
+        'Ya visitaste las cinco secciones del flujo de trabajo. Cuando dudes, vuelve al inicio.',
+      ir: 'Ir ahora',
+      cerrar: 'Entendido',
+      avisoCatalogo:
+        'Revisa primero tu catálogo: el cotizador y el mostrador usan sus productos y precios.',
+      irAlCatalogo: 'Ir al Catálogo →',
+    },
+    descripciones: {
+      catalogo: 'Tus productos y precios, siempre al día.',
+      cotizador: 'Calcula con el cliente enfrente y mándale el PDF por WhatsApp.',
+      ordenes: 'Da seguimiento a cada trabajo, del anticipo a la entrega.',
+      mostrador: 'Cobra al momento, imprime el ticket y haz tu corte.',
+      reportes: 'Cómo va el negocio: ventas, producción y cobros.',
+      clientes: 'Tus clientes y su historial.',
+      'cuentas-por-cobrar': 'Lo que te deben y desde cuándo.',
+      usuarios: 'Personas, PIN y tablets.',
+      configuracion: 'Condiciones, aviso de privacidad y más.',
+    },
   },
   entrada: {
     titulo: 'Entrar',
@@ -132,6 +191,126 @@ export const textos = {
     },
     esperaSegundos: (segundos: number): string =>
       `Intenta de nuevo en ${String(segundos)} segundos.`,
+  },
+  catalogo: {
+    titulo: 'Catálogo',
+    descripcion:
+      'Tus productos y precios de lista, con IVA incluido. Lo que cambies aquí se usa en el cotizador y en el mostrador.',
+    agregar: 'Agregar producto',
+    importar: 'Importar desde archivo',
+    editar: 'Editar',
+    desactivar: 'Desactivar',
+    activar: 'Activar',
+    activo: 'Activo',
+    inactivo: 'Inactivo',
+    vacioTitulo: 'Todavía no hay productos',
+    vacio:
+      'Agrega tu primer producto o importa muchos de una vez desde un archivo. Los productos nunca se borran: se desactivan.',
+    sinResultados: 'Ningún producto coincide con esa búsqueda.',
+    tipos: { CUSTOM: 'A medida', STANDARD: 'Pieza estándar', SERVICE: 'Servicio' },
+    unidades: {
+      SQUARE_METER: 'Metro cuadrado',
+      LINEAR_METER: 'Metro lineal',
+      PIECE: 'Pieza',
+      SERVICE: 'Servicio',
+    },
+    resumen: {
+      activos: 'Productos activos',
+      inactivos: 'Inactivos',
+      categorias: 'Categorías con productos',
+    },
+    filtros: {
+      titulo: 'Buscar',
+      buscar: 'Buscar por nombre o código',
+      categoria: 'Categoría',
+      tipo: 'Tipo',
+      todas: 'Todas',
+      todos: 'Todos',
+    },
+    columnas: {
+      producto: 'Producto',
+      venta: 'Cómo se vende',
+      precio: 'Precio con IVA',
+      estado: 'Estado',
+      acciones: 'Acciones',
+    },
+    formulario: {
+      tituloAlta: 'Agregar producto',
+      tituloEdicion: 'Editar producto',
+      nombre: 'Nombre',
+      codigo: 'Código (opcional)',
+      categoria: 'Categoría',
+      tipo: 'Tipo',
+      unidad: 'Se cobra por',
+      baseLineal: 'El metro lineal se mide por',
+      largo: 'Largo',
+      perimetro: 'Perímetro',
+      precio: 'Precio de lista con IVA',
+      garantia: 'Garantía sugerida en meses (opcional)',
+      exento: 'Este producto está exento de IVA',
+      historial: 'Cambios de precio',
+      guardar: 'Guardar producto',
+      guardando: 'Guardando…',
+      cancelar: 'Cancelar',
+    },
+    avisos: {
+      creado: 'Producto agregado al catálogo.',
+      guardado: 'Cambios guardados.',
+      desactivado: 'Producto desactivado: ya no sale para vender, pero se conserva.',
+      activado: 'Producto activado: ya se puede vender.',
+    },
+    errores: {
+      NAME_REQUIRED: {
+        mensaje: 'Falta el nombre del producto.',
+        queHacer: 'Escríbelo y guarda otra vez.',
+      },
+      PRICE_INVALID: {
+        mensaje: 'El precio no es válido.',
+        queHacer: 'Escríbelo en pesos, por ejemplo 280.00.',
+      },
+      PRICE_NEGATIVE: {
+        mensaje: 'El precio no puede ser negativo.',
+        queHacer: 'Corrígelo y guarda otra vez.',
+      },
+      KIND_UNIT_MISMATCH: {
+        mensaje: 'Ese tipo de producto no se cobra de esa manera.',
+        queHacer: 'Elige otra forma de cobro.',
+      },
+      RULE_UNIT_MISMATCH: {
+        mensaje: 'La forma de cobro no coincide con la regla de precio.',
+        queHacer: 'Elige otra forma de cobro.',
+      },
+      RULE_NOT_REGISTERED: {
+        mensaje: 'Esa forma de cobro todavía no está disponible.',
+        queHacer: 'Elige otra o avisa a soporte.',
+      },
+      RULE_PARAMS_INVALID: {
+        mensaje: 'Faltan datos para calcular el precio de este producto.',
+        queHacer: 'Revisa cómo se mide y guarda otra vez.',
+      },
+      FISCAL_INVALID: {
+        mensaje: 'Los datos fiscales de la categoría no son válidos.',
+        queHacer: 'Avisa a soporte para corregirlos.',
+      },
+      WARRANTY_INVALID: {
+        mensaje: 'La garantía debe ser un número de meses mayor a cero.',
+        queHacer: 'Corrígela o déjala en blanco.',
+      },
+      CODE_TAKEN: {
+        mensaje: 'Ese código ya lo usa otro producto.',
+        queHacer: 'Escribe uno distinto.',
+      },
+      NOT_FOUND: { mensaje: 'No se encontró el producto.', queHacer: 'Recarga el catálogo.' },
+      CATEGORY_NOT_FOUND: { mensaje: 'La categoría ya no existe.', queHacer: 'Elige otra.' },
+      NOT_AUTHORIZED: {
+        mensaje: 'Solo los administradores cambian el catálogo.',
+        queHacer: 'Entra con una cuenta de administrador.',
+      },
+      CATALOG_UNAVAILABLE: {
+        mensaje: 'No se pudo leer o guardar el catálogo.',
+        queHacer: 'Revisa tu conexión y vuelve a intentar.',
+      },
+    },
   },
   importar: {
     titulo: 'Importar el catálogo',
@@ -397,6 +576,9 @@ export const textos = {
       atrasadas: 'Atrasadas',
       sinFecha: 'Sin fecha válida',
       desde: (dias: number): string => `${String(dias)} días o más`,
+      cuantas: (n: number): string => (n === 1 ? '1 cuenta' : `${String(n)} cuentas`),
+      leyenda: (dias: number): string =>
+        `Atrasadas (en rojo): las que llevan ${String(dias)} días o más sin pagarse.`,
       entre: (de: number, a: number): string => `De ${String(de)} a ${String(a)} días`,
     },
     cajeros: {
@@ -414,10 +596,17 @@ export const textos = {
       cobros: 'Cobros',
     },
   },
+  componentes: {
+    cerrar: 'Cerrar',
+    cerrarAviso: 'Cerrar este aviso',
+    ayudaSobre: 'Ayuda sobre',
+    maximo: 'Máximo',
+  },
   cuentas: {
     titulo: 'Cuentas por cobrar',
     descripcion: (dias: number): string =>
       `Órdenes con saldo pendiente, de la más atrasada a la más reciente. Se resaltan las que llevan ${String(dias)} días o más.`,
+    vacioTitulo: 'Todo está cobrado',
     vacio: 'No hay cuentas por cobrar. Todas las órdenes están pagadas.',
     sinCliente: 'Sin cliente',
     sinFecha: 'Sin fecha',
@@ -624,7 +813,9 @@ export const textos = {
     },
     hoy: {
       titulo: 'Ventas de hoy',
+      vacioTitulo: 'Sin ventas por ahora',
       vacio: 'Todavía no hay ventas hoy.',
+      acciones: 'Acciones',
       folio: 'Folio',
       hora: 'Hora',
       cobro: 'Cobró',
@@ -682,6 +873,7 @@ export const textos = {
     sinPersona: 'Para trabajar con órdenes, elige quién eres.',
     elegirPersona: 'Entrar con PIN',
     cargando: 'Cargando órdenes…',
+    vacioTitulo: 'Todavía no hay órdenes',
     vacio:
       'Todavía no hay órdenes. Cuando un cliente acepte una cotización, créala aquí en un toque.',
     porConvertir: {
@@ -720,6 +912,7 @@ export const textos = {
       saldo: 'Saldo',
     },
     detalle: {
+      resumen: 'Cobro y saldo',
       volver: 'Volver a las órdenes',
       cliente: 'Cliente',
       obra: 'Domicilio de la obra',
@@ -949,6 +1142,8 @@ export const textos = {
     },
   },
   clientes: {
+    lista: 'Tus clientes',
+    vacioTitulo: 'Aún no hay a quién mostrar',
     ficha: {
       titulo: 'Historial de',
       ver: 'Ver historial',
@@ -1278,6 +1473,7 @@ export const textos = {
     },
     historial: {
       titulo: 'Cotizaciones de este cliente',
+      vacioTitulo: 'Todavía no hay cotizaciones',
       vacio: 'Este cliente todavía no tiene cotizaciones.',
       filtrar: 'Buscar por cliente (nombre o WhatsApp)',
       sinResultados: 'Ninguna cotización coincide con esa búsqueda.',
@@ -1434,6 +1630,7 @@ export const textos = {
     necesitaInternet: 'Para hacer esto necesitas internet.',
   },
   seccionVacia: {
+    titulo: 'Todavía no hay nada aquí',
     descripcion: 'Esta sección estará lista pronto.',
   },
 } as const;

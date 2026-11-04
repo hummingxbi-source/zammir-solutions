@@ -6,6 +6,7 @@ import { formatearPesos } from '../../../shared/ui/formatos';
 import { textos } from '../../../shared/i18n/textos';
 import { Aviso } from '../../../shared/ui/Aviso';
 import { Boton } from '../../../shared/ui/Boton';
+import { Ventana } from '../../../shared/ui/Ventana';
 import { Campo, CampoNumerico } from '../../../shared/ui/Campo';
 
 const t = textos.ordenes.cobro;
@@ -86,70 +87,72 @@ export function DialogoDeCobro({
   }
 
   return (
-    <form
-      role="dialog"
-      aria-label={t.titulo}
-      className="dialogo"
-      onSubmit={(e) => {
-        void registrar(e);
-      }}
-    >
-      <h3>{t.titulo}</h3>
-      <p>
-        {t.aCobrar}: <strong>{formatearPesos(saldoCents)}</strong>
-      </p>
-      {sugeridoCents !== null ? (
-        <p>
-          {t.sugerido}: <strong>{formatearPesos(sugeridoCents)}</strong>
-        </p>
-      ) : null}
-      {error !== null ? (
-        <Aviso tipo="error" queHacer={error.queHacer}>
-          {error.mensaje}
-        </Aviso>
-      ) : null}
-      <CampoNumerico
-        etiqueta={t.efectivoRecibido}
-        value={efectivoRecibido}
-        onChange={(e) => {
-          setEfectivoRecibido(e.target.value);
-          if (efectivoAplicar === '') {
+    <Ventana titulo={t.titulo} onCerrar={onCancelar}>
+      <form
+        className="formulario"
+        onSubmit={(e) => {
+          void registrar(e);
+        }}
+      >
+        <div className="cobro__monto">
+          <span className="rotulo">{t.aCobrar}</span>
+          <strong className="cifra cobro__cifra">{formatearPesos(saldoCents)}</strong>
+        </div>
+        {sugeridoCents !== null ? (
+          <p>
+            {t.sugerido}: <strong>{formatearPesos(sugeridoCents)}</strong>
+          </p>
+        ) : null}
+        {error !== null ? (
+          <Aviso tipo="error" queHacer={error.queHacer}>
+            {error.mensaje}
+          </Aviso>
+        ) : null}
+        <CampoNumerico
+          etiqueta={t.efectivoRecibido}
+          value={efectivoRecibido}
+          onChange={(e) => {
+            setEfectivoRecibido(e.target.value);
+            if (efectivoAplicar === '') {
+              setEfectivoAplicar(e.target.value);
+            }
+          }}
+        />
+        <CampoNumerico
+          etiqueta={t.efectivoAplicar}
+          value={efectivoAplicar}
+          onChange={(e) => {
             setEfectivoAplicar(e.target.value);
-          }
-        }}
-      />
-      <CampoNumerico
-        etiqueta={t.efectivoAplicar}
-        value={efectivoAplicar}
-        onChange={(e) => {
-          setEfectivoAplicar(e.target.value);
-        }}
-      />
-      {cambio > 0 ? (
-        <p role="status">
-          {t.cambioDe}: <strong>{formatearPesos(cambio)}</strong>
-        </p>
-      ) : null}
-      <CampoNumerico
-        etiqueta={t.transferenciaMonto}
-        value={transferencia}
-        onChange={(e) => {
-          setTransferencia(e.target.value);
-        }}
-      />
-      <Campo
-        etiqueta={t.referencia}
-        value={referencia}
-        onChange={(e) => {
-          setReferencia(e.target.value);
-        }}
-      />
-      <Boton type="submit" disabled={trabajando}>
-        {trabajando ? t.registrando : t.registrar}
-      </Boton>
-      <Boton variante="secundario" onClick={onCancelar}>
-        {t.cancelar}
-      </Boton>
-    </form>
+          }}
+        />
+        {cambio > 0 ? (
+          <p role="status" className="cobro__cambio">
+            {t.cambioDe}: <strong className="cifra">{formatearPesos(cambio)}</strong>
+          </p>
+        ) : null}
+        <CampoNumerico
+          etiqueta={t.transferenciaMonto}
+          value={transferencia}
+          onChange={(e) => {
+            setTransferencia(e.target.value);
+          }}
+        />
+        <Campo
+          etiqueta={t.referencia}
+          value={referencia}
+          onChange={(e) => {
+            setReferencia(e.target.value);
+          }}
+        />
+        <div className="formulario__acciones">
+          <Boton type="submit" disabled={trabajando}>
+            {trabajando ? t.registrando : t.registrar}
+          </Boton>
+          <Boton variante="secundario" onClick={onCancelar}>
+            {t.cancelar}
+          </Boton>
+        </div>
+      </form>
+    </Ventana>
   );
 }

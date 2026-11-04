@@ -20,6 +20,11 @@ import {
 import { textos } from '../../../shared/i18n/textos';
 import { Aviso } from '../../../shared/ui/Aviso';
 import { Boton } from '../../../shared/ui/Boton';
+import { EncabezadoDePagina } from '../../../shared/ui/EncabezadoDePagina';
+import { EstadoVacio } from '../../../shared/ui/EstadoVacio';
+import { EtiquetaDeEstado, type TonoDeEstado } from '../../../shared/ui/EtiquetaDeEstado';
+import { Indicador } from '../../../shared/ui/Indicador';
+import { Tarjeta } from '../../../shared/ui/Tarjeta';
 import { Campo } from '../../../shared/ui/Campo';
 import { Seleccion } from '../../../shared/ui/Seleccion';
 import { formatearPesos } from '../../../shared/ui/formatos';
@@ -35,6 +40,14 @@ const ESTADOS: readonly WorkOrderStatus[] = [
   'DELIVERED',
   'CANCELLED',
 ];
+
+const TONO_DE_ESTADO: Record<WorkOrderStatus, TonoDeEstado> = {
+  WAITING: 'espera',
+  IN_PROCESS: 'proceso',
+  READY: 'listo',
+  DELIVERED: 'entregado',
+  CANCELLED: 'cancelado',
+};
 
 export interface OrdenesProps {
   readonly deps: OrderDeps;
@@ -171,152 +184,180 @@ export function Ordenes(props: OrdenesProps): ReactElement {
   );
 
   return (
-    <section className="anima-entrada" aria-labelledby="titulo-ordenes">
-      <h1 id="titulo-ordenes">{t.titulo}</h1>
-      <p>{t.descripcion}</p>
+    <section className="anima-entrada">
+      <EncabezadoDePagina titulo={t.titulo} descripcion={t.descripcion} />
       {error !== null ? (
         <Aviso tipo="error" queHacer={error.queHacer}>
           {error.mensaje}
         </Aviso>
       ) : null}
 
-      <h2>{t.porConvertir.titulo}</h2>
-      {porConvertir.length === 0 ? (
-        <p>{t.porConvertir.vacio}</p>
-      ) : (
-        <ul className="accesos">
-          {porConvertir.map((q) => (
-            <li key={q.id}>
-              <Boton
-                disabled={creando === q.id}
+      {actor.role === 'ADMIN' ? (
+        <div className="indicadores">
+          <Indicador
+            rotulo={t.resumen.enProduccion}
+            valor={formatearPesos(resumen.inProductionCents)}
+          />
+          <Indicador
+            rotulo={t.resumen.porCobrar}
+            valor={formatearPesos(resumen.readyBalanceCents)}
+            tono="exito"
+          />
+        </div>
+      ) : null}
+
+      <div className="ordenes__lista">
+        <Tarjeta rotulo={t.porConvertir.titulo}>
+          {porConvertir.length === 0 ? (
+            <p className="mostrador__vacio">{t.porConvertir.vacio}</p>
+          ) : (
+            <ul className="productos productos--filas">
+              {porConvertir.map((q) => (
+                <li key={q.id} className="porconvertir">
+                  <span className="porconvertir__texto">
+                    <strong>{nombres.get(q.customerId)?.name ?? '—'}</strong>
+                    <span className="porconvertir__folio">{q.folio ?? q.tempFolio ?? ''}</span>
+                  </span>
+                  <Boton
+                    aria-label={`${t.porConvertir.crear} · ${nombres.get(q.customerId)?.name ?? '—'} · ${q.folio ?? q.tempFolio ?? ''}`}
+                    disabled={creando === q.id}
+                    onClick={() => {
+                      void convertir(q);
+                    }}
+                  >
+                    {creando === q.id ? t.porConvertir.creando : t.porConvertir.crear}
+                  </Boton>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Tarjeta>
+
+        <Tarjeta rotulo={t.filtro.titulo}>
+          <div className="filtros__chips" role="group" aria-label={t.filtro.titulo}>
+            <button
+              type="button"
+              className="chip"
+              aria-pressed={filtro === null}
+              onClick={() => {
+                setFiltro(null);
+              }}
+            >
+              {t.filtro.todas} ({String(ordenes.length)})
+            </button>
+            {ESTADOS.map((estado) => (
+              <button
+                key={estado}
+                type="button"
+                className="chip"
+                aria-pressed={filtro === estado}
                 onClick={() => {
-                  void convertir(q);
+                  setFiltro(estado);
                 }}
               >
-                {creando === q.id ? t.porConvertir.creando : t.porConvertir.crear} ·{' '}
-                {nombres.get(q.customerId)?.name ?? '—'} · {q.folio ?? q.tempFolio ?? ''}
-              </Boton>
-            </li>
-          ))}
-        </ul>
-      )}
+                {t.estados[estado]} ({String(ordenes.filter((o) => o.status === estado).length)})
+              </button>
+            ))}
+          </div>
 
-      <h2>{t.filtro.titulo}</h2>
-      <div className="pestanas" role="group" aria-label={t.filtro.titulo}>
-        <Boton
-          variante={filtro === null ? 'primario' : 'secundario'}
-          aria-pressed={filtro === null}
-          onClick={() => {
-            setFiltro(null);
-          }}
-        >
-          {t.filtro.todas} ({String(ordenes.length)})
-        </Boton>
-        {ESTADOS.map((estado) => (
-          <Boton
-            key={estado}
-            variante={filtro === estado ? 'primario' : 'secundario'}
-            aria-pressed={filtro === estado}
-            onClick={() => {
-              setFiltro(estado);
-            }}
-          >
-            {t.estados[estado]} ({String(ordenes.filter((o) => o.status === estado).length)})
-          </Boton>
-        ))}
-      </div>
+          <div className="filtros__campos">
+            <Seleccion
+              etiqueta={t.filtro.cliente}
+              value={clienteFiltro}
+              opciones={[
+                { valor: '', texto: t.filtro.todos },
+                ...[...nombres.values()].map((c) => ({ valor: c.id, texto: c.name })),
+              ]}
+              onChange={(e) => {
+                setClienteFiltro(e.target.value);
+              }}
+            />
+            <Seleccion
+              etiqueta={t.filtro.responsable}
+              value={responsableFiltro}
+              opciones={[
+                { valor: '', texto: t.filtro.todos },
+                ...props.personas.map((p) => ({ valor: p.id, texto: p.name })),
+              ]}
+              onChange={(e) => {
+                setResponsableFiltro(e.target.value);
+              }}
+            />
+            <Campo
+              etiqueta={t.filtro.desde}
+              type="date"
+              value={desde}
+              onChange={(e) => {
+                setDesde(e.target.value);
+              }}
+            />
+            <Campo
+              etiqueta={t.filtro.hasta}
+              type="date"
+              value={hasta}
+              onChange={(e) => {
+                setHasta(e.target.value);
+              }}
+            />
+          </div>
 
-      <Seleccion
-        etiqueta={t.filtro.cliente}
-        value={clienteFiltro}
-        opciones={[
-          { valor: '', texto: t.filtro.todos },
-          ...[...nombres.values()].map((c) => ({ valor: c.id, texto: c.name })),
-        ]}
-        onChange={(e) => {
-          setClienteFiltro(e.target.value);
-        }}
-      />
-      <Seleccion
-        etiqueta={t.filtro.responsable}
-        value={responsableFiltro}
-        opciones={[
-          { valor: '', texto: t.filtro.todos },
-          ...props.personas.map((p) => ({ valor: p.id, texto: p.name })),
-        ]}
-        onChange={(e) => {
-          setResponsableFiltro(e.target.value);
-        }}
-      />
-      <Campo
-        etiqueta={t.filtro.desde}
-        type="date"
-        value={desde}
-        onChange={(e) => {
-          setDesde(e.target.value);
-        }}
-      />
-      <Campo
-        etiqueta={t.filtro.hasta}
-        type="date"
-        value={hasta}
-        onChange={(e) => {
-          setHasta(e.target.value);
-        }}
-      />
-
-      {actor.role === 'ADMIN' ? (
-        <>
-          <h2>{t.resumen.titulo}</h2>
-          <dl className="documento__totales">
-            <dt>{t.resumen.enProduccion}</dt>
-            <dd>{formatearPesos(resumen.inProductionCents)}</dd>
-            <dt>{t.resumen.porCobrar}</dt>
-            <dd>{formatearPesos(resumen.readyBalanceCents)}</dd>
-          </dl>
-        </>
-      ) : null}
-
-      {cargado && ordenes.length === 0 ? <p>{t.vacio}</p> : null}
-      {cargado && ordenes.length > 0 && visibles.length === 0 ? (
-        <p>{t.filtro.sinResultados}</p>
-      ) : null}
-      {visibles.length > 0 ? (
-        <table className="tabla">
-          <thead>
-            <tr>
-              <th>{t.tabla.folio}</th>
-              <th>{t.tabla.cliente}</th>
-              <th>{t.tabla.estatus}</th>
-              <th>{t.tabla.total}</th>
-              <th>{t.tabla.saldo}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {visibles.map((o) => {
-              const saldo = balanceCents(o.totalCents, pagosDe(o.id));
-              return (
-                <tr key={o.id}>
-                  <td>
-                    <Boton
-                      variante="secundario"
-                      onClick={() => {
-                        setAbierta(o.id);
-                      }}
-                    >
-                      {o.folio ?? o.tempFolio}
-                    </Boton>
-                  </td>
-                  <td>{nombres.get(o.customerId)?.name ?? '—'}</td>
-                  <td>{t.estados[o.status]}</td>
-                  <td>{formatearPesos(o.totalCents)}</td>
-                  <td>{o.status === 'CANCELLED' ? '—' : formatearPesos(saldo)}</td>
+          {cargado && ordenes.length === 0 ? (
+            <EstadoVacio titulo={t.vacioTitulo} descripcion={t.vacio} icono="ordenes" />
+          ) : null}
+          {cargado && ordenes.length > 0 && visibles.length === 0 ? (
+            <p className="mostrador__vacio">{t.filtro.sinResultados}</p>
+          ) : null}
+          {visibles.length > 0 ? (
+            <table className="tabla tabla--apilada" aria-label={t.filtro.titulo}>
+              <thead>
+                <tr>
+                  <th scope="col">{t.tabla.folio}</th>
+                  <th scope="col">{t.tabla.cliente}</th>
+                  <th scope="col">{t.tabla.estatus}</th>
+                  <th scope="col" className="tabla__num">
+                    {t.tabla.total}
+                  </th>
+                  <th scope="col" className="tabla__num">
+                    {t.tabla.saldo}
+                  </th>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      ) : null}
+              </thead>
+              <tbody>
+                {visibles.map((o) => {
+                  const saldo = balanceCents(o.totalCents, pagosDe(o.id));
+                  return (
+                    <tr key={o.id}>
+                      <th scope="row">
+                        <Boton
+                          variante="secundario"
+                          onClick={() => {
+                            setAbierta(o.id);
+                          }}
+                        >
+                          {o.folio ?? o.tempFolio}
+                        </Boton>
+                      </th>
+                      <td data-label={t.tabla.cliente}>{nombres.get(o.customerId)?.name ?? '—'}</td>
+                      <td data-label={t.tabla.estatus}>
+                        <EtiquetaDeEstado
+                          tono={TONO_DE_ESTADO[o.status]}
+                          texto={t.estados[o.status]}
+                        />
+                      </td>
+                      <td data-label={t.tabla.total} className="tabla__num">
+                        {formatearPesos(o.totalCents)}
+                      </td>
+                      <td data-label={t.tabla.saldo} className="tabla__num">
+                        {o.status === 'CANCELLED' ? '—' : formatearPesos(saldo)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          ) : null}
+        </Tarjeta>
+      </div>
     </section>
   );
 }

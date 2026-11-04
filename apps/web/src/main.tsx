@@ -3,10 +3,19 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router';
 
 import { App } from './App';
+import { Muestras } from './dev/Muestras';
 import { createComposition } from './composition';
 import { ProveedorSesionAdmin } from './modules/identity/ui/SesionAdmin';
 import { registerSW } from 'virtual:pwa-register';
+import '@fontsource/fraunces/latin-400.css';
+import '@fontsource/fraunces/latin-700.css';
+import '@fontsource/ibm-plex-mono/latin-400.css';
+import '@fontsource/ibm-plex-mono/latin-500.css';
+import '@fontsource/source-serif-4/latin-400.css';
+import '@fontsource/source-serif-4/latin-600.css';
+import './shared/ui/tokens.css';
 import './shared/ui/estilos.css';
+import './shared/ui/componentes.css';
 
 // Guarda la aplicación en la tablet para abrirla sin internet [RNF-01].
 registerSW({ immediate: true });
@@ -52,6 +61,7 @@ createRoot(root).render(
           prepararOrdenes={composition.prepararOrdenes}
           prepararCuentas={composition.prepararCuentas}
           prepararReportes={composition.prepararReportes}
+          muestras={import.meta.env.DEV ? <Muestras /> : null}
           historialDeCliente={composition.historialDeCliente}
           prepararMostrador={composition.prepararMostrador}
           sincronizacion={composition.envio?.visible}

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within, configure } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import {
   fixedClock,
@@ -9,10 +9,15 @@ import {
   type ManageCustomersDeps,
 } from '@zammir/core';
 import { clientesEnMemoriaDePrueba } from '@zammir/core/testing';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { App } from '../../../App';
 import { ProveedorSesionAdmin } from '../../identity/ui/SesionAdmin';
+
+// La primera pantalla de cada archivo arma toda la aplicación y, con cientos de pruebas en paralelo, puede
+// pasar de los 5 s por omisión. Solo cambia cuánto se espera, no lo que se comprueba.
+vi.setConfig({ testTimeout: 30_000 });
+configure({ asyncUtilTimeout: 5_000 });
 
 const instante = new Date('2026-10-30T18:00:00.000Z');
 

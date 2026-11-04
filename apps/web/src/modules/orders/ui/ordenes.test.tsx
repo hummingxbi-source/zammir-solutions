@@ -264,7 +264,7 @@ describe('Órdenes de trabajo', () => {
     });
     fireEvent.click(within(dialogo).getByRole('button', { name: 'Continuar' }));
     await waitFor(() => {
-      expect(screen.getByText(/En proceso/, { selector: 'strong' })).toBeTruthy();
+      expect(screen.getByText(/En proceso/, { selector: '.etiqueta-estado' })).toBeTruthy();
     });
   });
 
@@ -276,11 +276,11 @@ describe('Órdenes de trabajo', () => {
     await screen.findByText(/Anticipo · Transferencia/);
     fireEvent.click(screen.getByRole('button', { name: /Avanzar a En proceso/ }));
     await waitFor(() => {
-      expect(screen.getByText('En proceso', { selector: 'strong' })).toBeTruthy();
+      expect(screen.getByText('En proceso', { selector: '.etiqueta-estado' })).toBeTruthy();
     });
     fireEvent.click(screen.getByRole('button', { name: /Avanzar a Listo/ }));
     await waitFor(() => {
-      expect(screen.getByText('Listo', { selector: 'strong' })).toBeTruthy();
+      expect(screen.getByText('Listo', { selector: '.etiqueta-estado' })).toBeTruthy();
     });
     expect(screen.getByRole('button', { name: 'Entregar' })).toBeTruthy();
   });
@@ -292,9 +292,9 @@ describe('Órdenes de trabajo', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Registrar cobro' }));
     await screen.findByText(/Anticipo · Transferencia/);
     fireEvent.click(screen.getByRole('button', { name: /Avanzar a En proceso/ }));
-    await screen.findByText('En proceso', { selector: 'strong' });
+    await screen.findByText('En proceso', { selector: '.etiqueta-estado' });
     fireEvent.click(screen.getByRole('button', { name: /Avanzar a Listo/ }));
-    await screen.findByText('Listo', { selector: 'strong' });
+    await screen.findByText('Listo', { selector: '.etiqueta-estado' });
     fireEvent.click(screen.getByRole('button', { name: 'Entregar' }));
     const dialogo = await screen.findByRole('dialog');
     fireEvent.change(within(dialogo).getByLabelText('Motivo'), {
@@ -305,7 +305,7 @@ describe('Órdenes de trabajo', () => {
     });
     fireEvent.click(within(dialogo).getByRole('button', { name: 'Continuar' }));
     await waitFor(() => {
-      expect(screen.getByText('Entregado', { selector: 'strong' })).toBeTruthy();
+      expect(screen.getByText('Entregado', { selector: '.etiqueta-estado' })).toBeTruthy();
     });
   });
 
@@ -319,7 +319,7 @@ describe('Órdenes de trabajo', () => {
     fireEvent.change(within(dialogo).getByLabelText('Motivo'), { target: { value: 'Duplicada' } });
     fireEvent.click(within(dialogo).getByRole('button', { name: 'Continuar' }));
     await waitFor(() => {
-      expect(screen.getByText('Cancelado', { selector: 'strong' })).toBeTruthy();
+      expect(screen.getByText('Cancelado', { selector: '.etiqueta-estado' })).toBeTruthy();
     });
   });
 

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import {
   asId,
   err,
@@ -30,8 +30,8 @@ const ids = {
   },
 };
 
-function montar(actor: QuoteActor = cajero) {
-  const reloj = fixedClock(new Date('2026-10-31T18:00:00.000Z'));
+function montar(actor: QuoteActor = cajero, instante = '2026-10-31T18:00:00.000Z') {
+  const reloj = fixedClock(new Date(instante));
   const outbox = inMemorySyncOutbox({ clock: reloj });
   const cash: CashDeps = {
     shifts: outboxCashShiftStore(outbox),
@@ -120,5 +120,17 @@ describe('Turno de caja', () => {
     montar(admin);
     expect(await screen.findByText('Corte del día')).toBeTruthy();
     expect(await screen.findByText('No hubo turnos ese día.')).toBeTruthy();
+  });
+});
+
+describe('Turno de caja · fechas de México', () => {
+  it('la lista de turnos muestra el día y la hora de México, no el día de UTC', async () => {
+    // 1 nov 03:00 UTC = 31 oct 21:00 en la Ciudad de México.
+    montar(cajero, '2026-11-01T03:00:00.000Z');
+    fireEvent.click(await screen.findByRole('button', { name: 'Abrir turno' }));
+    await screen.findByText(/Turno abierto desde las 21:00/);
+    const tabla = await screen.findByRole('table', { name: 'Turnos' });
+    expect(within(tabla).getByText('2026-10-31 21:00')).toBeTruthy();
+    expect(within(tabla).queryByText(/2026-11-01/)).toBeNull();
   });
 });

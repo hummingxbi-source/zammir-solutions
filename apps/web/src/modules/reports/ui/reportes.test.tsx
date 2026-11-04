@@ -159,21 +159,20 @@ describe('Reportes', () => {
 
   it('ventas de hoy, la semana y el mes al centavo, con la venta cancelada fuera', async () => {
     await montar();
-    const [tabla] = await screen.findAllByRole('table');
-    if (tabla === undefined) {
-      throw new Error('tabla');
-    }
+    const tarjeta = async (nombre: string) =>
+      within(await screen.findByRole('region', { name: nombre }));
     // Hoy: venta 116 + transferencia de orden 300.
-    expect(celdaDe(tabla, 'Hoy', 'Ventas')).toBe('$416.00');
-    expect(celdaDe(tabla, 'Esta semana', 'Ventas')).toBe('$416.00');
-    expect(celdaDe(tabla, 'Este mes', 'Ventas')).toBe('$416.00');
+    expect((await tarjeta('Hoy')).getByText('$416.00')).toBeTruthy();
+    expect((await tarjeta('Esta semana')).getByText('$416.00')).toBeTruthy();
+    const mes = await tarjeta('Este mes');
+    expect(mes.getByText('$416.00')).toBeTruthy();
     // El mes anterior (octubre) vendió $200: el mes sube 108.00 %.
-    expect(celdaDe(tabla, 'Este mes', 'Comparado con el anterior')).toContain('Sube 108.00 %');
-    expect(celdaDe(tabla, 'Este mes', 'Periodo anterior')).toContain('$200.00');
+    expect(mes.getByText('Sube 108.00 %')).toBeTruthy();
+    expect(mes.getByText(/Periodo anterior: \$200\.00/)).toBeTruthy();
     // Ayer no hubo ventas: no hay contra qué comparar y no sale un porcentaje infinito.
-    expect(celdaDe(tabla, 'Hoy', 'Comparado con el anterior')).toBe(
-      'Sin ventas en el periodo anterior para comparar',
-    );
+    expect(
+      (await tarjeta('Hoy')).getByText('Sin ventas en el periodo anterior para comparar'),
+    ).toBeTruthy();
   });
 
   it('los productos más vendidos salen por importe y por cantidad', async () => {
@@ -224,18 +223,15 @@ describe('Reportes', () => {
   it('los cobros por método cambian al elegir otro periodo', async () => {
     await montar();
     await screen.findByText('Cobros por método de pago');
-    const selector = screen.getAllByLabelText('Periodo').at(-1);
-    if (selector === undefined) {
-      throw new Error('selector');
-    }
     const resumen = (): string =>
       screen.getByText('Efectivo', { selector: 'dt' }).nextElementSibling?.textContent ?? '';
     expect(resumen()).toBe('$116.00');
-    fireEvent.change(selector, { target: { value: 'DAY' } });
-    expect(resumen()).toBe('$116.00');
-    expect(screen.getByText('Cobros', { selector: 'dt' }).nextElementSibling?.textContent).toBe(
-      '2',
+    const grupo = within(
+      screen.getAllByRole('tablist', { name: 'Periodo' }).at(-1) ?? document.body,
     );
+    fireEvent.click(grupo.getByRole('tab', { name: 'Hoy' }));
+    expect(resumen()).toBe('$116.00');
+    expect(screen.getByText('Cobros: 2')).toBeTruthy();
   });
 
   it('sin datos todo sale en cero y con avisos claros', async () => {
@@ -247,7 +243,7 @@ describe('Reportes', () => {
   it('en el celular las tablas se apilan: todas llevan la clase y cada celda su rótulo', async () => {
     await montar();
     const tablas = await screen.findAllByRole('table');
-    expect(tablas.length).toBeGreaterThan(4);
+    expect(tablas.length).toBeGreaterThanOrEqual(4);
     for (const tabla of tablas) {
       expect(tabla.className).toContain('tabla--apilada');
       for (const celda of tabla.querySelectorAll('tbody td')) {

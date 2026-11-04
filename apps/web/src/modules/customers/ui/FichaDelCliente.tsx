@@ -3,7 +3,11 @@ import type { ReactElement } from 'react';
 import type { Customer, CustomerHistory } from '@zammir/core';
 
 import { textos } from '../../../shared/i18n/textos';
+import { Boton } from '../../../shared/ui/Boton';
 import { formatearPesos } from '../../../shared/ui/formatos';
+import { Icono } from '../../../shared/ui/Icono';
+import { Indicador } from '../../../shared/ui/Indicador';
+import { Tarjeta } from '../../../shared/ui/Tarjeta';
 
 const t = textos.clientes.ficha;
 
@@ -39,26 +43,30 @@ export function FichaDelCliente({ cliente, cargar, onCerrar }: FichaDelClientePr
   }, [cargar]);
 
   return (
-    <section aria-label={`${t.titulo} ${cliente.name}`}>
-      <h2>
-        {t.titulo} · {cliente.name}
-      </h2>
-      <button type="button" className="boton boton--secundario" onClick={onCerrar}>
-        {t.cerrar}
-      </button>
+    <Tarjeta
+      rotulo={`${t.titulo} ${cliente.name}`}
+      acciones={
+        <Boton variante="secundario" onClick={onCerrar}>
+          {t.cerrar}
+        </Boton>
+      }
+    >
       {historial === null ? (
         <p role="status">{t.cargando}</p>
       ) : (
         <>
-          {historial.recurring ? <p>{t.recurrente}</p> : null}
-          <dl className="documento__totales">
-            <dt>{t.entregadas}</dt>
-            <dd>{String(historial.deliveredOrders)}</dd>
-            <dt>{t.comprado}</dt>
-            <dd>{formatearPesos(historial.totalPurchasedCents)}</dd>
-          </dl>
+          {historial.recurring ? (
+            <p className="ficha__recurrente">
+              <Icono nombre="verificar" />
+              {t.recurrente}
+            </p>
+          ) : null}
+          <div className="indicadores">
+            <Indicador rotulo={t.entregadas} valor={String(historial.deliveredOrders)} />
+            <Indicador rotulo={t.comprado} valor={formatearPesos(historial.totalPurchasedCents)} />
+          </div>
 
-          <h3>{t.cotizaciones}</h3>
+          <h3 className="rotulo ficha__subtitulo">{t.cotizaciones}</h3>
           {historial.quotes.length === 0 ? (
             <p>{t.sin}</p>
           ) : (
@@ -71,7 +79,7 @@ export function FichaDelCliente({ cliente, cargar, onCerrar }: FichaDelClientePr
             </ul>
           )}
 
-          <h3>{t.ordenes}</h3>
+          <h3 className="rotulo ficha__subtitulo">{t.ordenes}</h3>
           {historial.orders.length === 0 ? (
             <p>{t.sin}</p>
           ) : (
@@ -85,7 +93,7 @@ export function FichaDelCliente({ cliente, cargar, onCerrar }: FichaDelClientePr
             </ul>
           )}
 
-          <h3>{t.ventas}</h3>
+          <h3 className="rotulo ficha__subtitulo">{t.ventas}</h3>
           {historial.sales.length === 0 ? (
             <p>{t.sin}</p>
           ) : (
@@ -99,7 +107,7 @@ export function FichaDelCliente({ cliente, cargar, onCerrar }: FichaDelClientePr
             </ul>
           )}
 
-          <h3>{t.pagos}</h3>
+          <h3 className="rotulo ficha__subtitulo">{t.pagos}</h3>
           {historial.payments.length === 0 ? (
             <p>{t.sin}</p>
           ) : (
@@ -113,7 +121,7 @@ export function FichaDelCliente({ cliente, cargar, onCerrar }: FichaDelClientePr
             </ul>
           )}
 
-          <h3>{t.garantias}</h3>
+          <h3 className="rotulo ficha__subtitulo">{t.garantias}</h3>
           {historial.warranties.length === 0 ? (
             <p>{t.sin}</p>
           ) : (
@@ -128,6 +136,6 @@ export function FichaDelCliente({ cliente, cargar, onCerrar }: FichaDelClientePr
           )}
         </>
       )}
-    </section>
+    </Tarjeta>
   );
 }

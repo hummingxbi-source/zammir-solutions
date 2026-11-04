@@ -1,5 +1,5 @@
 import 'fake-indexeddb/auto';
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within, configure } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import {
   asId,
@@ -24,6 +24,7 @@ import { App } from '../App';
 // La pantalla completa se monta entera y, con todo el conjunto corriendo a la vez, puede pasar de los 5 s por
 // omisión: este archivo pide más margen solo para él (la configuración global no se toca).
 vi.setConfig({ testTimeout: 30_000 });
+configure({ asyncUtilTimeout: 5_000 });
 
 const hasher = fakePinHasher();
 const gente = [

@@ -18,6 +18,10 @@ import {
 import { textos } from '../../../shared/i18n/textos';
 import { Aviso } from '../../../shared/ui/Aviso';
 import { Boton } from '../../../shared/ui/Boton';
+import { EncabezadoDePagina } from '../../../shared/ui/EncabezadoDePagina';
+import { EstadoVacio } from '../../../shared/ui/EstadoVacio';
+import { Tabla } from '../../../shared/ui/Tabla';
+import { Tarjeta } from '../../../shared/ui/Tarjeta';
 import { Campo, CampoNumerico } from '../../../shared/ui/Campo';
 import { Confirmacion } from '../../../shared/ui/Confirmacion';
 import { useSesionAdmin } from '../../identity/ui/SesionAdmin';
@@ -136,9 +140,8 @@ export function Clientes({ deps, historial }: ClientesProps): ReactElement {
   }
 
   return (
-    <section className="anima-entrada" aria-labelledby="titulo-clientes">
-      <h1 id="titulo-clientes">{t.titulo}</h1>
-      <p>{t.descripcion}</p>
+    <section className="anima-entrada clientes">
+      <EncabezadoDePagina titulo={t.titulo} descripcion={t.descripcion} />
 
       {error !== null ? (
         <Aviso tipo="error" queHacer={t.errores[error.code].queHacer}>
@@ -147,154 +150,171 @@ export function Clientes({ deps, historial }: ClientesProps): ReactElement {
       ) : null}
       {aviso !== null ? <Aviso tipo="exito">{aviso}</Aviso> : null}
 
-      <form onSubmit={(e) => void guardar(e)}>
-        <h2>{t.alta.titulo}</h2>
-        <Campo
-          etiqueta={t.alta.nombre}
-          value={nombre}
-          autoComplete="off"
-          onChange={(e) => {
-            setNombre(e.target.value);
-          }}
-        />
-        <CampoNumerico
-          entero
-          etiqueta={t.alta.whatsapp}
-          value={telefono}
-          onChange={(e) => {
-            setTelefono(e.target.value);
-          }}
-        />
-        {repetidos.length > 0 ? (
-          <Aviso tipo="error" queHacer={t.duplicado.ayuda}>
-            {t.duplicado.aviso} {repetidos.map((r) => r.name).join(', ')}
-          </Aviso>
-        ) : null}
-        <Campo
-          etiqueta={t.alta.correo}
-          type="email"
-          autoComplete="off"
-          value={correo}
-          onChange={(e) => {
-            setCorreo(e.target.value);
-          }}
-        />
-        <Campo
-          etiqueta={t.alta.notas}
-          value={notas}
-          autoComplete="off"
-          onChange={(e) => {
-            setNotas(e.target.value);
-          }}
-        />
-        {avisoVigente !== null ? (
-          <details>
-            <summary>
-              {t.avisoVigente} {String(avisoVigente.version)}): {t.verAviso}
-            </summary>
-            <p style={{ whiteSpace: 'pre-wrap' }}>{avisoVigente.body}</p>
+      <Tarjeta rotulo={t.alta.titulo}>
+        <form className="formulario" onSubmit={(e) => void guardar(e)}>
+          <div className="formulario__par">
+            <Campo
+              etiqueta={t.alta.nombre}
+              value={nombre}
+              autoComplete="off"
+              onChange={(e) => {
+                setNombre(e.target.value);
+              }}
+            />
+            <CampoNumerico
+              entero
+              etiqueta={t.alta.whatsapp}
+              value={telefono}
+              onChange={(e) => {
+                setTelefono(e.target.value);
+              }}
+            />
+          </div>
+          {repetidos.length > 0 ? (
+            <Aviso tipo="error" queHacer={t.duplicado.ayuda}>
+              {t.duplicado.aviso} {repetidos.map((r) => r.name).join(', ')}
+            </Aviso>
+          ) : null}
+          <div className="formulario__par">
+            <Campo
+              etiqueta={t.alta.correo}
+              type="email"
+              autoComplete="off"
+              value={correo}
+              onChange={(e) => {
+                setCorreo(e.target.value);
+              }}
+            />
+            <Campo
+              etiqueta={t.alta.notas}
+              value={notas}
+              autoComplete="off"
+              onChange={(e) => {
+                setNotas(e.target.value);
+              }}
+            />
+          </div>
+          {avisoVigente !== null ? (
+            <details className="plegable">
+              <summary>
+                {t.avisoVigente} {String(avisoVigente.version)}): {t.verAviso}
+              </summary>
+              <p style={{ whiteSpace: 'pre-wrap' }}>{avisoVigente.body}</p>
+            </details>
+          ) : null}
+          <details className="plegable">
+            <summary>{t.alta.fiscalTitulo}</summary>
+            <div className="formulario__par">
+              <Campo
+                etiqueta={t.alta.rfc}
+                value={rfc}
+                autoComplete="off"
+                onChange={(e) => {
+                  setRfc(e.target.value);
+                }}
+              />
+              <CampoNumerico
+                entero
+                etiqueta={t.alta.codigoPostalFiscal}
+                value={codigoPostal}
+                onChange={(e) => {
+                  setCodigoPostal(e.target.value);
+                }}
+              />
+            </div>
+            <Campo
+              etiqueta={t.alta.razonSocial}
+              value={razonSocial}
+              autoComplete="off"
+              onChange={(e) => {
+                setRazonSocial(e.target.value);
+              }}
+            />
           </details>
+          <div className="formulario__acciones">
+            <Boton type="submit" disabled={guardando}>
+              {guardando ? t.alta.guardando : t.alta.guardar}
+            </Boton>
+          </div>
+        </form>
+      </Tarjeta>
+
+      <Tarjeta rotulo={t.lista}>
+        {lista !== null && lista.length > 0 ? (
+          <Campo
+            etiqueta={t.buscar}
+            type="search"
+            autoComplete="off"
+            value={busqueda}
+            onChange={(e) => {
+              setBusqueda(e.target.value);
+            }}
+          />
         ) : null}
-        <details>
-          <summary>{t.alta.fiscalTitulo}</summary>
-          <Campo
-            etiqueta={t.alta.rfc}
-            value={rfc}
-            autoComplete="off"
-            onChange={(e) => {
-              setRfc(e.target.value);
-            }}
-          />
-          <Campo
-            etiqueta={t.alta.razonSocial}
-            value={razonSocial}
-            autoComplete="off"
-            onChange={(e) => {
-              setRazonSocial(e.target.value);
-            }}
-          />
-          <CampoNumerico
-            entero
-            etiqueta={t.alta.codigoPostalFiscal}
-            value={codigoPostal}
-            onChange={(e) => {
-              setCodigoPostal(e.target.value);
-            }}
-          />
-        </details>
-        <Boton type="submit" disabled={guardando}>
-          {guardando ? t.alta.guardando : t.alta.guardar}
-        </Boton>
-      </form>
 
-      {lista !== null && lista.length > 0 ? (
-        <Campo
-          etiqueta={t.buscar}
-          type="search"
-          autoComplete="off"
-          value={busqueda}
-          onChange={(e) => {
-            setBusqueda(e.target.value);
-          }}
-        />
-      ) : null}
-
-      {lista === null ? (
-        error === null ? (
-          <p role="status">{t.cargando}</p>
-        ) : null
-      ) : lista.length === 0 ? (
-        <p>{t.sinClientes}</p>
-      ) : visibles.length === 0 ? (
-        <p>{t.sinResultados}</p>
-      ) : (
-        <table className="tabla">
-          <thead>
-            <tr>
-              <th scope="col">{t.columnas.nombre}</th>
-              <th scope="col">{t.columnas.whatsapp}</th>
-              <th scope="col">{t.columnas.correo}</th>
-              <th scope="col">{t.columnas.acciones}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {visibles.map((cliente) => (
-              <tr key={cliente.id}>
-                <th scope="row">
-                  {cliente.name}
-                  {cliente.anonymizedAt !== null ? <small> ({t.anonimizado})</small> : null}
-                </th>
-                <td>{cliente.phone}</td>
-                <td>{cliente.email ?? t.sinCorreo}</td>
-                <td>
-                  {historial !== undefined && cliente.anonymizedAt === null ? (
-                    <Boton
-                      variante="secundario"
-                      aria-label={`${t.ficha.ver} ${cliente.name}`}
-                      onClick={() => {
-                        setFicha(cliente);
-                      }}
-                    >
-                      {t.ficha.ver}
-                    </Boton>
-                  ) : null}
-                  {cliente.anonymizedAt === null ? (
-                    <Boton
-                      variante="peligro"
-                      aria-label={`${t.anonimizar} ${cliente.name}`}
-                      onClick={() => {
-                        setPorAnonimizar(cliente);
-                      }}
-                    >
-                      {t.anonimizar}
-                    </Boton>
-                  ) : null}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+        {lista === null ? (
+          error === null ? (
+            <p role="status">{t.cargando}</p>
+          ) : null
+        ) : lista.length === 0 ? (
+          <EstadoVacio titulo={t.vacioTitulo} descripcion={t.sinClientes} icono="clientes" />
+        ) : visibles.length === 0 ? (
+          <p className="mostrador__vacio">{t.sinResultados}</p>
+        ) : (
+          <Tabla
+            descripcion={t.lista}
+            claveDeFila={(c) => c.id}
+            filas={visibles}
+            columnas={[
+              {
+                clave: 'nombre',
+                rotulo: t.columnas.nombre,
+                celda: (c) => (
+                  <>
+                    {c.name}
+                    {c.anonymizedAt !== null ? <small> ({t.anonimizado})</small> : null}
+                  </>
+                ),
+              },
+              { clave: 'whatsapp', rotulo: t.columnas.whatsapp, celda: (c) => c.phone },
+              {
+                clave: 'correo',
+                rotulo: t.columnas.correo,
+                celda: (c) => c.email ?? t.sinCorreo,
+              },
+              {
+                clave: 'acciones',
+                rotulo: t.columnas.acciones,
+                celda: (c) =>
+                  c.anonymizedAt === null ? (
+                    <span className="tabla__acciones">
+                      {historial !== undefined ? (
+                        <Boton
+                          variante="secundario"
+                          aria-label={`${t.ficha.ver} ${c.name}`}
+                          onClick={() => {
+                            setFicha(c);
+                          }}
+                        >
+                          {t.ficha.ver}
+                        </Boton>
+                      ) : null}
+                      <Boton
+                        variante="peligro"
+                        aria-label={`${t.anonimizar} ${c.name}`}
+                        onClick={() => {
+                          setPorAnonimizar(c);
+                        }}
+                      >
+                        {t.anonimizar}
+                      </Boton>
+                    </span>
+                  ) : null,
+              },
+            ]}
+          />
+        )}
+      </Tarjeta>
 
       {ficha !== null && historial !== undefined ? (
         <FichaDelCliente

@@ -14,8 +14,9 @@ import type {
 } from '@zammir/core';
 
 import { Bitacora, type BitacoraProps } from './modules/audit/ui/Bitacora';
-import { ImportarCatalogo } from './modules/catalog/ui/ImportarCatalogo';
+import { CatalogoDelAdministrador } from './modules/catalog/ui/Catalogo';
 import { Clientes } from './modules/customers/ui/Clientes';
+import { ResumenDelInicioEnLaTablet } from './modules/reports/ui/ResumenDelInicioEnLaTablet';
 import { ReportesEnLaTablet, type PrepararReportes } from './modules/reports/ui/ReportesEnLaTablet';
 import {
   CuentasEnLaTablet,
@@ -77,6 +78,8 @@ export interface AppProps {
   readonly prepararCuentas?: PrepararCuentas | null;
   /** Reportes de la tablet: cómo reunir lo que necesitan; sin esto la sección queda como antes. */
   readonly prepararReportes?: PrepararReportes | null;
+  /** Solo en desarrollo: página de muestras con datos de ejemplo (`/muestras`). */
+  readonly muestras?: ReactElement | null;
   /** Historial de un cliente desde lo guardado en la tablet (ficha en Clientes). */
   readonly historialDeCliente?: ((id: CustomerId) => Promise<CustomerHistory>) | null;
   /** Estado del envío de lo guardado en la tablet ("N pendientes"). */
@@ -103,6 +106,7 @@ export function App({
   prepararOrdenes = null,
   prepararCuentas = null,
   prepararReportes = null,
+  muestras = null,
   historialDeCliente = null,
   prepararMostrador = null,
   cargarVigenciaDeCodigo,
@@ -113,7 +117,11 @@ export function App({
   ];
 
   return (
-    <Layout interruptores={interruptores} sincronizacion={sincronizacion}>
+    <Layout
+      interruptores={interruptores}
+      sincronizacion={sincronizacion}
+      session={entradaConPin?.session}
+    >
       {entradaConPin !== null ? <PersonaActiva session={entradaConPin.session} /> : null}
       <Routes>
         <Route
@@ -123,6 +131,14 @@ export function App({
               interruptores={interruptores}
               conectar={conectarTablet !== null}
               entrar={entradaConPin !== null}
+              resumen={
+                prepararReportes !== null && entradaConPin !== null ? (
+                  <ResumenDelInicioEnLaTablet
+                    preparar={prepararReportes}
+                    session={entradaConPin.session}
+                  />
+                ) : null
+              }
             />
           }
         />
@@ -132,6 +148,7 @@ export function App({
             element={<EntrarConPin deps={entradaConPin.deps} session={entradaConPin.session} />}
           />
         ) : null}
+        {muestras !== null ? <Route path="/muestras/*" element={muestras} /> : null}
         {conectarTablet !== null ? (
           <Route path="/conectar" element={<ConectarTablet deps={conectarTablet} />} />
         ) : null}
@@ -185,10 +202,7 @@ export function App({
                 <OrdenesEnLaTablet preparar={prepararOrdenes} session={entradaConPin.session} />
               ) : seccion.id === 'catalogo' && catalogo !== null ? (
                 <ProtegidaAdmin>
-                  <section>
-                    <h1>{seccion.texto}</h1>
-                    <ImportarCatalogo deps={catalogo} />
-                  </section>
+                  <CatalogoDelAdministrador deps={catalogo} />
                 </ProtegidaAdmin>
               ) : seccion.id === 'clientes' && clientes !== null ? (
                 <ProtegidaAdmin>
@@ -210,6 +224,14 @@ export function App({
               interruptores={interruptores}
               conectar={conectarTablet !== null}
               entrar={entradaConPin !== null}
+              resumen={
+                prepararReportes !== null && entradaConPin !== null ? (
+                  <ResumenDelInicioEnLaTablet
+                    preparar={prepararReportes}
+                    session={entradaConPin.session}
+                  />
+                ) : null
+              }
             />
           }
         />
