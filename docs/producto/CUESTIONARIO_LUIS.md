@@ -110,6 +110,12 @@
 53. **Autofacturación:** el cliente puede pedir su factura hasta el **último día del mes** de su compra. ¿Está bien? (PD-09)
 54. **Claves del SAT** de cada categoría de producto (producto o servicio, unidad, objeto de impuesto): ¿las revisa su contador cuando tengamos las categorías cerradas? (PD-29)
 
+61. **IVA de los productos:** ¿vende ZAMMIR algo con **IVA 0 %** o **exento**? Hoy todo se calcula con 16 % y el catálogo puede marcar un producto como exento. (PD-29)
+62. **Qué piden sus clientes al facturar:** ¿cuáles son el **régimen fiscal** y el **uso de CFDI** que más piden (por ejemplo "Gastos en general" o "Adquisición de mercancías")? Con eso el portal los muestra primero y se les hace más fácil a los clientes. (PD-52)
+63. **Correo del negocio:** ¿ZAMMIR tiene un correo para el negocio? Sirve para que el cliente reciba su factura y como segundo canal para ejercer sus derechos sobre sus datos. Hoy solo se usa el WhatsApp. (PD-11, PD-50)
+64. **Factura global del público en general** (ventas de mostrador que nadie pidió facturar): sigue a cargo de **su contador**, no del sistema. ¿Confirman que así lo quieren? (ALCANCE §3)
+65. **Cancelar una factura mal emitida** (RFC o nombre mal escrito): solo un **administrador** puede, con el motivo del SAT. ¿Quién de ZAMMIR haría esto y qué hacen hoy cuando pasa? (RN-28)
+
 ## 8. Equipo, local y avisos
 
 55. **Impresora:** la candidata es **Epson TM-m30III-052**. La ficha de la tienda se contradice en Wi-Fi y Bluetooth: ¿pueden preguntarle al vendedor qué conexiones trae esa variante **antes de comprar**? ¿Cuántas impresoras se necesitan? (PD-15)
@@ -135,6 +141,9 @@ Pendientes que no dependen de Luis, para no perderlos de vista:
 | PD-26 Límite anual de timbres del paquete incluido en la anualidad | Juanito |
 | PD-32 Retención de respaldos (30 días) del plan de Supabase | Juanito |
 | PD-35 Identidad visual definitiva | Juanito |
+| PD-50 Cómo se envía el correo con la factura: lo manda el PAC o un servicio de correo propio (y con qué remitente) | Juanito |
+| PD-51 Cuenta de Cloudflare Turnstile del portal `/factura` y sus llaves (PP-30) | Juanito |
+| PD-52 Orden de los regímenes y usos de CFDI en el portal (los más pedidos primero) | Luis, pregunta 62 |
 | Proyectos de pruebas de Supabase y Vercel (S0-06) | Juanito |
 | Tablet y impresora para las pruebas manuales (S0-09, S0-18, S0-20) | Juanito |
 
@@ -147,3 +156,4 @@ Pendientes que no dependen de Luis, para no perderlos de vista:
 | 31 oct 2026 | Sprint 3: preguntas 37.1 y 37.2 (una caja o una por persona; turno que cruza la medianoche). |
 | 31 oct 2026 | Sprint 3 (primeras 10 historias): preguntas 29.1 a 29.3 (fotos, condiciones del comprobante, pago de más). |
 | 31 oct 2026 | Sprint 3 (cierre): preguntas 37.3 a 37.6 (ancho del papel, cliente recurrente, leyenda del ticket, retiros de efectivo). |
+| 4 nov 2026 | Sprint 4 (portal de facturas): preguntas 61 a 65 (IVA 0 % o exento, régimen y uso más pedidos, correo del negocio, factura global, cancelación de facturas). |

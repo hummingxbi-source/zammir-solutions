@@ -29,7 +29,7 @@ export const SOLICITUD_DE_PRUEBA: StampRequest = {
       unitKey: 'MTK',
       description: 'Vidrio claro 6 mm',
       quantity: 2,
-      unitValueCents: 25_000,
+      unitValueMicros: 250_000_000,
       amountCents: 50_000,
       taxObject: '02',
       taxCents: 8_000,

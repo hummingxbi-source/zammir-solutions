@@ -142,7 +142,7 @@ describe('validación de la solicitud de timbrado', () => {
     ],
     [
       'centavos con decimales',
-      con({ concepts: [{ ...concepto, unitValueCents: 250.5, amountCents: 501 }] }),
+      con({ concepts: [{ ...concepto, unitValueMicros: 2_505_000.5, amountCents: 501 }] }),
       ['concepts[0].amountCents'],
     ],
     [
