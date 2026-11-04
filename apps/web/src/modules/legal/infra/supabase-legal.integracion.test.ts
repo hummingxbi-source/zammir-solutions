@@ -141,13 +141,11 @@ describe('documentos legales con Supabase y sus permisos', () => {
   });
 
   it('sin sesión se lee solo lo que ya rige y no se publica [ADR-0029]', async () => {
-    await servicio
-      .from('legal_documents')
-      .insert({
-        type: 'TERMS',
-        body: 'Versión futura (prueba)',
-        effective_from: '2999-01-01T00:00:00Z',
-      });
+    await servicio.from('legal_documents').insert({
+      type: 'TERMS',
+      body: 'Versión futura (prueba)',
+      effective_from: '2999-01-01T00:00:00Z',
+    });
     const anonimo = crearCliente(ANON);
     const lectura = await supabaseLegal(anonimo).list('TERMS');
     expect(lectura.ok).toBe(true);
