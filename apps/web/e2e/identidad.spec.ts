@@ -115,8 +115,8 @@ test.describe('tablet horizontal y computadora', () => {
     expect(caja?.width).toBeLessThan(300);
     const contenido = await page.locator('.marco__cuerpo').boundingBox();
     expect(contenido?.x).toBeGreaterThanOrEqual((caja?.width ?? 0) - 1);
-    await expect(page.getByText('Flujo de trabajo')).toBeVisible();
-    await expect(page.getByText('Administración')).toBeVisible();
+    await expect(barra.getByText('Flujo de trabajo')).toBeVisible();
+    await expect(barra.getByText('Administración')).toBeVisible();
   });
 });
 
