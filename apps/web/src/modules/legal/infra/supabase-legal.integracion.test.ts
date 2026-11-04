@@ -140,8 +140,25 @@ describe('documentos legales con Supabase y sus permisos', () => {
     expect(borrado.error?.code).toBe('42501');
   });
 
-  it('sin sesión no se ve nada', async () => {
-    const r = await supabaseLegal(crearCliente(ANON)).list('PRIVACY_NOTICE');
-    expect(r.ok).toBe(false);
+  it('sin sesión se lee solo lo que ya rige y no se publica [ADR-0029]', async () => {
+    await servicio
+      .from('legal_documents')
+      .insert({
+        type: 'TERMS',
+        body: 'Versión futura (prueba)',
+        effective_from: '2999-01-01T00:00:00Z',
+      });
+    const anonimo = crearCliente(ANON);
+    const lectura = await supabaseLegal(anonimo).list('TERMS');
+    expect(lectura.ok).toBe(true);
+    expect(lectura.ok && lectura.value.some((v) => v.body.includes('futura (prueba)'))).toBe(false);
+    const publicar = await supabaseLegal(anonimo).publish({
+      type: 'TERMS',
+      body: 'Intento anónimo',
+      effectiveFrom: new Date(),
+    });
+    expect(publicar.ok).toBe(false);
+    const contacto = await anonimo.rpc('public_business_contact');
+    expect(contacto.error).toBeNull();
   });
 });
