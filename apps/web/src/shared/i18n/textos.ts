@@ -148,6 +148,126 @@ export const textos = {
     esperaSegundos: (segundos: number): string =>
       `Intenta de nuevo en ${String(segundos)} segundos.`,
   },
+  catalogo: {
+    titulo: 'Catálogo',
+    descripcion:
+      'Tus productos y precios de lista, con IVA incluido. Lo que cambies aquí se usa en el cotizador y en el mostrador.',
+    agregar: 'Agregar producto',
+    importar: 'Importar desde archivo',
+    editar: 'Editar',
+    desactivar: 'Desactivar',
+    activar: 'Activar',
+    activo: 'Activo',
+    inactivo: 'Inactivo',
+    vacioTitulo: 'Todavía no hay productos',
+    vacio:
+      'Agrega tu primer producto o importa muchos de una vez desde un archivo. Los productos nunca se borran: se desactivan.',
+    sinResultados: 'Ningún producto coincide con esa búsqueda.',
+    tipos: { CUSTOM: 'A medida', STANDARD: 'Pieza estándar', SERVICE: 'Servicio' },
+    unidades: {
+      SQUARE_METER: 'Metro cuadrado',
+      LINEAR_METER: 'Metro lineal',
+      PIECE: 'Pieza',
+      SERVICE: 'Servicio',
+    },
+    resumen: {
+      activos: 'Productos activos',
+      inactivos: 'Inactivos',
+      categorias: 'Categorías con productos',
+    },
+    filtros: {
+      titulo: 'Buscar',
+      buscar: 'Buscar por nombre o código',
+      categoria: 'Categoría',
+      tipo: 'Tipo',
+      todas: 'Todas',
+      todos: 'Todos',
+    },
+    columnas: {
+      producto: 'Producto',
+      venta: 'Cómo se vende',
+      precio: 'Precio con IVA',
+      estado: 'Estado',
+      acciones: 'Acciones',
+    },
+    formulario: {
+      tituloAlta: 'Agregar producto',
+      tituloEdicion: 'Editar producto',
+      nombre: 'Nombre',
+      codigo: 'Código (opcional)',
+      categoria: 'Categoría',
+      tipo: 'Tipo',
+      unidad: 'Se cobra por',
+      baseLineal: 'El metro lineal se mide por',
+      largo: 'Largo',
+      perimetro: 'Perímetro',
+      precio: 'Precio de lista con IVA',
+      garantia: 'Garantía sugerida en meses (opcional)',
+      exento: 'Este producto está exento de IVA',
+      historial: 'Cambios de precio',
+      guardar: 'Guardar producto',
+      guardando: 'Guardando…',
+      cancelar: 'Cancelar',
+    },
+    avisos: {
+      creado: 'Producto agregado al catálogo.',
+      guardado: 'Cambios guardados.',
+      desactivado: 'Producto desactivado: ya no sale para vender, pero se conserva.',
+      activado: 'Producto activado: ya se puede vender.',
+    },
+    errores: {
+      NAME_REQUIRED: {
+        mensaje: 'Falta el nombre del producto.',
+        queHacer: 'Escríbelo y guarda otra vez.',
+      },
+      PRICE_INVALID: {
+        mensaje: 'El precio no es válido.',
+        queHacer: 'Escríbelo en pesos, por ejemplo 280.00.',
+      },
+      PRICE_NEGATIVE: {
+        mensaje: 'El precio no puede ser negativo.',
+        queHacer: 'Corrígelo y guarda otra vez.',
+      },
+      KIND_UNIT_MISMATCH: {
+        mensaje: 'Ese tipo de producto no se cobra de esa manera.',
+        queHacer: 'Elige otra forma de cobro.',
+      },
+      RULE_UNIT_MISMATCH: {
+        mensaje: 'La forma de cobro no coincide con la regla de precio.',
+        queHacer: 'Elige otra forma de cobro.',
+      },
+      RULE_NOT_REGISTERED: {
+        mensaje: 'Esa forma de cobro todavía no está disponible.',
+        queHacer: 'Elige otra o avisa a soporte.',
+      },
+      RULE_PARAMS_INVALID: {
+        mensaje: 'Faltan datos para calcular el precio de este producto.',
+        queHacer: 'Revisa cómo se mide y guarda otra vez.',
+      },
+      FISCAL_INVALID: {
+        mensaje: 'Los datos fiscales de la categoría no son válidos.',
+        queHacer: 'Avisa a soporte para corregirlos.',
+      },
+      WARRANTY_INVALID: {
+        mensaje: 'La garantía debe ser un número de meses mayor a cero.',
+        queHacer: 'Corrígela o déjala en blanco.',
+      },
+      CODE_TAKEN: {
+        mensaje: 'Ese código ya lo usa otro producto.',
+        queHacer: 'Escribe uno distinto.',
+      },
+      NOT_FOUND: { mensaje: 'No se encontró el producto.', queHacer: 'Recarga el catálogo.' },
+      CATEGORY_NOT_FOUND: { mensaje: 'La categoría ya no existe.', queHacer: 'Elige otra.' },
+      NOT_AUTHORIZED: {
+        mensaje: 'Solo los administradores cambian el catálogo.',
+        queHacer: 'Entra con una cuenta de administrador.',
+      },
+      CATALOG_UNAVAILABLE: {
+        mensaje: 'No se pudo leer o guardar el catálogo.',
+        queHacer: 'Revisa tu conexión y vuelve a intentar.',
+      },
+    },
+  },
   importar: {
     titulo: 'Importar el catálogo',
     descripcion:
@@ -978,6 +1098,8 @@ export const textos = {
     },
   },
   clientes: {
+    lista: 'Tus clientes',
+    vacioTitulo: 'Aún no hay a quién mostrar',
     ficha: {
       titulo: 'Historial de',
       ver: 'Ver historial',

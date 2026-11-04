@@ -14,7 +14,7 @@ import type {
 } from '@zammir/core';
 
 import { Bitacora, type BitacoraProps } from './modules/audit/ui/Bitacora';
-import { ImportarCatalogo } from './modules/catalog/ui/ImportarCatalogo';
+import { CatalogoDelAdministrador } from './modules/catalog/ui/Catalogo';
 import { Clientes } from './modules/customers/ui/Clientes';
 import { ReportesEnLaTablet, type PrepararReportes } from './modules/reports/ui/ReportesEnLaTablet';
 import {
@@ -193,10 +193,7 @@ export function App({
                 <OrdenesEnLaTablet preparar={prepararOrdenes} session={entradaConPin.session} />
               ) : seccion.id === 'catalogo' && catalogo !== null ? (
                 <ProtegidaAdmin>
-                  <section>
-                    <h1>{seccion.texto}</h1>
-                    <ImportarCatalogo deps={catalogo} />
-                  </section>
+                  <CatalogoDelAdministrador deps={catalogo} />
                 </ProtegidaAdmin>
               ) : seccion.id === 'clientes' && clientes !== null ? (
                 <ProtegidaAdmin>

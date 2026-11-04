@@ -4,6 +4,7 @@ import { Link, Route, Routes } from 'react-router';
 import { EncabezadoDePagina } from '../shared/ui/EncabezadoDePagina';
 import { MuestraDeOrdenes } from './MuestraDeOrdenes';
 import { MuestraDeCuentas, MuestraDeReportes } from './MuestraDeReportes';
+import { MuestraDelCatalogo } from './MuestraDelCatalogo';
 import { MuestraDelCotizador } from './MuestraDelCotizador';
 import { MuestraDelMostrador } from './MuestraDelMostrador';
 
@@ -17,6 +18,7 @@ export function Muestras(): ReactElement {
       <Route path="ordenes" element={<MuestraDeOrdenes />} />
       <Route path="reportes" element={<MuestraDeReportes />} />
       <Route path="cuentas" element={<MuestraDeCuentas />} />
+      <Route path="catalogo" element={<MuestraDelCatalogo />} />
       <Route
         index
         element={
@@ -40,6 +42,9 @@ export function Muestras(): ReactElement {
               </li>
               <li>
                 <Link to="cuentas">Cuentas por cobrar</Link>
+              </li>
+              <li>
+                <Link to="catalogo">Catálogo</Link>
               </li>
             </ul>
           </section>
