@@ -71,6 +71,7 @@ function entorno(documento: PortalDocumentRecord | null = venta) {
       });
       return Promise.resolve({ folio });
     },
+    recordAttempt: () => Promise.resolve(),
     markFailed: () => Promise.resolve(),
   };
   const provider = simulatedBilling({
@@ -219,6 +220,24 @@ describe('facturar desde el sistema', () => {
       ],
     });
     expect(provider.stampedCount()).toBe(0);
+  });
+
+  it('con el ajuste de anticipos en la opción (b) una orden no se factura: no está construida [RN-27]', async () => {
+    const orden = entorno({ ...venta, type: 'WORK_ORDER' });
+    const entradaOrden = { ...entrada, source: { type: 'WORK_ORDER' as const, id: 'venta-1' } };
+    expect(
+      await issueSystemInvoice({ ...orden.deps, depositTreatment: 'b' }, entradaOrden),
+    ).toEqual({
+      kind: 'DEPOSIT_TREATMENT_UNSUPPORTED',
+    });
+    expect(orden.provider.stampedCount()).toBe(0);
+    expect(
+      (await issueSystemInvoice({ ...orden.deps, depositTreatment: 'a' }, entradaOrden)).kind,
+    ).toBe('STAMPED');
+    const mostrador = entorno();
+    expect(
+      (await issueSystemInvoice({ ...mostrador.deps, depositTreatment: 'b' }, entrada)).kind,
+    ).toBe('STAMPED');
   });
 
   it('un catálogo sin claves del SAT no se factura', async () => {

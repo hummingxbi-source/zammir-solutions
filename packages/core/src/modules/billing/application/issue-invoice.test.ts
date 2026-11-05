@@ -21,6 +21,7 @@ function almacen() {
   const filas = new Map<string, Fila>();
   let numero = 0;
   const archivos: Record<string, { xml: string; pdf: Uint8Array }> = {};
+  const intentos: string[] = [];
   const store: InvoiceRequestStore = {
     begin(entrada) {
       const existente = filas.get(entrada.requestId);
@@ -51,6 +52,10 @@ function almacen() {
       archivos[requestId] = { xml: entrada.xml, pdf: entrada.pdf };
       return Promise.resolve({ folio });
     },
+    recordAttempt(requestId, error) {
+      intentos.push(`${requestId}:${error}`);
+      return Promise.resolve();
+    },
     markFailed(requestId) {
       const f = filas.get(requestId);
       if (f !== undefined) {
@@ -59,7 +64,7 @@ function almacen() {
       return Promise.resolve();
     },
   };
-  return { store, filas, archivos };
+  return { store, filas, archivos, intentos };
 }
 
 const linea: InvoiceSourceLine = {

@@ -2,6 +2,7 @@ import { isValidRfc, isValidZip } from '../../customers/domain/customer';
 import type { Authorization } from '../../identity/application/authorize-with-admin-pin';
 import type { PermissionPolicy } from '../../identity/domain/permissions';
 import type { BillingErrorCode, CfdiRecipient, PaymentForm } from '../domain/invoice';
+import { supportsDepositTreatment, type DepositTreatment } from '../domain/deposit-treatment';
 import { paymentFormFor } from '../domain/payment-form';
 import { isCfdiUse, isFiscalRegime } from '../domain/sat-catalogs';
 import { evaluateSelfInvoicing, type SelfInvoicingBlock } from '../domain/self-invoicing';
@@ -23,6 +24,8 @@ export interface IssueSystemInvoiceDeps {
   readonly sources: InvoiceSourceStore;
   readonly issue: IssueInvoiceDeps;
   readonly policy?: PermissionPolicy;
+  /** Ajuste de anticipos [RN-27]; sin él se usa la opción (a). */
+  readonly depositTreatment?: DepositTreatment;
 }
 
 export interface IssueSystemInvoiceInput {
@@ -43,6 +46,8 @@ export type IssueSystemInvoiceOutcome =
   | { readonly kind: 'IN_PROCESS' }
   | { readonly kind: InvoiceIssueError['code'] }
   | { readonly kind: 'NOT_FOUND' }
+  /** El ajuste de anticipos está en la opción (b), que no se construyó [RN-27]. */
+  | { readonly kind: 'DEPOSIT_TREATMENT_UNSUPPORTED' }
   /** Cancelada, ya facturada o con saldo: no se factura [RN-24, RN-25]. El plazo del portal no aplica. */
   | { readonly kind: 'INELIGIBLE'; readonly reason: Exclude<SelfInvoicingBlock, 'EXPIRED'> }
   /** Pago mixto: quien factura debe elegir la forma de pago `01` o `03` (PD-28). */
@@ -97,6 +102,10 @@ export async function issueSystemInvoice(
   }
   if (documento === null) {
     return { kind: 'NOT_FOUND' };
+  }
+
+  if (!supportsDepositTreatment(deps.depositTreatment, documento.type)) {
+    return { kind: 'DEPOSIT_TREATMENT_UNSUPPORTED' };
   }
 
   // Se sigue aunque ya tenga factura: reenviar la misma solicitud devuelve su factura en vez de un error [RN-24].
