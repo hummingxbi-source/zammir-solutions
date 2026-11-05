@@ -55,14 +55,20 @@ describe('App y navegación', () => {
     mostrar();
     const secundaria = screen.getByRole('navigation', { name: 'Otras secciones', hidden: true });
     const enlaces = [...secundaria.querySelectorAll('a')].map((e) => e.textContent);
-    expect(enlaces).toEqual(['Clientes', 'Cuentas por cobrar', 'Usuarios', 'Configuración']);
+    expect(enlaces).toEqual([
+      'Clientes',
+      'Cuentas por cobrar',
+      'Facturas',
+      'Usuarios',
+      'Configuración',
+    ]);
   });
 
   it('el panel de inicio ofrece accesos a las secciones y la guía, sin cifras de dinero', () => {
     mostrar();
     expect(screen.getByRole('heading', { name: 'Panel de inicio' })).toBeInTheDocument();
     const main = screen.getByRole('main');
-    expect(main.querySelectorAll('.tablero a')).toHaveLength(9);
+    expect(main.querySelectorAll('.tablero a')).toHaveLength(10);
     expect(within(main).getByRole('heading', { name: 'Primeros pasos' })).toBeInTheDocument();
     expect(main.querySelectorAll('.guia__paso')).toHaveLength(5);
     expect(main.textContent).not.toMatch(/\$/);

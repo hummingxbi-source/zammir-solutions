@@ -105,6 +105,11 @@ export function isPortalCfdiUse(code: string): boolean {
   return PORTAL_CFDI_USES.some((u) => u.code === code);
 }
 
+/** Cualquier uso de CFDI del catálogo del SAT; un administrador que factura desde el sistema puede usar todos. */
+export function isCfdiUse(code: string): boolean {
+  return CFDI_USES.some((u) => u.code === code);
+}
+
 /** Largo del RFC de una persona moral (12) y de una física (13). */
 export function personTypeOfRfc(rfc: string): 'FISICA' | 'MORAL' | null {
   if (rfc.length === 13) {

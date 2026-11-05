@@ -55,6 +55,8 @@ import {
   type AppUser,
   type UserId,
   type UserPolicy,
+  type AdminInvoices,
+  type ShareService,
   type PortalConsulta,
   type PortalDescarga,
   type PortalSolicitud,
@@ -80,6 +82,7 @@ import { supabaseCustomerReplica } from '../modules/customers/infra/supabase-cus
 import { supabaseCustomers } from '../modules/customers/infra/supabase-customers';
 import { textos } from '../shared/i18n/textos';
 import { functionPortalConsulta } from '../modules/billing/infra/function-portal-consulta';
+import { supabaseAdminInvoices } from '../modules/billing/infra/supabase-admin-invoices';
 import {
   functionPortalDescarga,
   functionPortalSolicitud,
@@ -141,6 +144,10 @@ export interface Composition {
   readonly legal: LegalDeps | null;
   /** Datos del negocio para el canal de derechos de las páginas públicas del aviso y los términos. */
   readonly contactoPublico: (() => Promise<ContactoPublico | null>) | null;
+  /** Facturas del administrador: lo facturable y emitir desde la aplicación [S4-16]. */
+  readonly facturas: AdminInvoices | null;
+  /** Para enviar por WhatsApp la factura emitida. */
+  readonly compartirFacturas: ShareService;
   /** Portal público de autofacturación: solo habla con la función de servidor [S4-18]. */
   readonly portal: {
     readonly consultar: PortalConsulta;
@@ -898,6 +905,11 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
     },
     legal,
     contactoPublico: cliente === null ? null : contactoPublicoDelNegocio(cliente),
+    facturas:
+      cliente === null || entorno.url === undefined || entorno.anonKey === undefined
+        ? null
+        : supabaseAdminInvoices(cliente, { url: entorno.url, anonKey: entorno.anonKey }),
+    compartirFacturas: webShareService(entornoDelNavegador()),
     portal:
       entorno.url === undefined || entorno.anonKey === undefined
         ? null

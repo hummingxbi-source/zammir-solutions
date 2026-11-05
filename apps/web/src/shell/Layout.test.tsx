@@ -89,7 +89,7 @@ describe('barra lateral', () => {
     const principal = screen.getByRole('navigation', { name: 'Secciones del trabajo' });
     const otras = screen.getByRole('navigation', { name: 'Otras secciones' });
     expect(within(principal).getAllByRole('link')).toHaveLength(5);
-    expect(within(otras).getAllByRole('link')).toHaveLength(4);
+    expect(within(otras).getAllByRole('link')).toHaveLength(5);
     for (const enlace of container.querySelectorAll('.nav__enlace')) {
       const icono = enlace.querySelector('svg');
       expect(icono?.getAttribute('aria-hidden')).toBe('true');

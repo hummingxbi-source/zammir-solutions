@@ -248,3 +248,31 @@ export function almacenDeArchivos(servicio) {
 }
 
 export { deBase64 };
+
+/** Quién llama a una función protegida: su identificador y su rol, según el token de Supabase Auth. `null` si
+ *  no hay token o no vale. El rol sale de `app_metadata`, que solo el servidor puede escribir. */
+export async function usuarioDeLaPeticion(servicio, req: Request) {
+  const token = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ?? '';
+  if (token === '') {
+    return null;
+  }
+  const { data, error } = await servicio.auth.getUser(token);
+  if (error !== null || data?.user === null || data?.user === undefined) {
+    return null;
+  }
+  const rol = data.user.app_metadata?.rol;
+  return { userId: data.user.id, role: typeof rol === 'string' ? rol : null };
+}
+
+/** La venta u orden que se quiere facturar, leída por su identificador (solo para funciones del servidor). */
+export function almacenDeFuentes(servicio) {
+  return {
+    async find(source) {
+      const data = await rpcOFalla(servicio, 'system_find_invoice_source', {
+        p_type: source.type,
+        p_id: source.id,
+      });
+      return data === null ? null : parsePortalDocumentRow(data);
+    },
+  };
+}

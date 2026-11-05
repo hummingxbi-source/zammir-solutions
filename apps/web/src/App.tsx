@@ -11,7 +11,9 @@ import type {
   QuoteConditionsStore,
   RegisterTabletDeps,
   SignInWithPinDeps,
+  AdminInvoices,
   PortalConsulta,
+  ShareService,
   PortalDescarga,
   PortalSolicitud,
 } from '@zammir/core';
@@ -27,6 +29,7 @@ import {
 } from './modules/receivables/ui/CuentasEnLaTablet';
 import { CondicionesDeCotizacion } from './modules/quotes/ui/CondicionesDeCotizacion';
 import { AvisoDePrivacidad, TerminosDelServicio } from './modules/legal/ui/AvisoDePrivacidad';
+import { Facturas } from './modules/billing/ui/Facturas';
 import { PortalDeFactura } from './modules/billing/ui/PortalDeFactura';
 import { PaginaLegalPublica, type ContactoPublico } from './modules/legal/ui/PaginaLegalPublica';
 import { EntrarConPin } from './modules/identity/ui/EntrarConPin';
@@ -60,6 +63,10 @@ export interface AppProps {
   readonly clientes?: ManageCustomersDeps | null;
   /** Aviso de privacidad versionado; aparece en Configuración. */
   readonly legal?: LegalDeps | null;
+  /** Facturas del administrador: lo facturable y emitir desde la aplicación [S4-16]. */
+  readonly facturas?: AdminInvoices | null;
+  /** Para enviar por WhatsApp la factura emitida. */
+  readonly compartirFacturas?: ShareService | null;
   /** Portal público de autofacturación (`/factura` y `/f/:folio/:codigo`, la dirección del QR) [S4-18]. */
   readonly portal?: {
     readonly consultar: PortalConsulta;
@@ -112,6 +119,8 @@ export function App({
   legal = null,
   contactoPublico = null,
   portal = null,
+  facturas = null,
+  compartirFacturas = null,
   condiciones = null,
   bitacora = null,
   conectarTablet = null,
@@ -203,6 +212,11 @@ export function App({
                         />
                       ) : null}
                     </section>
+                  ) : seccion.id === 'facturas' && facturas !== null ? (
+                    <Facturas
+                      facturas={facturas}
+                      {...(compartirFacturas === null ? {} : { compartir: compartirFacturas })}
+                    />
                   ) : (
                     <SeccionVacia titulo={seccion.texto} />
                   )}

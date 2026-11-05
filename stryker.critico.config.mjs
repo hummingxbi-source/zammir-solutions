@@ -24,6 +24,7 @@ export default {
     'packages/core/src/modules/billing/domain/invoice-concepts.ts',
     'packages/core/src/modules/billing/domain/sat-catalogs.ts',
     'packages/core/src/modules/billing/application/issue-invoice.ts',
+    'packages/core/src/modules/billing/application/issue-system-invoice.ts',
     'packages/core/src/modules/billing/application/request-portal-invoice.ts',
     'packages/core/src/modules/billing/application/download-portal-invoice.ts',
     'packages/core/src/modules/billing/domain/payment-form.ts',
