@@ -22,6 +22,7 @@ export const textos = {
       reportes: 'Reportes',
       clientes: 'Clientes',
       cuentasPorCobrar: 'Cuentas por cobrar',
+      facturas: 'Facturas',
       usuarios: 'Usuarios',
       configuracion: 'Configuración',
     },
@@ -82,6 +83,7 @@ export const textos = {
       reportes: 'Cómo va el negocio: ventas, producción y cobros.',
       clientes: 'Tus clientes y su historial.',
       'cuentas-por-cobrar': 'Lo que te deben y desde cuándo.',
+      facturas: 'Factura ventas y órdenes ya liquidadas.',
       usuarios: 'Personas, PIN y tablets.',
       configuracion: 'Condiciones, aviso de privacidad y más.',
     },
@@ -512,6 +514,123 @@ export const textos = {
       LEGAL_UNAVAILABLE: {
         mensaje: 'No hay conexión con el servidor.',
         queHacer: 'Conéctate a internet e intenta de nuevo.',
+      },
+    },
+  },
+  /** Pantalla de facturas del administrador [S4-16, RF-M10-04 a RF-M10-08]. */
+  facturas: {
+    titulo: 'Facturas',
+    descripcion:
+      'Ventas y órdenes ya liquidadas que todavía no tienen factura. Aquí sí puedes facturar aunque haya pasado el último día del mes.',
+    resumen: 'Por facturar',
+    cargando: 'Cargando lo facturable…',
+    vacioTitulo: 'No hay nada por facturar',
+    vacio:
+      'Cuando una venta o una orden quede liquidada y nadie la haya facturado, aparecerá aquí.',
+    sinConexion: {
+      mensaje: 'No se pudo leer lo facturable.',
+      queHacer: 'Revisa tu conexión a internet y entra de nuevo con tu cuenta de administrador.',
+    },
+    columnas: {
+      folio: 'Folio',
+      tipo: 'Tipo',
+      cliente: 'Cliente',
+      total: 'Total',
+      liquidada: 'Liquidada',
+      acciones: 'Acciones',
+    },
+    tipos: { COUNTER_SALE: 'Venta de mostrador', WORK_ORDER: 'Orden de trabajo' },
+    sinCliente: 'Sin cliente',
+    facturar: 'Facturar',
+    facturarA: (folio: string): string => `Facturar ${folio}`,
+    formulario: {
+      titulo: (folio: string): string => `Facturar ${folio}`,
+      desdeFicha:
+        'Los datos fiscales se tomaron de la ficha del cliente. Revísalos antes de timbrar.',
+      sinFicha:
+        'Este cliente no tiene datos fiscales en su ficha. Captúralos tal como aparecen en su constancia.',
+      rfc: 'RFC',
+      nombre: 'Nombre o razón social',
+      codigoPostal: 'Código postal fiscal',
+      regimen: 'Régimen fiscal',
+      uso: 'Uso de la factura',
+      formaDePago: 'Forma de pago de la factura',
+      elige: 'Elige una opción',
+      formas: { '01': '01 · Efectivo', '03': '03 · Transferencia' },
+      pagoMixto:
+        'Esta compra se pagó con efectivo y transferencia. Elige la forma de pago que llevará la factura (lo define tu contador).',
+      timbrar: 'Timbrar factura',
+      timbrando: 'Timbrando…',
+      cancelar: 'Cancelar',
+      errores: {
+        'recipient.rfc': 'El RFC no tiene el formato correcto (12 o 13 caracteres).',
+        'recipient.name': 'Falta el nombre o la razón social.',
+        'recipient.fiscalZip': 'El código postal debe tener 5 números.',
+        'recipient.regime': 'Elige el régimen fiscal.',
+        'recipient.cfdiUse': 'Elige el uso de la factura.',
+        paymentForm: 'Elige la forma de pago.',
+      },
+    },
+    resultado: {
+      titulo: 'Factura emitida',
+      folio: 'Folio de la factura',
+      aviso:
+        'Mientras no se conecte el proveedor de timbrado real, las facturas son de prueba y no tienen validez fiscal.',
+      pdf: 'Descargar PDF',
+      xml: 'Descargar XML',
+      whatsapp: 'Enviar por WhatsApp',
+      descargada: (nombre: string): string => `Se descargó ${nombre}.`,
+      cerrar: 'Cerrar',
+      mensajeWhatsApp: (folio: string): string => `Te comparto tu factura ${folio}.`,
+      sinArchivos: {
+        mensaje: 'No se pudieron leer los archivos de la factura.',
+        queHacer: 'Intenta de nuevo; si sigue pasando, avisa a soporte con el folio.',
+      },
+    },
+    errores: {
+      IN_PROCESS: {
+        mensaje: 'La factura se está procesando.',
+        queHacer: 'Espera un momento y vuelve a tocar "Timbrar factura"; no se genera dos veces.',
+      },
+      NOT_BILLABLE: {
+        mensaje: 'A algún producto le faltan las claves del SAT.',
+        queHacer:
+          'Complétalas en el Catálogo (o pide a tu contador que las valide) y vuelve a intentar.',
+      },
+      REJECTED: {
+        mensaje: 'El proveedor rechazó la factura con esos datos.',
+        queHacer:
+          'Revisa el RFC, el nombre y el código postal tal como aparecen en la constancia del cliente.',
+      },
+      NOT_AUTHORIZED: {
+        mensaje: 'Tu cuenta no puede facturar.',
+        queHacer: 'Entra con una cuenta de administrador.',
+      },
+      NOT_FOUND: {
+        mensaje: 'Ya no se encontró esa venta u orden.',
+        queHacer: 'Actualiza la lista.',
+      },
+      UNAVAILABLE: {
+        mensaje: 'El servicio de facturas no está disponible en este momento.',
+        queHacer: 'Intenta de nuevo en unos minutos.',
+      },
+      NO_NETWORK: {
+        mensaje: 'No hay conexión a internet.',
+        queHacer: 'Conéctate a internet e intenta de nuevo.',
+      },
+      INELIGIBLE: {
+        CANCELLED: {
+          mensaje: 'Esa compra está cancelada.',
+          queHacer: 'Una compra cancelada no se factura.',
+        },
+        ALREADY_INVOICED: {
+          mensaje: 'Esa compra ya tiene una factura.',
+          queHacer: 'Una operación solo puede tener una factura vigente. Actualiza la lista.',
+        },
+        NOT_SETTLED: {
+          mensaje: 'Esa compra todavía tiene saldo.',
+          queHacer: 'Se factura cuando queda liquidada.',
+        },
       },
     },
   },

@@ -115,6 +115,7 @@
 63. **Correo del negocio:** ¿ZAMMIR tiene un correo para el negocio? Sirve para que el cliente reciba su factura y como segundo canal para ejercer sus derechos sobre sus datos. Hoy solo se usa el WhatsApp. (PD-11, PD-50)
 64. **Factura global del público en general** (ventas de mostrador que nadie pidió facturar): sigue a cargo de **su contador**, no del sistema. ¿Confirman que así lo quieren? (ALCANCE §3)
 65. **Cancelar una factura mal emitida** (RFC o nombre mal escrito): solo un **administrador** puede, con el motivo del SAT. ¿Quién de ZAMMIR haría esto y qué hacen hoy cuando pasa? (RN-28)
+66. **¿Quién factura?** Hoy el sistema deja facturar solo al **administrador desde su computadora o tablet con su cuenta**. ¿Necesitan que un **cajero** pueda facturar desde la tablet con el PIN de un administrador, o con que el cajero le pida al administrador está bien? (PP-31)
 
 ## 8. Equipo, local y avisos
 
@@ -156,4 +157,5 @@ Pendientes que no dependen de Luis, para no perderlos de vista:
 | 31 oct 2026 | Sprint 3: preguntas 37.1 y 37.2 (una caja o una por persona; turno que cruza la medianoche). |
 | 31 oct 2026 | Sprint 3 (primeras 10 historias): preguntas 29.1 a 29.3 (fotos, condiciones del comprobante, pago de más). |
 | 31 oct 2026 | Sprint 3 (cierre): preguntas 37.3 a 37.6 (ancho del papel, cliente recurrente, leyenda del ticket, retiros de efectivo). |
+| 5 nov 2026 | Sprint 4 (facturar desde el sistema): pregunta 66 (quién factura: solo administrador o cajero con PIN). |
 | 4 nov 2026 | Sprint 4 (portal de facturas): preguntas 61 a 65 (IVA 0 % o exento, régimen y uso más pedidos, correo del negocio, factura global, cancelación de facturas). |

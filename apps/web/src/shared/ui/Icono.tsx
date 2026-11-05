@@ -74,6 +74,7 @@ export function iconoDeSeccion(id: string): NombreDeIcono {
     case 'configuracion':
       return id;
     case 'cuentas-por-cobrar':
+    case 'facturas':
       return 'cuentas';
     default:
       return 'inicio';

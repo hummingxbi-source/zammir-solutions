@@ -56,6 +56,8 @@ createRoot(root).render(
           clientes={composition.clientes}
           legal={composition.legal}
           contactoPublico={composition.contactoPublico}
+          facturas={composition.facturas}
+          compartirFacturas={composition.compartirFacturas}
           portal={composition.portal}
           condiciones={composition.condiciones}
           conectarTablet={composition.conectarTablet}

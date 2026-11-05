@@ -130,3 +130,4 @@ export * from './modules/billing/domain/payment-form';
 export * from './modules/billing/application/request-portal-invoice';
 export * from './modules/billing/application/download-portal-invoice';
 export * from './modules/billing/application/issue-system-invoice';
+export * from './modules/billing/application/admin-invoices';

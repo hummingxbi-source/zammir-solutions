@@ -43,6 +43,13 @@ export const SECCIONES: readonly Seccion[] = [
     soloAdministrador: true,
   },
   {
+    id: 'facturas',
+    ruta: '/facturas',
+    texto: s.facturas,
+    grupo: 'secundaria',
+    soloAdministrador: true,
+  },
+  {
     id: 'usuarios',
     ruta: '/usuarios',
     texto: s.usuarios,
