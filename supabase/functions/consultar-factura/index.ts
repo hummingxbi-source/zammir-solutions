@@ -5,6 +5,7 @@
 // (3) limita los intentos por IP y por folio y (4) frena a los programas. Toda la lógica vive en el núcleo
 // (`lookupInvoiceDocument`); este archivo solo conecta HTTP con las piezas comunes de `_shared/portal.ts`.
 // @ts-nocheck: el archivo se ejecuta en Deno, no lo compila el TypeScript del repositorio.
+import { servir } from '../_shared/errores.ts';
 import { lookupInvoiceDocument } from '../_shared/core.mjs';
 import {
   cabeceras,
@@ -15,7 +16,7 @@ import {
   responder,
 } from '../_shared/portal.ts';
 
-Deno.serve(async (req: Request) => {
+servir('consultar-factura', async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: cabeceras });
   }

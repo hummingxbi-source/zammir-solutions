@@ -4,6 +4,7 @@
 // orden, aplica el cambio y asigna el folio. Esta función no decide nada contable.
 // Se llama con la sesión de la tablet (su JWT): la base verifica que sea un dispositivo activo.
 // @ts-nocheck: el archivo se ejecuta en Deno, no lo compila el TypeScript del repositorio.
+import { servir } from '../_shared/errores.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2.118.0';
 import { parseEnvelope, parseOperation } from '../_shared/core.mjs';
 
@@ -19,7 +20,7 @@ function responder(estado: number, cuerpo: unknown): Response {
 
 // Los rechazos estructurales son una respuesta válida (200 con ok:false): la tablet los distingue
 // de una falla del servidor (5xx), que se reintenta.
-Deno.serve(async (req: Request) => {
+servir('recibir-operacion', async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: cabeceras });
   }

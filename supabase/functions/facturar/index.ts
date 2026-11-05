@@ -4,6 +4,7 @@
 // lógica vive en el núcleo (`issueSystemInvoice`); aquí solo se conecta HTTP con la base y el proveedor de
 // timbrado, que debe pedirse con `BILLING_PROVIDER=simulated` (sin validez fiscal) o no emite nada.
 // @ts-nocheck: el archivo se ejecuta en Deno, no lo compila el TypeScript del repositorio.
+import { servir } from '../_shared/errores.ts';
 import { issueSystemInvoice, simulatedBilling } from '../_shared/core.mjs';
 import {
   ajusteDeAnticipos,
@@ -22,7 +23,7 @@ function texto(valor: unknown): string {
   return typeof valor === 'string' ? valor : '';
 }
 
-Deno.serve(async (req: Request) => {
+servir('facturar', async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: cabeceras });
   }

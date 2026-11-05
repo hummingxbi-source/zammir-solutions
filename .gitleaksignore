@@ -1,0 +1,3 @@
+# Textos de prueba que parecen un token (JWT) en el primer commit de S4-28; ya no están en el código.
+ec85b0d4ae98c70b66d4e401ad8270c80655ae2d:packages/core/src/modules/observability/domain/error-report.test.ts:jwt:23
+ec85b0d4ae98c70b66d4e401ad8270c80655ae2d:packages/core/src/modules/observability/domain/error-report.test.ts:jwt:173

@@ -29,6 +29,8 @@ export default {
     'packages/core/src/modules/billing/application/stamp-snapshot.ts',
     'packages/core/src/modules/billing/application/cancel-invoice.ts',
     'packages/core/src/modules/billing/domain/stamp-usage.ts',
+    'packages/core/src/modules/observability/domain/error-report.ts',
+    'packages/core/src/modules/observability/application/error-reporter.ts',
     'packages/core/src/modules/billing/domain/deposit-treatment.ts',
     'packages/core/src/modules/billing/application/request-portal-invoice.ts',
     'packages/core/src/modules/billing/application/download-portal-invoice.ts',

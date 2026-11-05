@@ -2,10 +2,14 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router';
 
+import { createErrorReporter } from '@zammir/core';
+
 import { App } from './App';
 import { Muestras } from './dev/Muestras';
 import { createComposition } from './composition';
 import { ProveedorSesionAdmin } from './modules/identity/ui/SesionAdmin';
+import { envioDeErrores, instalarCapturaDeErrores } from './shared/infra/envio-de-errores';
+import { LimiteDeErrores } from './shared/ui/LimiteDeErrores';
 import { registerSW } from 'virtual:pwa-register';
 import '@fontsource/fraunces/latin-400.css';
 import '@fontsource/fraunces/latin-700.css';
@@ -19,6 +23,17 @@ import './shared/ui/componentes.css';
 
 // Guarda la aplicación en la tablet para abrirla sin internet [RNF-01].
 registerSW({ immediate: true });
+
+// Errores sin datos personales: se limpian en el navegador y otra vez en el servidor [RNF-34, S4-28].
+const reportero = createErrorReporter({
+  source: 'CLIENT',
+  appVersion: import.meta.env.VITE_APP_VERSION ?? 'desarrollo',
+  send: envioDeErrores({
+    url: import.meta.env.VITE_SUPABASE_URL,
+    anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+  }),
+});
+instalarCapturaDeErrores(reportero, window);
 
 const composition = createComposition({
   url: import.meta.env.VITE_SUPABASE_URL,
@@ -45,48 +60,54 @@ if (root === null) {
 
 createRoot(root).render(
   <StrictMode>
-    <ProveedorSesionAdmin
-      auth={composition.adminAuth}
-      clock={composition.clock}
-      cargarLimiteInactividad={composition.cargarLimiteInactividad}
+    <LimiteDeErrores
+      alError={(error) => {
+        void reportero.report(error, window.location.pathname);
+      }}
     >
-      <BrowserRouter>
-        <App
-          dispositivos={composition.dispositivos}
-          clientes={composition.clientes}
-          legal={composition.legal}
-          contactoPublico={composition.contactoPublico}
-          facturas={composition.facturas}
-          compartirFacturas={composition.compartirFacturas}
-          portal={composition.portal}
-          condiciones={composition.condiciones}
-          conectarTablet={composition.conectarTablet}
-          entradaConPin={composition.entradaConPin}
-          prepararCotizador={composition.prepararCotizador}
-          prepararOrdenes={composition.prepararOrdenes}
-          prepararCuentas={composition.prepararCuentas}
-          prepararReportes={composition.prepararReportes}
-          muestras={import.meta.env.DEV ? <Muestras /> : null}
-          historialDeCliente={composition.historialDeCliente}
-          prepararMostrador={composition.prepararMostrador}
-          sincronizacion={composition.envio?.visible}
-          catalogo={composition.catalogo}
-          bitacora={
-            composition.bitacora === null
-              ? null
-              : { reader: composition.bitacora, cargarNombres: composition.cargarNombres }
-          }
-          usuarios={
-            composition.usuarios === null
-              ? null
-              : {
-                  deps: composition.usuarios,
-                  cargarPolitica: composition.cargarPoliticaDeUsuarios,
-                }
-          }
-          cargarVigenciaDeCodigo={composition.cargarVigenciaDeCodigo}
-        />
-      </BrowserRouter>
-    </ProveedorSesionAdmin>
+      <ProveedorSesionAdmin
+        auth={composition.adminAuth}
+        clock={composition.clock}
+        cargarLimiteInactividad={composition.cargarLimiteInactividad}
+      >
+        <BrowserRouter>
+          <App
+            dispositivos={composition.dispositivos}
+            clientes={composition.clientes}
+            legal={composition.legal}
+            contactoPublico={composition.contactoPublico}
+            facturas={composition.facturas}
+            compartirFacturas={composition.compartirFacturas}
+            portal={composition.portal}
+            condiciones={composition.condiciones}
+            conectarTablet={composition.conectarTablet}
+            entradaConPin={composition.entradaConPin}
+            prepararCotizador={composition.prepararCotizador}
+            prepararOrdenes={composition.prepararOrdenes}
+            prepararCuentas={composition.prepararCuentas}
+            prepararReportes={composition.prepararReportes}
+            muestras={import.meta.env.DEV ? <Muestras /> : null}
+            historialDeCliente={composition.historialDeCliente}
+            prepararMostrador={composition.prepararMostrador}
+            sincronizacion={composition.envio?.visible}
+            catalogo={composition.catalogo}
+            bitacora={
+              composition.bitacora === null
+                ? null
+                : { reader: composition.bitacora, cargarNombres: composition.cargarNombres }
+            }
+            usuarios={
+              composition.usuarios === null
+                ? null
+                : {
+                    deps: composition.usuarios,
+                    cargarPolitica: composition.cargarPoliticaDeUsuarios,
+                  }
+            }
+            cargarVigenciaDeCodigo={composition.cargarVigenciaDeCodigo}
+          />
+        </BrowserRouter>
+      </ProveedorSesionAdmin>
+    </LimiteDeErrores>
   </StrictMode>,
 );

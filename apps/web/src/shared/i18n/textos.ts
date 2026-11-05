@@ -5,6 +5,12 @@ export const textos = {
   app: {
     nombre: 'ZAMMIR',
   },
+  falla: {
+    mensaje: 'Esta pantalla tuvo un problema y no se pudo mostrar.',
+    queHacer:
+      'Toca "Volver a abrir". Lo que ya guardaste en la tablet no se pierde. Si sigue pasando, avísale a Juanito.',
+    recargar: 'Volver a abrir',
+  },
   navegacion: {
     irAlInicio: 'ZAMMIR, ir al panel de inicio',
     principal: 'Secciones del trabajo',

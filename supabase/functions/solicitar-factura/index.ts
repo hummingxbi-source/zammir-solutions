@@ -4,6 +4,7 @@
 // timbrado. Todo se decide aquí aunque la pantalla ya lo haya validado [RNF-11]. Sin `BILLING_PROVIDER` no
 // emite nada. La lógica vive en el núcleo (`requestPortalInvoice`).
 // @ts-nocheck: el archivo se ejecuta en Deno, no lo compila el TypeScript del repositorio.
+import { servir } from '../_shared/errores.ts';
 import { requestPortalInvoice, simulatedBilling } from '../_shared/core.mjs';
 import {
   ajusteDeAnticipos,
@@ -23,7 +24,7 @@ function texto(valor: unknown): string {
   return typeof valor === 'string' ? valor : '';
 }
 
-Deno.serve(async (req: Request) => {
+servir('solicitar-factura', async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: cabeceras });
   }
