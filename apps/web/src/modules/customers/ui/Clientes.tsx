@@ -11,6 +11,7 @@ import {
   type Customer,
   type CustomerError,
   type CustomerHistory,
+  type CustomerInvoice,
   type CustomerId,
   type ManageCustomersDeps,
 } from '@zammir/core';
@@ -33,11 +34,13 @@ export interface ClientesProps {
   readonly deps: ManageCustomersDeps;
   /** Historial de un cliente desde lo guardado en la tablet; sin esto no se ofrece la ficha [S3-25]. */
   readonly historial?: (id: CustomerId) => Promise<CustomerHistory>;
+  /** Las facturas de un cliente para su historial (solo administradores con sesión) [RF-M10-21]. */
+  readonly facturasDelCliente?: (id: CustomerId) => Promise<readonly CustomerInvoice[] | null>;
 }
 
 /** Clientes: lista y alta con lo mínimo (nombre y WhatsApp) [RF-M5-01]. La búsqueda y el aviso de
  *  duplicados llegan con S1-11. */
-export function Clientes({ deps, historial }: ClientesProps): ReactElement {
+export function Clientes({ deps, historial, facturasDelCliente }: ClientesProps): ReactElement {
   const { usuario } = useSesionAdmin();
   const actor = { role: usuario?.role ?? null };
 
@@ -320,6 +323,9 @@ export function Clientes({ deps, historial }: ClientesProps): ReactElement {
         <FichaDelCliente
           cliente={ficha}
           cargar={() => historial(ficha.id)}
+          {...(facturasDelCliente === undefined
+            ? {}
+            : { cargarFacturas: () => facturasDelCliente(ficha.id) })}
           onCerrar={() => {
             setFicha(null);
           }}

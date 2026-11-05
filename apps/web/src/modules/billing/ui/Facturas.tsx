@@ -1,18 +1,23 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { ReactElement, SyntheticEvent } from 'react';
 import {
+  CANCELLATION_MOTIVES,
   CFDI_USES,
   isCfdiUse,
   isFiscalRegime,
   isValidRfc,
   isValidZip,
   regimesForRfc,
+  type AdminCancelResult,
   type AdminInvoices,
   type AdminIssueResult,
+  type CancellationMotive,
   type InvoiceCandidate,
+  type IssuedInvoice,
   type PaymentForm,
   type ShareableFile,
   type ShareService,
+  type StampUsage,
 } from '@zammir/core';
 
 import { textos } from '../../../shared/i18n/textos';
@@ -21,7 +26,9 @@ import { Boton } from '../../../shared/ui/Boton';
 import { Campo } from '../../../shared/ui/Campo';
 import { EncabezadoDePagina } from '../../../shared/ui/EncabezadoDePagina';
 import { EstadoVacio } from '../../../shared/ui/EstadoVacio';
+import { EtiquetaDeEstado, type TonoDeEstado } from '../../../shared/ui/EtiquetaDeEstado';
 import { Indicador } from '../../../shared/ui/Indicador';
+import { Pestanas } from '../../../shared/ui/Pestanas';
 import { Seleccion } from '../../../shared/ui/Seleccion';
 import { Tabla } from '../../../shared/ui/Tabla';
 import { Tarjeta } from '../../../shared/ui/Tarjeta';
@@ -70,6 +77,8 @@ function errorDe(r: AdminIssueResult): ErrorVisible | null {
       return null;
     case 'IN_PROCESS':
       return t.errores.IN_PROCESS;
+    case 'DEPOSIT_TREATMENT_UNSUPPORTED':
+      return t.errores.DEPOSIT_TREATMENT_UNSUPPORTED;
     case 'NOT_BILLABLE':
       return t.errores.NOT_BILLABLE;
     case 'REJECTED':
@@ -422,90 +431,458 @@ function FacturaEmitida({
   );
 }
 
-/** Facturas para administradores: lo que ya se puede facturar (ventas y órdenes liquidadas sin factura) y emitir
- *  la factura con el receptor de la ficha del cliente [S4-16, RF-M10-04 a RF-M10-07]. Todo lo decide el servidor. */
+function errorDeCancelacion(r: AdminCancelResult): ErrorVisible | null {
+  switch (r.kind) {
+    case 'CANCELLED':
+    case 'CANCELLATION_PENDING':
+    case 'INVALID':
+      return null;
+    case 'NOT_CANCELLABLE':
+      return t.cancelar.noSePudo.NOT_CANCELLABLE;
+    case 'NOT_FOUND':
+      return t.cancelar.noSePudo.NOT_FOUND;
+    case 'REJECTED':
+      return t.cancelar.noSePudo.REJECTED;
+    case 'NOT_AUTHORIZED':
+      return t.errores.NOT_AUTHORIZED;
+    case 'NO_NETWORK':
+      return t.errores.NO_NETWORK;
+    case 'UNAVAILABLE':
+      return t.errores.UNAVAILABLE;
+  }
+}
+
+/** Cancelar una factura con uno de los motivos del SAT; con el 01 pide el folio de la que la sustituye. Solo la
+ *  ven los administradores y queda en la bitácora [RF-M10-19, RN-28]. */
+function FormularioDeCancelacion({
+  factura,
+  facturas,
+  alTerminar,
+  alVolver,
+}: {
+  readonly factura: IssuedInvoice;
+  readonly facturas: AdminInvoices;
+  readonly alTerminar: (mensaje: string) => void;
+  readonly alVolver: () => void;
+}): ReactElement {
+  const folio = factura.folio ?? '';
+  const [motivo, setMotivo] = useState<'' | CancellationMotive>('');
+  const [sustituta, setSustituta] = useState('');
+  const [campos, setCampos] = useState<readonly string[]>([]);
+  const [error, setError] = useState<ErrorVisible | null>(null);
+  const [trabajando, setTrabajando] = useState(false);
+
+  const mensajes: Readonly<Record<string, string>> = t.cancelar.errores;
+
+  async function cancelar(evento: SyntheticEvent): Promise<void> {
+    evento.preventDefault();
+    setError(null);
+    const malos: string[] = [];
+    if (motivo === '') {
+      malos.push('motive');
+    }
+    if (motivo === '01' && sustituta.trim() === '') {
+      malos.push('substituteFolio');
+    }
+    setCampos(malos);
+    if (motivo === '' || malos.length > 0) {
+      return;
+    }
+    setTrabajando(true);
+    const r = await facturas.cancel({
+      folio,
+      motive: motivo,
+      ...(motivo === '01' ? { substituteFolio: sustituta.trim().toUpperCase() } : {}),
+    });
+    setTrabajando(false);
+    if (r.kind === 'CANCELLED') {
+      alTerminar(t.cancelar.cancelada(folio));
+      return;
+    }
+    if (r.kind === 'CANCELLATION_PENDING') {
+      alTerminar(t.cancelar.pendiente(folio));
+      return;
+    }
+    if (r.kind === 'INVALID') {
+      setCampos(r.fields);
+      return;
+    }
+    setError(errorDeCancelacion(r));
+  }
+
+  return (
+    <form
+      className="formulario"
+      noValidate
+      onSubmit={(e) => {
+        void cancelar(e);
+      }}
+    >
+      <p>{t.cancelar.explicacion}</p>
+      <Seleccion
+        etiqueta={t.cancelar.motivo}
+        value={motivo}
+        opciones={[
+          { valor: '', texto: t.cancelar.elige },
+          ...CANCELLATION_MOTIVES.map((m) => ({ valor: m, texto: t.cancelar.motivos[m] })),
+        ]}
+        onChange={(e) => {
+          const valor = CANCELLATION_MOTIVES.find((m) => m === e.target.value);
+          setMotivo(valor ?? '');
+        }}
+      />
+      {campos.includes('motive') ? (
+        <p className="portal__error" role="alert">
+          {mensajes.motive}
+        </p>
+      ) : null}
+      {motivo === '01' ? (
+        <>
+          <Campo
+            etiqueta={t.cancelar.sustituta}
+            value={sustituta}
+            autoComplete="off"
+            autoCapitalize="characters"
+            spellCheck={false}
+            {...(campos.includes('substituteFolio')
+              ? { error: mensajes.substituteFolio ?? '' }
+              : {})}
+            onChange={(e) => {
+              setSustituta(e.target.value);
+            }}
+          />
+          <p className="portal__ayuda">{t.cancelar.sustitutaAyuda}</p>
+        </>
+      ) : null}
+      {error === null ? null : (
+        <Aviso tipo="error" queHacer={error.queHacer}>
+          {error.mensaje}
+        </Aviso>
+      )}
+      <div className="formulario__acciones">
+        <Boton type="submit" variante="peligro" disabled={trabajando}>
+          {trabajando ? t.cancelar.cancelando : t.cancelar.confirmar}
+        </Boton>
+        <Boton type="button" variante="secundario" disabled={trabajando} onClick={alVolver}>
+          {t.cancelar.volver}
+        </Boton>
+      </div>
+    </form>
+  );
+}
+
+const TONO_DE_ESTADO: Readonly<Record<IssuedInvoice['status'], TonoDeEstado>> = {
+  STAMPED: 'listo',
+  IN_PROCESS: 'proceso',
+  CANCELLED: 'cancelado',
+  FAILED: 'cancelado',
+};
+
+function etiquetaDe(f: IssuedInvoice): ReactElement {
+  if (f.status === 'STAMPED' && f.cancellationRequested) {
+    return <EtiquetaDeEstado tono="espera" texto={t.emitidas.estados.CANCELLATION_REQUESTED} />;
+  }
+  return <EtiquetaDeEstado tono={TONO_DE_ESTADO[f.status]} texto={t.emitidas.estados[f.status]} />;
+}
+
+/** Los timbres de este año contra el límite del paquete, con aviso al llegar al 80 % [RF-M10-20]. */
+function Timbres({ uso }: { readonly uso: StampUsage | null | undefined }): ReactElement | null {
+  if (uso === undefined) {
+    return null;
+  }
+  if (uso === null) {
+    return <p className="portal__ayuda">{t.timbres.noDisponible}</p>;
+  }
+  return (
+    <>
+      <Indicador
+        rotulo={t.timbres.titulo}
+        valor={uso.limit === null ? String(uso.used) : t.timbres.usados(uso.used, uso.limit)}
+        detalle={
+          uso.limit === null || uso.remaining === null
+            ? t.timbres.sinLimite
+            : t.timbres.quedan(uso.remaining)
+        }
+        tono={uso.level === 'REACHED' ? 'peligro' : uso.level === 'WARNING' ? 'aviso' : 'neutro'}
+      />
+      {uso.level === 'NO_LIMIT' ? (
+        <p className="portal__ayuda">{t.timbres.sinLimiteDetalle(uso.used)}</p>
+      ) : null}
+    </>
+  );
+}
+
+type Seccion = 'por-facturar' | 'emitidas';
+
+/** Facturas para administradores: lo que ya se puede facturar, lo emitido y en proceso, cancelar y los timbres del
+ *  año [S4-16, S4-20 a S4-22, RF-M10-04 a RF-M10-07, RF-M10-15, RF-M10-19, RF-M10-20]. Todo lo decide el servidor. */
 export function Facturas({
   facturas,
   compartir,
   nuevoId = () => crypto.randomUUID(),
   guardarArchivo = guardarEnElNavegador,
 }: FacturasProps): ReactElement {
+  const [seccion, setSeccion] = useState<Seccion>('por-facturar');
   const [lista, setLista] = useState<readonly InvoiceCandidate[] | null | undefined>(undefined);
+  const [emitidasLista, setEmitidasLista] = useState<readonly IssuedInvoice[] | null | undefined>(
+    undefined,
+  );
+  const [uso, setUso] = useState<StampUsage | null | undefined>(undefined);
   const [facturando, setFacturando] = useState<InvoiceCandidate | null>(null);
   const [emitida, setEmitida] = useState<string | null>(null);
+  const [cancelando, setCancelando] = useState<IssuedInvoice | null>(null);
+  const [reintentando, setReintentando] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<string | null>(null);
+  const [errorDeReintento, setErrorDeReintento] = useState<ErrorVisible | null>(null);
 
   const cargar = useCallback(async () => {
-    setLista(await facturas.candidates());
+    const [c, e, u] = await Promise.all([facturas.candidates(), facturas.list(), facturas.usage()]);
+    setLista(c);
+    setEmitidasLista(e);
+    setUso(u);
   }, [facturas]);
 
   useEffect(() => {
     void cargar();
   }, [cargar]);
 
+  async function reintentar(f: IssuedInvoice): Promise<void> {
+    setReintentando(f.requestId);
+    setAviso(null);
+    setErrorDeReintento(null);
+    const r = await facturas.retry(f.requestId);
+    setReintentando(null);
+    if (r.kind === 'STAMPED') {
+      setAviso(t.emitidas.reintentoListo(r.folio));
+      await cargar();
+      return;
+    }
+    setErrorDeReintento(
+      r.kind === 'IN_PROCESS'
+        ? t.errores.IN_PROCESS
+        : r.kind === 'REJECTED'
+          ? t.errores.REJECTED
+          : r.kind === 'NOT_FOUND'
+            ? t.errores.NOT_FOUND
+            : r.kind === 'NOT_AUTHORIZED'
+              ? t.errores.NOT_AUTHORIZED
+              : r.kind === 'NO_NETWORK'
+                ? t.errores.NO_NETWORK
+                : t.errores.UNAVAILABLE,
+    );
+    if (r.kind === 'NOT_FOUND') {
+      await cargar();
+    }
+  }
+
+  const enProceso = (emitidasLista ?? []).filter((f) => f.status === 'IN_PROCESS');
+
   return (
     <section className="anima-entrada">
       <EncabezadoDePagina titulo={t.titulo} descripcion={t.descripcion} />
 
-      {lista === undefined ? <p role="status">{t.cargando}</p> : null}
-      {lista === null ? (
-        <Aviso tipo="error" queHacer={t.sinConexion.queHacer}>
-          {t.sinConexion.mensaje}
-        </Aviso>
-      ) : null}
+      {uso === undefined && lista === undefined ? <p role="status">{t.cargando}</p> : null}
 
-      {lista !== undefined && lista !== null ? (
+      <div className="indicadores">
+        {lista === undefined || lista === null ? null : (
+          <Indicador rotulo={t.resumen} valor={String(lista.length)} />
+        )}
+        <Timbres uso={uso} />
+      </div>
+      {uso?.level === 'WARNING' ? <Aviso tipo="error">{t.timbres.aviso}</Aviso> : null}
+      {uso?.level === 'REACHED' ? <Aviso tipo="error">{t.timbres.agotados}</Aviso> : null}
+
+      {aviso === null ? null : <Aviso tipo="exito">{aviso}</Aviso>}
+
+      <Pestanas
+        etiqueta={t.pestanas.etiqueta}
+        pestanas={[
+          { id: 'por-facturar', texto: t.pestanas.porFacturar },
+          { id: 'emitidas', texto: t.pestanas.emitidas },
+        ]}
+        activa={seccion}
+        onCambiar={(id) => {
+          setSeccion(id === 'emitidas' ? 'emitidas' : 'por-facturar');
+        }}
+      />
+
+      {seccion === 'por-facturar' ? (
         <>
-          <div className="indicadores">
-            <Indicador rotulo={t.resumen} valor={String(lista.length)} />
-          </div>
-          {lista.length === 0 ? (
-            <EstadoVacio titulo={t.vacioTitulo} descripcion={t.vacio} icono="cuentas" />
-          ) : (
-            <Tarjeta rotulo={t.resumen}>
-              <Tabla
-                descripcion={t.titulo}
-                claveDeFila={(c) => `${c.sourceType}-${c.sourceId}`}
-                filas={lista}
-                columnas={[
-                  { clave: 'folio', rotulo: t.columnas.folio, celda: (c) => c.folio },
-                  { clave: 'tipo', rotulo: t.columnas.tipo, celda: (c) => t.tipos[c.sourceType] },
-                  {
-                    clave: 'cliente',
-                    rotulo: t.columnas.cliente,
-                    celda: (c) => c.customerName ?? t.sinCliente,
-                  },
-                  {
-                    clave: 'total',
-                    rotulo: t.columnas.total,
-                    numerica: true,
-                    celda: (c) => formatearPesos(c.totalCents),
-                  },
-                  {
-                    clave: 'liquidada',
-                    rotulo: t.columnas.liquidada,
-                    celda: (c) =>
-                      c.settledAt === null ? '' : formatearFecha(new Date(c.settledAt)),
-                  },
-                  {
-                    clave: 'acciones',
-                    rotulo: t.columnas.acciones,
-                    celda: (c) => (
-                      <Boton
-                        aria-label={t.facturarA(c.folio)}
-                        onClick={() => {
-                          setFacturando(c);
-                        }}
-                      >
-                        {t.facturar}
-                      </Boton>
-                    ),
-                  },
-                ]}
-              />
-            </Tarjeta>
-          )}
+          {lista === null ? (
+            <Aviso tipo="error" queHacer={t.sinConexion.queHacer}>
+              {t.sinConexion.mensaje}
+            </Aviso>
+          ) : null}
+          {lista !== undefined && lista !== null ? (
+            lista.length === 0 ? (
+              <EstadoVacio titulo={t.vacioTitulo} descripcion={t.vacio} icono="cuentas" />
+            ) : (
+              <Tarjeta rotulo={t.resumen}>
+                <Tabla
+                  descripcion={t.titulo}
+                  claveDeFila={(c) => `${c.sourceType}-${c.sourceId}`}
+                  filas={lista}
+                  columnas={[
+                    { clave: 'folio', rotulo: t.columnas.folio, celda: (c) => c.folio },
+                    { clave: 'tipo', rotulo: t.columnas.tipo, celda: (c) => t.tipos[c.sourceType] },
+                    {
+                      clave: 'cliente',
+                      rotulo: t.columnas.cliente,
+                      celda: (c) => c.customerName ?? t.sinCliente,
+                    },
+                    {
+                      clave: 'total',
+                      rotulo: t.columnas.total,
+                      numerica: true,
+                      celda: (c) => formatearPesos(c.totalCents),
+                    },
+                    {
+                      clave: 'liquidada',
+                      rotulo: t.columnas.liquidada,
+                      celda: (c) =>
+                        c.settledAt === null ? '' : formatearFecha(new Date(c.settledAt)),
+                    },
+                    {
+                      clave: 'acciones',
+                      rotulo: t.columnas.acciones,
+                      celda: (c) => (
+                        <Boton
+                          aria-label={t.facturarA(c.folio)}
+                          onClick={() => {
+                            setFacturando(c);
+                          }}
+                        >
+                          {t.facturar}
+                        </Boton>
+                      ),
+                    },
+                  ]}
+                />
+              </Tarjeta>
+            )
+          ) : null}
         </>
-      ) : null}
+      ) : (
+        <>
+          {emitidasLista === undefined ? <p role="status">{t.emitidas.cargando}</p> : null}
+          {emitidasLista === null ? (
+            <Aviso tipo="error" queHacer={t.emitidas.sinConexion.queHacer}>
+              {t.emitidas.sinConexion.mensaje}
+            </Aviso>
+          ) : null}
+          {enProceso.length > 0 ? (
+            <Aviso tipo="error" queHacer={t.emitidas.enProceso.queHacer}>
+              {t.emitidas.enProceso.mensaje(enProceso.length)}
+            </Aviso>
+          ) : null}
+          {errorDeReintento === null ? null : (
+            <Aviso tipo="error" queHacer={errorDeReintento.queHacer}>
+              {errorDeReintento.mensaje}
+            </Aviso>
+          )}
+          {emitidasLista !== undefined && emitidasLista !== null ? (
+            emitidasLista.length === 0 ? (
+              <EstadoVacio
+                titulo={t.emitidas.vacioTitulo}
+                descripcion={t.emitidas.vacio}
+                icono="cuentas"
+              />
+            ) : (
+              <Tarjeta rotulo={t.emitidas.titulo}>
+                <Tabla
+                  descripcion={t.emitidas.titulo}
+                  claveDeFila={(f) => f.requestId}
+                  filas={emitidasLista}
+                  columnas={[
+                    {
+                      clave: 'factura',
+                      rotulo: t.emitidas.columnas.factura,
+                      celda: (f) => f.folio ?? t.emitidas.sinFolio,
+                    },
+                    {
+                      clave: 'origen',
+                      rotulo: t.emitidas.columnas.origen,
+                      celda: (f) => f.sourceFolio ?? '',
+                    },
+                    {
+                      clave: 'cliente',
+                      rotulo: t.emitidas.columnas.cliente,
+                      celda: (f) => f.customerName ?? t.sinCliente,
+                    },
+                    {
+                      clave: 'total',
+                      rotulo: t.emitidas.columnas.total,
+                      numerica: true,
+                      celda: (f) => (f.totalCents === null ? '' : formatearPesos(f.totalCents)),
+                    },
+                    {
+                      clave: 'fecha',
+                      rotulo: t.emitidas.columnas.fecha,
+                      celda: (f) => formatearFecha(new Date(f.stampedAt ?? f.createdAt)),
+                    },
+                    {
+                      clave: 'estado',
+                      rotulo: t.emitidas.columnas.estado,
+                      celda: (f) => (
+                        <>
+                          {etiquetaDe(f)}
+                          {f.status === 'IN_PROCESS' ? (
+                            <small> {t.emitidas.intentos(f.attempts)}</small>
+                          ) : null}
+                        </>
+                      ),
+                    },
+                    {
+                      clave: 'acciones',
+                      rotulo: t.emitidas.columnas.acciones,
+                      celda: (f) => (
+                        <span className="tabla__acciones">
+                          {f.status === 'IN_PROCESS' ? (
+                            <Boton
+                              variante="secundario"
+                              disabled={reintentando !== null}
+                              aria-label={t.emitidas.reintentarA(f.folio ?? f.requestId)}
+                              onClick={() => {
+                                void reintentar(f);
+                              }}
+                            >
+                              {reintentando === f.requestId
+                                ? t.emitidas.reintentando
+                                : t.emitidas.reintentar}
+                            </Boton>
+                          ) : null}
+                          {f.status === 'STAMPED' && f.folio !== null ? (
+                            <>
+                              <Boton
+                                variante="secundario"
+                                aria-label={t.emitidas.descargarA(f.folio)}
+                                onClick={() => {
+                                  setEmitida(f.folio);
+                                }}
+                              >
+                                {t.emitidas.descargar}
+                              </Boton>
+                              <Boton
+                                variante="peligro"
+                                aria-label={t.emitidas.cancelarA(f.folio)}
+                                onClick={() => {
+                                  setCancelando(f);
+                                }}
+                              >
+                                {t.emitidas.cancelar}
+                              </Boton>
+                            </>
+                          ) : null}
+                        </span>
+                      ),
+                    },
+                  ]}
+                />
+              </Tarjeta>
+            )
+          ) : null}
+        </>
+      )}
 
       {facturando === null ? null : (
         <Ventana
@@ -544,6 +921,28 @@ export function Facturas({
             guardarArchivo={guardarArchivo}
             alCerrar={() => {
               setEmitida(null);
+            }}
+          />
+        </Ventana>
+      )}
+
+      {cancelando === null ? null : (
+        <Ventana
+          titulo={t.cancelar.titulo(cancelando.folio ?? '')}
+          onCerrar={() => {
+            setCancelando(null);
+          }}
+        >
+          <FormularioDeCancelacion
+            factura={cancelando}
+            facturas={facturas}
+            alVolver={() => {
+              setCancelando(null);
+            }}
+            alTerminar={(mensaje) => {
+              setCancelando(null);
+              setAviso(mensaje);
+              void cargar();
             }}
           />
         </Ventana>

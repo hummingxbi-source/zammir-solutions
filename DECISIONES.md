@@ -38,5 +38,6 @@
 | [0030](docs/decisiones/0030-portal-de-autofacturacion-sin-sesion-y-con-limites.md) | Portal de autofacturación sin sesión, con respuesta uniforme y límites de intentos | Aceptada (propuesta) | 2026-11-04 |
 | [0031](docs/decisiones/0031-solicitud-de-factura-en-el-portal-y-proveedor-simulado.md) | Solicitud de factura en el portal, archivos guardados y proveedor simulado explícito | Aceptada (propuesta) | 2026-11-04 |
 | [0032](docs/decisiones/0032-facturar-desde-el-sistema-solo-administrador-con-sesion.md) | Facturar desde el sistema: administrador con sesión, sin plazo y con elección explícita en pagos mixtos | Aceptada (propuesta) | 2026-11-05 |
+| [0033](docs/decisiones/0033-reintentos-cancelacion-anticipos-y-timbres.md) | Reintentos con la solicitud guardada, cancelación solo de administradores, anticipos en la opción (a) y timbres con límite configurable | Aceptada (propuesta) | 2026-11-05 |
 
 Plantilla para una nueva decisión: [`docs/decisiones/0000-plantilla.md`](docs/decisiones/0000-plantilla.md).
