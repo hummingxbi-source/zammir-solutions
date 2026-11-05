@@ -135,3 +135,4 @@ export * from './modules/billing/domain/stamp-usage';
 export * from './modules/billing/application/retry-invoices';
 export * from './modules/billing/application/cancel-invoice';
 export * from './modules/billing/domain/deposit-treatment';
+export * from './modules/billing/application/stamp-snapshot';

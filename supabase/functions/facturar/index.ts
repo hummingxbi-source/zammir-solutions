@@ -6,6 +6,7 @@
 // @ts-nocheck: el archivo se ejecuta en Deno, no lo compila el TypeScript del repositorio.
 import { issueSystemInvoice, simulatedBilling } from '../_shared/core.mjs';
 import {
+  ajusteDeAnticipos,
   almacenDeFacturas,
   almacenDeFuentes,
   cabeceras,
@@ -75,6 +76,7 @@ Deno.serve(async (req: Request) => {
         store: almacenDeFacturas(servicio),
         clock: { now: () => new Date() },
       },
+      depositTreatment: await ajusteDeAnticipos(servicio),
     },
     {
       actor: { userId: usuario.userId, role: usuario.role },
@@ -106,6 +108,8 @@ Deno.serve(async (req: Request) => {
       return responder(409, { error: 'NOT_ELIGIBLE', reason: resultado.reason });
     case 'PAYMENT_FORM_REQUIRED':
       return responder(409, { error: 'PAYMENT_FORM_REQUIRED' });
+    case 'DEPOSIT_TREATMENT_UNSUPPORTED':
+      return responder(409, { error: 'DEPOSIT_TREATMENT_UNSUPPORTED' });
     case 'NOT_BILLABLE':
       return responder(409, { error: 'NOT_BILLABLE', reason: resultado.reason });
     case 'INVALID':

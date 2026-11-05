@@ -6,6 +6,7 @@
 // @ts-nocheck: el archivo se ejecuta en Deno, no lo compila el TypeScript del repositorio.
 import { requestPortalInvoice, simulatedBilling } from '../_shared/core.mjs';
 import {
+  ajusteDeAnticipos,
   almacenDeFacturas,
   cabeceras,
   clienteDeServicio,
@@ -52,6 +53,7 @@ Deno.serve(async (req: Request) => {
     {
       ...base,
       issue: { provider: proveedor, store: almacenDeFacturas(servicio), clock: base.clock },
+      depositTreatment: await ajusteDeAnticipos(servicio),
     },
     {
       ...entradaDelPortal(req, cuerpo),
@@ -78,6 +80,8 @@ Deno.serve(async (req: Request) => {
       return responder(400, { error: 'INVALID_INPUT', fields: resultado.fields });
     case 'PAYMENT_FORM_UNDEFINED':
       return responder(409, { error: 'PAYMENT_FORM_UNDEFINED' });
+    case 'DEPOSIT_TREATMENT_UNSUPPORTED':
+      return responder(409, { error: 'DEPOSIT_TREATMENT_UNSUPPORTED' });
     case 'NOT_BILLABLE':
       return responder(409, { error: 'NOT_BILLABLE', reason: resultado.reason });
     case 'INELIGIBLE':

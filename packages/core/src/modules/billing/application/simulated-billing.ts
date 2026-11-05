@@ -18,6 +18,9 @@ export interface SimulatedBillingDeps {
   /** Si es verdadero, una cancelación queda "pendiente" (como cuando el receptor debe aceptarla) en lugar de
    *  completarse. Con `resolveCancellation` se completa. */
   readonly cancellationNeedsAcceptance?: boolean;
+  /** Para las funciones de servidor, donde cada llamada arranca sin memoria: una factura que no conoce se da por
+   *  existente y vigente, porque quien sabe su estado es la base y no este adaptador. El PAC real no lo necesita. */
+  readonly assumeUnknownInvoicesExist?: boolean;
 }
 
 /** Cómo falla la siguiente llamada: antes de timbrar (no pasó nada) o **después** (el PAC sí timbró pero la
@@ -48,6 +51,35 @@ export function simulatedBilling(deps: SimulatedBillingDeps): SimulatedBilling {
   const porSolicitud = new Map<string, Registro>();
   const porUuid = new Map<string, Registro>();
   let falla: { code: BillingErrorCode; afterStamping: boolean } | null = null;
+
+  /** El registro de una factura; con `assumeUnknownInvoicesExist`, una desconocida se adopta como vigente. */
+  function buscar(uuid: string): Registro | undefined {
+    const existente = porUuid.get(uuid);
+    if (existente !== undefined || deps.assumeUnknownInvoicesExist !== true) {
+      return existente;
+    }
+    const ahora = deps.clock.now();
+    const adoptado: Registro = {
+      factura: { uuid, stampedAt: ahora, subtotalCents: 0, taxCents: 0, totalCents: 0 },
+      solicitud: {
+        requestId: uuid,
+        paymentForm: '01',
+        paymentMethod: 'PUE',
+        recipient: {
+          rfc: 'XAXX010101000',
+          name: 'ADOPTADA',
+          fiscalZip: '00000',
+          regime: '616',
+          cfdiUse: 'S01',
+        },
+        concepts: [],
+        issuedAt: ahora,
+      },
+      estado: 'VALID',
+    };
+    porUuid.set(uuid, adoptado);
+    return adoptado;
+  }
 
   function tomarFalla(): { code: BillingErrorCode; afterStamping: boolean } | null {
     const actual = falla;
@@ -108,7 +140,7 @@ export function simulatedBilling(deps: SimulatedBillingDeps): SimulatedBilling {
       if (!valida.ok) {
         return Promise.resolve(err(valida.error));
       }
-      const registro = porUuid.get(solicitud.uuid);
+      const registro = buscar(solicitud.uuid);
       if (registro === undefined) {
         return Promise.resolve(err({ code: 'NOT_FOUND' }));
       }
@@ -125,7 +157,7 @@ export function simulatedBilling(deps: SimulatedBillingDeps): SimulatedBilling {
       if (falla1 !== null) {
         return Promise.resolve(err({ code: falla1.code }));
       }
-      const registro = porUuid.get(uuid);
+      const registro = buscar(uuid);
       return Promise.resolve(
         registro === undefined ? err({ code: 'NOT_FOUND' as const }) : ok(registro.estado),
       );
@@ -136,7 +168,7 @@ export function simulatedBilling(deps: SimulatedBillingDeps): SimulatedBilling {
       if (falla1 !== null) {
         return Promise.resolve(err({ code: falla1.code }));
       }
-      const registro = porUuid.get(uuid);
+      const registro = buscar(uuid);
       if (registro === undefined) {
         return Promise.resolve(err({ code: 'NOT_FOUND' as const }));
       }

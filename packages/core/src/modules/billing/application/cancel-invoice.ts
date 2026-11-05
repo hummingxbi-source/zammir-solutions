@@ -89,7 +89,10 @@ export async function cancelInvoice(
 
   try {
     const factura = await deps.store.findByFolio(entrada.folio);
-    if (factura === null || factura.uuid === null) {
+    if (factura === null) {
+      return { kind: 'NOT_FOUND' };
+    }
+    if (factura.uuid === null) {
       return { kind: 'NOT_FOUND' };
     }
     if (factura.status !== 'STAMPED') {
@@ -99,15 +102,12 @@ export async function cancelInvoice(
     let uuidDeLaSustituta: string | null = null;
     if (entrada.motive === '01') {
       const otra = await deps.store.findByFolio(sustituta);
-      if (
-        otra === null ||
-        otra.uuid === null ||
-        otra.status !== 'STAMPED' ||
-        otra.requestId === factura.requestId
-      ) {
+      const sirve =
+        otra !== null && otra.status === 'STAMPED' && otra.requestId !== factura.requestId;
+      uuidDeLaSustituta = sirve ? otra.uuid : null;
+      if (uuidDeLaSustituta === null) {
         return { kind: 'INVALID', fields: ['substituteFolio'] };
       }
-      uuidDeLaSustituta = otra.uuid;
     }
 
     const r = await deps.provider.cancel({

@@ -26,6 +26,7 @@ export default {
     'packages/core/src/modules/billing/application/issue-invoice.ts',
     'packages/core/src/modules/billing/application/issue-system-invoice.ts',
     'packages/core/src/modules/billing/application/retry-invoices.ts',
+    'packages/core/src/modules/billing/application/stamp-snapshot.ts',
     'packages/core/src/modules/billing/application/cancel-invoice.ts',
     'packages/core/src/modules/billing/domain/stamp-usage.ts',
     'packages/core/src/modules/billing/domain/deposit-treatment.ts',
