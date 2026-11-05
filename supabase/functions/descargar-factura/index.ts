@@ -3,6 +3,7 @@
 // responde igual si no cuadran o si todavía no hay factura. Devuelve JSON con el contenido (el XML como texto y
 // el PDF en base64) para que la página arme la descarga. La lógica vive en el núcleo (`downloadPortalInvoice`).
 // @ts-nocheck: el archivo se ejecuta en Deno, no lo compila el TypeScript del repositorio.
+import { servir } from '../_shared/errores.ts';
 import { downloadPortalInvoice } from '../_shared/core.mjs';
 import {
   almacenDeArchivos,
@@ -14,7 +15,7 @@ import {
   responder,
 } from '../_shared/portal.ts';
 
-Deno.serve(async (req: Request) => {
+servir('descargar-factura', async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: cabeceras });
   }

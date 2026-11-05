@@ -4,6 +4,7 @@
 //   · A petición de un administrador con sesión, sobre una solicitud en particular (`requestId`).
 // La lógica vive en el núcleo (`retryPendingInvoices` y `retryInvoice`).
 // @ts-nocheck: el archivo se ejecuta en Deno, no lo compila el TypeScript del repositorio.
+import { servir } from '../_shared/errores.ts';
 import {
   DEFAULT_RETRY_POLICY,
   retryInvoice,
@@ -27,7 +28,7 @@ const entero = (valor: string | undefined, porOmision: number): number => {
   return Number.isInteger(n) && n > 0 ? n : porOmision;
 };
 
-Deno.serve(async (req: Request) => {
+servir('reintentar-facturas', async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: cabeceras });
   }

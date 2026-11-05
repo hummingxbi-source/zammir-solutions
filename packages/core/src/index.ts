@@ -136,3 +136,5 @@ export * from './modules/billing/application/retry-invoices';
 export * from './modules/billing/application/cancel-invoice';
 export * from './modules/billing/domain/deposit-treatment';
 export * from './modules/billing/application/stamp-snapshot';
+export * from './modules/observability/domain/error-report';
+export * from './modules/observability/application/error-reporter';

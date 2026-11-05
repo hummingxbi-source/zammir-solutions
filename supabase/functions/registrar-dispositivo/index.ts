@@ -4,6 +4,7 @@
 // Crea la identidad de la tablet en Supabase Auth (rol DEVICE), canjea el código y devuelve
 // la sesión del dispositivo. Si el canje falla, la identidad recién creada se borra.
 // @ts-nocheck: el archivo se ejecuta en Deno, no lo compila el TypeScript del repositorio.
+import { servir } from '../_shared/errores.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2.118.0';
 import { err, ok, redeemRegistrationCode } from '../_shared/core.mjs';
 
@@ -23,7 +24,7 @@ const ESTADO_POR_ERROR: Record<string, number> = {
   NOT_AUTHORIZED: 403,
 };
 
-Deno.serve(async (req: Request) => {
+servir('registrar-dispositivo', async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: cabeceras });
   }

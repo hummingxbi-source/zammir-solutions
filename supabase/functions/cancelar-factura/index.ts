@@ -3,6 +3,7 @@
 // cancela, ni con autorización. La cancelación queda en la bitácora con quién y por qué; nada se borra. La lógica
 // vive en el núcleo (`cancelInvoice`); el proveedor de timbrado se pide con `BILLING_PROVIDER=simulated`.
 // @ts-nocheck: el archivo se ejecuta en Deno, no lo compila el TypeScript del repositorio.
+import { servir } from '../_shared/errores.ts';
 import { cancelInvoice, simulatedBilling } from '../_shared/core.mjs';
 import {
   almacenDeCancelaciones,
@@ -13,7 +14,7 @@ import {
   usuarioDeLaPeticion,
 } from '../_shared/portal.ts';
 
-Deno.serve(async (req: Request) => {
+servir('cancelar-factura', async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: cabeceras });
   }

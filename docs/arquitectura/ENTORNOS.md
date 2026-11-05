@@ -68,7 +68,8 @@ El dominio de ZAMMIR (HTTPS, DNS en Cloudflare) **no puede cambiar después de i
 ## 7. Observabilidad
 
 - Registro de errores de cliente y servidor **sin datos personales** y monitoreo simple de disponibilidad con aviso a Juanito [RNF-34].
-- La herramienta concreta queda **por decidir** (historia S4-28); su elección lleva ADR.
+- Errores: registro propio en la base (`error_log`), limpiado en el navegador y otra vez en el servidor, solo lo leen administradores y se purga a los 90 días [ADR-0034].
+- Disponibilidad: la función pública `salud` responde 200 o 503; el servicio de monitoreo externo que la consulte y avise a Juanito se elige y se crea con PP-32.
 
 ## 8. Cuentas y accesos que hacen falta
 
