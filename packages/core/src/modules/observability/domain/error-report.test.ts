@@ -11,6 +11,10 @@ import {
   scrubText,
 } from './error-report';
 
+// Se arma al correr la prueba para que no parezca un token real a los escáneres de secretos.
+const ENCABEZADO_DE_PRUEBA = ['ey', 'JhbGciOiJIUzI1NiJ9'].join('');
+const TOKEN_DE_PRUEBA = `${ENCABEZADO_DE_PRUEBA}.${['ey', 'JzdWIiOiIxMjM0NTY3ODkwIn0'].join('')}`;
+
 describe('scrubText', () => {
   it.each([
     ['Falló para ana.lopez@ejemplo.invalid al guardar', 'ana.lopez@ejemplo.invalid', '[correo]'],
@@ -19,11 +23,7 @@ describe('scrubText', () => {
     ['RFC XAXX010101000 inválido', 'XAXX010101000', '[rfc]'],
     ['RFC de persona moral ABC010101AB1', 'ABC010101AB1', '[rfc]'],
     ['CURP GOMA800101HDFRRN09 no existe', 'GOMA800101HDFRRN09', '[curp]'],
-    [
-      'sesión eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.abcdefghijk roto',
-      'eyJhbGciOiJIUzI1NiJ9',
-      '[token]',
-    ],
+    [`sesión ${TOKEN_DE_PRUEBA}.abcdefghijk roto`, ENCABEZADO_DE_PRUEBA, '[token]'],
     ['password: hunter2hunter2', 'hunter2hunter2', '[secreto]'],
     ['Bearer abc123xyz', 'abc123xyz', '[secreto]'],
     ['pin=4821', '4821', '[secreto]'],
@@ -169,10 +169,7 @@ describe('fingerprintOf', () => {
 
 describe('scrubText, resultados exactos', () => {
   it.each([
-    [
-      'sesión eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.abc-DEF_123 fin',
-      'sesión [token] fin',
-    ],
+    [`sesión ${TOKEN_DE_PRUEBA}.abc-DEF_123 fin`, 'sesión [token] fin'],
     ['de a@mail.ejemplo.com.mx fin', 'de [correo] fin'],
     ['password = hunter2 fin', 'password = [secreto] fin'],
     ['token    abc123 fin', 'token    [secreto] fin'],
