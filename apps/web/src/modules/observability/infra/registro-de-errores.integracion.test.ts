@@ -10,7 +10,10 @@ const SERVICIO = process.env.ZAMMIR_TEST_SUPABASE_SERVICE_KEY ?? '';
 const servicio = createClient(URL, SERVICIO, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
-const marca = Math.random().toString(16).slice(2, 10);
+// Solo letras: el limpiador cambia por una marca cualquier serie larga de dígitos, y el nombre se busca tal cual.
+const marca = Array.from({ length: 10 }, () =>
+  String.fromCharCode(97 + Math.floor(Math.random() * 26)),
+).join('');
 
 function enviar(cuerpo: unknown): Promise<Response> {
   return fetch(`${URL}/functions/v1/registrar-error`, {
