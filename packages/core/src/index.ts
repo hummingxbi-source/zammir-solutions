@@ -131,3 +131,8 @@ export * from './modules/billing/application/request-portal-invoice';
 export * from './modules/billing/application/download-portal-invoice';
 export * from './modules/billing/application/issue-system-invoice';
 export * from './modules/billing/application/admin-invoices';
+export * from './modules/billing/domain/stamp-usage';
+export * from './modules/billing/application/retry-invoices';
+export * from './modules/billing/application/cancel-invoice';
+export * from './modules/billing/domain/deposit-treatment';
+export * from './modules/billing/application/stamp-snapshot';

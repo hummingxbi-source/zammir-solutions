@@ -523,6 +523,109 @@ export const textos = {
     descripcion:
       'Ventas y órdenes ya liquidadas que todavía no tienen factura. Aquí sí puedes facturar aunque haya pasado el último día del mes.',
     resumen: 'Por facturar',
+    pestanas: {
+      etiqueta: 'Secciones de facturas',
+      porFacturar: 'Por facturar',
+      emitidas: 'Emitidas',
+    },
+    timbres: {
+      titulo: 'Timbres de este año',
+      usados: (usados: number, limite: number): string => `${String(usados)} de ${String(limite)}`,
+      sinLimite: 'Límite por definir',
+      sinLimiteDetalle: (usados: number): string =>
+        `Llevas ${String(usados)} este año. El límite del paquete todavía no está definido.`,
+      quedan: (n: number): string => (n === 1 ? 'Queda 1 timbre' : `Quedan ${String(n)} timbres`),
+      aviso:
+        'Ya usaste la mayor parte de los timbres del paquete. Pide ampliarlo antes de que se acaben.',
+      agotados: 'Ya no quedan timbres en el paquete. Amplíalo antes de seguir facturando.',
+      noDisponible: 'No se pudieron leer los timbres.',
+    },
+    emitidas: {
+      titulo: 'Facturas emitidas',
+      cargando: 'Cargando las facturas…',
+      vacioTitulo: 'Todavía no hay facturas',
+      vacio:
+        'Cuando factures una venta u orden, o un cliente la pida en el portal, aparecerá aquí.',
+      sinConexion: {
+        mensaje: 'No se pudieron leer las facturas.',
+        queHacer: 'Revisa tu conexión a internet y entra de nuevo con tu cuenta de administrador.',
+      },
+      columnas: {
+        factura: 'Factura',
+        origen: 'De',
+        cliente: 'Cliente',
+        total: 'Total',
+        fecha: 'Fecha',
+        estado: 'Estado',
+        acciones: 'Acciones',
+      },
+      sinFolio: 'Sin folio todavía',
+      estados: {
+        STAMPED: 'Vigente',
+        IN_PROCESS: 'En proceso',
+        CANCELLED: 'Cancelada',
+        FAILED: 'Rechazada',
+        CANCELLATION_REQUESTED: 'Cancelación solicitada',
+      },
+      enProceso: {
+        titulo: 'Facturas en proceso',
+        mensaje: (n: number): string =>
+          n === 1
+            ? 'Hay 1 factura en proceso: el proveedor no contestó.'
+            : `Hay ${String(n)} facturas en proceso: el proveedor no contestó.`,
+        queHacer:
+          'Se reintentan solas y nunca se timbra dos veces. Si tardan, toca "Reintentar" en cada una.',
+      },
+      intentos: (n: number): string => (n === 1 ? '1 intento' : `${String(n)} intentos`),
+      descargar: 'Descargar',
+      descargarA: (folio: string): string => `Descargar ${folio}`,
+      reintentar: 'Reintentar',
+      reintentarA: (folio: string): string => `Reintentar ${folio}`,
+      reintentando: 'Reintentando…',
+      reintentoListo: (folio: string): string => `La factura quedó timbrada: ${folio}.`,
+      cancelar: 'Cancelar',
+      cancelarA: (folio: string): string => `Cancelar ${folio}`,
+    },
+    cancelar: {
+      titulo: (folio: string): string => `Cancelar la factura ${folio}`,
+      explicacion:
+        'Cancelar no borra nada: la factura queda marcada como cancelada, con el motivo y quién la canceló. Si el RFC o el nombre estaban mal, cancela y vuelve a emitirla.',
+      motivo: 'Motivo del SAT',
+      elige: 'Elige un motivo',
+      motivos: {
+        '01': '01 · Emitida con errores, con relación a otra factura',
+        '02': '02 · Emitida con errores, sin relación',
+        '03': '03 · No se llevó a cabo la operación',
+        '04': '04 · Operación nominativa relacionada en una factura global',
+      },
+      sustituta: 'Folio de la factura que la sustituye',
+      sustitutaAyuda:
+        'Primero emite la nueva factura y escribe aquí su folio, por ejemplo F-2026-0002.',
+      confirmar: 'Cancelar factura',
+      cancelando: 'Cancelando…',
+      volver: 'Volver',
+      errores: {
+        motive: 'Elige un motivo del SAT.',
+        substituteFolio: 'Escribe el folio de una factura vigente que la sustituya.',
+      },
+      cancelada: (folio: string): string => `La factura ${folio} quedó cancelada.`,
+      pendiente: (folio: string): string =>
+        `Se pidió cancelar ${folio}. Queda vigente hasta que el cliente la acepte.`,
+      noSePudo: {
+        NOT_CANCELLABLE: {
+          mensaje: 'Esa factura ya no se puede cancelar.',
+          queHacer: 'Solo se cancelan las facturas vigentes. Actualiza la lista.',
+        },
+        NOT_FOUND: {
+          mensaje: 'No se encontró esa factura.',
+          queHacer: 'Actualiza la lista.',
+        },
+        REJECTED: {
+          mensaje: 'El proveedor rechazó la cancelación.',
+          queHacer: 'Revisa el motivo y, si sigue igual, avisa a tu contador.',
+        },
+      },
+    },
     cargando: 'Cargando lo facturable…',
     vacioTitulo: 'No hay nada por facturar',
     vacio:
@@ -617,6 +720,10 @@ export const textos = {
       NO_NETWORK: {
         mensaje: 'No hay conexión a internet.',
         queHacer: 'Conéctate a internet e intenta de nuevo.',
+      },
+      DEPOSIT_TREATMENT_UNSUPPORTED: {
+        mensaje: 'El ajuste de anticipos está en una opción que todavía no se construye.',
+        queHacer: 'Deja el ajuste en "un solo CFDI al liquidar" o avisa a soporte [RN-27].',
       },
       INELIGIBLE: {
         CANCELLED: {
@@ -1459,6 +1566,10 @@ export const textos = {
       garantias: 'Garantías',
       sin: 'Todavía no hay nada.',
       cancelada: 'cancelada',
+      facturas: 'Facturas',
+      estadoFactura: { STAMPED: 'vigente', CANCELLED: 'cancelada' },
+      sinFacturas: 'Todavía no tiene facturas.',
+      facturasNoDisponibles: 'No se pudieron leer sus facturas.',
       desde: 'Desde',
       meses: 'meses',
       estadoCotizacion: {

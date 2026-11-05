@@ -261,3 +261,171 @@ describe('archivos de la factura', () => {
     expect(await adaptador(conError.cliente).files('F-2026-0001')).toBeNull();
   });
 });
+
+function respuesta(estado: number, cuerpo: unknown): typeof fetch {
+  return () => Promise.resolve(new Response(JSON.stringify(cuerpo), { status: estado }));
+}
+
+describe('lo emitido, reintentos, cancelación y timbres', () => {
+  it('convierte las facturas pedidas y marca la cancelación solicitada', async () => {
+    const { cliente } = clienteFalso({
+      rpc: {
+        error: null,
+        data: [
+          {
+            request_id: 'r-1',
+            status: 'STAMPED',
+            invoice_folio: 'F-2026-0001',
+            channel: 'PORTAL',
+            source_type: 'WORK_ORDER',
+            source_folio: 'OT-2026-0001',
+            customer_name: 'Ana',
+            total_cents: 11_600,
+            stamped_at: '2026-11-04T18:00:00Z',
+            created_at: '2026-11-04T17:59:00Z',
+            attempts: 1,
+            last_error: null,
+            cancel_motive: '02',
+            cancel_requested_at: '2026-11-05T10:00:00Z',
+            cancelled_at: null,
+          },
+        ],
+      },
+    });
+    const lista = await adaptador(cliente).list();
+    expect(lista?.[0]).toMatchObject({
+      requestId: 'r-1',
+      folio: 'F-2026-0001',
+      channel: 'PORTAL',
+      sourceFolio: 'OT-2026-0001',
+      cancellationRequested: true,
+      cancelMotive: '02',
+    });
+  });
+
+  it('si no se puede leer lo emitido, los timbres o el historial devuelve null', async () => {
+    const { cliente } = clienteFalso({ rpc: { data: null, error: { message: 'x' } } });
+    const a = adaptador(cliente);
+    expect(await a.list()).toBeNull();
+    expect(await a.usage()).toBeNull();
+    expect(await a.customerInvoices('c-1')).toBeNull();
+  });
+
+  it('evalúa los timbres con el límite y el porcentaje de aviso', async () => {
+    const { cliente } = clienteFalso({
+      rpc: { error: null, data: [{ used: 80, yearly_limit: 100, warning_percent: 80 }] },
+    });
+    expect(await adaptador(cliente).usage()).toMatchObject({
+      used: 80,
+      remaining: 20,
+      level: 'WARNING',
+    });
+  });
+
+  it('sin límite configurado no inventa uno', async () => {
+    const { cliente } = clienteFalso({
+      rpc: { error: null, data: [{ used: 5, yearly_limit: null, warning_percent: 80 }] },
+    });
+    expect(await adaptador(cliente).usage()).toMatchObject({ limit: null, level: 'NO_LIMIT' });
+  });
+
+  it('convierte el historial de facturas de un cliente', async () => {
+    const { cliente } = clienteFalso({
+      rpc: {
+        error: null,
+        data: [
+          {
+            invoice_folio: 'F-2026-0003',
+            status: 'CANCELLED',
+            source_type: 'COUNTER_SALE',
+            source_folio: 'V-2026-0003',
+            total_cents: 500,
+            stamped_at: null,
+          },
+        ],
+      },
+    });
+    expect(await adaptador(cliente).customerInvoices('c-1')).toEqual([
+      {
+        folio: 'F-2026-0003',
+        status: 'CANCELLED',
+        sourceType: 'COUNTER_SALE',
+        sourceFolio: 'V-2026-0003',
+        totalCents: 500,
+        stampedAt: null,
+      },
+    ]);
+  });
+
+  it('reintentar traduce las respuestas del servidor', async () => {
+    const { cliente } = clienteFalso();
+    const r = (e: number, c: unknown) => adaptador(cliente, respuesta(e, c)).retry('r-1');
+    expect(await r(200, { invoice: { folio: 'F-2026-0002' } })).toEqual({
+      kind: 'STAMPED',
+      folio: 'F-2026-0002',
+    });
+    expect(await r(202, {})).toEqual({ kind: 'IN_PROCESS' });
+    expect(await r(403, {})).toEqual({ kind: 'NOT_AUTHORIZED' });
+    expect(await r(404, {})).toEqual({ kind: 'NOT_FOUND' });
+    expect(await r(422, {})).toEqual({ kind: 'REJECTED' });
+    expect(await r(500, {})).toEqual({ kind: 'UNAVAILABLE' });
+  });
+
+  it('reintentar y cancelar sin sesión o sin red no llaman o lo dicen', async () => {
+    const sinSesion = clienteFalso({ token: null }).cliente;
+    expect(await adaptador(sinSesion).retry('r-1')).toEqual({ kind: 'NOT_AUTHORIZED' });
+    expect(await adaptador(sinSesion).cancel({ folio: 'F-2026-0001', motive: '02' })).toEqual({
+      kind: 'NOT_AUTHORIZED',
+    });
+    const caida: typeof fetch = () => Promise.reject(new Error('sin red'));
+    const { cliente } = clienteFalso();
+    expect(await adaptador(cliente, caida).retry('r-1')).toEqual({ kind: 'NO_NETWORK' });
+    expect(await adaptador(cliente, caida).cancel({ folio: 'F-2026-0001', motive: '02' })).toEqual({
+      kind: 'NO_NETWORK',
+    });
+  });
+
+  it('cancelar manda el folio, el motivo y la sustituta, y traduce las respuestas', async () => {
+    const { cliente } = clienteFalso();
+    const cuerpos: unknown[] = [];
+    const espia =
+      (estado: number, cuerpo: unknown): typeof fetch =>
+      (_url, init) => {
+        cuerpos.push(JSON.parse(init?.body as string));
+        return Promise.resolve(new Response(JSON.stringify(cuerpo), { status: estado }));
+      };
+    const c = (e: number, b: unknown) =>
+      adaptador(cliente, espia(e, b)).cancel({
+        folio: 'F-2026-0001',
+        motive: '01',
+        substituteFolio: 'F-2026-0002',
+      });
+    expect(await c(200, { status: 'CANCELLED' })).toEqual({ kind: 'CANCELLED' });
+    expect(await c(200, { status: 'otra' })).toEqual({ kind: 'UNAVAILABLE' });
+    expect(await c(202, {})).toEqual({ kind: 'CANCELLATION_PENDING' });
+    expect(await c(409, {})).toEqual({ kind: 'NOT_CANCELLABLE' });
+    expect(await c(404, {})).toEqual({ kind: 'NOT_FOUND' });
+    expect(await c(422, {})).toEqual({ kind: 'REJECTED' });
+    expect(await c(401, {})).toEqual({ kind: 'NOT_AUTHORIZED' });
+    expect(await c(400, { fields: ['substituteFolio'] })).toEqual({
+      kind: 'INVALID',
+      fields: ['substituteFolio'],
+    });
+    expect(await c(400, {})).toEqual({ kind: 'UNAVAILABLE' });
+    expect(await c(500, {})).toEqual({ kind: 'UNAVAILABLE' });
+    expect(cuerpos[0]).toEqual({
+      folio: 'F-2026-0001',
+      motive: '01',
+      substituteFolio: 'F-2026-0002',
+    });
+  });
+
+  it('emitir reconoce el ajuste de anticipos no construido', async () => {
+    const { cliente } = clienteFalso();
+    expect(
+      await adaptador(cliente, respuesta(409, { error: 'DEPOSIT_TREATMENT_UNSUPPORTED' })).issue(
+        entrada,
+      ),
+    ).toEqual({ kind: 'DEPOSIT_TREATMENT_UNSUPPORTED' });
+  });
+});

@@ -3,7 +3,12 @@
 // conecta HTTP, la base (con funciones `portal_*`, nunca tablas) y el servicio contra automatización.
 // @ts-nocheck: el archivo se ejecuta en Deno, no lo compila el TypeScript del repositorio.
 import { createClient } from 'npm:@supabase/supabase-js@2.118.0';
-import { DEFAULT_RATE_LIMIT, parsePortalDocumentRow } from './core.mjs';
+import {
+  DEFAULT_RATE_LIMIT,
+  parseDepositTreatment,
+  parsePortalDocumentRow,
+  parseStampSnapshot,
+} from './core.mjs';
 
 export const cabeceras = {
   'content-type': 'application/json',
@@ -193,18 +198,21 @@ export function proveedorDeTimbrado(simulatedBilling) {
   return simulatedBilling({
     clock: { now: () => new Date() },
     idGenerator: { newId: () => crypto.randomUUID() },
+    // Cada llamada arranca sin memoria: la base es la que sabe qué facturas existen.
+    assumeUnknownInvoicesExist: true,
   });
 }
 
 /** Las facturas pedidas y sus archivos, con las funciones `portal_invoice_*`. */
 export function almacenDeFacturas(servicio) {
   return {
-    async begin({ requestId, source, channel }) {
+    async begin({ requestId, source, channel, snapshot }) {
       const data = await rpcOFalla(servicio, 'portal_invoice_begin', {
         p_request_id: requestId,
         p_source_type: source.type,
         p_source_id: source.id,
         p_channel: channel,
+        p_snapshot: snapshot,
       });
       return data;
     },
@@ -220,10 +228,87 @@ export function almacenDeFacturas(servicio) {
       });
       return { folio };
     },
+    async recordAttempt(requestId, error) {
+      await rpcOFalla(servicio, 'invoice_record_attempt', {
+        p_request_id: requestId,
+        p_error: error,
+      });
+    },
     async markFailed(requestId) {
       await rpcOFalla(servicio, 'portal_invoice_mark_failed', { p_request_id: requestId });
     },
   };
+}
+
+/** Las solicitudes en proceso que toca reintentar, con lo que se mandó al PAC [RF-M10-15]. */
+export function almacenDePendientes(servicio) {
+  const aPendiente = (fila) => {
+    const snapshot = parseStampSnapshot(fila.request_snapshot);
+    return snapshot === null
+      ? null
+      : {
+          requestId: fila.request_id,
+          source: { type: fila.source_type, id: fila.source_id },
+          attempts: fila.attempts,
+          snapshot,
+        };
+  };
+  return {
+    async listRetriable({ waitSeconds, maxAttempts, limit }) {
+      const data = await rpcOFalla(servicio, 'invoice_pending_retries', {
+        p_wait_seconds: waitSeconds,
+        p_max_attempts: maxAttempts,
+        p_limit: limit,
+      });
+      return (data ?? []).map(aPendiente).filter((p) => p !== null);
+    },
+    async getPending(requestId) {
+      const data = await rpcOFalla(servicio, 'invoice_request_get', { p_request_id: requestId });
+      const fila = Array.isArray(data) ? data[0] : data;
+      return fila === undefined || fila === null || fila.status !== 'IN_PROCESS'
+        ? null
+        : aPendiente(fila);
+    },
+  };
+}
+
+/** Las facturas y su cancelación, con el rastro en la bitácora [RF-M10-19]. */
+export function almacenDeCancelaciones(servicio) {
+  return {
+    async findByFolio(folio) {
+      const data = await rpcOFalla(servicio, 'invoice_find_by_folio', { p_folio: folio });
+      const fila = Array.isArray(data) ? data[0] : data;
+      if (fila === undefined || fila === null) {
+        return null;
+      }
+      return {
+        requestId: fila.request_id,
+        status: fila.status,
+        uuid: fila.invoice_uuid,
+        folio: fila.invoice_folio,
+        cancellationRequested: fila.cancel_requested_at !== null,
+      };
+    },
+    async markCancelled(requestId, { motive, substituteUuid, by, pending }) {
+      await rpcOFalla(servicio, 'invoice_mark_cancelled', {
+        p_request_id: requestId,
+        p_motive: motive,
+        p_substitute_uuid: substituteUuid,
+        p_by: by,
+        p_pending: pending,
+      });
+    },
+  };
+}
+
+/** El ajuste de anticipos de la configuración [RN-27]; sin valor o con uno raro, la opción (a). */
+export async function ajusteDeAnticipos(servicio) {
+  const { data } = await servicio
+    .from('business_settings')
+    .select('value')
+    .eq('key', 'deposit_tax_treatment')
+    .maybeSingle();
+  return parseDepositTreatment(data?.value);
 }
 
 export function almacenDeArchivos(servicio) {

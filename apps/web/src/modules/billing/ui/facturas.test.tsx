@@ -2,15 +2,21 @@ import axe from 'axe-core';
 import { configure, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import type {
+  AdminCancelInput,
+  AdminCancelResult,
   AdminInvoices,
   AdminIssueInput,
   AdminIssueResult,
+  AdminRetryResult,
   InvoiceCandidate,
+  IssuedInvoice,
+  StampUsage,
   ShareableFile,
   ShareService,
 } from '@zammir/core';
 import { describe, expect, it, vi } from 'vitest';
 
+import { textos } from '../../../shared/i18n/textos';
 import { Facturas } from './Facturas';
 
 vi.setConfig({ testTimeout: 30_000 });
@@ -50,9 +56,15 @@ function servidor(
     lista?: readonly InvoiceCandidate[] | null;
     emision?: AdminIssueResult | AdminIssueResult[];
     archivos?: { folio: string; xml: string; pdfBase64: string } | null;
+    emitidas?: readonly IssuedInvoice[] | null;
+    uso?: StampUsage | null;
+    reintento?: AdminRetryResult;
+    cancelacion?: AdminCancelResult;
   } = {},
 ) {
   const solicitudes: AdminIssueInput[] = [];
+  const reintentos: string[] = [];
+  const cancelaciones: AdminCancelInput[] = [];
   const consultasDeArchivos: string[] = [];
   let lista = opciones.lista === undefined ? [conFicha, sinFicha] : opciones.lista;
   const respuestas = Array.isArray(opciones.emision)
@@ -69,6 +81,22 @@ function servidor(
       }
       return Promise.resolve(r ?? { kind: 'UNAVAILABLE' });
     },
+    list: () => Promise.resolve(opciones.emitidas === undefined ? [] : opciones.emitidas),
+    retry: (requestId) => {
+      reintentos.push(requestId);
+      return Promise.resolve(opciones.reintento ?? { kind: 'UNAVAILABLE' });
+    },
+    cancel: (entrada) => {
+      cancelaciones.push(entrada);
+      return Promise.resolve(opciones.cancelacion ?? { kind: 'CANCELLED' });
+    },
+    usage: () =>
+      Promise.resolve(
+        opciones.uso === undefined
+          ? { used: 10, limit: 100, remaining: 90, percentBps: 1000, level: 'OK' as const }
+          : opciones.uso,
+      ),
+    customerInvoices: () => Promise.resolve([]),
     files: (folio) => {
       consultasDeArchivos.push(folio);
       return Promise.resolve(
@@ -78,7 +106,7 @@ function servidor(
       );
     },
   };
-  return { facturas, solicitudes, consultasDeArchivos };
+  return { facturas, solicitudes, consultasDeArchivos, reintentos, cancelaciones };
 }
 
 function montar(
@@ -376,6 +404,125 @@ describe('factura emitida: descargar y enviar', () => {
     expect(enlaces[0]).toBe(
       `https://wa.me/?text=${encodeURIComponent('Te comparto tu factura F-2026-0001.')}`,
     );
+  });
+});
+
+const vigente: IssuedInvoice = {
+  requestId: 'r1000000-0000-4000-8000-000000000001',
+  status: 'STAMPED',
+  folio: 'F-2026-0001',
+  channel: 'SYSTEM',
+  sourceType: 'COUNTER_SALE',
+  sourceFolio: 'V-2026-0001',
+  customerName: 'Ana López',
+  totalCents: 11_600,
+  stampedAt: '2026-11-04T18:00:00.000Z',
+  createdAt: '2026-11-04T18:00:00.000Z',
+  attempts: 1,
+  lastError: null,
+  cancelMotive: null,
+  cancellationRequested: false,
+  cancelledAt: null,
+};
+
+const enProceso: IssuedInvoice = {
+  ...vigente,
+  requestId: 'r2000000-0000-4000-8000-000000000002',
+  status: 'IN_PROCESS',
+  folio: null,
+  stampedAt: null,
+  attempts: 3,
+};
+
+async function irAEmitidas(): Promise<void> {
+  fireEvent.click(await screen.findByRole('tab', { name: 'Emitidas' }));
+}
+
+describe('Facturas emitidas, reintentos, cancelación y timbres', () => {
+  it('en la pestaña Emitidas muestra el estado de cada factura y avisa de las que están en proceso', async () => {
+    montar(servidor({ emitidas: [vigente, enProceso] }));
+    await irAEmitidas();
+    expect(await screen.findByText('Vigente')).toBeTruthy();
+    expect(screen.getAllByText('En proceso').length).toBeGreaterThan(0);
+    expect(screen.getByText('3 intentos')).toBeTruthy();
+    expect(screen.getByText(/Hay 1 factura en proceso/)).toBeTruthy();
+  });
+
+  it('reintentar una en proceso usa su mismo identificador y avisa cuando queda timbrada', async () => {
+    const s = servidor({
+      emitidas: [enProceso],
+      reintento: { kind: 'STAMPED', folio: 'F-2026-0002' },
+    });
+    montar(s);
+    await irAEmitidas();
+    fireEvent.click(await screen.findByRole('button', { name: /^Reintentar/ }));
+    expect(await screen.findByText('La factura quedó timbrada: F-2026-0002.')).toBeTruthy();
+    expect(s.reintentos).toEqual([enProceso.requestId]);
+  });
+
+  it('si el reintento no se logra lo dice sin dar la factura por perdida', async () => {
+    montar(servidor({ emitidas: [enProceso], reintento: { kind: 'IN_PROCESS' } }));
+    await irAEmitidas();
+    fireEvent.click(await screen.findByRole('button', { name: /^Reintentar/ }));
+    expect(await screen.findAllByRole('alert')).not.toHaveLength(0);
+  });
+
+  it('cancelar con el motivo 01 exige el folio de la factura que la sustituye', async () => {
+    const s = servidor({ emitidas: [vigente] });
+    montar(s);
+    await irAEmitidas();
+    fireEvent.click(await screen.findByRole('button', { name: 'Cancelar F-2026-0001' }));
+    const ventana = within(await screen.findByRole('dialog'));
+    fireEvent.click(
+      ventana.getByRole('button', { name: /^Cancelar factura|^Confirmar|^Cancelar$/ }),
+    );
+    expect(s.cancelaciones).toHaveLength(0);
+    fireEvent.change(ventana.getByRole('combobox'), { target: { value: '01' } });
+    fireEvent.click(
+      ventana.getByRole('button', { name: /^Cancelar factura|^Confirmar|^Cancelar$/ }),
+    );
+    expect(s.cancelaciones).toHaveLength(0);
+    fireEvent.change(ventana.getByRole('textbox'), { target: { value: 'f-2026-0009' } });
+    fireEvent.click(
+      ventana.getByRole('button', { name: /^Cancelar factura|^Confirmar|^Cancelar$/ }),
+    );
+    await waitFor(() => {
+      expect(s.cancelaciones).toEqual([
+        { folio: 'F-2026-0001', motive: '01', substituteFolio: 'F-2026-0009' },
+      ]);
+    });
+  });
+
+  it('con el motivo 02 cancela sin pedir factura sustituta', async () => {
+    const s = servidor({ emitidas: [vigente] });
+    montar(s);
+    await irAEmitidas();
+    fireEvent.click(await screen.findByRole('button', { name: 'Cancelar F-2026-0001' }));
+    const ventana = within(await screen.findByRole('dialog'));
+    fireEvent.change(ventana.getByRole('combobox'), { target: { value: '02' } });
+    expect(ventana.queryByRole('textbox')).toBeNull();
+    fireEvent.click(
+      ventana.getByRole('button', { name: /^Cancelar factura|^Confirmar|^Cancelar$/ }),
+    );
+    await waitFor(() => {
+      expect(s.cancelaciones).toEqual([{ folio: 'F-2026-0001', motive: '02' }]);
+    });
+  });
+
+  it('avisa cuando los timbres llegan al porcentaje de aviso y cuando se agotan', async () => {
+    const { unmount } = montar(
+      servidor({
+        uso: { used: 80, limit: 100, remaining: 20, percentBps: 8000, level: 'WARNING' },
+      }),
+    );
+    expect(await screen.findByText(textos.facturas.timbres.aviso)).toBeTruthy();
+    unmount();
+    montar(
+      servidor({
+        uso: { used: 100, limit: 100, remaining: 0, percentBps: 10_000, level: 'REACHED' },
+      }),
+    );
+    expect(await screen.findByText(textos.facturas.timbres.agotados)).toBeTruthy();
   });
 });
 

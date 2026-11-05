@@ -1,5 +1,6 @@
 import { isValidRfc, isValidZip } from '../../customers/domain/customer';
 import type { BillingErrorCode, CfdiRecipient } from '../domain/invoice';
+import { supportsDepositTreatment, type DepositTreatment } from '../domain/deposit-treatment';
 import { paymentFormFor } from '../domain/payment-form';
 import { isFiscalRegime, isPortalCfdiUse } from '../domain/sat-catalogs';
 import type { SelfInvoicingBlock } from '../domain/self-invoicing';
@@ -12,6 +13,8 @@ import {
 
 export interface RequestPortalInvoiceDeps extends PortalLookupDeps {
   readonly issue: IssueInvoiceDeps;
+  /** Ajuste de anticipos [RN-27]; sin él se usa la opción (a). */
+  readonly depositTreatment?: DepositTreatment;
 }
 
 /** Los datos fiscales que el cliente captura en el portal [RF-M10-13]. */
@@ -46,6 +49,8 @@ export type RequestPortalInvoiceOutcome =
   | { readonly kind: 'INELIGIBLE'; readonly reason: SelfInvoicingBlock }
   | { readonly kind: 'ALREADY_INVOICED' }
   | { readonly kind: 'REJECTED'; readonly code: BillingErrorCode }
+  /** El ajuste de anticipos está en la opción (b), que no se construyó [RN-27]: se pide en el negocio. */
+  | { readonly kind: 'DEPOSIT_TREATMENT_UNSUPPORTED' }
   | { readonly kind: 'NOT_AVAILABLE' }
   | { readonly kind: 'BLOCKED'; readonly retryAfterSeconds: number }
   | { readonly kind: 'UNAVAILABLE' };
@@ -100,6 +105,9 @@ export async function requestPortalInvoice(
     return acceso;
   }
   const { eligibility } = acceso;
+  if (!supportsDepositTreatment(deps.depositTreatment, acceso.record.type)) {
+    return { kind: 'DEPOSIT_TREATMENT_UNSUPPORTED' };
+  }
   if (!eligibility.ok && eligibility.reason !== 'ALREADY_INVOICED') {
     return { kind: 'INELIGIBLE', reason: eligibility.reason };
   }

@@ -240,6 +240,9 @@ export function App({
                   <Clientes
                     deps={clientes}
                     {...(historialDeCliente === null ? {} : { historial: historialDeCliente })}
+                    {...(facturas === null
+                      ? {}
+                      : { facturasDelCliente: (id: CustomerId) => facturas.customerInvoices(id) })}
                   />
                 </ProtegidaAdmin>
               ) : (

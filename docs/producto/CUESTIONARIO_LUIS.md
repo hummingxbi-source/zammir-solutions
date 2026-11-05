@@ -116,6 +116,8 @@
 64. **Factura global del público en general** (ventas de mostrador que nadie pidió facturar): sigue a cargo de **su contador**, no del sistema. ¿Confirman que así lo quieren? (ALCANCE §3)
 65. **Cancelar una factura mal emitida** (RFC o nombre mal escrito): solo un **administrador** puede, con el motivo del SAT. ¿Quién de ZAMMIR haría esto y qué hacen hoy cuando pasa? (RN-28)
 66. **¿Quién factura?** Hoy el sistema deja facturar solo al **administrador desde su computadora o tablet con su cuenta**. ¿Necesitan que un **cajero** pueda facturar desde la tablet con el PIN de un administrador, o con que el cajero le pida al administrador está bien? (PP-31)
+67. **Timbres del paquete:** ¿cuántos timbres **incluye la anualidad** del proveedor y cuándo se renueva? Con ese número el sistema avisa al llegar al 80 % y al agotarse; hoy no hay límite y no avisa. (PD-26)
+68. **Facturas "en proceso":** si el proveedor no contesta, el sistema reintenta solo (hasta 8 veces) y el administrador puede reintentar a mano. ¿Les basta con eso o quieren que se les avise de alguna forma (por ejemplo por WhatsApp)? (RF-M10-15)
 
 ## 8. Equipo, local y avisos
 
@@ -158,4 +160,5 @@ Pendientes que no dependen de Luis, para no perderlos de vista:
 | 31 oct 2026 | Sprint 3 (primeras 10 historias): preguntas 29.1 a 29.3 (fotos, condiciones del comprobante, pago de más). |
 | 31 oct 2026 | Sprint 3 (cierre): preguntas 37.3 a 37.6 (ancho del papel, cliente recurrente, leyenda del ticket, retiros de efectivo). |
 | 5 nov 2026 | Sprint 4 (facturar desde el sistema): pregunta 66 (quién factura: solo administrador o cajero con PIN). |
+| 5 nov 2026 | Sprint 4 (reintentos, cancelación y timbres): preguntas 67 y 68 (timbres incluidos en la anualidad, aviso de facturas en proceso). |
 | 4 nov 2026 | Sprint 4 (portal de facturas): preguntas 61 a 65 (IVA 0 % o exento, régimen y uso más pedidos, correo del negocio, factura global, cancelación de facturas). |

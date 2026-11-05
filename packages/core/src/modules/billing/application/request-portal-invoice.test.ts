@@ -102,6 +102,7 @@ function entorno(documento: PortalDocumentRecord = venta) {
       });
       return Promise.resolve({ folio });
     },
+    recordAttempt: () => Promise.resolve(),
     markFailed: () => Promise.resolve(),
   };
   const provider = simulatedBilling({
@@ -246,6 +247,22 @@ describe('pedir la factura desde el portal', () => {
       recipient: { ...bien.recipient, rfc: 'CORTO' },
     });
     expect(r).toEqual({ kind: 'INVALID', fields: ['recipient.rfc'] });
+  });
+
+  it('con el ajuste de anticipos en la opción (b) una orden no se factura: no está construida [RN-27]', async () => {
+    const { deps, provider } = entorno({ ...venta, type: 'WORK_ORDER' });
+    expect(await requestPortalInvoice({ ...deps, depositTreatment: 'b' }, bien)).toEqual({
+      kind: 'DEPOSIT_TREATMENT_UNSUPPORTED',
+    });
+    expect(provider.stampedCount()).toBe(0);
+    // Con la opción (a), o sin ajuste, sí; y una venta de mostrador no lleva anticipo.
+    expect((await requestPortalInvoice({ ...deps, depositTreatment: 'a' }, bien)).kind).toBe(
+      'STAMPED',
+    );
+    const mostrador = entorno();
+    expect(
+      (await requestPortalInvoice({ ...mostrador.deps, depositTreatment: 'b' }, bien)).kind,
+    ).toBe('STAMPED');
   });
 
   it('un pago mixto no se factura solo: la forma de pago la define el contador', async () => {

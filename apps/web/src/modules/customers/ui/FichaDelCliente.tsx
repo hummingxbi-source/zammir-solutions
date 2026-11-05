@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
-import type { Customer, CustomerHistory } from '@zammir/core';
+import type { Customer, CustomerHistory, CustomerInvoice } from '@zammir/core';
 
 import { textos } from '../../../shared/i18n/textos';
 import { Boton } from '../../../shared/ui/Boton';
@@ -23,12 +23,22 @@ function fecha(iso: string): string {
 export interface FichaDelClienteProps {
   readonly cliente: Customer;
   readonly cargar: () => Promise<CustomerHistory>;
+  /** Sus facturas, si se pueden leer (solo administradores con sesión); sin esto no se muestra la sección [RF-M10-21]. */
+  readonly cargarFacturas?: () => Promise<readonly CustomerInvoice[] | null>;
   readonly onCerrar: () => void;
 }
 
 /** Ficha de un cliente: sus cotizaciones, órdenes, ventas, pagos y garantías, y si es recurrente [S3-25]. */
-export function FichaDelCliente({ cliente, cargar, onCerrar }: FichaDelClienteProps): ReactElement {
+export function FichaDelCliente({
+  cliente,
+  cargar,
+  cargarFacturas,
+  onCerrar,
+}: FichaDelClienteProps): ReactElement {
   const [historial, setHistorial] = useState<CustomerHistory | null>(null);
+  const [facturas, setFacturas] = useState<readonly CustomerInvoice[] | null | undefined>(
+    undefined,
+  );
 
   useEffect(() => {
     let vigente = true;
@@ -41,6 +51,21 @@ export function FichaDelCliente({ cliente, cargar, onCerrar }: FichaDelClientePr
       vigente = false;
     };
   }, [cargar]);
+
+  useEffect(() => {
+    if (cargarFacturas === undefined) {
+      return;
+    }
+    let vigente = true;
+    void cargarFacturas().then((f) => {
+      if (vigente) {
+        setFacturas(f);
+      }
+    });
+    return () => {
+      vigente = false;
+    };
+  }, [cargarFacturas]);
 
   return (
     <Tarjeta
@@ -119,6 +144,30 @@ export function FichaDelCliente({ cliente, cargar, onCerrar }: FichaDelClientePr
                 </li>
               ))}
             </ul>
+          )}
+
+          {cargarFacturas === undefined ? null : (
+            <>
+              <h3 className="rotulo ficha__subtitulo">{t.facturas}</h3>
+              {facturas === undefined ? (
+                <p role="status">{t.cargando}</p>
+              ) : facturas === null ? (
+                <p>{t.facturasNoDisponibles}</p>
+              ) : facturas.length === 0 ? (
+                <p>{t.sinFacturas}</p>
+              ) : (
+                <ul className="lineas">
+                  {facturas.map((f) => (
+                    <li key={f.folio}>
+                      {f.folio} · {t.estadoFactura[f.status]}
+                      {f.sourceFolio === null ? '' : ` · ${f.sourceFolio}`}
+                      {f.totalCents === null ? '' : ` · ${formatearPesos(f.totalCents)}`}
+                      {f.stampedAt === null ? '' : ` · ${fecha(f.stampedAt)}`}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
           )}
 
           <h3 className="rotulo ficha__subtitulo">{t.garantias}</h3>

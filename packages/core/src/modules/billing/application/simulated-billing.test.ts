@@ -200,3 +200,36 @@ describe('validación de la cancelación', () => {
     expect(validateCancelRequest({ uuid: ' ', motive: '03' }).ok).toBe(false);
   });
 });
+
+describe('adaptador simulado en las funciones de servidor', () => {
+  const servidor = () =>
+    simulatedBilling({
+      clock: fixedClock(new Date('2026-11-03T18:00:00.000Z')),
+      idGenerator: sequentialIdGenerator('uuid'),
+      assumeUnknownInvoicesExist: true,
+    });
+
+  it('una factura timbrada en otra llamada se da por existente y vigente, y se puede cancelar', async () => {
+    const b = servidor();
+    const c = await b.cancel({ uuid: 'uuid-de-otra-llamada', motive: '02' });
+    expect(c.ok && c.value.status).toBe('CANCELLED');
+    const s = await b.getStatus('uuid-de-otra-llamada');
+    expect(s.ok && s.value).toBe('CANCELLED');
+  });
+
+  it('consultar el estatus o descargar una desconocida la adopta como vigente', async () => {
+    const b = servidor();
+    const s = await b.getStatus('uuid-desconocida');
+    expect(s.ok && s.value).toBe('VALID');
+    const d = await b.download('uuid-desconocida');
+    expect(d.ok && d.value.xml).toContain('uuid-desconocida');
+  });
+
+  it('sin la opción, una factura desconocida sigue sin existir', async () => {
+    const b = nuevo();
+    const c = await b.cancel({ uuid: 'uuid-de-otra-llamada', motive: '02' });
+    expect(!c.ok && c.error.code).toBe('NOT_FOUND');
+    expect((await b.getStatus('uuid-desconocida')).ok).toBe(false);
+    expect((await b.download('uuid-desconocida')).ok).toBe(false);
+  });
+});
