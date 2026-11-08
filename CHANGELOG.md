@@ -2,6 +2,65 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Las versiones siguen [SemVer](https://semver.org/lang/es/).
 
+## [1.0.0] — pendiente de etiquetar
+
+> Todavía **no** está etiquetada. La versión `1.0.0` se etiqueta al entregar, cuando estén firmadas la aceptación de Luis y el acta de entrega (S5-15); mientras tanto los `package.json` siguen en `0.0.0`. Cómo se etiqueta: [`docs/entrega/ACTA_DE_ENTREGA.md`](docs/entrega/ACTA_DE_ENTREGA.md), sección "Publicar la versión". Al etiquetar, lo anotado abajo en "Sin publicar" (la documentación y las decisiones de las primeras fases) pasa a esta versión.
+> Las facturas son **de prueba y sin validez fiscal** hasta conectar el proveedor de timbrado real y el certificado de ZAMMIR (PD-04, PD-05).
+
+### Agregado
+
+**Catálogo y precios**
+- Catálogo de productos con categorías e historial de precios; los productos se desactivan, nunca se borran.
+- Reglas de precio por área (m²), longitud, pieza y servicio, con medidas en centímetros o metros que se suben al múltiplo que se cobra.
+- Importación del catálogo desde un archivo.
+- Dinero en centavos enteros y precios con IVA incluido, con casos de oro de redondeo.
+
+**Clientes**
+- Fichas de cliente con datos de contacto y fiscales, su historial (cotizaciones, órdenes, ventas, pagos, garantías y facturas) y la marca de cliente recurrente.
+- Anonimización de un cliente sin tocar lo contable.
+
+**Personas, tablets y bitácora**
+- Altas de personas con rol y PIN (con hash y sal, límite de intentos y bloqueo por inactividad).
+- Registro de tablets con un código de un solo uso; revocar una tablet.
+- Bitácora de lo que hace cada persona, desde qué tablet y cuándo.
+
+**Cotizador (funciona sin internet)**
+- Cotizaciones con cliente, conceptos, descuentos con el PIN de un administrador, vista previa del documento, PDF y envío por WhatsApp.
+- Folios provisionales en la tablet y definitivos en el servidor, sin duplicados al reconectar.
+
+**Órdenes de trabajo y cuentas por cobrar**
+- Conversión de una cotización aceptada, anticipo, saldo, garantía y estatus, con autorizaciones de administrador para lo excepcional.
+- Comprobante de trabajo en PDF con QR para pedir la factura.
+- Cuentas por cobrar, de la más atrasada a la más reciente.
+
+**Mostrador y caja**
+- Venta rápida con ticket; cobro en efectivo, transferencia o mixto, con cambio.
+- Ticket térmico con QR e impresión por Bluetooth en tres capas.
+- Turnos de caja y corte por cajero, con el consolidado del día para administradores.
+
+**Reportes e inicio**
+- Reportes de ventas por día, semana (de lunes a domingo) y mes, en hora de México y con comparativo; por medio de pago y por persona; lo más vendido; trabajos por estatus.
+- Panel de inicio según quién entró, "Primeros pasos" y botón "¿Por dónde empiezo?"; el inicio del cajero muestra su turno abierto y lo que falta por enviar.
+
+**Legal y facturación**
+- Aviso de privacidad y términos del servicio versionados, y canal para ejercer derechos.
+- Facturar desde el sistema (administradores); portal público de autofacturación con respuesta uniforme y límites contra abuso; cancelación con motivo del SAT; reintentos sin duplicar el timbre; anticipos y control de timbres del año. Proveedor de timbrado **simulado**.
+
+**Operación y seguridad**
+- Registro de errores sin datos personales y comprobación de salud para el monitoreo.
+- Exportación de los datos del negocio en CSV, JSON y PDF, sin PIN ni credenciales.
+- Revisión de seguridad automatizada (RLS en todas las tablas, permisos, secretos y dependencias) y ensayo de restauración de un respaldo.
+
+**Documentación**
+- Manual de usuario con capturas, manual de soporte, guía de operación, guía de restauración y plan de pruebas de aceptación con el cliente.
+
+### Pendiente para la entrega
+
+- Conectar el proveedor de timbrado real y el certificado de ZAMMIR (PD-04, PD-05).
+- Producción, dominio y variables (PD-10); respaldos con 30 días y su ensayo en producción (PD-32).
+- Catálogo, parámetros y ajustes reales, y las pruebas con el equipo real (tablets e impresora).
+- Capacitación y aceptación firmada.
+
 ## [Sin publicar]
 
 ### Agregado
