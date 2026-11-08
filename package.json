@@ -18,6 +18,7 @@
     "format:check": "prettier --check .",
     "funciones:empaquetar": "node scripts/empaquetar-core.mjs",
     "lint": "eslint . --max-warnings 0",
+    "manual:capturas": "node scripts/capturas-manual.mjs",
     "test": "vitest run",
     "test:concurrencia": "node scripts/repetir-concurrencia.mjs",
     "test:cobertura": "vitest run --coverage",

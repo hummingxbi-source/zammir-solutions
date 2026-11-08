@@ -4,6 +4,7 @@
 |---|---|---|
 | `CASOS_DE_ORO_DINERO.md` | Cálculos de dinero e IVA de referencia [ADR-0011] | Borrador, a validar por Juanito |
 | `PRUEBAS_DE_ACEPTACION.md` | Recorridos E1 a E10 y criterios generales antes de entregar [DC §14] | Completo |
+| [`PLAN_DE_ACEPTACION_CLIENTE.md`](PLAN_DE_ACEPTACION_CLIENTE.md) | Guion de escenarios del día a día que Luis ejecuta y firma [S4-30] | Borrador, hasta que Juanito lo apruebe |
 | [`TESTING.md`](TESTING.md) | Estrategia de pruebas | Borrador, Fase 2 |
 
 `TESTING.md` definirá qué se prueba, en qué nivel (unitarias, integración, extremo a extremo) y la cobertura mínima.
