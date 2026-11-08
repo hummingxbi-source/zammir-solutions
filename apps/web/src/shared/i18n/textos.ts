@@ -58,6 +58,21 @@ export const textos = {
       trabajos: (n: number): string => (n === 1 ? '1 trabajo' : `${String(n)} trabajos`),
       tendencia: 'Ingresos de los últimos 31 días',
       tuTurno: 'Tus cobros de hoy',
+      miTurno: 'Mi turno de caja',
+      ayudaMiTurno:
+        'El turno que abriste en el Mostrador. Sin turno abierto no puedes cobrar; el corte se hace al cerrarlo.',
+      turnoAbierto: (hora: string): string => `Abierto desde las ${hora}`,
+      fondoInicial: 'Fondo inicial',
+      sinTurno: 'Sin turno abierto',
+      abrirEnElMostrador: 'Ábrelo en el Mostrador para poder cobrar.',
+      porEnviar: 'Por enviar',
+      ayudaPorEnviar:
+        'Lo que capturaste y todavía no llega al servidor. Sale solo cuando hay internet; no lo borres.',
+      todoEnviado: 'Todo enviado',
+      operacionesSinEnviar: (n: number): string =>
+        n === 1 ? '1 operación sin enviar' : `${String(n)} operaciones sin enviar`,
+      nadaPendiente: 'No hay nada pendiente.',
+      saldranSolas: 'Saldrán solas al volver la conexión.',
       vacioTitulo: 'Todavía no hay movimiento',
       vacio:
         'Cuando cotices, cobres o abras una orden, aquí verás cómo va el día. Empieza por revisar tu catálogo.',

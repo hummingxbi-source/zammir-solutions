@@ -49,6 +49,7 @@ import { Dispositivos } from './modules/devices/ui/Dispositivos';
 import { Usuarios, type UsuariosProps } from './modules/identity/ui/Usuarios';
 import { ProtegidaAdmin } from './modules/identity/ui/ProtegidaAdmin';
 import type { SincronizacionVisible } from './shell/IndicadorDeConexion';
+import { AvisoDeCatalogo } from './shell/AvisoDeCatalogo';
 import { Layout } from './shell/Layout';
 import { PanelDeInicio, SeccionVacia } from './shell/Paginas';
 import { seccionesVisibles, type Interruptor } from './shell/secciones';
@@ -229,11 +230,23 @@ export function App({
               ) : seccion.id === 'cotizador' &&
                 prepararCotizador !== null &&
                 entradaConPin !== null ? (
-                <CotizadorEnLaTablet preparar={prepararCotizador} session={entradaConPin.session} />
+                <>
+                  <AvisoDeCatalogo />
+                  <CotizadorEnLaTablet
+                    preparar={prepararCotizador}
+                    session={entradaConPin.session}
+                  />
+                </>
               ) : seccion.id === 'mostrador' &&
                 prepararMostrador !== null &&
                 entradaConPin !== null ? (
-                <MostradorEnLaTablet preparar={prepararMostrador} session={entradaConPin.session} />
+                <>
+                  <AvisoDeCatalogo />
+                  <MostradorEnLaTablet
+                    preparar={prepararMostrador}
+                    session={entradaConPin.session}
+                  />
+                </>
               ) : seccion.id === 'ordenes' && prepararOrdenes !== null && entradaConPin !== null ? (
                 <OrdenesEnLaTablet preparar={prepararOrdenes} session={entradaConPin.session} />
               ) : seccion.id === 'catalogo' && catalogo !== null ? (

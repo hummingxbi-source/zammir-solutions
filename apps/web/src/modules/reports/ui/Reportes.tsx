@@ -12,6 +12,7 @@ import {
   receivablesAgingReport,
   salesReport,
   topProducts,
+  type CashShiftStore,
   type ComparisonMode,
   type CounterSale,
   type CounterSaleStore,
@@ -57,6 +58,10 @@ export interface ReportesProps {
   /** Contra qué se compara cada periodo (PP-13 por aprobar: el periodo anterior completo). */
   readonly modoDeComparacion?: ComparisonMode;
   readonly alCambiarElEnvio?: (aviso: () => void) => () => void;
+  /** Turnos de caja de la tablet: el inicio del cajero muestra el suyo abierto. */
+  readonly turnos?: Pick<CashShiftStore, 'openFor'>;
+  /** Cuántas operaciones siguen sin enviarse al servidor: el inicio del cajero lo muestra. */
+  readonly porEnviar?: () => Promise<number>;
 }
 
 /** Porcentaje en puntos base como texto exacto, sin flotantes: 1250 → "12.50 %". */

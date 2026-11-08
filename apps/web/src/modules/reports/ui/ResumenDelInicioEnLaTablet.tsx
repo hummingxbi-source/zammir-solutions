@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
+import { useCallback, useSyncExternalStore } from 'react';
 import type { ReactElement } from 'react';
+import { useDatosDeLaTablet } from '../../../shared/ui/use-datos-de-la-tablet';
 import type { ActiveUserSession, QuoteActor } from '@zammir/core';
 
 import type { PrepararReportes } from './ReportesEnLaTablet';
-import { ResumenDelInicio, type ResumenDelInicioProps } from './ResumenDelInicio';
+import { ResumenDelInicio } from './ResumenDelInicio';
 
 export interface ResumenDelInicioEnLaTabletProps {
   readonly preparar: PrepararReportes;
@@ -19,13 +20,9 @@ export function ResumenDelInicioEnLaTablet({
   const suscribir = useCallback((aviso: () => void) => session.subscribe(aviso), [session]);
   const leer = useCallback(() => session.state(), [session]);
   const estado = useSyncExternalStore(suscribir, leer);
-  const [props, setProps] = useState<Omit<ResumenDelInicioProps, 'actor'> | null>(null);
+  const props = useDatosDeLaTablet(preparar);
 
-  useEffect(() => {
-    void preparar().then(setProps);
-  }, [preparar]);
-
-  if (props === null || estado.kind !== 'ACTIVE') {
+  if (props === null || props === undefined || estado.kind !== 'ACTIVE') {
     return null;
   }
   const actor: QuoteActor = { userId: estado.user.id, role: estado.user.role };

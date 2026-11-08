@@ -9,6 +9,7 @@ import {
   periodOf,
   receivablesAgingReport,
   salesReport,
+  type CashShift,
   type CounterSale,
   type Payment,
   type WorkOrder,
@@ -25,6 +26,15 @@ import { formatearPesos } from '../../../shared/ui/formatos';
 import { formatearPorcentaje, type ReportesProps } from './Reportes';
 
 const t = textos.inicio.resumen;
+
+function horaDeMexico(iso: string): string {
+  return new Intl.DateTimeFormat('es-MX', {
+    timeZone: 'America/Mexico_City',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(new Date(iso));
+}
 const r = textos.reportes;
 
 export type ResumenDelInicioProps = ReportesProps;
@@ -43,6 +53,9 @@ export function ResumenDelInicio(props: ResumenDelInicioProps): ReactElement | n
   const [ordenes, setOrdenes] = useState<readonly WorkOrder[]>([]);
   const [ventas, setVentas] = useState<readonly CounterSale[]>([]);
   const [cargado, setCargado] = useState(false);
+  const idDeQuienUsa = props.actor?.userId ?? null;
+  const [turno, setTurno] = useState<CashShift | null>(null);
+  const [sinEnviar, setSinEnviar] = useState<number | null>(null);
 
   const refrescar = useCallback(async () => {
     const [p, o, v] = await Promise.all([
@@ -53,8 +66,14 @@ export function ResumenDelInicio(props: ResumenDelInicioProps): ReactElement | n
     setPagos(p);
     setOrdenes(o);
     setVentas(v);
+    setTurno(
+      idDeQuienUsa === null || props.turnos === undefined
+        ? null
+        : await props.turnos.openFor(idDeQuienUsa),
+    );
+    setSinEnviar(props.porEnviar === undefined ? null : await props.porEnviar());
     setCargado(true);
-  }, [deps, props.sales]);
+  }, [deps, props.sales, idDeQuienUsa, props.turnos, props.porEnviar]);
 
   useEffect(() => {
     void refrescar();
@@ -69,8 +88,49 @@ export function ResumenDelInicio(props: ResumenDelInicioProps): ReactElement | n
   if (!cargado) {
     return <p role="status">{t.cargando}</p>;
   }
+  // Lo propio de quien cobra en la tablet: su turno de caja y lo que falta por enviar.
+  const delCajero = (
+    <>
+      {props.turnos === undefined ? null : (
+        <Tarjeta rotulo={t.miTurno} acciones={<Ayuda tema={t.miTurno}>{t.ayudaMiTurno}</Ayuda>}>
+          {turno === null ? (
+            <Indicador rotulo={t.sinTurno} valor="—" detalle={t.abrirEnElMostrador} />
+          ) : (
+            <Indicador
+              rotulo={t.turnoAbierto(horaDeMexico(turno.openedAt))}
+              valor={formatearPesos(turno.openingFloatCents)}
+              detalle={t.fondoInicial}
+              tono="exito"
+            />
+          )}
+        </Tarjeta>
+      )}
+      {sinEnviar === null ? null : (
+        <Tarjeta
+          rotulo={t.porEnviar}
+          acciones={<Ayuda tema={t.porEnviar}>{t.ayudaPorEnviar}</Ayuda>}
+        >
+          <Indicador
+            rotulo={sinEnviar === 0 ? t.todoEnviado : t.operacionesSinEnviar(sinEnviar)}
+            valor={String(sinEnviar)}
+            detalle={sinEnviar === 0 ? t.nadaPendiente : t.saldranSolas}
+            tono={sinEnviar === 0 ? 'exito' : 'neutro'}
+          />
+        </Tarjeta>
+      )}
+    </>
+  );
+
   if (pagos.length === 0 && ordenes.length === 0 && ventas.length === 0) {
-    return <EstadoVacio titulo={t.vacioTitulo} descripcion={t.vacio} icono="reportes" />;
+    const vacio = <EstadoVacio titulo={t.vacioTitulo} descripcion={t.vacio} icono="reportes" />;
+    return actor.role === 'ADMIN' ? (
+      vacio
+    ) : (
+      <div className="resumen">
+        <div className="indicadores">{delCajero}</div>
+        {vacio}
+      </div>
+    );
   }
 
   const ahora = deps.clock.now();
@@ -110,6 +170,7 @@ export function ResumenDelInicio(props: ResumenDelInicioProps): ReactElement | n
             <Indicador rotulo={r.periodos.DAY} valor={formatearPesos(mios?.transferCents ?? 0)} />
           </Tarjeta>
           <Tarjeta rotulo={t.produccion}>{produccion}</Tarjeta>
+          {delCajero}
         </div>
       </div>
     );
