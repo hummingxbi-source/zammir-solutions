@@ -76,7 +76,8 @@
 35. **Transferencias:** ¿cómo comprueban que llegó el dinero? ¿Quieren marcarlas como "confirmadas"? (PD-43)
 36. **Si se reimprime un ticket,** ¿que salga marcado "COPIA"? ☐ Sí ☐ No. (PP-14)
 37. **Productos de venta rápida:** ¿quieren una lista corta de los que más se venden en el mostrador? ☐ Sí ☐ No. (PP-08)
-- **37.1 Una caja o una por persona:** cuando dos personas cobran el mismo día, ¿cada quien abre y cierra **su propia caja** (y cuenta su efectivo), o hay **una sola caja** del local que se va relevando? *Si no sabes: cada persona tiene su caja.* (PD-36, Sprint 3)    - **37.2 Turno que cruza la medianoche:** si una caja se abre un día y se cierra al siguiente, ¿a qué día pertenece su corte? *Si no sabes: al día en que se abrió.*
+- **37.1 Una caja o una por persona:** cuando dos personas cobran el mismo día, ¿cada quien abre y cierra **su propia caja** (y cuenta su efectivo), o hay **una sola caja** del local que se va relevando? *Si no sabes: cada persona tiene su caja.* (PD-36, Sprint 3)
+- **37.2 Turno que cruza la medianoche:** si una caja se abre un día y se cierra al siguiente, ¿a qué día pertenece su corte? *Si no sabes: al día en que se abrió.*
 - **37.3 Ancho del papel del ticket:** ¿la impresora usa papel de **58 mm** o de **80 mm**? *Si no sabes: 58 mm.* (PD-15, Sprint 3)
 - **37.4 Cliente recurrente:** ¿a partir de cuántos trabajos **entregados** un cliente es "recurrente"? *Si no sabes: 2.* (Sprint 3)
 - **37.5 Leyenda del ticket:** ¿qué texto quieren abajo del ticket sobre cómo y hasta cuándo pedir su factura? (PD-09, PD-10, Sprint 3)
@@ -99,6 +100,7 @@
 47. **¿Quieren el texto "Powered by HummingX BI"** al pie de la aplicación? ☐ Sí ☐ No. (PD-30)
 48. **Garantía:** ¿cuánto dura, qué cubre y qué excluye? ¿Cambia por producto? (PD-06)
 49. **¿Quieren un portal para que sus clientes vean el avance de su trabajo**? ☐ Sí ☐ No. (PD-13)
+73. **Solicitudes de datos de sus clientes** (ver, corregir o quitar sus datos): ¿quién en ZAMMIR las recibe y por qué canal (WhatsApp del negocio, correo)? Del lado técnico, HummingX las atiende. (RF-M9-04)
 
 ## 7. Facturación y datos fiscales (Luis y su contador)
 
@@ -108,6 +110,8 @@
 51. **Anticipos:** ¿se factura **una sola vez al liquidar**, o se emite una factura por el anticipo y otra al final? (PD-27)
 52. **Pago mixto** (parte efectivo, parte transferencia): ¿qué forma de pago debe llevar la factura? Mientras no se responda, el portal **no factura** las compras con pago mixto y manda a pedir la factura en el negocio. (PD-28)
 53. **Autofacturación:** el cliente puede pedir su factura hasta el **último día del mes** de su compra. ¿Está bien? (PD-09)
+69. ⭐ **Datos del emisor de las facturas:** necesitamos, tal como aparecen en su constancia de situación fiscal, la **razón social**, el **RFC**, el **régimen fiscal** y el **código postal del domicilio fiscal** (en la factura sale como "lugar de expedición"). Una foto de la constancia sirve. *Si no los tienes: no se puede emitir ninguna factura real.* (PD-04, PD-11)
+72. **Primera factura real:** antes de facturar con valor fiscal hay que hacer una verificación con su **contador** (una factura de prueba que se cancela). ¿Puede su contador acompañarla, por teléfono o en persona? ☐ Sí ☐ No, otra persona: ___. (Fase 9.2)
 54. **Claves del SAT** de cada categoría de producto (producto o servicio, unidad, objeto de impuesto): ¿las revisa su contador cuando tengamos las categorías cerradas? (PD-29)
 
 61. **IVA de los productos:** ¿vende ZAMMIR algo con **IVA 0 %** o **exento**? Hoy todo se calcula con 16 % y el catálogo puede marcar un producto como exento. (PD-29)
@@ -127,6 +131,10 @@
 58. **Dirección web propia** (dominio): ¿ZAMMIR ya tiene una, o prefieren que se compre una nueva? **No se puede cambiar después de imprimir los primeros tickets**, porque los códigos QR apuntan a ella. (PD-10)
 59. **Aviso de privacidad y términos:** ¿tienen un asesor legal que revise el texto final? (PD-12)
 60. **¿Pueden dedicar a una persona 30 minutos para probar el sistema** con datos reales cuando esté listo para pruebas?
+70. ⭐ **¿A nombre de quién quedan las cuentas de producción** (dominio, base de datos, aplicación y proveedor de timbrado)? ☐ A nombre de ZAMMIR, con Juanito como colaborador ☐ A nombre de HummingX BI ☐ Otra forma: ___. *Recomendación: el dominio y el certificado siempre a nombre de ZAMMIR.* (PD-05, PD-10, PD-20)
+71. ⭐ **Fechas de la entrega** (entre el 23 de noviembre y el 1 de diciembre): ¿qué días y a qué hora están **Luis**, **Ricardo** y **el equipo de mostrador** para las tres sesiones de capacitación y para ejecutar el plan de pruebas de aceptación (de 2 a 3 horas, con la tablet y la impresora en el local)? ¿Se puede aprovechar un día para **cortar el internet a propósito** y comprobar que todo sigue funcionando? (Fase 9)
+74. **Si el servidor se cae:** las tablets siguen cotizando y cobrando sin internet, pero facturar o entrar a administración necesita el servidor. ¿Cuánto tiempo sin esas funciones pueden aguantar sin problema? ☐ Hasta 1 hora ☐ Hasta medio día ☐ Un día completo. Con eso se fija el compromiso de recuperación. *Si no sabes: se atiende el mismo día hábil.* (RNF-20, RNF-21)
+75. **¿Para qué fecha tendrán en el local las tablets y la impresora?** Sin ellas no se puede ensayar la impresión ni registrar las tablets reales. (PD-15, PD-16)
 
 ---
 
@@ -161,4 +169,5 @@ Pendientes que no dependen de Luis, para no perderlos de vista:
 | 31 oct 2026 | Sprint 3 (cierre): preguntas 37.3 a 37.6 (ancho del papel, cliente recurrente, leyenda del ticket, retiros de efectivo). |
 | 5 nov 2026 | Sprint 4 (facturar desde el sistema): pregunta 66 (quién factura: solo administrador o cajero con PIN). |
 | 5 nov 2026 | Sprint 4 (reintentos, cancelación y timbres): preguntas 67 y 68 (timbres incluidos en la anualidad, aviso de facturas en proceso). |
+| 8 nov 2026 | Cierre de lo construible: preguntas 69 a 75 (datos del emisor, primera factura real con el contador, solicitudes de datos, a nombre de quién quedan las cuentas, fechas de la entrega, tolerancia a una caída, fecha del equipo). Versión para enviar en `CUESTIONARIO_FINAL_PARA_LUIS.md`. |
 | 4 nov 2026 | Sprint 4 (portal de facturas): preguntas 61 a 65 (IVA 0 % o exento, régimen y uso más pedidos, correo del negocio, factura global, cancelación de facturas). |
