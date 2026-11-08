@@ -34,7 +34,7 @@ A 8 de noviembre de 2026 (Sprint 4). Los marcados con 🖐 se repiten además a 
 | E6 | el mismo archivo y `packages/core/src/acceptance/e6-facturar.test.ts` | Un cajero sin permiso no factura (sin sesión y con sesión de cajero); un administrador sí; el cajero solo con autorización de un administrador en el núcleo. Que el cajero facture desde la tablet con el PIN de un administrador **no está construido** (PP-31). |
 | E7 | `packages/core/src/acceptance/e7-reportes.test.ts` | Datos armados a mano en los bordes de medianoche de México: día, semana (lunes a domingo) y mes bien delimitados; totales al centavo por periodo, método de pago y persona; la venta cancelada no cuenta. |
 | E8 | `packages/core/src/acceptance/e8-permisos.test.ts` y `e8-reportes-precios-y-cortes.test.ts` | Catálogo, personas y privacidad; reportes y cuentas por cobrar solo de administradores; el cajero no cambia precios sin el PIN de un administrador ni ve ni cierra cortes ajenos. Las pantallas que se le niegan al cajero las prueban `reportes.test.tsx` y `cuentas-por-cobrar.test.tsx`. |
-| E9 | — | Manual, en el Sprint 5 (S5-06). |
+| E9 | `scripts/ensayo-de-restauracion.mjs` (`pnpm ensayo:restauracion`) y [`docs/operacion/RESTAURACION.md`](../operacion/RESTAURACION.md) | Ensayo en local con datos inventados: respaldo → base limpia desde las migraciones → restauración → cada tabla idéntica, cuenta de administrador funcionando y numeración automática intacta. 🖐 **Falta repetirlo en producción con un respaldo real** (S5-06). |
 | E10 | — | Manual con la impresora, en el Sprint 5 (S5-09). |
 
 ## Criterios generales

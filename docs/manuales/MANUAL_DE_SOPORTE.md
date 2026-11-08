@@ -102,13 +102,8 @@ Los errores del navegador y de las funciones de servidor se guardan **sin datos 
 - **Meta** [RNF-21]: respaldos diarios con **al menos 30 días** de historial. Si el plan de Supabase retiene menos, se programa una exportación nocturna a otro almacenamiento **(pendiente: retención real del plan y destino, PD-32, S4-27)**.
 - **Exportación del negocio (S5-08):** además del respaldo, un administrador puede llevarse todos los datos en CSV, JSON y PDF desde **Configuración** → **Exportar los datos**. No sustituye al respaldo (no trae los PIN ni las cuentas de acceso, y el PDF de cada factura se vuelve a generar), pero es una copia legible por cualquier programa. Los archivos traen datos personales: se guardan en un lugar seguro.
 - **Qué se respalda:** toda la base (clientes, cotizaciones, órdenes, ventas, pagos, facturas y bitácora). Los archivos de factura (XML y PDF) viven en la propia base.
-- **Restauración (se ensaya y se completa en S5-06, recorrido E9).** Procedimiento propuesto:
-  1. Crea un proyecto de Supabase **limpio** (nunca restaures encima de producción).
-  2. Aplica las migraciones desde cero para crear la estructura.
-  3. Restaura los datos desde la copia (el respaldo del panel o una exportación nocturna).
-  4. Comprueba conteos de clientes, cotizaciones, órdenes, ventas, pagos y facturas contra el origen, y el saldo de las cuentas por cobrar.
-  5. Anota la fecha, cuánto tardó y lo que faltó. El resultado se pega en este manual.
-- Después de restaurar, las **tablets** deben conectarse y enviar lo que tuvieran sin enviar; los folios definitivos los asigna el servidor.
+- **Restauración (recorrido E9).** El procedimiento completo, la lista de verificación y el registro de ensayos están en [`docs/operacion/RESTAURACION.md`](../operacion/RESTAURACION.md). En resumen: se restaura **siempre en un proyecto de Supabase limpio** (nunca encima del de producción), con las migraciones desde cero y luego los datos y las cuentas de la copia, y se comprueba que cada tabla quedó igual. Ya se ensayó en local con datos inventados (`pnpm ensayo:restauracion`, 28 tablas idénticas en menos de un minuto); **falta ensayarlo en producción** con un respaldo real y comprobar cómo vuelven a conectarse las tablets.
+- Después de restaurar, las **tablets** probablemente deban conectarse otra vez con un código nuevo (un proyecto nuevo tiene otras llaves de sesión); lo que tuvieran sin enviar se conserva en la tablet. Los folios definitivos los asigna el servidor.
 
 ## 8. Solicitudes de un cliente sobre sus datos
 
