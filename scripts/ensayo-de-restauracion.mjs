@@ -10,7 +10,7 @@
 // Con datos INVENTADOS, nunca con los de producción. Para producción el procedimiento es el de
 // docs/operacion/RESTAURACION.md (el ensayo local demuestra el procedimiento y su verificación).
 import { spawnSync } from 'node:child_process';
-import { copyFileSync, mkdirSync, rmSync, statSync } from 'node:fs';
+import { mkdirSync, rmSync, statSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -242,7 +242,7 @@ if (!sesion.error) {
 }
 
 // Lo que se numera solo sigue su cuenta: un renglón nuevo no choca con los restaurados.
-let numeracionFunciona = false;
+let numeracionFunciona;
 try {
   const r = await servicio.rpc('error_log_record', {
     p_source: 'SERVER',
