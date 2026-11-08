@@ -5,6 +5,7 @@ import {
   collectionsByCashier,
   collectionsByMethod,
   DEFAULT_OVERDUE_DAYS,
+  dailyIncomeTrend,
   defaultPermissionPolicy,
   ordersByStatus,
   PERIOD_KINDS,
@@ -27,24 +28,31 @@ import {
 
 import { textos } from '../../../shared/i18n/textos';
 import { Aviso } from '../../../shared/ui/Aviso';
+import { Ayuda } from '../../../shared/ui/Ayuda';
 import { EncabezadoDePagina } from '../../../shared/ui/EncabezadoDePagina';
-import { EtiquetaDeEstado, type TonoDeEstado } from '../../../shared/ui/EtiquetaDeEstado';
 import { FlechaDeComparacion } from '../../../shared/ui/FlechaDeComparacion';
-import { GraficaDeBarras } from '../../../shared/ui/Graficas';
-import { Indicador } from '../../../shared/ui/Indicador';
+import {
+  Dona,
+  GraficaDeBarras,
+  GraficaDeColumnas,
+  GraficaDeLinea,
+  type TonoDeGrafica,
+} from '../../../shared/ui/Graficas';
+import { PanelDeIndicadores } from '../../../shared/ui/PanelDeIndicadores';
 import { Pestanas } from '../../../shared/ui/Pestanas';
 import { Tabla } from '../../../shared/ui/Tabla';
 import { Tarjeta } from '../../../shared/ui/Tarjeta';
+import { pesosCompactos } from '../../../shared/ui/graficas-util';
 import { formatearPesos } from '../../../shared/ui/formatos';
 
 const t = textos.reportes;
 
-const TONO_DE_ESTADO: Record<WorkOrderStatus, TonoDeEstado> = {
-  WAITING: 'espera',
-  IN_PROCESS: 'proceso',
-  READY: 'listo',
-  DELIVERED: 'entregado',
-  CANCELLED: 'cancelado',
+const TONO_DE_ESTATUS: Record<WorkOrderStatus, TonoDeGrafica> = {
+  WAITING: 'aluminio',
+  IN_PROCESS: 'acento',
+  READY: 'exito',
+  DELIVERED: 'laton',
+  CANCELLED: 'peligro',
 };
 
 export interface ReportesProps {
@@ -73,6 +81,11 @@ export function formatearPorcentaje(bps: number): string {
 function fechaCorta(dia: string): string {
   const [y, m, d] = dia.split('-');
   return `${d ?? ''}/${m ?? ''}/${y ?? ''}`;
+}
+
+function diaYMes(dia: string): string {
+  const [, m, d] = dia.split('-');
+  return `${d ?? ''}/${m ?? ''}`;
 }
 
 function etiquetaDelPeriodo(p: Period): string {
@@ -171,14 +184,19 @@ export function Reportes(props: ReportesProps): ReactElement {
     texto: t.periodos[k],
   }));
 
+  const tendencia = dailyIncomeTrend({ payments: pagos, sales: ventas, now: ahora });
+  const activos = pendientes.reduce((n, e) => n + e.count, 0);
+
   return (
     <section className="anima-entrada reportes">
-      <EncabezadoDePagina titulo={t.titulo} />
+      <EncabezadoDePagina
+        titulo={t.titulo}
+        acciones={<Ayuda tema={t.ventas.titulo}>{t.ventas.base}</Ayuda>}
+      />
 
-      <h2 className="rotulo reportes__seccion">{t.ventas.titulo}</h2>
-      <p className="reportes__base">{t.ventas.base}</p>
-      <div className="indicadores">
-        {PERIOD_KINDS.map((k) => {
+      <PanelDeIndicadores
+        descripcion={t.ventas.titulo}
+        items={PERIOD_KINDS.map((k) => {
           const r = ventasPorPeriodo[k];
           const c = r.comparison;
           const palabra =
@@ -187,29 +205,35 @@ export function Reportes(props: ReportesProps): ReactElement {
               : c.trend === 'DOWN'
                 ? t.comparativo.baja
                 : t.comparativo.igual;
-          return (
-            <Tarjeta key={k} rotulo={t.periodos[k]}>
-              <Indicador
-                rotulo={etiquetaDelPeriodo(r.period)}
-                valor={formatearPesos(c.currentCents)}
-                detalle={`${t.ventas.anterior}: ${formatearPesos(c.previousCents)} · ${etiquetaDelPeriodo(r.previous)}`}
+          return {
+            clave: k,
+            rotulo: t.periodos[k],
+            valor: formatearPesos(c.currentCents),
+            variacion: (
+              <FlechaDeComparacion
+                tendencia={c.trend}
+                texto={
+                  c.trend === 'NO_BASELINE'
+                    ? t.comparativo.sinBaseCorta
+                    : `${palabra} ${formatearPorcentaje(c.percentBps ?? 0)}`
+                }
               />
-              <div className="reportes__comparacion">
-                <FlechaDeComparacion
-                  tendencia={c.trend}
-                  texto={
-                    c.trend === 'NO_BASELINE'
-                      ? t.comparativo.sinBase
-                      : `${palabra} ${formatearPorcentaje(c.percentBps ?? 0)}`
-                  }
-                />
-              </div>
-            </Tarjeta>
-          );
+            ),
+            detalle: `${t.ventas.anterior}: ${formatearPesos(c.previousCents)} · ${etiquetaDelPeriodo(r.previous)}`,
+          };
         })}
-      </div>
+      />
 
-      <div className="reportes__rejilla">
+      <Tarjeta rotulo={t.tendencia}>
+        <GraficaDeLinea
+          descripcion={t.tendencia}
+          formatear={formatearPesos}
+          formatearEje={pesosCompactos}
+          puntos={tendencia.map((d) => ({ etiqueta: diaYMes(d.day), valor: d.totalCents }))}
+        />
+      </Tarjeta>
+
+      <div className="tablero-datos">
         <Tarjeta rotulo={t.productos.titulo}>
           <Pestanas
             etiqueta={t.productos.periodo}
@@ -248,37 +272,19 @@ export function Reportes(props: ReportesProps): ReactElement {
         </Tarjeta>
 
         <Tarjeta rotulo={t.trabajos.titulo}>
-          <Tabla
+          <Dona
             descripcion={t.trabajos.titulo}
-            claveDeFila={(e) => e.status}
-            filas={estatus}
-            columnas={[
-              {
-                clave: 'estatus',
-                rotulo: t.trabajos.estatus,
-                celda: (e) => (
-                  <EtiquetaDeEstado
-                    tono={TONO_DE_ESTADO[e.status]}
-                    texto={textos.ordenes.estados[e.status]}
-                  />
-                ),
-              },
-              {
-                clave: 'trabajos',
-                rotulo: t.trabajos.trabajos,
-                numerica: true,
-                celda: (e) => String(e.count),
-              },
-              {
-                clave: 'valor',
-                rotulo: t.trabajos.valor,
-                numerica: true,
-                celda: (e) => formatearPesos(e.valueCents),
-              },
-            ]}
+            formatear={(n) => textos.inicio.resumen.trabajos(n)}
+            centro={{ valor: String(activos), rotulo: textos.inicio.resumen.activas }}
+            datos={estatus.map((e) => ({
+              etiqueta: textos.ordenes.estados[e.status],
+              valor: e.count,
+              nota: formatearPesos(e.valueCents),
+              tono: TONO_DE_ESTATUS[e.status],
+            }))}
           />
           <p className="reportes__pie">
-            {t.trabajos.pendientes}: {String(pendientes.reduce((s, e) => s + e.count, 0))} ·{' '}
+            {t.trabajos.pendientes}: {String(activos)} ·{' '}
             {formatearPesos(pendientes.reduce((s, e) => s + e.valueCents, 0))}
           </p>
         </Tarjeta>
@@ -302,21 +308,53 @@ export function Reportes(props: ReportesProps): ReactElement {
         <p className="reportes__pie">{t.cuentas.leyenda(umbral)}</p>
       </Tarjeta>
 
-      <Tarjeta rotulo={t.cajeros.titulo}>
-        {PERIOD_KINDS.map((k) => (
-          <div key={k} className="reportes__periodo-bloque">
-            <h3 className="reportes__subtitulo">
-              {t.periodos[k]}
-              <small> · {etiquetaDelPeriodo(cajeros[k].period)}</small>
-            </h3>
-            {cajeros[k].rows.length === 0 ? (
-              <p className="mostrador__vacio">{t.cajeros.vacio}</p>
-            ) : (
+      <div className="reportes__cobros">
+        <h2 className="rotulo reportes__seccion">{t.cobros.titulo}</h2>
+        <Pestanas
+          etiqueta={t.cobros.periodo}
+          pestanas={periodosDeLista.map((p) => ({ id: p.id, texto: p.texto }))}
+          activa={periodoDeMetodo}
+          onCambiar={(id) => {
+            setPeriodoDeMetodo(id === 'DAY' ? 'DAY' : id === 'WEEK' ? 'WEEK' : 'MONTH');
+          }}
+        />
+        <p className="reportes__periodo">{etiquetaDelPeriodo(periodoMetodo)}</p>
+      </div>
+
+      <div className="tablero-datos tablero-datos--apila">
+        <Tarjeta clase="tablero-datos__angosto" rotulo={t.metodos.titulo}>
+          <Dona
+            descripcion={t.metodos.titulo}
+            formatear={formatearPesos}
+            centro={{ valor: String(metodos.count), rotulo: t.metodos.cobros.toLowerCase() }}
+            datos={[
+              { etiqueta: t.metodos.efectivo, valor: metodos.cashCents, tono: 'exito' },
+              { etiqueta: t.metodos.transferencia, valor: metodos.transferCents, tono: 'acento' },
+            ]}
+          />
+          <p className="reportes__pie">
+            {t.metodos.total}: {formatearPesos(metodos.totalCents)}
+          </p>
+        </Tarjeta>
+
+        <Tarjeta clase="tablero-datos__ancho" rotulo={t.cajeros.titulo}>
+          {cajeros[periodoDeMetodo].rows.length === 0 ? (
+            <p className="mostrador__vacio">{t.cajeros.vacio}</p>
+          ) : (
+            <>
+              <GraficaDeColumnas
+                descripcion={t.cajeros.titulo}
+                formatear={formatearPesos}
+                datos={cajeros[periodoDeMetodo].rows.map((r) => ({
+                  etiqueta: nombre(r.userId),
+                  valor: r.totalCents,
+                }))}
+              />
               <Tabla
-                descripcion={`${t.cajeros.titulo}: ${t.periodos[k]}`}
+                descripcion={`${t.cajeros.titulo}: ${t.periodos[periodoDeMetodo]}`}
                 claveDeFila={(f) => f.clave}
                 filas={[
-                  ...cajeros[k].rows.map((r) => ({
+                  ...cajeros[periodoDeMetodo].rows.map((r) => ({
                     clave: r.userId,
                     nombre: nombre(r.userId),
                     cash: r.cashCents,
@@ -326,9 +364,9 @@ export function Reportes(props: ReportesProps): ReactElement {
                   {
                     clave: '__todas',
                     nombre: t.cajeros.todos,
-                    cash: cajeros[k].totals.cashCents,
-                    transfer: cajeros[k].totals.transferCents,
-                    total: cajeros[k].totals.totalCents,
+                    cash: cajeros[periodoDeMetodo].totals.cashCents,
+                    transfer: cajeros[periodoDeMetodo].totals.transferCents,
+                    total: cajeros[periodoDeMetodo].totals.totalCents,
                   },
                 ]}
                 columnas={[
@@ -353,35 +391,10 @@ export function Reportes(props: ReportesProps): ReactElement {
                   },
                 ]}
               />
-            )}
-          </div>
-        ))}
-      </Tarjeta>
-
-      <Tarjeta rotulo={t.metodos.titulo}>
-        <Pestanas
-          etiqueta={t.metodos.periodo}
-          pestanas={periodosDeLista.map((p) => ({ id: p.id, texto: p.texto }))}
-          activa={periodoDeMetodo}
-          onCambiar={(id) => {
-            setPeriodoDeMetodo(id === 'DAY' ? 'DAY' : id === 'WEEK' ? 'WEEK' : 'MONTH');
-          }}
-        />
-        <p className="reportes__periodo">{etiquetaDelPeriodo(periodoMetodo)}</p>
-        <div className="indicadores">
-          <Indicador rotulo={t.metodos.efectivo} valor={formatearPesos(metodos.cashCents)} />
-          <Indicador
-            rotulo={t.metodos.transferencia}
-            valor={formatearPesos(metodos.transferCents)}
-          />
-          <Indicador
-            rotulo={t.metodos.total}
-            valor={formatearPesos(metodos.totalCents)}
-            tono="exito"
-            detalle={`${t.metodos.cobros}: ${String(metodos.count)}`}
-          />
-        </div>
-      </Tarjeta>
+            </>
+          )}
+        </Tarjeta>
+      </div>
     </section>
   );
 }

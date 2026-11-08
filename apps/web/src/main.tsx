@@ -20,6 +20,7 @@ import '@fontsource/source-serif-4/latin-600.css';
 import './shared/ui/tokens.css';
 import './shared/ui/estilos.css';
 import './shared/ui/componentes.css';
+import './shared/ui/graficas.css';
 
 // Guarda la aplicación en la tablet para abrirla sin internet [RNF-01].
 registerSW({ immediate: true });

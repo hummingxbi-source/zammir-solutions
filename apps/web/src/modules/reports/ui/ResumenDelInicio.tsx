@@ -13,15 +13,24 @@ import {
   type CounterSale,
   type Payment,
   type WorkOrder,
+  type WorkOrderStatus,
 } from '@zammir/core';
 
 import { textos } from '../../../shared/i18n/textos';
 import { Ayuda } from '../../../shared/ui/Ayuda';
 import { EstadoVacio } from '../../../shared/ui/EstadoVacio';
 import { FlechaDeComparacion } from '../../../shared/ui/FlechaDeComparacion';
-import { GraficaDeBarras, GraficaDeLinea } from '../../../shared/ui/Graficas';
+import {
+  Dona,
+  GraficaDeBarras,
+  GraficaDeColumnas,
+  GraficaDeLinea,
+  type TonoDeGrafica,
+} from '../../../shared/ui/Graficas';
 import { Indicador } from '../../../shared/ui/Indicador';
+import { PanelDeIndicadores } from '../../../shared/ui/PanelDeIndicadores';
 import { Tarjeta } from '../../../shared/ui/Tarjeta';
+import { pesosCompactos } from '../../../shared/ui/graficas-util';
 import { formatearPesos } from '../../../shared/ui/formatos';
 import { formatearPorcentaje, type ReportesProps } from './Reportes';
 
@@ -140,13 +149,6 @@ export function ResumenDelInicio(props: ResumenDelInicioProps): ReactElement | n
     count: pendientes.reduce((s, e) => s + e.count, 0),
     cents: pendientes.reduce((s, e) => s + e.valueCents, 0),
   };
-  const produccion = (
-    <Indicador
-      rotulo={r.trabajos.pendientes}
-      valor={formatearPesos(enProduccion.cents)}
-      detalle={t.trabajos(enProduccion.count)}
-    />
-  );
 
   if (actor.role !== 'ADMIN') {
     const mios = collectionsByCashier({ payments: pagos, sales: ventas, now: ahora }).DAY.rows.find(
@@ -154,24 +156,38 @@ export function ResumenDelInicio(props: ResumenDelInicioProps): ReactElement | n
     );
     return (
       <div className="resumen">
-        <div className="indicadores">
-          <Tarjeta rotulo={t.tuTurno} acciones={<Ayuda tema={t.tuTurno}>{t.ayudaTuTurno}</Ayuda>}>
-            <Indicador
-              rotulo={r.periodos.DAY}
-              valor={formatearPesos(mios?.totalCents ?? 0)}
-              detalle={t.cobros(mios?.count ?? 0)}
-              tono="exito"
-            />
-          </Tarjeta>
-          <Tarjeta rotulo={t.efectivo}>
-            <Indicador rotulo={r.periodos.DAY} valor={formatearPesos(mios?.cashCents ?? 0)} />
-          </Tarjeta>
-          <Tarjeta rotulo={t.transferencia}>
-            <Indicador rotulo={r.periodos.DAY} valor={formatearPesos(mios?.transferCents ?? 0)} />
-          </Tarjeta>
-          <Tarjeta rotulo={t.produccion}>{produccion}</Tarjeta>
-          {delCajero}
-        </div>
+        <PanelDeIndicadores
+          descripcion={t.tuTurno}
+          items={[
+            {
+              clave: 'cobros',
+              rotulo: t.tuTurno,
+              valor: formatearPesos(mios?.totalCents ?? 0),
+              tono: 'exito',
+              detalle: t.cobros(mios?.count ?? 0),
+              ayuda: <Ayuda tema={t.tuTurno}>{t.ayudaTuTurno}</Ayuda>,
+            },
+            {
+              clave: 'efectivo',
+              rotulo: t.efectivo,
+              valor: formatearPesos(mios?.cashCents ?? 0),
+              detalle: r.periodos.DAY,
+            },
+            {
+              clave: 'transferencia',
+              rotulo: t.transferencia,
+              valor: formatearPesos(mios?.transferCents ?? 0),
+              detalle: r.periodos.DAY,
+            },
+            {
+              clave: 'produccion',
+              rotulo: t.produccion,
+              valor: formatearPesos(enProduccion.cents),
+              detalle: t.trabajos(enProduccion.count),
+            },
+          ]}
+        />
+        <div className="indicadores">{delCajero}</div>
       </div>
     );
   }
@@ -196,63 +212,127 @@ export function ResumenDelInicio(props: ResumenDelInicioProps): ReactElement | n
   const atrasadas = cuentas.filter((b) => b.overdue).reduce((s, b) => s + b.count, 0);
   const tendencia = dailyIncomeTrend({ payments: pagos, sales: ventas, now: ahora });
 
+  const ultimos14 = tendencia.slice(-14).map((d) => d.totalCents);
+  const cobrosDeHoy = collectionsByCashier({ payments: pagos, sales: ventas, now: ahora }).DAY.rows;
+  const nombreDe = (id: string): string =>
+    props.personas.find((p) => p.id === id)?.name ?? r.sinNombre;
+  const TONO_DE_ESTATUS: Record<WorkOrderStatus, TonoDeGrafica> = {
+    WAITING: 'aluminio',
+    IN_PROCESS: 'acento',
+    READY: 'exito',
+    DELIVERED: 'laton',
+    CANCELLED: 'peligro',
+  };
+
   return (
     <div className="resumen">
-      <div className="indicadores">
-        <Tarjeta rotulo={t.hoy} acciones={<Ayuda tema={t.hoy}>{t.ayudaVentas}</Ayuda>}>
-          <Indicador
-            rotulo={fechaCorta(hoy.start)}
-            valor={formatearPesos(c.currentCents)}
-            detalle={`${t.ayer}: ${formatearPesos(c.previousCents)}`}
-            tono="exito"
-          />
-          <div className="reportes__comparacion">
-            <FlechaDeComparacion
-              tendencia={c.trend}
-              texto={
-                c.trend === 'NO_BASELINE'
-                  ? r.comparativo.sinBase
-                  : `${palabra} ${formatearPorcentaje(c.percentBps ?? 0)}`
-              }
-            />
-          </div>
-        </Tarjeta>
-        <Tarjeta
-          rotulo={t.porCobrar}
-          acciones={<Ayuda tema={t.porCobrar}>{t.ayudaPorCobrar}</Ayuda>}
-        >
-          <Indicador
-            rotulo={t.cuentas(cuentasAbiertas)}
-            valor={formatearPesos(porCobrar)}
-            detalle={cuentasAbiertas === 0 ? t.sinDeudas : t.atrasadas(atrasadas)}
-            tono={atrasadas > 0 ? 'peligro' : 'neutro'}
-          />
-        </Tarjeta>
-        <Tarjeta rotulo={t.produccion}>{produccion}</Tarjeta>
-      </div>
+      <PanelDeIndicadores
+        descripcion={t.resumenDelDia}
+        items={[
+          {
+            clave: 'hoy',
+            rotulo: t.hoy,
+            valor: formatearPesos(c.currentCents),
+            tono: 'exito',
+            ayuda: <Ayuda tema={t.hoy}>{t.ayudaVentas}</Ayuda>,
+            variacion: (
+              <FlechaDeComparacion
+                tendencia={c.trend}
+                texto={
+                  c.trend === 'NO_BASELINE'
+                    ? r.comparativo.sinBaseCorta
+                    : `${palabra} ${formatearPorcentaje(c.percentBps ?? 0)}`
+                }
+              />
+            ),
+            tendencia: ultimos14,
+            tonoDeTendencia: 'exito',
+            detalle: `${t.ayer}: ${formatearPesos(c.previousCents)}`,
+          },
+          {
+            clave: 'porCobrar',
+            rotulo: t.porCobrar,
+            valor: formatearPesos(porCobrar),
+            tono: atrasadas > 0 ? 'peligro' : 'neutro',
+            ayuda: <Ayuda tema={t.porCobrar}>{t.ayudaPorCobrar}</Ayuda>,
+            detalle: `${t.cuentas(cuentasAbiertas)} · ${cuentasAbiertas === 0 ? t.sinDeudas : t.atrasadas(atrasadas)}`,
+          },
+          {
+            clave: 'produccion',
+            rotulo: t.produccion,
+            valor: formatearPesos(enProduccion.cents),
+            detalle: t.trabajos(enProduccion.count),
+          },
+        ]}
+      />
 
-      <div className="reportes__rejilla">
-        <Tarjeta rotulo={t.mediosDePago}>
-          <GraficaDeBarras
-            descripcion={t.mediosDePago}
-            formatear={formatearPesos}
-            datos={[
-              { etiqueta: t.efectivo, valor: metodos.cashCents, tono: 'exito' },
-              { etiqueta: t.transferencia, valor: metodos.transferCents, tono: 'acento' },
-            ]}
-          />
-          <p className="reportes__pie">{t.cobros(metodos.count)}</p>
-        </Tarjeta>
+      <div className="tablero-datos">
         <Tarjeta
+          clase="tablero-datos__ancho"
           rotulo={t.tendencia}
           acciones={<Ayuda tema={t.tendencia}>{t.ayudaTendencia}</Ayuda>}
         >
           <GraficaDeLinea
             descripcion={t.tendencia}
             formatear={formatearPesos}
+            formatearEje={pesosCompactos}
             puntos={tendencia.map((d) => ({
               etiqueta: fechaCorta(d.day),
               valor: d.totalCents,
+            }))}
+          />
+        </Tarjeta>
+        <Tarjeta clase="tablero-datos__angosto" rotulo={t.mediosDePago}>
+          <Dona
+            descripcion={t.mediosDePago}
+            formatear={formatearPesos}
+            centro={{ valor: String(metodos.count), rotulo: t.cobrosDeHoy }}
+            datos={[
+              { etiqueta: t.efectivo, valor: metodos.cashCents, tono: 'exito' },
+              { etiqueta: t.transferencia, valor: metodos.transferCents, tono: 'acento' },
+            ]}
+          />
+        </Tarjeta>
+        <Tarjeta rotulo={t.cobrosPorPersona}>
+          {cobrosDeHoy.length === 0 ? (
+            <p className="mostrador__vacio">{r.cajeros.vacio}</p>
+          ) : (
+            <GraficaDeColumnas
+              descripcion={t.cobrosPorPersona}
+              formatear={formatearPesos}
+              datos={cobrosDeHoy.map((f) => ({
+                etiqueta: nombreDe(f.userId),
+                valor: f.totalCents,
+              }))}
+            />
+          )}
+        </Tarjeta>
+        <Tarjeta rotulo={t.produccionPorEstatus}>
+          <Dona
+            descripcion={t.produccionPorEstatus}
+            formatear={(n) => t.trabajos(n)}
+            centro={{ valor: String(enProduccion.count), rotulo: t.activas }}
+            datos={pendientes.map((e) => ({
+              etiqueta: textos.ordenes.estados[e.status],
+              valor: e.count,
+              nota: formatearPesos(e.valueCents),
+              tono: TONO_DE_ESTATUS[e.status],
+            }))}
+          />
+        </Tarjeta>
+        <Tarjeta clase="tablero-datos__completo" rotulo={t.antiguedad}>
+          <GraficaDeBarras
+            descripcion={t.antiguedad}
+            formatear={formatearPesos}
+            datos={cuentas.map((b) => ({
+              etiqueta: b.undated
+                ? r.cuentas.sinFecha
+                : b.toDays === null
+                  ? r.cuentas.desde(b.fromDays ?? 0)
+                  : r.cuentas.entre(b.fromDays ?? 0, b.toDays),
+              valor: b.balanceCents,
+              tono: b.overdue ? 'peligro' : 'acento',
+              nota: r.cuentas.cuantas(b.count),
             }))}
           />
         </Tarjeta>
