@@ -151,6 +151,98 @@ export async function armarOrdenes(): Promise<OrdenesProps> {
     }
   }
 
+  // Historia de un mes en marcha (solo para ver las gráficas): cobros repartidos en los últimos 31 días,
+  // más fuertes entre semana y con un empujón hoy, y varias cuentas viejas por cobrar.
+  const azar = seededRandom(7);
+  const ordenBase = `00000000-0000-4000-8000-0000000b0001`;
+  let k = 100;
+  for (let dia = 0; dia < 31; dia++) {
+    const fecha = new Date(Date.now() - dia * 86_400_000);
+    const finDeSemana = fecha.getDay() === 0 || fecha.getDay() === 6;
+    const cuantos = dia === 0 ? 5 : finDeSemana ? azar.nextInt(2) : 1 + azar.nextInt(3);
+    for (let i = 0; i < cuantos; i++) {
+      k += 1;
+      const monto = (800 + azar.nextInt(5200)) * 100 + (dia === 0 ? 120_000 : 0);
+      const pago = {
+        id: `00000000-0000-4000-8000-0000000c${String(k).padStart(4, '0')}`,
+        groupId: `00000000-0000-4000-8000-0000000d${String(k).padStart(4, '0')}`,
+        targetType: 'WORK_ORDER',
+        targetId: ordenBase,
+        kind: 'DEPOSIT',
+        method: azar.nextInt(10) < 6 ? 'CASH' : 'TRANSFER',
+        amountCents: monto,
+        cashReceivedCents: null,
+        changeCents: null,
+        reference: null,
+        userId: azar.nextInt(10) < 6 ? CAJERO : ADMIN,
+        deviceId: null,
+        paidAt: new Date(fecha.getTime() - i * 3_600_000).toISOString(),
+        cashShiftId: null,
+      };
+      await outbox.transaction((tx) => tx.putDocument(PAYMENTS_COLLECTION, pago.id, pago));
+    }
+  }
+  // Cuentas por cobrar de distinta antigüedad
+  for (const [dias, total] of [
+    [4, 640_000],
+    [9, 410_000],
+    [16, 1_250_000],
+    [27, 890_000],
+    [41, 1_560_000],
+    [58, 720_000],
+  ] as const) {
+    n += 1;
+    const id = `00000000-0000-4000-8000-0000000b${String(n).padStart(4, '0')}`;
+    const emitida = hace(dias);
+    await outbox.transaction((tx) =>
+      tx.putDocument(WORK_ORDERS_COLLECTION, id, {
+        id,
+        status: dias > 30 ? 'READY' : 'IN_PROCESS',
+        customerId: CLIENTES[n % 3]?.[0],
+        quoteId: null,
+        siteAddress: null,
+        description: null,
+        lines: [
+          {
+            id: `${id}-l1`,
+            productId: null,
+            name: 'Trabajo a medida',
+            detail: 'Trabajo a medida',
+            quantity: 1,
+            unitPriceCents: total,
+            lineTotalCents: total,
+          },
+        ],
+        subtotalCents: Math.round(total / 1.16),
+        taxCents: total - Math.round(total / 1.16),
+        totalCents: total,
+        depositPercentBps: 5_000,
+        depositRequiredCents: Math.round(total / 2),
+        measuredBy: null,
+        builtBy: null,
+        installedBy: null,
+        estimatedDeliveryDate: null,
+        notes: null,
+        tempFolio: `T1-${String(n).padStart(4, '0')}`,
+        folio: `OT-2026-${String(n).padStart(4, '0')}`,
+        publicCode: `ABCD${String(1000 + n)}`,
+        issuedAt: emitida,
+        deliveredAt: null,
+        deliveredWithBalance: false,
+        deliveryReason: null,
+        deliveryAuthorizedBy: null,
+        cancelledAt: null,
+        cancelReason: null,
+        cancelledFromStatus: null,
+        cancelDepositPaidCents: null,
+        userId: CAJERO,
+        syncStatus: 'SENT',
+        reviewReason: null,
+        updatedAt: emitida,
+      }),
+    );
+  }
+
   return {
     deps,
     actor: { userId: ADMIN, role: 'ADMIN' },

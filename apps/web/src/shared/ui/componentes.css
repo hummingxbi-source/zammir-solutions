@@ -533,39 +533,6 @@
   }
 }
 
-/* ---------- Línea ---------- */
-.linea {
-  margin: 0;
-}
-
-.linea__maximo {
-  margin: 0 0 0.25rem;
-}
-
-.linea__dibujo {
-  display: block;
-  width: 100%;
-  height: 11rem;
-}
-
-.linea__area {
-  fill: var(--acento-tinte-fuerte);
-}
-
-.linea__trazo {
-  fill: none;
-  stroke: var(--acento);
-  stroke-width: 3;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.linea__extremos {
-  display: flex;
-  justify-content: space-between;
-  margin: 0.5rem 0 0;
-}
-
 /* ---------- Panel de inicio: mosaicos ---------- */
 .tablero__titulo {
   margin: 1.75rem 0 0.75rem;

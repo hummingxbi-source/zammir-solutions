@@ -7,6 +7,8 @@ export interface TarjetaProps {
   /** Algo a la derecha del rótulo (por ejemplo, el botón de ayuda). */
   readonly acciones?: ReactNode;
   readonly variante?: 'blanca' | 'panel';
+  /** Clase extra para acomodarla en una rejilla. */
+  readonly clase?: string;
   readonly children: ReactNode;
 }
 
@@ -16,12 +18,13 @@ export function Tarjeta({
   rotulo,
   acciones,
   variante = 'blanca',
+  clase,
   children,
 }: TarjetaProps): ReactElement {
   const id = useId();
   return (
     <section
-      className={variante === 'panel' ? 'tarjeta tarjeta--panel' : 'tarjeta'}
+      className={`${variante === 'panel' ? 'tarjeta tarjeta--panel' : 'tarjeta'}${clase === undefined ? '' : ` ${clase}`}`}
       aria-labelledby={rotulo === undefined ? undefined : id}
     >
       {rotulo !== undefined || acciones !== undefined ? (

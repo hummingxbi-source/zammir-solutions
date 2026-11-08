@@ -151,8 +151,9 @@ describe('Reportes', () => {
     expect(await screen.findByRole('link', { name: 'Entrar con PIN' })).toBeTruthy();
   });
 
-  it('explica que "ventas" es el efectivo recibido', async () => {
+  it('explica que "ventas" es el efectivo recibido, en la ayuda del encabezado', async () => {
     await montar();
+    fireEvent.click(await screen.findByRole('button', { name: /^Ayuda sobre Ventas/ }));
     expect(await screen.findByText(/"ventas" es el efectivo recibido/)).toBeTruthy();
     expect(screen.getByText(/semana va de lunes a domingo/)).toBeTruthy();
   });
@@ -160,7 +161,7 @@ describe('Reportes', () => {
   it('ventas de hoy, la semana y el mes al centavo, con la venta cancelada fuera', async () => {
     await montar();
     const tarjeta = async (nombre: string) =>
-      within(await screen.findByRole('region', { name: nombre }));
+      within(await screen.findByRole('group', { name: nombre }));
     // Hoy: venta 116 + transferencia de orden 300.
     expect((await tarjeta('Hoy')).getByText('$416.00')).toBeTruthy();
     expect((await tarjeta('Esta semana')).getByText('$416.00')).toBeTruthy();
@@ -170,9 +171,7 @@ describe('Reportes', () => {
     expect(mes.getByText('Sube 108.00 %')).toBeTruthy();
     expect(mes.getByText(/Periodo anterior: \$200\.00/)).toBeTruthy();
     // Ayer no hubo ventas: no hay contra qué comparar y no sale un porcentaje infinito.
-    expect(
-      (await tarjeta('Hoy')).getByText('Sin ventas en el periodo anterior para comparar'),
-    ).toBeTruthy();
+    expect((await tarjeta('Hoy')).getByText('Sin base para comparar')).toBeTruthy();
   });
 
   it('los productos más vendidos salen por importe y por cantidad', async () => {
@@ -183,17 +182,19 @@ describe('Reportes', () => {
     expect(screen.getAllByText('Chapa').length).toBeGreaterThanOrEqual(2);
   });
 
-  it('los trabajos por estatus dan conteo y valor, y suman los pendientes', async () => {
+  it('los trabajos por estatus dan conteo, valor y porcentaje, y suman los pendientes', async () => {
     await montar();
-    const tabla = (await screen.findAllByRole('table')).find((t) =>
-      t.textContent.includes('En proceso'),
-    );
-    if (tabla === undefined) {
-      throw new Error('tabla de estatus');
-    }
-    expect(celdaDe(tabla, 'En proceso', 'Trabajos')).toBe('1');
-    expect(celdaDe(tabla, 'En proceso', 'Valor')).toBe('$1,000.00');
-    expect(celdaDe(tabla, 'Entregado', 'Trabajos')).toBe('1');
+    const lista = within(await screen.findByRole('list', { name: 'Trabajos por estatus' }));
+    const filas = lista.getAllByRole('listitem');
+    const fila = (estatus: string): string =>
+      filas.find((f) => f.textContent.includes(estatus))?.textContent ?? '';
+    // Orden de $1,000 en proceso y otra de $500 entregada: cada una es la mitad de las que no están en cero.
+    expect(fila('En proceso')).toContain('1 trabajo');
+    expect(fila('En proceso')).toContain('$1,000.00');
+    expect(fila('En proceso')).toContain('50.0 %');
+    expect(fila('Entregado')).toContain('1 trabajo');
+    expect(fila('Entregado')).toContain('$500.00');
+    expect(fila('Cancelado')).toContain('0 trabajos');
     expect(screen.getByText(/Pendientes en producción: 1 · \$1,000\.00/)).toBeTruthy();
   });
 
@@ -220,30 +221,45 @@ describe('Reportes', () => {
     expect(celdaDe(deHoy, 'Todas', 'Total')).toBe('$416.00');
   });
 
-  it('los cobros por método cambian al elegir otro periodo', async () => {
+  it('los cobros por método y por persona cambian juntos al elegir otro periodo', async () => {
     await montar();
-    await screen.findByText('Cobros por método de pago');
-    const resumen = (): string =>
-      screen.getByText('Efectivo', { selector: 'dt' }).nextElementSibling?.textContent ?? '';
-    expect(resumen()).toBe('$116.00');
+    await screen.findByRole('list', { name: 'Cobros por método de pago' });
+    const metodo = (nombre: string): string =>
+      within(screen.getByRole('list', { name: 'Cobros por método de pago' }))
+        .getAllByRole('listitem')
+        .find((f) => f.textContent.includes(nombre))?.textContent ?? '';
+    expect(metodo('Efectivo')).toContain('$116.00');
+    expect(metodo('Efectivo')).toContain('27.9 %');
+    expect(metodo('Transferencia')).toContain('72.1 %');
     const grupo = within(
       screen.getAllByRole('tablist', { name: 'Periodo' }).at(-1) ?? document.body,
     );
     fireEvent.click(grupo.getByRole('tab', { name: 'Hoy' }));
-    expect(resumen()).toBe('$116.00');
-    expect(screen.getByText('Cobros: 2')).toBeTruthy();
+    expect(metodo('Efectivo')).toContain('$116.00');
+    expect(screen.getByText('Total: $416.00')).toBeTruthy();
+  });
+
+  it('el eje de la tendencia de 31 días trae números redondos y el día de hoy marcado', async () => {
+    await montar();
+    const region = within(
+      await screen.findByRole('region', { name: 'Ingresos de los últimos 31 días' }),
+    );
+    expect(region.getAllByRole('row')).toHaveLength(31);
+    expect(region.getByText('Máximo $416.00')).toBeTruthy();
   });
 
   it('sin datos todo sale en cero y con avisos claros', async () => {
     await montar(admin, false);
     expect(await screen.findByText('Todavía no hay ventas en este periodo.')).toBeTruthy();
-    expect(screen.getAllByText('No hubo cobros en este periodo.')).toHaveLength(3);
+    expect(screen.getAllByText('No hubo cobros en este periodo.')).toHaveLength(1);
   });
 
   it('en el celular las tablas se apilan: todas llevan la clase y cada celda su rótulo', async () => {
     await montar();
-    const tablas = await screen.findAllByRole('table');
-    expect(tablas.length).toBeGreaterThanOrEqual(4);
+    const tablas = (await screen.findAllByRole('table')).filter(
+      (t) => !t.classList.contains('solo-lectores'),
+    );
+    expect(tablas.length).toBeGreaterThanOrEqual(1);
     for (const tabla of tablas) {
       expect(tabla.className).toContain('tabla--apilada');
       for (const celda of tabla.querySelectorAll('tbody td')) {

@@ -51,6 +51,28 @@ export function PanelDeInicio({
   const principales = seccionesVisibles('principal', interruptores);
   const secundarias = seccionesVisibles('secundaria', interruptores);
 
+  const atajos = (
+    <>
+      <h2 className="rotulo tablero__titulo">{textos.navegacion.flujoDeTrabajo}</h2>
+      <ul className="tablero">
+        {principales.map((seccion) => (
+          <li key={seccion.id}>
+            <Mosaico seccion={seccion} />
+          </li>
+        ))}
+      </ul>
+
+      <h2 className="rotulo tablero__titulo">{textos.navegacion.administracion}</h2>
+      <ul className="tablero tablero--chico">
+        {secundarias.map((seccion) => (
+          <li key={seccion.id}>
+            <Mosaico seccion={seccion} />
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+
   return (
     <section className="anima-entrada">
       <EncabezadoDePagina
@@ -94,23 +116,14 @@ export function PanelDeInicio({
 
       <PrimerosPasos interruptores={interruptores} visitadas={visitadas} />
 
-      <h2 className="rotulo tablero__titulo">{textos.navegacion.flujoDeTrabajo}</h2>
-      <ul className="tablero">
-        {principales.map((seccion) => (
-          <li key={seccion.id}>
-            <Mosaico seccion={seccion} />
-          </li>
-        ))}
-      </ul>
-
-      <h2 className="rotulo tablero__titulo">{textos.navegacion.administracion}</h2>
-      <ul className="tablero tablero--chico">
-        {secundarias.map((seccion) => (
-          <li key={seccion.id}>
-            <Mosaico seccion={seccion} />
-          </li>
-        ))}
-      </ul>
+      {resumen === null ? (
+        atajos
+      ) : (
+        <details className="atajos">
+          <summary className="rotulo atajos__titulo">{textos.inicio.atajos}</summary>
+          {atajos}
+        </details>
+      )}
 
       <Tarjeta variante="panel">
         <p className="inicio__nota">{textos.inicio.nota}</p>
