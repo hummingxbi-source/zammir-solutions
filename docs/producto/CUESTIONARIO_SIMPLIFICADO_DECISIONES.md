@@ -1,6 +1,6 @@
 # Cuestionario simplificado: qué se quitó y qué asumimos
 
-El cuestionario HTML (`CUESTIONARIO_PARA_LUIS.html`) pasó de 91 a 29 preguntas. Lo que se quitó son decisiones técnicas o datos que ya tenemos; Luis no tiene por qué decidirlas.
+El cuestionario HTML (`CUESTIONARIO_PARA_LUIS.html`) pasó de 91 a 35 preguntas. Lo que se quitó son decisiones técnicas o datos que ya tenemos; Luis no tiene por qué decidirlas.
 Las preguntas completas siguen en `CUESTIONARIO_LUIS.md` por si se necesitan.
 
 ## Datos que ya no se piden (salen de la constancia fiscal o ya los tenemos)
