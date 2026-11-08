@@ -858,6 +858,8 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
             deps: base.deps,
             sales: outboxCounterSaleStore(envio.outbox),
             personas: base.personas,
+            turnos: outboxCashShiftStore(envio.outbox),
+            porEnviar: () => envio.outbox.pendingCount(),
             ...(base.alCambiarElEnvio === undefined
               ? {}
               : { alCambiarElEnvio: base.alCambiarElEnvio }),

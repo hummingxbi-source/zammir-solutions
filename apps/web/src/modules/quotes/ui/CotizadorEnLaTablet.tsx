@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
+import { useCallback, useSyncExternalStore } from 'react';
 import type { ReactElement } from 'react';
+import { useDatosDeLaTablet } from '../../../shared/ui/use-datos-de-la-tablet';
 import { Link } from 'react-router';
 import type { ActiveUserSession, QuoteActor } from '@zammir/core';
 
@@ -22,11 +23,7 @@ export function CotizadorEnLaTablet({ preparar, session }: CotizadorEnLaTabletPr
   const suscribir = useCallback((aviso: () => void) => session.subscribe(aviso), [session]);
   const leer = useCallback(() => session.state(), [session]);
   const estado = useSyncExternalStore(suscribir, leer);
-  const [props, setProps] = useState<Omit<CotizadorProps, 'actor'> | null | undefined>(undefined);
-
-  useEffect(() => {
-    void preparar().then(setProps);
-  }, [preparar]);
+  const props = useDatosDeLaTablet(preparar);
 
   if (props === undefined) {
     return <p role="status">{textos.personas.cargando}</p>;

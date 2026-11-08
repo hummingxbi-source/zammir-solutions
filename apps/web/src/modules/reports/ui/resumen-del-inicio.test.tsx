@@ -7,6 +7,7 @@ import {
   outboxPaymentStore,
   outboxWorkOrderStore,
   PAYMENTS_COLLECTION,
+  type CashShift,
   type CounterSale,
   type QuoteActor,
   type WorkOrder,
@@ -70,7 +71,20 @@ const pago = (id: string, cobrador: string, centavos: number, pagado: string, ex
   ...extra,
 });
 
-async function montar(actor: QuoteActor | null, conDatos = true) {
+interface Cajero {
+  readonly turno: CashShift | null;
+  readonly porEnviar: number;
+}
+
+const turnoAbierto = {
+  id: 't1',
+  cashierId: ana.userId,
+  status: 'OPEN',
+  openedAt: '2026-11-20T15:00:00.000Z',
+  openingFloatCents: 50_000,
+} as unknown as CashShift;
+
+async function montar(actor: QuoteActor | null, conDatos = true, cajero?: Cajero) {
   // Viernes 20 nov 2026, mediodía en México.
   const reloj = fixedClock(new Date('2026-11-20T18:00:00.000Z'));
   const outbox = inMemorySyncOutbox({ clock: reloj });
@@ -100,6 +114,12 @@ async function montar(actor: QuoteActor | null, conDatos = true) {
       sales={sales}
       personas={[]}
       actor={actor}
+      {...(cajero === undefined
+        ? {}
+        : {
+            turnos: { openFor: () => Promise.resolve(cajero.turno) },
+            porEnviar: () => Promise.resolve(cajero.porEnviar),
+          })}
     />,
   );
 }
@@ -165,5 +185,52 @@ describe('resumen del inicio', () => {
     await montar(admin, false);
     expect(await screen.findByText('Todavía no hay movimiento')).toBeTruthy();
     expect(screen.queryByRole('region', { name: 'Ventas de hoy' })).toBeNull();
+  });
+
+  it('el cajero ve su turno abierto, con la hora de México y su fondo, y lo que falta por enviar', async () => {
+    await montar(ana, true, { turno: turnoAbierto, porEnviar: 3 });
+    const turno = within(await screen.findByRole('region', { name: 'Mi turno de caja' }));
+    expect(turno.getByText('Abierto desde las 09:00')).toBeTruthy();
+    expect(turno.getByText('$500.00')).toBeTruthy();
+    expect(turno.getByText('Fondo inicial')).toBeTruthy();
+    const porEnviar = within(screen.getByRole('region', { name: 'Por enviar' }));
+    expect(porEnviar.getByText('3 operaciones sin enviar')).toBeTruthy();
+    expect(porEnviar.getByText('Saldrán solas al volver la conexión.')).toBeTruthy();
+  });
+
+  it('sin turno abierto dice que se abre en el Mostrador, y con todo enviado lo dice', async () => {
+    await montar(ana, true, { turno: null, porEnviar: 0 });
+    const turno = within(await screen.findByRole('region', { name: 'Mi turno de caja' }));
+    expect(turno.getByText('Sin turno abierto')).toBeTruthy();
+    expect(turno.getByText('Ábrelo en el Mostrador para poder cobrar.')).toBeTruthy();
+    const porEnviar = within(screen.getByRole('region', { name: 'Por enviar' }));
+    expect(porEnviar.getByText('Todo enviado')).toBeTruthy();
+    expect(porEnviar.getByText('No hay nada pendiente.')).toBeTruthy();
+  });
+
+  it('una sola operación sin enviar se dice en singular', async () => {
+    await montar(ana, true, { turno: null, porEnviar: 1 });
+    expect(await screen.findByText('1 operación sin enviar')).toBeTruthy();
+  });
+
+  it('el cajero ve su turno y lo por enviar aunque todavía no haya movimiento', async () => {
+    await montar(ana, false, { turno: turnoAbierto, porEnviar: 2 });
+    expect(await screen.findByRole('region', { name: 'Mi turno de caja' })).toBeTruthy();
+    expect(screen.getByRole('region', { name: 'Por enviar' })).toBeTruthy();
+    expect(screen.getByText('Todavía no hay movimiento')).toBeTruthy();
+  });
+
+  it('el administrador no ve las tarjetas del cajero', async () => {
+    await montar(admin, true, { turno: turnoAbierto, porEnviar: 3 });
+    await screen.findByRole('region', { name: 'Ventas de hoy' });
+    expect(screen.queryByRole('region', { name: 'Mi turno de caja' })).toBeNull();
+    expect(screen.queryByRole('region', { name: 'Por enviar' })).toBeNull();
+  });
+
+  it('sin turnos ni cola conectados (como en las muestras) no aparecen esas tarjetas', async () => {
+    await montar(ana);
+    await screen.findByRole('region', { name: 'Tus cobros de hoy' });
+    expect(screen.queryByRole('region', { name: 'Mi turno de caja' })).toBeNull();
+    expect(screen.queryByRole('region', { name: 'Por enviar' })).toBeNull();
   });
 });
