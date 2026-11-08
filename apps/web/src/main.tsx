@@ -77,6 +77,7 @@ createRoot(root).render(
             legal={composition.legal}
             contactoPublico={composition.contactoPublico}
             facturas={composition.facturas}
+            exportacion={composition.exportacionDeDatos}
             compartirFacturas={composition.compartirFacturas}
             portal={composition.portal}
             condiciones={composition.condiciones}

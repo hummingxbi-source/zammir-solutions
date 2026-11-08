@@ -41,5 +41,6 @@
 | [0033](docs/decisiones/0033-reintentos-cancelacion-anticipos-y-timbres.md) | Reintentos con la solicitud guardada, cancelación solo de administradores, anticipos en la opción (a) y timbres con límite configurable | Aceptada (propuesta) | 2026-11-05 |
 | [0034](docs/decisiones/0034-registro-de-errores-propio-sin-datos-personales-y-salud.md) | Registro de errores propio sin datos personales y comprobación de salud para el monitoreo | Aceptada (propuesta) | 2026-11-05 |
 | [0035](docs/decisiones/0035-revision-de-seguridad-automatizada.md) | Revisión de seguridad automatizada: invariantes de la base, escaneo del paquete y auditoría de producción | Aceptada (propuesta) | 2026-11-08 |
+| [0036](docs/decisiones/0036-exportacion-de-datos-del-negocio.md) | Exportación de los datos del negocio en CSV, JSON y PDF, solo administradores y sin credenciales | Aceptada (propuesta) | 2026-11-08 |
 
 Plantilla para una nueva decisión: [`docs/decisiones/0000-plantilla.md`](docs/decisiones/0000-plantilla.md).

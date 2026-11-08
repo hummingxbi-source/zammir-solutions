@@ -116,8 +116,8 @@ async function sembrar() {
   }
 }
 
-const captura = async (pagina, nombre) => {
-  await pagina.evaluate('window.scrollTo(0, 0)');
+const captura = async (pagina, nombre, alInicio = true) => {
+  if (alInicio) await pagina.evaluate('window.scrollTo(0, 0)');
   await pagina.waitForTimeout(600);
   await pagina.screenshot({ path: `${DESTINO}${nombre}.png` });
   console.log(`captura: ${nombre}`);
@@ -293,6 +293,13 @@ for (const [ruta, titulo, nombre] of [
   await admin.goto(`${BASE}${ruta}`);
   await admin.getByRole('heading', { name: titulo, exact: true }).first().waitFor();
   await captura(admin, nombre);
+  if (ruta === '/configuracion') {
+    // La exportación de los datos está al final de Configuración.
+    await admin.getByRole('button', { name: 'Preparar la exportación' }).click();
+    await admin.getByRole('button', { name: 'Descargar todo (ZIP)' }).waitFor();
+    await admin.getByRole('button', { name: 'Descargar todo (ZIP)' }).scrollIntoViewIfNeeded();
+    await captura(admin, '24b-exportar-datos', false);
+  }
 }
 await admin.goto(`${BASE}/facturas`);
 await admin

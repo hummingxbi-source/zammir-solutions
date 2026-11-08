@@ -871,6 +871,45 @@ export const textos = {
     },
   },
   /** Páginas públicas del aviso de privacidad y de los términos (`/aviso` y `/terminos`) [S4-11]. */
+  /** Exportar los datos del negocio [S5-08, RNF-22]. */
+  exportar: {
+    titulo: 'Exportar los datos',
+    descripcion:
+      'Llévate todos los datos de tu negocio (clientes, productos, cotizaciones, órdenes, ventas, pagos, facturas y bitácora) en archivos que abre cualquier programa: CSV para Excel, JSON y un PDF para leer e imprimir.',
+    privacidad:
+      'Estos archivos traen información personal de tus clientes. Guárdalos en un lugar seguro y no los compartas. Cada exportación queda anotada en la bitácora.',
+    sinPin: 'No incluyen los PIN ni las cuentas de acceso de las tablets.',
+    preparar: 'Preparar la exportación',
+    preparando: 'Preparando los datos…',
+    listo: (renglones: number, tablas: number): string =>
+      `Listo: ${String(renglones)} ${renglones === 1 ? 'renglón' : 'renglones'} de ${String(tablas)} ${tablas === 1 ? 'tabla' : 'tablas'}.`,
+    descargas: {
+      todo: 'Descargar todo (ZIP)',
+      json: 'Descargar JSON',
+      csv: 'Descargar CSV (ZIP)',
+      pdf: 'Descargar PDF',
+    },
+    descargado: (nombre: string): string => `Se descargó ${nombre}.`,
+    tablas: 'Qué trae cada tabla',
+    errores: {
+      NOT_AUTHORIZED: {
+        mensaje: 'Solo los administradores pueden exportar los datos.',
+        queHacer: 'Entra con tu cuenta de administrador.',
+      },
+      NO_NETWORK: {
+        mensaje: 'No hay conexión con el servidor.',
+        queHacer: 'Conéctate a internet e intenta de nuevo.',
+      },
+      UNAVAILABLE: {
+        mensaje: 'No se pudieron preparar los datos.',
+        queHacer: 'Intenta de nuevo en unos minutos. Si sigue pasando, avísale a Juanito.',
+      },
+      PDF: {
+        mensaje: 'Los datos están listos, pero no se pudo armar el PDF.',
+        queHacer: 'Descarga el JSON o los CSV, que traen todo, e intenta el PDF más tarde.',
+      },
+    },
+  },
   legalPublico: {
     cargando: 'Cargando…',
     version: 'Versión',

@@ -90,7 +90,7 @@ select is(
          where n.nspname in ('public', 'private') and p.prorettype <> 'trigger'::regtype
            and has_function_privilege('authenticated', p.oid, 'execute')
          order by 1),
-  array['admin_customer_invoices', 'admin_error_log', 'admin_invoice_candidates', 'admin_invoice_list',
+  array['admin_customer_invoices', 'admin_error_log', 'admin_export_data', 'admin_invoice_candidates', 'admin_invoice_list',
         'admin_stamp_usage', 'anonymize_customer', 'create_device_registration_code', 'is_admin', 'is_device',
         'list_devices', 'public_business_contact', 'receive_operation', 'revoke_device'],
   'las funciones que llama un usuario con sesión son las esperadas'
