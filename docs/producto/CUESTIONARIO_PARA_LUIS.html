@@ -1,0 +1,656 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0f4c81">
+  <title>Cuestionario para Luis · ZAMMIR</title>
+  <meta name="description" content="Cuestionario para cerrar el sistema de ZAMMIR: opciones que se tocan, se guarda solo y se envía por WhatsApp.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --papel:#f4f1ec; --panel:#ece8e0; --superficie:#fff;
+      --tinta:#26241f; --suave:#57534a; --apagada:#8c8880;
+      --acento:#0f4c81; --acento-osc:#0a3153; --tinte:rgb(15 76 129 / 8%); --tinte-f:rgb(15 76 129 / 14%);
+      --laton:#7a5f2d; --laton-f:#9c7a3c; --laton-fondo:#fdf4e3;
+      --vidrio:#b9c6cc; --exito:#2e6b45; --exito-fondo:#ebf4ee; --peligro:#8b3a3a;
+      --borde:rgb(124 133 146 / 32%); --borde-control:#a8a193;
+      --titulo:'Fraunces',Georgia,'Times New Roman',serif;
+      --base:'Source Serif 4',Georgia,'Times New Roman',serif;
+      --mono:'IBM Plex Mono',ui-monospace,'Cascadia Mono',Consolas,monospace;
+      --radio:12px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+    body{margin:0;background:var(--papel);color:var(--tinta);font:17px/1.55 var(--base);padding-bottom:110px}
+    button,input,textarea{font:inherit;color:inherit}
+    :focus-visible{outline:3px solid var(--acento);outline-offset:2px;border-radius:6px}
+    .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+    /* ---------- Encabezado ---------- */
+    .top{position:sticky;top:0;z-index:20;background:rgb(244 241 236 / 92%);backdrop-filter:blur(14px);border-bottom:1px solid var(--borde)}
+    .top-in{max-width:820px;margin:auto;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+    .marca{display:flex;align-items:baseline;gap:10px}
+    .marca b{font:700 22px/1 var(--titulo);letter-spacing:.01em}
+    .marca b i{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--acento);margin-left:2px;vertical-align:baseline}
+    .marca span{font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--suave)}
+    .contador{font:500 12px var(--mono);color:var(--suave);white-space:nowrap}
+    .barra{height:4px;background:var(--panel)}
+    .barra i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--acento),var(--acento-osc));transition:width .35s ease}
+    .partes{max-width:820px;margin:auto;padding:8px 20px 10px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .parte-tab{border:1px solid var(--borde);background:var(--superficie);border-radius:10px;padding:7px 10px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:2px;min-height:48px;transition:border-color .2s,background .2s}
+    .parte-tab:hover{border-color:var(--acento)}
+    .parte-tab[aria-current="true"]{border-color:var(--acento);background:var(--tinte)}
+    .parte-tab .t{font:500 10.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--suave)}
+    .parte-tab .n{font:600 13.5px/1.2 var(--base)}
+    .parte-tab .m{height:3px;background:var(--panel);border-radius:2px;overflow:hidden;margin-top:3px}
+    .parte-tab .m i{display:block;height:100%;background:var(--acento);width:0;transition:width .3s}
+    .parte-tab.completa .m i{background:var(--exito)}
+
+    main{max-width:820px;margin:auto;padding:0 20px}
+
+    /* ---------- Bienvenida ---------- */
+    .hero{padding:54px 4px 28px;text-align:center}
+    .etiqueta{font:500 11.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--laton)}
+    .hero h1{font:700 clamp(34px,7vw,54px)/1.06 var(--titulo);letter-spacing:-.015em;margin:14px auto 16px;max-width:640px}
+    .hero p{max-width:600px;margin:0 auto 12px;color:var(--suave);font-size:18px}
+    .tarjetas{display:grid;gap:12px;margin:26px 0 8px}
+    .tarjeta-parte{background:var(--superficie);border:1px solid var(--borde);border-radius:var(--radio);padding:18px 20px;display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;cursor:pointer;text-align:left;width:100%;transition:transform .15s,border-color .2s,box-shadow .2s}
+    .tarjeta-parte:hover{border-color:var(--acento);box-shadow:0 6px 18px rgb(15 76 129 / 10%);transform:translateY(-1px)}
+    .letra{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font:700 22px var(--titulo);color:#fff;background:var(--acento)}
+    .tarjeta-parte[data-p="A"] .letra{background:var(--laton)}
+    .tarjeta-parte[data-p="C"] .letra{background:var(--aluminio,#7c8592)}
+    .tarjeta-parte h3{margin:0;font:600 18px/1.25 var(--base)}
+    .tarjeta-parte p{margin:2px 0 0;color:var(--suave);font-size:15px}
+    .cuenta{font:500 12px var(--mono);color:var(--suave);text-align:right;white-space:nowrap}
+    .aviso-guardado{margin:22px auto 0;max-width:560px;background:var(--tinte);border:1px solid var(--tinte-f);border-radius:var(--radio);padding:12px 16px;font-size:15px;color:var(--acento-osc);text-align:left}
+
+    /* ---------- Pasos y preguntas ---------- */
+    .paso{display:none}
+    .paso.activo{display:block;animation:sube .35s ease}
+    @keyframes sube{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+    .paso-cab{padding:34px 2px 16px}
+    .paso-cab .etiqueta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .pildora{display:inline-block;padding:2px 9px;border-radius:99px;background:var(--laton-fondo);color:var(--laton);border:1px solid rgb(122 95 45 / 30%);font:500 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase}
+    .paso-cab h2{font:700 clamp(26px,5vw,36px)/1.12 var(--titulo);margin:10px 0 6px;letter-spacing:-.01em}
+    .paso-cab p{margin:0;color:var(--suave)}
+    .q{background:var(--superficie);border:1px solid var(--borde);border-radius:var(--radio);padding:22px 22px 16px;margin-bottom:14px;position:relative;transition:border-color .25s,box-shadow .25s}
+    .q.hecha{border-color:rgb(46 107 69 / 45%)}
+    .q.hecha::after{content:"✓";position:absolute;top:16px;right:18px;width:26px;height:26px;border-radius:50%;background:var(--exito);color:#fff;display:grid;place-items:center;font:700 14px var(--base);animation:pop .3s ease}
+    @keyframes pop{from{transform:scale(.4);opacity:0}to{transform:none;opacity:1}}
+    .q-cab{display:flex;align-items:baseline;gap:10px;padding-right:34px;flex-wrap:wrap}
+    .num{font:500 12px var(--mono);color:var(--apagada)}
+    .q h3{margin:0;font:600 19px/1.3 var(--base)}
+    .q .texto{margin:8px 0 14px;color:var(--suave);font-size:16px}
+    .campo{margin:0 0 14px}
+    .campo>label,.campo>.etq{display:block;font:500 13px var(--mono);letter-spacing:.02em;color:var(--suave);margin-bottom:8px}
+    .opciones{display:flex;flex-wrap:wrap;gap:8px}
+    .chip{border:1.5px solid var(--borde-control);background:var(--superficie);color:var(--tinta);border-radius:99px;padding:10px 16px;min-height:44px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;text-align:left;line-height:1.3;transition:background .15s,border-color .15s,color .15s,transform .1s}
+    .chip:hover{border-color:var(--acento);background:var(--tinte)}
+    .chip:active{transform:scale(.98)}
+    .chip[aria-pressed="true"]{background:var(--acento);border-color:var(--acento);color:#fff}
+    .chip[aria-pressed="true"]::before{content:"✓";font-weight:700}
+    .chip .tag{font:500 10px var(--mono);letter-spacing:.06em;text-transform:uppercase;background:var(--laton-fondo);color:var(--laton);border-radius:99px;padding:1px 7px}
+    .chip[aria-pressed="true"] .tag{background:rgb(255 255 255 / 20%);color:#fff}
+    .chip.salta{border-style:dashed;color:var(--suave);background:transparent}
+    .chip.salta[aria-pressed="true"]{background:var(--laton);border-color:var(--laton);color:#fff;border-style:solid}
+    input[type=text],textarea{width:100%;border:1.5px solid var(--borde-control);background:#fbfaf8;border-radius:10px;padding:12px 14px;min-height:46px;outline:none;transition:border-color .2s,box-shadow .2s,background .2s}
+    textarea{min-height:84px;resize:vertical}
+    input[type=text]:focus,textarea:focus{border-color:var(--acento);background:#fff;box-shadow:0 0 0 3px var(--tinte-f)}
+    ::placeholder{color:var(--apagada)}
+    .pie-q{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:6px;padding-top:12px;border-top:1px dashed var(--borde)}
+    .enlace{background:none;border:0;padding:6px 2px;color:var(--acento);cursor:pointer;font:500 13.5px var(--base);text-decoration:underline;text-underline-offset:3px;min-height:36px}
+    .enlace:hover{color:var(--acento-osc)}
+    .propuesta{font-size:14px;color:var(--suave);margin:0 0 10px;padding:8px 12px;background:var(--panel);border-radius:8px}
+    .propuesta b{font-weight:600;color:var(--tinta)}
+    .comentario{margin-top:12px}
+
+    /* ---------- Barra de navegación inferior ---------- */
+    .dock{position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgb(255 255 255 / 94%);backdrop-filter:blur(14px);border-top:1px solid var(--borde);padding:10px 16px calc(10px + env(safe-area-inset-bottom))}
+    .dock-in{max-width:820px;margin:auto;display:flex;align-items:center;gap:12px}
+    .dock .estado{flex:1;min-width:0;font:500 12px var(--mono);color:var(--suave);line-height:1.35}
+    .dock .estado b{color:var(--tinta);font-weight:500}
+    .btn{border:1.5px solid var(--acento);background:var(--acento);color:#fff;padding:12px 22px;border-radius:99px;font:600 16px var(--base);cursor:pointer;min-height:46px;transition:background .15s,transform .1s;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+    .btn:hover{background:var(--acento-osc);border-color:var(--acento-osc)}
+    .btn:active{transform:scale(.98)}
+    .btn.sec{background:transparent;color:var(--acento)}
+    .btn.sec:hover{background:var(--tinte)}
+    .btn[disabled]{opacity:.4;cursor:not-allowed}
+
+    /* ---------- Resumen ---------- */
+    .final-cab{text-align:center;padding:40px 4px 12px}
+    .anillo{width:120px;height:120px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--acento) calc(var(--p)*1%),var(--panel) 0)}
+    .anillo div{width:94px;height:94px;border-radius:50%;background:var(--papel);display:grid;place-items:center;font:700 26px var(--titulo)}
+    .alerta{background:var(--laton-fondo);border:1px solid rgb(122 95 45 / 35%);border-radius:var(--radio);padding:14px 16px;margin:16px 0;font-size:15.5px}
+    .acciones{display:grid;gap:10px;margin:18px 0}
+    .acciones .btn{width:100%}
+    .btn.wa{background:#1f7a4d;border-color:#1f7a4d}
+    .btn.wa:hover{background:#17603c;border-color:#17603c}
+    .nota{font-size:14px;color:var(--suave);text-align:center;margin:6px 0 0}
+    .resumen h3{font:600 12.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--laton);margin:26px 0 8px}
+    .fila{display:grid;grid-template-columns:42px 1fr;gap:10px;padding:12px 0;border-bottom:1px solid var(--borde)}
+    .fila .num{padding-top:3px}
+    .fila b{font-weight:600}
+    .fila .r{white-space:pre-wrap;color:var(--tinta)}
+    .fila .r.vacia{color:var(--apagada);font-style:italic}
+    .fila .editar{margin-left:8px}
+    .pie{text-align:center;color:var(--suave);font-size:13.5px;padding:36px 0 20px}
+    .toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%) translateY(20px);background:var(--tinta);color:#fff;padding:10px 18px;border-radius:99px;font-size:15px;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:40;max-width:90vw;text-align:center}
+    .toast.ver{opacity:1;transform:translateX(-50%)}
+
+    @media (max-width:560px){
+      body{font-size:16.5px}
+      .top-in{padding:10px 14px}.partes{padding:8px 14px 10px;gap:6px}.parte-tab{padding:6px 8px}.parte-tab .n{font-size:12.5px}
+      main{padding:0 14px}.q{padding:18px 16px 12px}.hero{padding-top:36px}
+      .tarjeta-parte{grid-template-columns:auto 1fr;}.tarjeta-parte .cuenta{grid-column:1/-1;text-align:left}
+      .marca span{display:none}
+      .dock .estado{display:none}.dock-in{justify-content:space-between}.dock .btn{flex:1}
+    }
+    @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+    @media print{
+      .top,.dock,.hero,.tarjetas,.aviso-guardado,.acciones,.nota,.alerta,.toast,.paso:not(#paso-final),.final-cab .anillo{display:none!important}
+      #paso-final{display:block!important}body{background:#fff;padding:0;font-size:12pt}.fila{break-inside:avoid}
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="top-in">
+      <div class="marca"><b>ZAMMIR<i></i></b><span>Cuestionario</span></div>
+      <span class="contador" id="contador" aria-live="polite"></span>
+    </div>
+    <div class="barra" role="progressbar" aria-label="Avance general" aria-valuemin="0" aria-valuemax="100" id="barraAria"><i id="barra"></i></div>
+    <nav class="partes" id="partes" aria-label="Partes del cuestionario"></nav>
+  </header>
+
+  <main id="main">
+    <!-- Bienvenida -->
+    <section class="paso activo" id="paso-0" aria-labelledby="h-bienvenida">
+      <div class="hero">
+        <p class="etiqueta">Para cerrar el sistema de ZAMMIR</p>
+        <h1 id="h-bienvenida">Hola, Luis. Falta muy poco.</h1>
+        <p>Ya casi terminamos de construir el sistema. Para entregarlo necesitamos que nos confirmes cómo trabajan, <strong>para no inventar nada</strong>.</p>
+        <p>Casi todo se contesta <strong>tocando una opción</strong>. Si algo no lo sabes, déjalo: dice qué haremos y nada se detiene.</p>
+      </div>
+      <div class="tarjetas" id="tarjetas"></div>
+      <div class="aviso-guardado"><strong>Se guarda solo</strong> en este teléfono o computadora: puedes cerrarlo y volver cuando quieras. Lo que contestes no sale de aquí hasta que toques <em>Enviar</em>. Las preguntas marcadas <span class="pildora">Primero</span> conviene contestarlas antes. Lo que diga <em>tu contador</em>, puede contestarlo él.</div>
+    </section>
+
+    <div id="pasos"></div>
+
+    <!-- Resumen y envío -->
+    <section class="paso" id="paso-final" aria-labelledby="h-final">
+      <div class="final-cab">
+        <div class="anillo" id="anillo" style="--p:0"><div id="anilloTxt">0%</div></div>
+        <p class="etiqueta">Revisa y envía</p>
+        <h2 id="h-final" style="font:700 clamp(26px,5vw,36px)/1.12 var(--titulo);margin:10px 0 6px">Casi listo</h2>
+        <p id="finalSub" style="color:var(--suave);margin:0"></p>
+      </div>
+      <div id="alertaFinal"></div>
+      <div class="acciones">
+        <button class="btn wa" type="button" id="btnWa">Enviar por WhatsApp</button>
+        <button class="btn sec" type="button" id="btnCopiar">Copiar las respuestas</button>
+        <button class="btn sec" type="button" id="btnDescargar">Descargar como archivo (.txt)</button>
+        <button class="btn sec" type="button" id="btnImprimir">Imprimir o guardar en PDF</button>
+      </div>
+      <p class="nota" id="notaEnvio">Se abre WhatsApp con tus respuestas ya escritas. Solo falta elegir el contacto y enviar.</p>
+      <div class="resumen" id="resumen"></div>
+      <div class="pie"><button class="enlace" type="button" id="btnReiniciar">Borrar todo y empezar de nuevo</button></div>
+    </section>
+    <div class="pie" id="pieGeneral">Cuestionario preparado por HummingX BI para ZAMMIR · <span id="anio"></span></div>
+  </main>
+
+  <div class="dock" id="dock">
+    <div class="dock-in">
+      <button class="btn sec" type="button" id="btnAtras">← Atrás</button>
+      <div class="estado" id="estado"></div>
+      <button class="btn" type="button" id="btnSig">Empezar →</button>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+  /* ========================================================================================================
+     Cuestionario para Luis · ZAMMIR.  Un solo archivo, sin dependencias: se abre con doble clic.
+     Para que "Enviar por WhatsApp" abra directamente el chat de Juanito, escribe aquí su número con lada
+     de país y sin signos (por ejemplo 5215512345678). Vacío: se abre WhatsApp para elegir el contacto.
+     ======================================================================================================== */
+  const NUMERO_WHATSAPP = '';
+  const CLAVE = 'zammir-cuestionario-luis-v1';
+
+  /* ---------- Las preguntas (el número es el mismo del cuestionario base y de PENDIENTES.md) ---------- */
+  const una = (...t) => t.map(x => typeof x === 'string' ? {t: x} : x);
+  const P = (t) => ({t, prop: true});
+  const PREGUNTAS = [
+    /* ===== PARTE A · Para poder entregar ===== */
+    {id:'69', prio:true, titulo:'Datos fiscales de ZAMMIR para las facturas', texto:'Tal como aparecen en su constancia de situación fiscal. Si prefieres, mándanos una foto de la constancia y deja esto en blanco.', tipo:'subs', sinSaber:'Sin estos datos no se puede emitir ninguna factura real.',
+      subs:[{k:'razon',t:'Razón social',tipo:'texto',ph:'Como aparece en la constancia'},{k:'rfc',t:'RFC',tipo:'texto',ph:'12 o 13 caracteres'},{k:'regimen',t:'Régimen fiscal',tipo:'texto',ph:'Ej. Persona física con actividad empresarial'},{k:'cp',t:'Código postal del domicilio fiscal',tipo:'texto',ph:'5 dígitos'},{k:'foto',t:'¿Prefieres mandar foto de la constancia?',tipo:'una',op:una('Sí, la mando por WhatsApp','No, los escribí aquí')}]},
+    {id:'50', prio:true, titulo:'Certificado de sello digital (CSD)', texto:'Es el archivo con el que se timbran las facturas. Puede tardar en tramitarse, por eso conviene empezar ya. ZAMMIR lo sube directo al proveedor de timbrado: a nosotros nunca nos llega.', tipo:'una', opciones:una('Ya tenemos e.firma vigente y podemos empezar el trámite','Tenemos e.firma pero no hemos empezado el CSD','No tenemos e.firma vigente','Lo consulto con mi contador')},
+    {id:'72', titulo:'Primera factura real, con tu contador', texto:'Antes de facturar con valor fiscal se hace una verificación: una factura de prueba que se cancela. Conviene que tu contador la acompañe.', tipo:'una', opciones:una('Sí, mi contador la acompaña','Otra persona la acompaña','Todavía no sé quién')},
+    {id:'70', prio:true, titulo:'¿A nombre de quién quedan las cuentas de producción?', texto:'Dominio, base de datos, aplicación y proveedor de timbrado. Recomendamos que el dominio y el certificado queden siempre a nombre de ZAMMIR.', tipo:'una', opciones:una('A nombre de ZAMMIR, con Juanito como colaborador (recomendado)','A nombre de HummingX BI','Otra forma')},
+
+    {id:'46', prio:true, titulo:'Datos del negocio para tickets y documentos', texto:'Lo que sale impreso en tickets, cotizaciones y comprobantes.', tipo:'subs', sinSaber:'Sin esto los documentos llevan datos de prueba.',
+      subs:[{k:'nombre',t:'Nombre completo del negocio',tipo:'texto',ph:'ZAMMIR, Soluciones en Vidrio y Aluminio'},{k:'domicilio',t:'Domicilio',tipo:'texto',ph:'Calle, número, colonia, Otumba'},{k:'tel',t:'Teléfono',tipo:'texto',ph:'10 dígitos'},{k:'correo',t:'Correo',tipo:'texto',ph:'Si lo tienen'},{k:'logo',t:'¿Tienen logo?',tipo:'una',op:una('Sí, lo mando por WhatsApp','No tenemos')},{k:'colores',t:'Colores de la marca',tipo:'texto',ph:'Opcional'}]},
+    {id:'63', titulo:'Correo del negocio', texto:'Sirve para que el cliente reciba su factura y como segundo canal para ejercer sus derechos sobre sus datos. Hoy solo se usa WhatsApp.', tipo:'subs',
+      subs:[{k:'tiene',t:'¿Tienen un correo para el negocio?',tipo:'una',op:una('Sí','No, hay que crear uno')},{k:'cual',t:'¿Cuál?',tipo:'texto',ph:'ejemplo@zammir.mx'}]},
+    {id:'59', titulo:'Aviso de privacidad y términos', texto:'El texto que tenemos es un borrador. Alguien de su confianza debe revisar el texto final.', tipo:'una', opciones:una('Sí, tenemos un asesor que lo revisa','Lo revisa mi contador','No tenemos a quién')},
+    {id:'58', titulo:'Dirección web propia (dominio)', texto:'No se puede cambiar después de imprimir los primeros tickets, porque los códigos QR apuntan a ella.', tipo:'subs',
+      subs:[{k:'tiene',t:'¿ZAMMIR ya tiene dirección web?',tipo:'una',op:una('Sí, ya tenemos','No, prefiero que se compre una nueva')},{k:'cual',t:'¿Cuál? (si ya tienen)',tipo:'texto',ph:'zammir.mx'}]},
+    {id:'11', titulo:'Lista real de productos y precios', texto:'Entre 50 y 150 productos. Una hoja de Excel o fotos de la lista sirven.', tipo:'subs',
+      subs:[{k:'cuando',t:'¿Cuándo nos la puedes pasar?',tipo:'una',op:una('Esta semana','En 1 o 2 semanas','Más adelante')},{k:'formato',t:'¿En qué formato?',tipo:'una',op:una('Excel','Fotos','Otro')}]},
+
+    {id:'75', titulo:'¿Para qué fecha tendrán las tablets y la impresora?', texto:'Sin ellas no se puede ensayar la impresión ni registrar las tablets reales.', tipo:'subs',
+      subs:[{k:'fecha',t:'Fecha aproximada',tipo:'texto',ph:'Ej. antes del 20 de noviembre'}]},
+    {id:'55', titulo:'Impresora de tickets', texto:'La candidata es la Epson TM-m30III-052. La ficha de la tienda se contradice en Wi-Fi y Bluetooth, así que conviene preguntarle al vendedor qué conexiones trae esa variante antes de comprar.', tipo:'subs',
+      subs:[{k:'cuantas',t:'¿Cuántas impresoras se necesitan?',tipo:'texto',ph:'Ej. 1'},{k:'vendedor',t:'¿Ya le preguntaron al vendedor por las conexiones?',tipo:'una',op:una('Sí, ya tiene Bluetooth','Sí, pero no trae Bluetooth','Todavía no','Ya compramos otra')}]},
+    {id:'56', titulo:'Tablets', texto:'La candidata es la Samsung Galaxy Tab A9+ 5G.', tipo:'subs',
+      subs:[{k:'cuantas',t:'¿Cuántas tablets se necesitan?',tipo:'texto',ph:'Ej. 2'},{k:'datos',t:'¿La que va a obra necesita datos móviles?',tipo:'una',op:una('Sí','No, solo Wi-Fi','No sé')}]},
+    {id:'57', titulo:'Internet en el local', texto:'Las tablets funcionan sin internet, pero necesitan conectarse para enviar lo capturado y para facturar.', tipo:'subs',
+      subs:[{k:'wifi',t:'¿Hay Wi-Fi estable donde está el mostrador?',tipo:'una',op:una('Sí','A veces falla','No hay')},{k:'quien',t:'¿Quién lo administra?',tipo:'texto',ph:'Nombre o proveedor'}]},
+    {id:'37.3', titulo:'Ancho del papel del ticket', texto:'Está impreso en el rollo o en la ficha de la impresora.', tipo:'una', propuesta:'58 mm', opciones:una('58 mm','80 mm')},
+    {id:'71', prio:true, titulo:'Fechas de la entrega (23 de noviembre al 1 de diciembre)', texto:'Necesitamos una capacitación con cada grupo (tú, Ricardo y el equipo de mostrador) y una prueba de aceptación en el local con la tablet y la impresora, de 2 a 3 horas.', tipo:'subs',
+      subs:[{k:'capacitacion',t:'¿Qué días y a qué hora puedes tú, Ricardo y el mostrador para la capacitación?',tipo:'texto',ph:'Ej. martes 24 a las 10:00 con Luis, miércoles 25 con Ricardo…'},{k:'aceptacion',t:'¿Qué día para la prueba de aceptación en el local?',tipo:'texto',ph:'Ej. viernes 27 por la tarde'},{k:'internet',t:'¿Podemos cortar el internet a propósito ese día para comprobar que todo sigue funcionando?',tipo:'una',op:una('Sí','Mejor no')}]},
+    {id:'60', titulo:'Una persona para probar el sistema', texto:'30 minutos, con datos reales, cuando esté listo para pruebas.', tipo:'una', opciones:una('Sí, una persona puede','Sí, pero necesito fecha','Por ahora no')},
+
+    /* ===== PARTE B · Reglas del negocio ===== */
+    {id:'51', titulo:'Anticipos y factura', texto:'¿Cómo se factura un trabajo que lleva anticipo? Tu contador lo sabe.', tipo:'una', opciones:una('Una sola factura al liquidar','Una factura por el anticipo y otra al final','Lo consulto con mi contador')},
+    {id:'52', titulo:'Pago mixto: ¿qué forma de pago lleva la factura?', texto:'Cuando el cliente paga parte en efectivo y parte por transferencia. Mientras no se defina, el portal no factura esas compras y pide pasar al negocio.', tipo:'una', opciones:una('Efectivo','Transferencia','Que elija quien factura cada vez','Lo consulto con mi contador')},
+    {id:'53', titulo:'Plazo para que el cliente pida su factura', texto:'Hoy puede pedirla en el portal hasta el último día del mes de su compra. Después, la hace un administrador.', tipo:'una', opciones:una(P('Está bien: hasta el último día del mes'),'Quiero otro plazo','Lo consulto con mi contador')},
+    {id:'54', titulo:'Claves del SAT de cada categoría', texto:'Producto o servicio, unidad y objeto de impuesto. Hoy son valores de prueba; deben validarse.', tipo:'una', opciones:una('Sí, mi contador las revisa','Prefiero revisarlas juntos con mi contador')},
+    {id:'66', titulo:'¿Quién puede facturar desde el sistema?', texto:'Hoy solo un administrador, desde su computadora o tablet con su cuenta.', tipo:'una', opciones:una(P('Solo administradores (como está hoy)'),'También un cajero, con el PIN de un administrador')},
+    {id:'61', titulo:'IVA de los productos', texto:'Hoy todo se calcula con 16 %. El catálogo puede marcar un producto como exento.', tipo:'una', opciones:una('Todo lleva IVA 16 %','Algo lleva IVA 0 %','Algo está exento','Lo consulto con mi contador')},
+    {id:'62', titulo:'Lo que más piden sus clientes al facturar', texto:'Con esto el portal muestra primero lo más común y a sus clientes les resulta más fácil.', tipo:'subs',
+      subs:[{k:'regimen',t:'Régimen fiscal más pedido',tipo:'texto',ph:'Ej. Personas físicas con actividad empresarial'},{k:'uso',t:'Uso de CFDI más pedido',tipo:'texto',ph:'Ej. Gastos en general'}]},
+    {id:'64', titulo:'Factura global del público en general', texto:'Son las ventas de mostrador que nadie pidió facturar. Hoy la hace tu contador, no el sistema.', tipo:'una', opciones:una(P('Confirmado: la hace mi contador'),'Quiero que la haga el sistema')},
+    {id:'65', titulo:'Cuando una factura sale mal emitida', texto:'Por ejemplo, un RFC o un nombre mal escrito. Solo un administrador puede cancelarla, con el motivo del SAT.', tipo:'subs',
+      subs:[{k:'quien',t:'¿Quién de ZAMMIR lo haría?',tipo:'texto',ph:'Nombre'},{k:'hoy',t:'¿Qué hacen hoy cuando pasa?',tipo:'texto',ph:'Ej. se le pide a mi contador que la cancele'}]},
+    {id:'67', titulo:'Timbres del paquete', texto:'Con el número, el sistema avisa al llegar al 80 % y al agotarse. Hoy no hay límite y no avisa.', tipo:'subs',
+      subs:[{k:'cuantos',t:'¿Cuántos timbres incluye la anualidad?',tipo:'texto',ph:'Ej. 500 al año'},{k:'renueva',t:'¿Cuándo se renueva?',tipo:'texto',ph:'Fecha'}]},
+    {id:'68', titulo:'Facturas que se quedan "en proceso"', texto:'Si el proveedor de timbrado no contesta, el sistema reintenta solo (hasta 8 veces) y un administrador puede reintentar a mano. Nunca se timbra dos veces.', tipo:'una', opciones:una(P('Basta con eso'),'Quiero que me avisen por WhatsApp','Otra forma')},
+
+    {id:'1', prio:true, titulo:'Vidrio laminado', texto:'¿Lo venden?', tipo:'una', sinSaber:'Se deja como categoría apagada.', opciones:una('Sí','No')},
+    {id:'2', prio:true, titulo:'Acrílico o policarbonato', texto:'Marca todo lo que vendan.', tipo:'varias', opciones:una('Acrílico','Policarbonato','Ninguno')},
+    {id:'3', prio:true, titulo:'Canceles de baño, mamparas, barandales y puertas de cristal', texto:'¿Cómo se cotizan?', tipo:'una', opciones:una('Un solo precio ya armado','El vidrio y los herrajes por separado','Depende del trabajo')},
+    {id:'4', prio:true, titulo:'Cantos pulidos, perforaciones, biselados y otros trabajos de taller', texto:'¿Se cobran aparte o van incluidos en el precio del vidrio?', tipo:'subs',
+      subs:[{k:'aparte',t:'¿Se cobran?',tipo:'una',op:una('Aparte','Incluidos','Depende del trabajo')},{k:'como',t:'Si son aparte, ¿cómo los cobran?',tipo:'varias',op:una('Por pieza','Por metro','Monto fijo')}]},
+    {id:'8', titulo:'Productos que se cobran por metro lineal', texto:'Un perfil, un zoclo, una moldura… ¿se cobra por el largo que se captura o por el perímetro (alrededor de la pieza)?', tipo:'una', opciones:una('Largo que se captura','Perímetro','Depende del producto')},
+    {id:'9', titulo:'Cobro mínimo', texto:'¿Hay un área o un monto mínimo que siempre se cobra aunque la pieza sea más chica?', tipo:'subs', sinSaber:'Se cobra exacto, sin mínimos.',
+      subs:[{k:'hay',t:'¿Hay mínimo?',tipo:'una',op:una('No, se cobra exacto','Sí, un área mínima','Sí, un monto mínimo por trabajo')},{k:'cuanto',t:'Si hay, ¿cuánto?',tipo:'texto',ph:'Ej. 0.5 m² o $300'}]},
+    {id:'10', titulo:'Redondeo de medidas', texto:'¿Se redondean hacia arriba antes de cobrar (por ejemplo, a múltiplos de 5 cm)?', tipo:'subs', sinSaber:'Se cobra la medida exacta.',
+      subs:[{k:'redondea',t:'¿Se redondean?',tipo:'una',op:una('No, la medida exacta','Sí, hacia arriba')},{k:'multiplo',t:'Si sí, ¿a qué múltiplo?',tipo:'texto',ph:'Ej. 5 cm'}]},
+
+    {id:'15', prio:true, titulo:'Descuentos', texto:'¿Hay un máximo? ¿Quién puede darlos?', tipo:'subs', sinSaber:'Todo descuento necesita la autorización de un administrador.',
+      subs:[{k:'quien',t:'¿Quién puede darlos?',tipo:'una',op:una('Solo Luis y Ricardo','Cualquiera, hasta cierto porcentaje')},{k:'maximo',t:'Si hay máximo, ¿cuál?',tipo:'texto',ph:'Ej. 10 %'}]},
+    {id:'17', titulo:'Anticipo', texto:'El sistema propone 50 % en trabajos a medida y en puertas o ventanas.', tipo:'subs',
+      subs:[{k:'porc',t:'¿Está bien el 50 %?',tipo:'una',op:una(P('Sí, está bien'),'Quiero otro porcentaje')},{k:'otro',t:'Si otro, ¿cuál?',tipo:'texto',ph:'Ej. 40 %'},{k:'sin',t:'¿Hay trabajos sin anticipo? ¿Cuáles?',tipo:'texto',ph:'Opcional'}]},
+    {id:'19.1', titulo:'Cotización vencida', texto:'Si un cliente quiere aceptar una cotización cuya vigencia ya pasó, ¿se puede?', tipo:'una', sinSaber:'Se puede aceptar con aviso.', opciones:una(P('Sí, avisando que los precios pueden haber cambiado'),'No, hay que hacer una nueva')},
+    {id:'19.5', titulo:'Cotizaciones de otra tablet', texto:'Si Ricardo hace una cotización en su tablet, ¿Luis debe poder verla desde otra tablet o desde la computadora?', tipo:'una', sinSaber:'Cada tablet ve las suyas; el administrador ve todas desde la computadora.', opciones:una('Sí, siempre','Solo la que cada quien hizo')},
+
+    {id:'20', prio:true, titulo:'Entregas por partes', texto:'¿Se entregan trabajos a medias (unas piezas hoy, otras después)?', tipo:'una', sinSaber:'Una orden se entrega completa.', opciones:una('Nunca','A veces')},
+    {id:'21', prio:true, titulo:'¿Se puede empezar a fabricar sin anticipo?', texto:'', tipo:'una', opciones:una('Nunca','Con autorización de Luis o Ricardo','Sí, libremente')},
+    {id:'22', titulo:'Medición final distinta de la cotizada', texto:'Si al medir en obra cambia el tamaño, ¿cómo se ajusta el precio y quién lo autoriza? ¿A partir de qué diferencia?', tipo:'texto', ph:'Cuéntanos cómo lo hacen hoy'},
+    {id:'23', titulo:'Si se cancela una orden con anticipo', texto:'¿Qué pasa con el dinero del anticipo?', tipo:'subs',
+      subs:[{k:'que',t:'¿Qué se hace?',tipo:'una',op:una('Se devuelve','Se queda','Depende')},{k:'depende',t:'Si depende, ¿de qué?',tipo:'texto',ph:'Ej. de si ya se cortó el material'}]},
+    {id:'24', titulo:'Tiempos de entrega', texto:'¿Cuánto tarda normalmente cada tipo de trabajo? Con esto sabemos cuándo marcar una orden como "atrasada".', tipo:'subs',
+      subs:[{k:'cortado',t:'Vidrio cortado',tipo:'texto',ph:'Ej. 1 día'},{k:'templado',t:'Templado',tipo:'texto',ph:'Ej. 5 días'},{k:'caneleria',t:'Cancelería',tipo:'texto',ph:'Ej. 2 semanas'},{k:'instalacion',t:'Instalación',tipo:'texto',ph:'Ej. 3 días'},{k:'atrasado',t:'¿A partir de cuántos días se considera atrasado?',tipo:'texto',ph:'Ej. 3 días'}]},
+    {id:'25', titulo:'Roturas y errores de medida', texto:'¿Quién absorbe el costo en cada caso?', tipo:'subs',
+      subs:[{k:'quien',t:'¿Quién absorbe cada caso (el cliente, ZAMMIR, el instalador)?',tipo:'texto',ph:'Cuéntanos cómo se decide'},{k:'causa',t:'¿Quieren anotar la causa?',tipo:'una',op:una('Sí','No')}]},
+    {id:'26', titulo:'Medición a domicilio y flete', texto:'', tipo:'subs',
+      subs:[{k:'cobra',t:'¿Se cobra la medición?',tipo:'una',op:una('Sí','No','Depende')},{k:'descuenta',t:'¿Se descuenta si el cliente contrata el trabajo?',tipo:'una',op:una('Sí','No')},{k:'recargo',t:'¿Hay recargo fuera de Otumba?',tipo:'una',op:una('Sí','No')},{k:'detalle',t:'Detalle (opcional)',tipo:'texto',ph:'Montos o reglas'}]},
+    {id:'29.3', titulo:'Cuando el cliente deja de más', texto:'Si deja más dinero del saldo de su orden, el sistema solo cobra el saldo y el resto es cambio.', tipo:'una', opciones:una(P('Está bien'),'Hace falta registrar un saldo a favor')},
+
+    {id:'30', prio:true, titulo:'Caja compartida', texto:'Cuántas personas cobran y cómo se relevan.', tipo:'subs',
+      subs:[{k:'cuantas',t:'¿Cuántas personas cobran en un día?',tipo:'texto',ph:'Ej. 2'},{k:'relevan',t:'¿Se relevan?',tipo:'una',op:una('Sí','No')},{k:'cuentan',t:'¿Cuándo cuentan el efectivo?',tipo:'una',op:una('En cada relevo','Solo al cierre')},{k:'cierre',t:'¿A qué hora cierran?',tipo:'texto',ph:'Ej. 7 pm'}]},
+    {id:'31', prio:true, titulo:'Efectivo cobrado en obra o a domicilio', texto:'¿Cómo se entrega ese dinero y cuándo entra al corte?', tipo:'texto', ph:'Cuéntanos cómo lo hacen hoy'},
+    {id:'32', titulo:'Salidas del cajón', texto:'Gastos, depósitos o retiros.', tipo:'subs',
+      subs:[{k:'existen',t:'¿Sacan dinero del cajón?',tipo:'una',op:una('Sí','No')},{k:'como',t:'¿Cómo lo anotan hoy?',tipo:'texto',ph:'Ej. en una libreta'}]},
+    {id:'33', titulo:'Sobrante o faltante en el corte', texto:'¿Qué diferencia se acepta sin pedir explicación?', tipo:'texto', ph:'Ej. hasta $50'},
+    {id:'34', titulo:'Venta de mostrador cancelada', texto:'', tipo:'subs',
+      subs:[{k:'devuelve',t:'¿Se devuelve el efectivo?',tipo:'una',op:una('Sí','No','Depende')},{k:'quien',t:'¿Quién autoriza?',tipo:'texto',ph:'Nombre'}]},
+    {id:'35', titulo:'Transferencias', texto:'', tipo:'subs',
+      subs:[{k:'comprueba',t:'¿Cómo comprueban que llegó el dinero?',tipo:'texto',ph:'Ej. reviso la app del banco'},{k:'marca',t:'¿Quieren marcarlas como "confirmadas"?',tipo:'una',op:una('Sí','No')}]},
+
+    {id:'43', titulo:'Permisos de Luis y Ricardo', texto:'¿Tienen exactamente los mismos permisos?', tipo:'subs',
+      subs:[{k:'igual',t:'',tipo:'una',op:una('Sí, exactamente los mismos','No, hay diferencias')},{k:'que',t:'Si no, ¿qué cambia?',tipo:'texto',ph:'Cuéntanos'}]},
+    {id:'48', titulo:'Garantía', texto:'Cuánto dura, qué cubre y qué excluye.', tipo:'subs',
+      subs:[{k:'dura',t:'¿Cuánto dura?',tipo:'texto',ph:'Ej. 1 año'},{k:'cubre',t:'¿Qué cubre?',tipo:'texto',ph:'Cuéntanos'},{k:'excluye',t:'¿Qué excluye?',tipo:'texto',ph:'Ej. roturas por mal uso'},{k:'cambia',t:'¿Cambia según el producto?',tipo:'una',op:una('Sí','No')}]},
+    {id:'39', titulo:'¿Qué son las "ventas" en los reportes?', texto:'', tipo:'una', sinSaber:'Se cuenta lo cobrado.', opciones:una(P('Lo cobrado (el efectivo recibido)'),'Lo contratado (el valor de las órdenes)')},
+    {id:'40', titulo:'¿Cuándo un saldo por cobrar se considera atrasado?', texto:'', tipo:'subs',
+      subs:[{k:'dias',t:'',tipo:'una',op:una(P('A los 10 días'),'Otro plazo')},{k:'otro',t:'Si otro, ¿cuántos días?',tipo:'texto',ph:'Ej. 15'}]},
+    {id:'73', titulo:'Solicitudes de datos de sus clientes', texto:'Cuando un cliente pida ver, corregir o quitar sus datos. Del lado técnico, HummingX las atiende.', tipo:'subs',
+      subs:[{k:'quien',t:'¿Quién en ZAMMIR las recibe?',tipo:'texto',ph:'Nombre'},{k:'canal',t:'¿Por qué canal?',tipo:'una',op:una('WhatsApp del negocio','Correo','Los dos')}]},
+    {id:'74', titulo:'Si el servidor se cae', texto:'Las tablets siguen cotizando y cobrando sin internet, pero facturar o entrar a administración necesita el servidor. ¿Cuánto tiempo sin esas funciones pueden aguantar sin problema?', tipo:'una', sinSaber:'Se atiende el mismo día hábil.', opciones:una('Hasta 1 hora','Hasta medio día','Un día completo')},
+
+    /* ===== PARTE C · Afinaciones (ya traen propuesta) ===== */
+    {id:'5', titulo:'Aluminio', texto:'¿Venden también perfil suelto (por tramo) o solo cancelería ya armada?', tipo:'una', opciones:una('Solo cancelería armada','También perfil suelto')},
+    {id:'6', titulo:'Herrajes y accesorios', texto:'Bisagras, chapas, felpa, vinil…', tipo:'una', opciones:una('Juntos en una categoría','Separados')},
+    {id:'7', titulo:'¿Falta alguna categoría?', texto:'De la propuesta del catálogo. Escribe cuáles agregarías.', tipo:'texto', ph:'Opcional'},
+    {id:'12', titulo:'Código del producto', texto:'', tipo:'una', opciones:una('Que el sistema lo genere solo','Lo capturo yo')},
+    {id:'13', titulo:'Descripción del producto', texto:'¿Quieren un campo de descripción en cada producto?', tipo:'una', opciones:una('Sí','No')},
+    {id:'14', titulo:'Existencias', texto:'Piezas estándar (puertas y ventanas ya hechas) y material en bodega.', tipo:'subs',
+      subs:[{k:'piezas',t:'¿Quieren llevar cuántas piezas estándar hay?',tipo:'una',op:una('Sí','No')},{k:'hojas',t:'¿Y las hojas de vidrio o material en bodega?',tipo:'una',op:una('Sí','No')}]},
+
+    {id:'16', titulo:'Vigencia de una cotización', texto:'El sistema propone 15 días.', tipo:'subs',
+      subs:[{k:'ok',t:'',tipo:'una',op:una(P('15 días está bien'),'Otro plazo')},{k:'otro',t:'Si otro, ¿cuántos días?',tipo:'texto',ph:'Ej. 30'}]},
+    {id:'18', titulo:'Convertir solo una parte de una cotización en orden', texto:'', tipo:'una', opciones:una('Sí','No')},
+    {id:'19', titulo:'Cotizaciones por vencer', texto:'¿Quieren ver cuáles están por vencer y cuántas se aceptan?', tipo:'una', opciones:una('Sí','No')},
+    {id:'19.2', titulo:'Cotización cancelada', texto:'¿Hace falta "cancelar" una cotización ya enviada, además de marcarla "rechazada"?', tipo:'una', sinSaber:'Basta con rechazada; el folio se conserva.', opciones:una(P('Basta con rechazada'),'Necesitamos cancelada, con motivo')},
+    {id:'19.3', titulo:'Historial en la tablet', texto:'¿Cuántos días de cotizaciones, órdenes y ventas debe tener a la mano cada tablet sin internet?', tipo:'una', opciones:una('30 días',P('90 días'),'180 días','Todo')},
+    {id:'19.4', titulo:'Aviso de documentos sin enviar', texto:'¿Después de cuántas horas sin internet avisamos que hay documentos sin enviar?', tipo:'subs',
+      subs:[{k:'ok',t:'',tipo:'una',op:una(P('6 horas'),'Otro tiempo')},{k:'otro',t:'Si otro, ¿cuántas horas?',tipo:'texto',ph:'Ej. 12'}]},
+    {id:'19.6', titulo:'Dos personas corrigen al mismo cliente', texto:'Si dos tablets cambian los datos de un mismo cliente al mismo tiempo, ¿queda bien que gane el último cambio que llegue? El anterior se guarda en la bitácora.', tipo:'una', opciones:una(P('Sí, gana el último'),'No, que avise para decidir')},
+    {id:'19.7', titulo:'Condiciones de la cotización', texto:'Las tres condiciones iniciales son: anticipo del 50 %, vigencia de la cotización y precios sujetos a cambio. Se pueden cambiar cuando quieran en Configuración.', tipo:'una', opciones:una('Las tres iniciales están bien','Prefiero otras')},
+
+    {id:'27', titulo:'Aviso de "trabajo listo"', texto:'¿Quieren avisar al cliente por WhatsApp cuando su trabajo esté listo?', tipo:'una', opciones:una('Sí','No')},
+    {id:'28', titulo:'Órdenes "detenidas"', texto:'¿Una orden puede quedar detenida (esperando material o al cliente), con su motivo?', tipo:'una', opciones:una('Sí','No')},
+    {id:'29', titulo:'Reposiciones', texto:'Cuando se repone una pieza rota, ¿se registra ligada a la orden original, sin cobro?', tipo:'una', opciones:una('Sí','No')},
+    {id:'29.1', titulo:'Fotos de la medición', texto:'¿Cuántas fotos suelen hacer falta por trabajo y quién debe poder verlas? Hoy: hasta 10 por orden; las ven las tablets y los administradores.', tipo:'una', opciones:una(P('Está bien: hasta 10 por orden'),'Otra cantidad')},
+    {id:'29.2', titulo:'Condiciones del comprobante de trabajo', texto:'¿Son las mismas de la cotización (anticipo, saldo contra entrega, tiempos)?', tipo:'una', opciones:una(P('Sí, las mismas'),'No, son otras')},
+
+    {id:'36', titulo:'Reimpresión de un ticket', texto:'¿Quieren que salga marcado "COPIA"?', tipo:'una', opciones:una('Sí','No')},
+    {id:'37', titulo:'Productos de venta rápida', texto:'¿Quieren una lista corta de los que más se venden en el mostrador?', tipo:'una', opciones:una('Sí','No')},
+    {id:'37.1', titulo:'Una caja o una por persona', texto:'Cuando dos personas cobran el mismo día, ¿cada quien abre y cierra su propia caja o hay una sola caja del local que se va relevando?', tipo:'una', opciones:una(P('Cada persona su propia caja'),'Una sola caja que se releva')},
+    {id:'37.2', titulo:'Turno que cruza la medianoche', texto:'Si una caja se abre un día y se cierra al siguiente, ¿a qué día pertenece su corte?', tipo:'una', opciones:una(P('Al día en que se abrió'),'Al día en que se cerró')},
+    {id:'37.4', titulo:'Cliente recurrente', texto:'¿A partir de cuántos trabajos entregados un cliente es "recurrente"?', tipo:'una', opciones:una(P('2 trabajos'),'3 trabajos','Otro número')},
+    {id:'37.5', titulo:'Leyenda al pie del ticket', texto:'¿Qué texto quieren abajo del ticket sobre cómo y hasta cuándo pedir su factura?', tipo:'texto', ph:'Ej. Factura en zammir.mx hasta el último día del mes'},
+    {id:'37.6', titulo:'Retiros de efectivo durante el día', texto:'Por ejemplo, para pagar a un proveedor. ¿Se debe anotar en el corte?', tipo:'una', opciones:una(P('No se anotan'),'Sí, se anotan en el corte')},
+
+    {id:'38', titulo:'Qué quieren ver al abrir el sistema', texto:'Marca lo que les sirve.', tipo:'subs',
+      subs:[{k:'ver',t:'Quiero ver…',tipo:'varias',op:una('Ventas del día y por medio de pago','Cuentas por cobrar','Tendencia del último mes','Trabajos en producción')},{k:'igual',t:'¿Lo mismo para todos?',tipo:'una',op:una('Lo mismo para todos','Distinto por persona')},{k:'otro',t:'¿Algo más que quieran ver?',tipo:'texto',ph:'Opcional'}]},
+    {id:'41', titulo:'Lista de "atención"', texto:'Órdenes atrasadas y saldos viejos, en una sola lista.', tipo:'una', opciones:una('Sí','No')},
+    {id:'42', titulo:'Más cosas en los reportes', texto:'Marca las que les sirven.', tipo:'varias', opciones:una('Comparar contra el periodo anterior','Metros cuadrados vendidos','Productos más vendidos','Ninguna')},
+    {id:'44', titulo:'Cierre de sesión del administrador por inactividad', texto:'En la computadora. Proponemos 30 minutos.', tipo:'subs',
+      subs:[{k:'ok',t:'',tipo:'una',op:una(P('30 minutos'),'Otro tiempo')},{k:'otro',t:'Si otro, ¿cuántos minutos?',tipo:'texto',ph:'Ej. 15'}]},
+    {id:'45', titulo:'Bloqueo de la tablet por inactividad', texto:'Se propone 5 minutos.', tipo:'subs',
+      subs:[{k:'ok',t:'',tipo:'una',op:una(P('5 minutos'),'Otro tiempo')},{k:'otro',t:'Si otro, ¿cuántos minutos?',tipo:'texto',ph:'Ej. 3'}]},
+    {id:'47', titulo:'"Powered by HummingX BI"', texto:'¿Quieren ese texto al pie de la aplicación?', tipo:'una', opciones:una('Sí','No')},
+    {id:'49', titulo:'Portal para sus clientes', texto:'¿Quieren que sus clientes puedan ver el avance de su trabajo?', tipo:'una', opciones:una('Sí','No')},
+  ];
+
+  /* ---------- Los pasos: cuántas preguntas por pantalla y cómo se llaman ---------- */
+  const PARTES = {
+    A:{nombre:'Para poder entregar', corto:'Parte A', min:'≈ 15 min', desc:'Lo más urgente: datos fiscales, cuentas, equipo y fechas. Sin esto no se abre producción ni se factura de verdad.'},
+    B:{nombre:'Cómo trabajan', corto:'Parte B', min:'≈ 40 min', desc:'Las reglas del negocio: cómo se cobra, se entrega y se factura. Cada pregunta dice qué haremos si no la sabes.'},
+    C:{nombre:'Afinaciones', corto:'Parte C', min:'≈ 20 min', desc:'Ya traen una propuesta nuestra. Si está bien, déjalas en blanco; corrige solo lo que no te sirva.'},
+  };
+  const PASOS = [
+    {p:'A', titulo:'Facturación y cuentas', sub:'Lo que hace falta para poder facturar y abrir producción.', ids:['69','50','72','70']},
+    {p:'A', titulo:'Tu negocio y tu catálogo', sub:'Datos que salen en tus documentos y la lista de productos.', ids:['46','63','59','58','11']},
+    {p:'A', titulo:'Equipo, local y fechas', sub:'Tablets, impresora, internet y cuándo hacemos la entrega.', ids:['75','55','56','57','37.3','71','60']},
+    {p:'B', titulo:'Cuándo y cómo se factura', sub:'Reglas fiscales que conviene que confirme tu contador.', ids:['51','52','53','54','66']},
+    {p:'B', titulo:'Detalles fiscales y avisos', sub:'IVA, clientes, cancelaciones, timbres y avisos.', ids:['61','62','64','65','67','68']},
+    {p:'B', titulo:'Productos y precios', sub:'Qué venden y cómo se cobra.', ids:['1','2','3','4','8','9','10']},
+    {p:'B', titulo:'Cotizaciones y descuentos', sub:'', ids:['15','17','19.1','19.5']},
+    {p:'B', titulo:'Órdenes de trabajo', sub:'Del anticipo a la entrega.', ids:['20','21','22','23','24','25','26','29.3']},
+    {p:'B', titulo:'Mostrador y caja', sub:'Cobros, cortes y efectivo.', ids:['30','31','32','33','34','35']},
+    {p:'B', titulo:'Personas, garantía y reportes', sub:'', ids:['43','48','39','40','73','74']},
+    {p:'C', titulo:'Productos y catálogo', sub:'Propuestas: solo corrige lo que no te sirva.', ids:['5','6','7','12','13','14']},
+    {p:'C', titulo:'Cotizaciones', sub:'', ids:['16','18','19','19.2','19.3','19.4','19.6','19.7']},
+    {p:'C', titulo:'Órdenes de trabajo', sub:'', ids:['27','28','29','29.1','29.2']},
+    {p:'C', titulo:'Mostrador, ticket y caja', sub:'', ids:['36','37','37.1','37.2','37.4','37.5','37.6']},
+    {p:'C', titulo:'Reportes, personas y avisos', sub:'', ids:['38','41','42','44','45','47','49']},
+  ];
+  const Q = Object.fromEntries(PREGUNTAS.map(q => [q.id, q]));
+
+  /* ---------- Estado y guardado ---------- */
+  let R = {};            // respuestas por id: {v, s:{}, c, skip}
+  let paso = 0;          // 0 = bienvenida, 1..N = pasos, N+1 = resumen
+  const FINAL = PASOS.length + 1;
+  function guardar(){ try{ localStorage.setItem(CLAVE, JSON.stringify({R, paso})); }catch(e){} }
+  function cargar(){ try{ const d = JSON.parse(localStorage.getItem(CLAVE) || 'null'); if(d && d.R){ R = d.R; paso = Math.min(Math.max(d.paso|0, 0), FINAL); } }catch(e){} }
+  const get = id => (R[id] ||= {v:null, s:{}, c:'', skip:false});
+  const vacio = v => v == null || v === '' || (Array.isArray(v) && v.length === 0);
+  function respondida(id){ const r = R[id]; if(!r) return false; if(r.skip) return true; if(!vacio(r.v)) return true; return Object.values(r.s || {}).some(x => !vacio(x)); }
+  const idsDe = p => PASOS.filter(s => s.p === p).flatMap(s => s.ids);
+  const contar = ids => ids.filter(respondida).length;
+
+  /* ---------- Utilidades de DOM ---------- */
+  function el(tag, attrs = {}, ...hijos){
+    const n = document.createElement(tag);
+    for(const [k, v] of Object.entries(attrs)){
+      if(k === 'class') n.className = v; else if(k === 'text') n.textContent = v;
+      else if(k.startsWith('on')) n.addEventListener(k.slice(2), v); else if(v !== false && v != null) n.setAttribute(k, v === true ? '' : v);
+    }
+    for(const h of hijos.flat()) if(h != null) n.append(h.nodeType ? h : document.createTextNode(h));
+    return n;
+  }
+  function aviso(texto){ const t = document.getElementById('toast'); t.textContent = texto; t.classList.add('ver'); clearTimeout(aviso.t); aviso.t = setTimeout(() => t.classList.remove('ver'), 2600); }
+
+  /* ---------- Construcción de las preguntas ---------- */
+  function chips(opciones, esMultiple, valor, alElegir){
+    const grupo = el('div', {class:'opciones', role:'group'});
+    const marcados = () => esMultiple ? (valor() || []) : [valor()];
+    for(const o of opciones){
+      const b = el('button', {type:'button', class:'chip', 'aria-pressed':'false'}, o.t, o.prop ? el('span', {class:'tag', text:'Propuesta'}) : null);
+      b.dataset.valor = o.t;
+      b.addEventListener('click', () => {
+        const ya = marcados().includes(o.t);
+        if(esMultiple){
+          const v = new Set(valor() || []);
+          ya ? v.delete(o.t) : v.add(o.t);
+          alElegir([...v]);
+        } else alElegir(ya ? null : o.t);
+        pintar(grupo, marcados());
+      });
+      grupo.append(b);
+    }
+    const pintar = (g, m) => g.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', String(m.includes(c.dataset.valor))));
+    pintar(grupo, marcados());
+    grupo.pintar = () => pintar(grupo, marcados());
+    return grupo;
+  }
+
+  function construirPregunta(q){
+    const r = get(q.id);
+    const tarjeta = el('article', {class:'q', id:'q-' + q.id});
+    const marcar = () => { tarjeta.classList.toggle('hecha', respondida(q.id)); guardar(); actualizar(); };
+    const repintar = [];
+
+    tarjeta.append(el('div', {class:'q-cab'}, el('span', {class:'num', text:q.id + '.'}), el('h3', {text:q.titulo}), q.prio ? el('span', {class:'pildora', text:'Primero'}) : null));
+    if(q.texto) tarjeta.append(el('p', {class:'texto', text:q.texto}));
+    const propuesta = (q.opciones || []).find(o => o.prop) || (q.subs || []).flatMap(s => s.op || []).find(o => o.prop);
+    if(q.sinSaber) tarjeta.append(el('p', {class:'propuesta'}, el('b', {text:'Si no lo sabes: '}), q.sinSaber));
+
+    const alCambiar = () => { if(r.skip && (!vacio(r.v) || Object.values(r.s).some(x => !vacio(x)))) r.skip = false; sinSaberBtn.setAttribute('aria-pressed', String(r.skip)); marcar(); };
+
+    if(q.tipo === 'una' || q.tipo === 'varias'){
+      const g = chips(q.opciones, q.tipo === 'varias', () => r.v, v => { r.v = v; alCambiar(); });
+      tarjeta.append(el('div', {class:'campo'}, g)); repintar.push(() => g.pintar());
+    } else if(q.tipo === 'texto'){
+      const i = el('textarea', {rows:2, placeholder:q.ph || 'Escribe aquí', 'aria-label':q.titulo});
+      i.value = r.v || '';
+      i.addEventListener('input', () => { r.v = i.value.trim() ? i.value : null; alCambiar(); });
+      tarjeta.append(el('div', {class:'campo'}, i)); repintar.push(() => { i.value = r.v || ''; });
+    } else if(q.tipo === 'subs'){
+      for(const s of q.subs){
+        const etq = s.t ? s.t : null;
+        const id = `s-${q.id}-${s.k}`;
+        const campo = el('div', {class:'campo'});
+        if(s.tipo === 'texto'){
+          const i = el('input', {type:'text', id, placeholder:s.ph || '', autocomplete:'off'});
+          i.value = r.s[s.k] || '';
+          i.addEventListener('input', () => { r.s[s.k] = i.value.trim() ? i.value : null; alCambiar(); });
+          if(etq) campo.append(el('label', {for:id, text:etq})); campo.append(i);
+          repintar.push(() => { i.value = r.s[s.k] || ''; });
+        } else {
+          const multiple = s.tipo === 'varias';
+          const g = chips(s.op, multiple, () => r.s[s.k], v => { r.s[s.k] = v; alCambiar(); });
+          if(etq) campo.append(el('div', {class:'etq', text:etq})); campo.append(g);
+          repintar.push(() => g.pintar());
+        }
+        tarjeta.append(campo);
+      }
+    }
+
+    const etiquetaSkip = (q.sinSaber || propuesta) ? 'Usen la propuesta' : 'Aún no lo sé';
+    const sinSaberBtn = el('button', {type:'button', class:'chip salta', 'aria-pressed':String(r.skip), onclick: () => {
+      r.skip = !r.skip;
+      if(r.skip){ r.v = null; r.s = {}; repintar.forEach(f => f()); }
+      sinSaberBtn.setAttribute('aria-pressed', String(r.skip)); marcar();
+    }}, etiquetaSkip);
+    const comentario = el('div', {class:'comentario', hidden:true}, el('textarea', {rows:2, placeholder:'Escribe lo que quieras agregar', 'aria-label':'Comentario de la pregunta ' + q.id}));
+    const ta = comentario.querySelector('textarea');
+    ta.value = r.c || '';
+    ta.addEventListener('input', () => { r.c = ta.value; guardar(); });
+    const btnCom = el('button', {type:'button', class:'enlace', 'aria-expanded':'false', onclick: () => {
+      comentario.hidden = !comentario.hidden; btnCom.setAttribute('aria-expanded', String(!comentario.hidden)); if(!comentario.hidden) ta.focus();
+    }}, r.c ? 'Ver o editar comentario' : '+ Agregar un comentario');
+    if(r.c){ comentario.hidden = false; btnCom.setAttribute('aria-expanded', 'true'); }
+    ta.addEventListener('blur', () => { btnCom.textContent = ta.value.trim() ? 'Ver o editar comentario' : '+ Agregar un comentario'; });
+
+    tarjeta.append(el('div', {class:'pie-q'}, sinSaberBtn, btnCom), comentario);
+    tarjeta.classList.toggle('hecha', respondida(q.id));
+    return tarjeta;
+  }
+
+  /* ---------- Pantallas ---------- */
+  function construir(){
+    // Tarjetas de la bienvenida
+    const cont = document.getElementById('tarjetas');
+    for(const [p, d] of Object.entries(PARTES)){
+      const primero = PASOS.findIndex(s => s.p === p) + 1;
+      const b = el('button', {type:'button', class:'tarjeta-parte', 'data-p':p, onclick: () => ir(primero)},
+        el('span', {class:'letra', text:p}),
+        el('div', {}, el('h3', {text:`${d.nombre} · ${d.min}`}), el('p', {text:d.desc})),
+        el('span', {class:'cuenta', id:'cuenta-' + p}));
+      cont.append(b);
+    }
+    // Pasos
+    const pasos = document.getElementById('pasos');
+    PASOS.forEach((s, i) => {
+      const sec = el('section', {class:'paso', id:'paso-' + (i + 1), 'aria-labelledby':'h-' + (i + 1)},
+        el('div', {class:'paso-cab'},
+          el('div', {class:'etiqueta'}, `${PARTES[s.p].corto} · paso ${PASOS.filter((x, j) => x.p === s.p && j <= i).length} de ${PASOS.filter(x => x.p === s.p).length}`, s.ids.some(id => Q[id].prio) ? el('span', {class:'pildora', text:'Hay preguntas "Primero"'}) : null),
+          el('h2', {id:'h-' + (i + 1), text:s.titulo}), s.sub ? el('p', {text:s.sub}) : null));
+      s.ids.forEach(id => sec.append(construirPregunta(Q[id])));
+      pasos.append(sec);
+    });
+    // Pestañas de partes
+    const nav = document.getElementById('partes');
+    for(const [p, d] of Object.entries(PARTES)){
+      nav.append(el('button', {type:'button', class:'parte-tab', 'data-p':p, onclick: () => ir(PASOS.findIndex(s => s.p === p) + 1)},
+        el('span', {class:'t', text:d.corto}), el('span', {class:'n', id:'tabn-' + p}), el('span', {class:'m'}, el('i', {id:'tabm-' + p}))));
+    }
+  }
+
+  function ir(n){
+    paso = Math.min(Math.max(n, 0), FINAL);
+    document.querySelectorAll('.paso').forEach(s => s.classList.remove('activo'));
+    document.getElementById(paso === 0 ? 'paso-0' : paso === FINAL ? 'paso-final' : 'paso-' + paso).classList.add('activo');
+    if(paso === FINAL) pintarResumen();
+    guardar(); actualizar();
+    window.scrollTo({top:0, behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
+  }
+
+  function actualizar(){
+    const todas = PREGUNTAS.length, hechas = contar(PREGUNTAS.map(q => q.id));
+    const pct = Math.round(hechas / todas * 100);
+    document.getElementById('barra').style.width = pct + '%';
+    document.getElementById('barraAria').setAttribute('aria-valuenow', String(pct));
+    document.getElementById('contador').textContent = `${hechas} de ${todas} contestadas`;
+    const actual = paso >= 1 && paso <= PASOS.length ? PASOS[paso - 1].p : (paso === FINAL ? null : null);
+    for(const p of Object.keys(PARTES)){
+      const ids = idsDe(p), h = contar(ids);
+      document.getElementById('tabn-' + p).textContent = `${h} de ${ids.length}`;
+      document.getElementById('tabm-' + p).style.width = (h / ids.length * 100) + '%';
+      const tab = document.querySelector(`.parte-tab[data-p="${p}"]`);
+      tab.classList.toggle('completa', h === ids.length);
+      tab.setAttribute('aria-current', String(actual === p));
+      document.getElementById('cuenta-' + p).textContent = `${h} de ${ids.length} contestadas`;
+    }
+    const atras = document.getElementById('btnAtras'), sig = document.getElementById('btnSig'), est = document.getElementById('estado');
+    atras.style.visibility = paso === 0 ? 'hidden' : 'visible';
+    if(paso === 0){ sig.textContent = 'Empezar →'; est.textContent = 'Tarda unos 15 minutos si solo haces la Parte A.'; }
+    else if(paso === FINAL){ sig.style.display = 'none'; est.textContent = 'Revisa y envía.'; }
+    else {
+      sig.style.display = ''; sig.textContent = paso === PASOS.length ? 'Revisar y enviar →' : 'Siguiente →';
+      const s = PASOS[paso - 1];
+      est.innerHTML = ''; est.append(el('b', {text:`${contar(s.ids)} de ${s.ids.length}`}), ' en esta pantalla · ', `paso ${paso} de ${PASOS.length}`);
+    }
+    if(paso === 0) sig.style.display = '';
+    if(paso === FINAL) { sig.style.display = 'none'; }
+  }
+
+  /* ---------- Resumen y envío ---------- */
+  function textoRespuesta(q){
+    const r = R[q.id]; if(!r) return null;
+    if(r.skip) return ((q.sinSaber || (q.opciones || []).some(o => o.prop) || (q.subs || []).some(s => (s.op || []).some(o => o.prop))) ? 'Usen la propuesta' : 'Aún no lo sé') + (r.c ? `\nComentario: ${r.c}` : '');
+    const partes = [];
+    if(!vacio(r.v)) partes.push(Array.isArray(r.v) ? r.v.join(', ') : r.v);
+    for(const s of (q.subs || [])){
+      const v = r.s[s.k]; if(vacio(v)) continue;
+      const txt = Array.isArray(v) ? v.join(', ') : v;
+      partes.push(s.t ? `${s.t.replace(/[¿?]/g, '').replace(/:$/, '')}: ${txt}` : txt);
+    }
+    if(r.c && r.c.trim()) partes.push('Comentario: ' + r.c.trim());
+    return partes.length ? partes.join('\n') : null;
+  }
+  function pintarResumen(){
+    const total = PREGUNTAS.length, hechas = contar(PREGUNTAS.map(q => q.id)), pct = Math.round(hechas / total * 100);
+    document.getElementById('anillo').style.setProperty('--p', pct);
+    document.getElementById('anilloTxt').textContent = pct + '%';
+    document.getElementById('finalSub').textContent = `Contestaste ${hechas} de ${total}. Lo que quede en blanco se queda con nuestra propuesta.`;
+    const faltaA = idsDe('A').length - contar(idsDe('A'));
+    const alerta = document.getElementById('alertaFinal'); alerta.innerHTML = '';
+    if(faltaA > 0) alerta.append(el('div', {class:'alerta'}, el('strong', {text:`Te faltan ${faltaA} de la Parte A. `}), 'Es lo que más necesitamos para poder entregar. ', el('button', {type:'button', class:'enlace', onclick: () => ir(1)}, 'Ir a la Parte A')));
+    const cont = document.getElementById('resumen'); cont.innerHTML = '';
+    for(const [p, d] of Object.entries(PARTES)){
+      cont.append(el('h3', {text:`${d.corto} · ${d.nombre}`}));
+      for(const id of idsDe(p)){
+        const q = Q[id], t = textoRespuesta(q);
+        const paso1 = PASOS.findIndex(s => s.ids.includes(id)) + 1;
+        cont.append(el('div', {class:'fila'}, el('span', {class:'num', text:id + '.'}),
+          el('div', {}, el('b', {text:q.titulo}), el('button', {type:'button', class:'enlace editar', onclick: () => { ir(paso1); setTimeout(() => document.getElementById('q-' + id)?.scrollIntoView({block:'center'}), 60); }}, t ? 'Cambiar' : 'Contestar'),
+            el('div', {class:'r' + (t ? '' : ' vacia'), text:t || 'Sin contestar'}))));
+      }
+    }
+  }
+  function mensaje(completo){
+    const hechas = PREGUNTAS.filter(q => respondida(q.id));
+    const L = ['Hola, te mando mis respuestas del *Cuestionario de ZAMMIR*:', ''];
+    for(const q of hechas){ L.push(`*${q.id}. ${q.titulo}*`, textoRespuesta(q) || '', ''); }
+    const sin = PREGUNTAS.length - hechas.length;
+    if(sin > 0) L.push(`(Quedaron ${sin} sin contestar: usen la propuesta.)`);
+    return L.join('\n').trim();
+  }
+  async function copiar(texto){
+    try{ await navigator.clipboard.writeText(texto); return true; }
+    catch(e){ const t = el('textarea', {style:'position:fixed;opacity:0'}); t.value = texto; document.body.append(t); t.select(); let ok = false; try{ ok = document.execCommand('copy'); }catch(_){} t.remove(); return ok; }
+  }
+  function descargar(){
+    const f = new Date(), pad = n => String(n).padStart(2, '0');
+    const nombre = `cuestionario-zammir-${f.getFullYear()}-${pad(f.getMonth() + 1)}-${pad(f.getDate())}.txt`;
+    const blob = new Blob(['﻿' + mensaje(true).replace(/\*/g, '')], {type:'text/plain;charset=utf-8'});
+    const a = el('a', {href:URL.createObjectURL(blob), download:nombre}); document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+    aviso('Se descargó ' + nombre);
+  }
+  function enviarWhatsApp(){
+    let texto = mensaje(false);
+    const MAX = 3600;
+    let largo = false;
+    if(texto.length > MAX){ texto = texto.slice(0, MAX).replace(/\n[^\n]*$/, '') + '\n\n(…el mensaje es largo: te mando el resto en el archivo.)'; largo = true; }
+    const base = NUMERO_WHATSAPP ? `https://wa.me/${NUMERO_WHATSAPP.replace(/\D/g, '')}` : 'https://wa.me/';
+    window.open(`${base}?text=${encodeURIComponent(texto)}`, '_blank', 'noopener');
+    document.getElementById('notaEnvio').textContent = largo
+      ? 'Tus respuestas son largas y WhatsApp corta el mensaje. Toca "Descargar como archivo" y mándalo también por WhatsApp.'
+      : 'Se abrió WhatsApp con tus respuestas. Elige el contacto y envía. Si no se abrió, usa "Copiar las respuestas".';
+  }
+
+  /* ---------- Arranque ---------- */
+  document.getElementById('btnSig').addEventListener('click', () => ir(paso + 1));
+  document.getElementById('btnAtras').addEventListener('click', () => ir(paso - 1));
+  document.getElementById('btnWa').addEventListener('click', enviarWhatsApp);
+  document.getElementById('btnCopiar').addEventListener('click', async () => aviso(await copiar(mensaje(true)) ? 'Respuestas copiadas' : 'No se pudo copiar: usa Descargar'));
+  document.getElementById('btnDescargar').addEventListener('click', descargar);
+  document.getElementById('btnImprimir').addEventListener('click', () => window.print());
+  document.getElementById('btnReiniciar').addEventListener('click', () => {
+    if(!confirm('¿Borrar todas las respuestas y empezar de nuevo? No se puede deshacer.')) return;
+    try{ localStorage.removeItem(CLAVE); }catch(e){} location.reload();
+  });
+  document.getElementById('anio').textContent = new Date().getFullYear();
+  cargar(); construir(); ir(paso);
+  </script>
+</body>
+</html>
