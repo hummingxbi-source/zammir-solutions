@@ -75,6 +75,12 @@ jobs:
       - name: 8. Construcción de producción
         run: pnpm build
 
+      - name: 8b. Ningún secreto en el paquete del navegador
+        run: pnpm check:bundle
+
+      - name: 8c. Dependencias de producción sin vulnerabilidades graves conocidas
+        run: pnpm audit --prod --audit-level high
+
       - name: 9. Pruebas extremo a extremo (tamaño de tablet)
         run: |
           pnpm exec playwright install --with-deps chromium
