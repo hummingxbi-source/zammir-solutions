@@ -8,6 +8,7 @@
   },
   "scripts": {
     "build": "pnpm -r build",
+    "check:bundle": "node scripts/check-bundle-secretos.mjs",
     "check:deps": "depcruise packages apps --config .dependency-cruiser.cjs",
     "check:env": "node scripts/check-env-example.mjs",
     "db:reset": "supabase db reset",
