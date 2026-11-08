@@ -20,6 +20,23 @@
 
 **Ajuste a E10:** el documento fuente pide imprimir la cotización y el comprobante en tamaño carta. Esa impresión quedó fuera del alcance [ADR-0005], [ADR-0017]; se verifica en su lugar que el PDF se lea bien y que su QR se pueda escanear desde otro teléfono.
 
+## Dónde vive cada recorrido automatizado
+
+A 8 de noviembre de 2026 (Sprint 4). Los marcados con 🖐 se repiten además a mano con el equipo real en el Sprint 5 (S5-09).
+
+| ID | Pruebas automáticas | Qué cubren |
+|---|---|---|
+| E1 | `apps/web/src/shared/infra/sync/e1-e2-mostrador.integracion.test.ts` | De la cotización a la entrega, sin conexión y al volver la red, contra el servidor real. 🖐 |
+| E2 | el mismo archivo y `packages/core/src/modules/cash/` | Ventas del día, cancelación fuera del corte y corte recalculado por el servidor. 🖐 impresora |
+| E3 | `e3-cotizaciones-sin-conexion.integracion.test.ts` y `e3-e4-ventas.integracion.test.ts` | Cotizaciones y ventas sin conexión: cero duplicados y folios correctos. 🖐 |
+| E4 | `apps/web/src/acceptance/e4-tres-personas.test.tsx` | Tres personas con PIN en la misma tablet y bloqueo por inactividad. |
+| E5 | `apps/web/src/acceptance/e5-e6-facturacion.integracion.test.ts` | Autofacturación: folio liquidado → factura de prueba y descarga; ya facturado, fuera de plazo, con saldo y código incorrecto se rechazan con su motivo; ningún rechazo deja un timbre; reenviar no duplica. Contra el proveedor simulado; **se repite contra el entorno de pruebas del proveedor real cuando exista (PD-05)**. |
+| E6 | el mismo archivo y `packages/core/src/acceptance/e6-facturar.test.ts` | Un cajero sin permiso no factura (sin sesión y con sesión de cajero); un administrador sí; el cajero solo con autorización de un administrador en el núcleo. Que el cajero facture desde la tablet con el PIN de un administrador **no está construido** (PP-31). |
+| E7 | `packages/core/src/acceptance/e7-reportes.test.ts` | Datos armados a mano en los bordes de medianoche de México: día, semana (lunes a domingo) y mes bien delimitados; totales al centavo por periodo, método de pago y persona; la venta cancelada no cuenta. |
+| E8 | `packages/core/src/acceptance/e8-permisos.test.ts` y `e8-reportes-precios-y-cortes.test.ts` | Catálogo, personas y privacidad; reportes y cuentas por cobrar solo de administradores; el cajero no cambia precios sin el PIN de un administrador ni ve ni cierra cortes ajenos. Las pantallas que se le niegan al cajero las prueban `reportes.test.tsx` y `cuentas-por-cobrar.test.tsx`. |
+| E9 | — | Manual, en el Sprint 5 (S5-06). |
+| E10 | — | Manual con la impresora, en el Sprint 5 (S5-09). |
+
 ## Criterios generales
 
 Además de los recorridos, antes de entregar [DC §14]:
