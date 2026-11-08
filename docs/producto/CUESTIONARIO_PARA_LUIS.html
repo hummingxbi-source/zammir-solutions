@@ -29,8 +29,10 @@
     :focus-visible{outline:3px solid var(--acento);outline-offset:2px;border-radius:6px}
     .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
+    .falla{background:#fdf4e3;border-bottom:3px solid #9c7a3c;padding:14px 20px;font:16px/1.5 var(--base);color:#26241f;text-align:center}
+
     /* ---------- Encabezado ---------- */
-    .top{position:sticky;top:0;z-index:20;background:rgb(244 241 236 / 92%);backdrop-filter:blur(14px);border-bottom:1px solid var(--borde)}
+    .top{position:sticky;top:0;z-index:20;background:rgb(244 241 236 / 92%);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-bottom:1px solid var(--borde)}
     .top-in{max-width:820px;margin:auto;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px}
     .marca{display:flex;align-items:baseline;gap:10px}
     .marca b{font:700 22px/1 var(--titulo);letter-spacing:.01em}
@@ -56,6 +58,8 @@
     .etiqueta{font:500 11.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--laton)}
     .hero h1{font:700 clamp(34px,7vw,54px)/1.06 var(--titulo);letter-spacing:-.015em;margin:14px auto 16px;max-width:640px}
     .hero p{max-width:600px;margin:0 auto 12px;color:var(--suave);font-size:18px}
+    .empezar{margin:22px 0 4px!important}
+    .empezar .btn{padding:14px 34px;font-size:18px}
     .tarjetas{display:grid;gap:12px;margin:26px 0 8px}
     .tarjeta-parte{background:var(--superficie);border:1px solid var(--borde);border-radius:var(--radio);padding:18px 20px;display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;cursor:pointer;text-align:left;width:100%;transition:transform .15s,border-color .2s,box-shadow .2s}
     .tarjeta-parte:hover{border-color:var(--acento);box-shadow:0 6px 18px rgb(15 76 129 / 10%);transform:translateY(-1px)}
@@ -86,12 +90,13 @@
     .q .texto{margin:8px 0 14px;color:var(--suave);font-size:16px}
     .campo{margin:0 0 14px}
     .campo>label,.campo>.etq{display:block;font:500 13px var(--mono);letter-spacing:.02em;color:var(--suave);margin-bottom:8px}
-    .opciones{display:flex;flex-wrap:wrap;gap:8px}
+    .opciones{display:flex;flex-wrap:wrap;margin:0 -4px -8px}
+    .opciones .chip{margin:0 4px 8px}
     .chip{border:1.5px solid var(--borde-control);background:var(--superficie);color:var(--tinta);border-radius:99px;padding:10px 16px;min-height:44px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;text-align:left;line-height:1.3;transition:background .15s,border-color .15s,color .15s,transform .1s}
     .chip:hover{border-color:var(--acento);background:var(--tinte)}
     .chip:active{transform:scale(.98)}
     .chip[aria-pressed="true"]{background:var(--acento);border-color:var(--acento);color:#fff}
-    .chip[aria-pressed="true"]::before{content:"✓";font-weight:700}
+    .chip[aria-pressed="true"]::before{content:"✓";font-weight:700;margin-right:8px}
     .chip .tag{font:500 10px var(--mono);letter-spacing:.06em;text-transform:uppercase;background:var(--laton-fondo);color:var(--laton);border-radius:99px;padding:1px 7px}
     .chip[aria-pressed="true"] .tag{background:rgb(255 255 255 / 20%);color:#fff}
     .chip.salta{border-style:dashed;color:var(--suave);background:transparent}
@@ -108,10 +113,12 @@
     .comentario{margin-top:12px}
 
     /* ---------- Barra de navegación inferior ---------- */
-    .dock{position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgb(255 255 255 / 94%);backdrop-filter:blur(14px);border-top:1px solid var(--borde);padding:10px 16px calc(10px + env(safe-area-inset-bottom))}
-    .dock-in{max-width:820px;margin:auto;display:flex;align-items:center;gap:12px}
+    .dock{position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgb(255 255 255 / 94%);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-top:1px solid var(--borde);padding:10px 16px calc(10px + env(safe-area-inset-bottom))}
+    .dock-in{max-width:820px;margin:auto;display:flex;align-items:center}
+    .dock-in>*{margin-left:12px}.dock-in>:first-child{margin-left:0}
     .dock .estado{flex:1;min-width:0;font:500 12px var(--mono);color:var(--suave);line-height:1.35}
     .dock .estado b{color:var(--tinta);font-weight:500}
+    .dock .btn{white-space:nowrap}
     .btn{border:1.5px solid var(--acento);background:var(--acento);color:#fff;padding:12px 22px;border-radius:99px;font:600 16px var(--base);cursor:pointer;min-height:46px;transition:background .15s,transform .1s;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px}
     .btn:hover{background:var(--acento-osc);border-color:var(--acento-osc)}
     .btn:active{transform:scale(.98)}
@@ -148,6 +155,15 @@
       .marca span{display:none}
       .dock .estado{display:none}.dock-in{justify-content:space-between}.dock .btn{flex:1}
     }
+    @media (max-width:380px){
+      body{font-size:16px}.dock .btn{padding:10px 16px;font-size:15px}.q h3{font-size:18px}.chip{padding:10px 14px}.hero h1{font-size:32px}
+      .parte-tab .t{font-size:9.5px;letter-spacing:.06em}.parte-tab .n{font-size:12px}.contador{font-size:11px}
+    }
+    @media (max-height:520px){
+      .top{position:static}.hero{padding-top:22px;padding-bottom:12px}.paso-cab{padding-top:18px}
+      .dock{padding:6px 12px}.btn{min-height:42px;padding:8px 18px}body{padding-bottom:76px}.toast{bottom:70px}
+    }
+    @media (min-width:900px){.q{padding:26px 28px 18px}.hero{padding-top:70px}}
     @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
     @media print{
       .top,.dock,.hero,.tarjetas,.aviso-guardado,.acciones,.nota,.alerta,.toast,.paso:not(#paso-final),.final-cab .anillo{display:none!important}
@@ -156,6 +172,9 @@
   </style>
 </head>
 <body>
+  <noscript><div class="falla" role="alert"><strong>Este cuestionario necesita JavaScript.</strong> Ábrelo con Chrome, Safari o Edge, directo desde el archivo descargado (no desde la vista previa de WhatsApp, del correo o de Drive).</div></noscript>
+  <div class="falla" id="falla" role="alert" hidden><strong>Tu navegador no pudo abrir el cuestionario.</strong> Ábrelo con Chrome, Safari o Edge actualizados, directo desde el archivo descargado (no desde la vista previa de WhatsApp, del correo o de Drive). Si sigue sin abrir, mándanos un mensaje y lo contestamos por llamada.</div>
+  <script>window.addEventListener('error', function(){ var f = document.getElementById('falla'); if(f) f.hidden = false; });</script>
   <header class="top">
     <div class="top-in">
       <div class="marca"><b>ZAMMIR<i></i></b><span>Cuestionario</span></div>
@@ -173,6 +192,7 @@
         <h1 id="h-bienvenida">Hola, Luis. Falta muy poco.</h1>
         <p>Ya casi terminamos de construir el sistema. Para entregarlo necesitamos que nos confirmes cómo trabajan, <strong>para no inventar nada</strong>.</p>
         <p>Casi todo se contesta <strong>tocando una opción</strong>. Si algo no lo sabes, déjalo: dice qué haremos y nada se detiene.</p>
+        <p class="empezar"><button class="btn" type="button" id="btnEmpezar">Empezar →</button></p>
       </div>
       <div class="tarjetas" id="tarjetas"></div>
       <div class="aviso-guardado"><strong>Se guarda solo</strong> en este teléfono o computadora: puedes cerrarlo y volver cuando quieras. Lo que contestes no sale de aquí hasta que toques <em>Enviar</em>. Las preguntas marcadas <span class="pildora">Primero</span> conviene contestarlas antes. Lo que diga <em>tu contador</em>, puede contestarlo él.</div>
@@ -225,13 +245,13 @@
   const P = (t) => ({t, prop: true});
   const PREGUNTAS = [
     /* ===== PARTE A · Para poder entregar ===== */
-    {id:'69', prio:true, titulo:'Datos fiscales de ZAMMIR para las facturas', texto:'Tal como aparecen en su constancia de situación fiscal. Si prefieres, mándanos una foto de la constancia y deja esto en blanco.', tipo:'subs', sinSaber:'Sin estos datos no se puede emitir ninguna factura real.',
+    {id:'69', prio:true, titulo:'Datos fiscales de ZAMMIR para las facturas', texto:'Tal como aparecen en su constancia de situación fiscal. Si prefieres, mándanos una foto de la constancia y deja esto en blanco.', tipo:'subs', consecuencia:'Sin estos datos no se puede emitir ninguna factura real.',
       subs:[{k:'razon',t:'Razón social',tipo:'texto',ph:'Como aparece en la constancia'},{k:'rfc',t:'RFC',tipo:'texto',ph:'12 o 13 caracteres'},{k:'regimen',t:'Régimen fiscal',tipo:'texto',ph:'Ej. Persona física con actividad empresarial'},{k:'cp',t:'Código postal del domicilio fiscal',tipo:'texto',ph:'5 dígitos'},{k:'foto',t:'¿Prefieres mandar foto de la constancia?',tipo:'una',op:una('Sí, la mando por WhatsApp','No, los escribí aquí')}]},
     {id:'50', prio:true, titulo:'Certificado de sello digital (CSD)', texto:'Es el archivo con el que se timbran las facturas. Puede tardar en tramitarse, por eso conviene empezar ya. ZAMMIR lo sube directo al proveedor de timbrado: a nosotros nunca nos llega.', tipo:'una', opciones:una('Ya tenemos e.firma vigente y podemos empezar el trámite','Tenemos e.firma pero no hemos empezado el CSD','No tenemos e.firma vigente','Lo consulto con mi contador')},
     {id:'72', titulo:'Primera factura real, con tu contador', texto:'Antes de facturar con valor fiscal se hace una verificación: una factura de prueba que se cancela. Conviene que tu contador la acompañe.', tipo:'una', opciones:una('Sí, mi contador la acompaña','Otra persona la acompaña','Todavía no sé quién')},
     {id:'70', prio:true, titulo:'¿A nombre de quién quedan las cuentas de producción?', texto:'Dominio, base de datos, aplicación y proveedor de timbrado. Recomendamos que el dominio y el certificado queden siempre a nombre de ZAMMIR.', tipo:'una', opciones:una('A nombre de ZAMMIR, con Juanito como colaborador (recomendado)','A nombre de HummingX BI','Otra forma')},
 
-    {id:'46', prio:true, titulo:'Datos del negocio para tickets y documentos', texto:'Lo que sale impreso en tickets, cotizaciones y comprobantes.', tipo:'subs', sinSaber:'Sin esto los documentos llevan datos de prueba.',
+    {id:'46', prio:true, titulo:'Datos del negocio para tickets y documentos', texto:'Lo que sale impreso en tickets, cotizaciones y comprobantes.', tipo:'subs', consecuencia:'Sin esto los documentos salen con datos de prueba.',
       subs:[{k:'nombre',t:'Nombre completo del negocio',tipo:'texto',ph:'ZAMMIR, Soluciones en Vidrio y Aluminio'},{k:'domicilio',t:'Domicilio',tipo:'texto',ph:'Calle, número, colonia, Otumba'},{k:'tel',t:'Teléfono',tipo:'texto',ph:'10 dígitos'},{k:'correo',t:'Correo',tipo:'texto',ph:'Si lo tienen'},{k:'logo',t:'¿Tienen logo?',tipo:'una',op:una('Sí, lo mando por WhatsApp','No tenemos')},{k:'colores',t:'Colores de la marca',tipo:'texto',ph:'Opcional'}]},
     {id:'63', titulo:'Correo del negocio', texto:'Sirve para que el cliente reciba su factura y como segundo canal para ejercer sus derechos sobre sus datos. Hoy solo se usa WhatsApp.', tipo:'subs',
       subs:[{k:'tiene',t:'¿Tienen un correo para el negocio?',tipo:'una',op:una('Sí','No, hay que crear uno')},{k:'cual',t:'¿Cuál?',tipo:'texto',ph:'ejemplo@zammir.mx'}]},
@@ -392,7 +412,8 @@
     {p:'C', titulo:'Mostrador, ticket y caja', sub:'', ids:['36','37','37.1','37.2','37.4','37.5','37.6']},
     {p:'C', titulo:'Reportes, personas y avisos', sub:'', ids:['38','41','42','44','45','47','49']},
   ];
-  const Q = Object.fromEntries(PREGUNTAS.map(q => [q.id, q]));
+  const Q = {}; PREGUNTAS.forEach(q => { Q[q.id] = q; });
+  const aplanar = listas => listas.reduce((a, l) => a.concat(l), []);
 
   /* ---------- Estado y guardado ---------- */
   let R = {};            // respuestas por id: {v, s:{}, c, skip}
@@ -400,10 +421,10 @@
   const FINAL = PASOS.length + 1;
   function guardar(){ try{ localStorage.setItem(CLAVE, JSON.stringify({R, paso})); }catch(e){} }
   function cargar(){ try{ const d = JSON.parse(localStorage.getItem(CLAVE) || 'null'); if(d && d.R){ R = d.R; paso = Math.min(Math.max(d.paso|0, 0), FINAL); } }catch(e){} }
-  const get = id => (R[id] ||= {v:null, s:{}, c:'', skip:false});
+  const get = id => { if(!R[id]) R[id] = {v:null, s:{}, c:'', skip:false}; return R[id]; };
   const vacio = v => v == null || v === '' || (Array.isArray(v) && v.length === 0);
   function respondida(id){ const r = R[id]; if(!r) return false; if(r.skip) return true; if(!vacio(r.v)) return true; return Object.values(r.s || {}).some(x => !vacio(x)); }
-  const idsDe = p => PASOS.filter(s => s.p === p).flatMap(s => s.ids);
+  const idsDe = p => aplanar(PASOS.filter(s => s.p === p).map(s => s.ids));
   const contar = ids => ids.filter(respondida).length;
 
   /* ---------- Utilidades de DOM ---------- */
@@ -450,8 +471,9 @@
 
     tarjeta.append(el('div', {class:'q-cab'}, el('span', {class:'num', text:q.id + '.'}), el('h3', {text:q.titulo}), q.prio ? el('span', {class:'pildora', text:'Primero'}) : null));
     if(q.texto) tarjeta.append(el('p', {class:'texto', text:q.texto}));
-    const propuesta = (q.opciones || []).find(o => o.prop) || (q.subs || []).flatMap(s => s.op || []).find(o => o.prop);
+    const propuesta = (q.opciones || []).find(o => o.prop) || aplanar((q.subs || []).map(s => s.op || [])).find(o => o.prop);
     if(q.sinSaber) tarjeta.append(el('p', {class:'propuesta'}, el('b', {text:'Si no lo sabes: '}), q.sinSaber));
+    if(q.consecuencia) tarjeta.append(el('p', {class:'propuesta'}, el('b', {text:'Ojo: '}), q.consecuencia));
 
     const alCambiar = () => { if(r.skip && (!vacio(r.v) || Object.values(r.s).some(x => !vacio(x)))) r.skip = false; sinSaberBtn.setAttribute('aria-pressed', String(r.skip)); marcar(); };
 
@@ -602,7 +624,7 @@
         const q = Q[id], t = textoRespuesta(q);
         const paso1 = PASOS.findIndex(s => s.ids.includes(id)) + 1;
         cont.append(el('div', {class:'fila'}, el('span', {class:'num', text:id + '.'}),
-          el('div', {}, el('b', {text:q.titulo}), el('button', {type:'button', class:'enlace editar', onclick: () => { ir(paso1); setTimeout(() => document.getElementById('q-' + id)?.scrollIntoView({block:'center'}), 60); }}, t ? 'Cambiar' : 'Contestar'),
+          el('div', {}, el('b', {text:q.titulo}), el('button', {type:'button', class:'enlace editar', onclick: () => { ir(paso1); setTimeout(() => { const n = document.getElementById('q-' + id); if(n) n.scrollIntoView({block:'center'}); }, 60); }}, t ? 'Cambiar' : 'Contestar'),
             el('div', {class:'r' + (t ? '' : ' vacia'), text:t || 'Sin contestar'}))));
       }
     }
@@ -640,6 +662,7 @@
 
   /* ---------- Arranque ---------- */
   document.getElementById('btnSig').addEventListener('click', () => ir(paso + 1));
+  document.getElementById('btnEmpezar').addEventListener('click', () => ir(1));
   document.getElementById('btnAtras').addEventListener('click', () => ir(paso - 1));
   document.getElementById('btnWa').addEventListener('click', enviarWhatsApp);
   document.getElementById('btnCopiar').addEventListener('click', async () => aviso(await copiar(mensaje(true)) ? 'Respuestas copiadas' : 'No se pudo copiar: usa Descargar'));
