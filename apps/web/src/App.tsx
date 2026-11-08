@@ -19,6 +19,7 @@ import type {
 } from '@zammir/core';
 
 import { Bitacora, type BitacoraProps } from './modules/audit/ui/Bitacora';
+import { ExportarDatos, type ExportarDatosProps } from './modules/export/ui/ExportarDatos';
 import { CatalogoDelAdministrador } from './modules/catalog/ui/Catalogo';
 import { Clientes } from './modules/customers/ui/Clientes';
 import { ResumenDelInicioEnLaTablet } from './modules/reports/ui/ResumenDelInicioEnLaTablet';
@@ -65,6 +66,8 @@ export interface AppProps {
   readonly legal?: LegalDeps | null;
   /** Facturas del administrador: lo facturable y emitir desde la aplicación [S4-16]. */
   readonly facturas?: AdminInvoices | null;
+  /** Exportar los datos del negocio (en Configuración); `null` si no hay servidor configurado [S5-08]. */
+  readonly exportacion?: Pick<ExportarDatosProps, 'source' | 'renderPdf'> | null;
   /** Para enviar por WhatsApp la factura emitida. */
   readonly compartirFacturas?: ShareService | null;
   /** Portal público de autofacturación (`/factura` y `/f/:folio/:codigo`, la dirección del QR) [S4-18]. */
@@ -120,6 +123,7 @@ export function App({
   contactoPublico = null,
   portal = null,
   facturas = null,
+  exportacion = null,
   compartirFacturas = null,
   condiciones = null,
   bitacora = null,
@@ -198,6 +202,7 @@ export function App({
                       {condiciones !== null ? (
                         <CondicionesDeCotizacion store={condiciones} />
                       ) : null}
+                      {exportacion !== null ? <ExportarDatos {...exportacion} /> : null}
                     </section>
                   ) : seccion.id === 'usuarios' &&
                     (dispositivos !== null || usuarios !== null || bitacora !== null) ? (

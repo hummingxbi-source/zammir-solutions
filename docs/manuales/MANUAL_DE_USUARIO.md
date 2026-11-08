@@ -221,6 +221,18 @@ Aquí se edita el **aviso de privacidad** (cada cambio crea una versión nueva y
 
 ![Configuración](capturas/24-configuracion.png)
 
+### Exportar los datos
+
+Al final de **Configuración** está **Exportar los datos**. Sirve para llevarte **toda la información del negocio** (clientes, productos, cotizaciones, órdenes, ventas, pagos, facturas y bitácora) en archivos que abre cualquier programa.
+
+1. Toca **Preparar la exportación** y espera a que diga *Listo*.
+2. Elige qué descargar: **Descargar todo (ZIP)**, **Descargar JSON**, **Descargar CSV (ZIP)** (una tabla por archivo, para Excel) o **Descargar PDF** (un resumen para leer e imprimir).
+3. Abre el archivo `LEEME.txt` que viene dentro: explica cómo leer los importes (están en centavos) y las fechas.
+
+![Exportar los datos](capturas/24b-exportar-datos.png)
+
+> **Cuidado:** estos archivos traen **información personal de tus clientes**. Guárdalos en un lugar seguro y no los compartas. **No incluyen los PIN** ni las cuentas de las tablets. Cada exportación queda anotada en la bitácora, con quién la hizo.
+
 ---
 
 ## 9. Facturas (administradores)

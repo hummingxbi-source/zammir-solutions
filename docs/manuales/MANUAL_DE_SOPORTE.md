@@ -100,6 +100,7 @@ Los errores del navegador y de las funciones de servidor se guardan **sin datos 
 ## 7. Respaldo y restauración
 
 - **Meta** [RNF-21]: respaldos diarios con **al menos 30 días** de historial. Si el plan de Supabase retiene menos, se programa una exportación nocturna a otro almacenamiento **(pendiente: retención real del plan y destino, PD-32, S4-27)**.
+- **Exportación del negocio (S5-08):** además del respaldo, un administrador puede llevarse todos los datos en CSV, JSON y PDF desde **Configuración** → **Exportar los datos**. No sustituye al respaldo (no trae los PIN ni las cuentas de acceso, y el PDF de cada factura se vuelve a generar), pero es una copia legible por cualquier programa. Los archivos traen datos personales: se guardan en un lugar seguro.
 - **Qué se respalda:** toda la base (clientes, cotizaciones, órdenes, ventas, pagos, facturas y bitácora). Los archivos de factura (XML y PDF) viven en la propia base.
 - **Restauración (se ensaya y se completa en S5-06, recorrido E9).** Procedimiento propuesto:
   1. Crea un proyecto de Supabase **limpio** (nunca restaures encima de producción).
@@ -117,7 +118,7 @@ Cualquier persona puede pedir **ver, corregir o cancelar** el uso de sus datos [
 2. **Comprueba quién es**: debe poder demostrar que es el cliente (por ejemplo, desde el WhatsApp registrado en su ficha).
 3. **Ubícalo** en **Clientes** (búsqueda por nombre o WhatsApp) y revisa su ficha.
 4. **Corregir:** edita la ficha. La bitácora conserva el cambio.
-5. **Ver / copia de sus datos:** hoy se arma a mano con la ficha y sus documentos. La **exportación automática** (CSV, JSON y PDF) es la historia S5-08 **(pendiente)**.
+5. **Ver / copia de sus datos:** la copia de **un solo cliente** hoy se arma a mano con su ficha y sus documentos **(pendiente: PP-34)**. Lo que sí existe es la **exportación completa del negocio** (**Configuración** → **Exportar los datos**, solo administradores): CSV, JSON y PDF, sin PIN ni cuentas de tablets, y cada exportación queda en la bitácora. Si la persona pide *todos* sus datos y no hay forma de separarlos, no entregues la exportación completa: trae datos de todos los clientes.
 6. **Cancelar el uso:** lo contable **no se borra** (ventas, órdenes, pagos y facturas solo se cancelan con motivo y rastro, RN-18). Qué datos personales se pueden quitar de un documento contable es una pregunta para el **asesor de ZAMMIR (pendiente)**; no improvises.
 7. **Responde** por el mismo canal y guarda la fecha de respuesta.
 
@@ -137,6 +138,7 @@ El aviso de privacidad vigente se edita en **Configuración** (cada edición cre
 | Una factura está *En proceso* | El proveedor de timbrado no contestó | **Reintentar** en **Emitidas**; nunca se duplica |
 | *"Esta cuenta no es de administrador"* | Falta el rol en la cuenta | Ver §4, *Un administrador nuevo* |
 | El portal rechaza un folio | Ya facturado, fuera de plazo (fin de mes) o código incorrecto | Un administrador puede facturar desde **Facturas** aun fuera de plazo |
+| La exportación dice *"No se pudieron preparar los datos"* | La base tardó más de 60 segundos o no contestó (con muchos años de datos puede pasar) | Intentar de nuevo; si sigue, avisar: hay que partirla por tablas (PP-34) |
 | Sale *"Esta pantalla tuvo un problema"* | Error inesperado de una pantalla | Tocar **Volver a abrir**; lo guardado en la tablet no se pierde; avisar a Juanito con la hora |
 
 ## 10. Soporte a ZAMMIR
@@ -153,5 +155,5 @@ El aviso de privacidad vigente se edita en **Configuración** (cada edición cre
 | Reintentos y purga programados | Mantenimiento programado (S4-26) |
 | Proveedor de timbrado y certificado | PD-04, PD-05, S4-15 |
 | Retención de respaldos y ensayo de restauración | PD-32, S4-27, S5-06 |
-| Exportación de datos de un cliente | S5-08 |
+| Copia de los datos de un solo cliente, y partir la exportación completa si crece demasiado | PP-34 |
 | Criterio para cancelar datos personales | Asesor de ZAMMIR |
