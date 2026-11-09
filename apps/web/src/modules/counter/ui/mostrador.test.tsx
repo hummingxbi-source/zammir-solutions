@@ -334,6 +334,53 @@ describe('Mostrador', () => {
     expect(porEnviar).toHaveBeenCalled();
   });
 
+  it('la franja de ventas de hoy cuenta lo vendido y, al cancelar, lo saca del total', async () => {
+    await montar({ actor: admin });
+    await agregarChapa();
+    fireEvent.click(screen.getByRole('button', { name: 'Cobrar' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Registrar cobro' }));
+    await screen.findByText(/Venta registrada/, { selector: 'strong' });
+    const franja = within(
+      await screen.findByRole('region', { name: 'Resumen de las ventas de hoy' }),
+    );
+    expect(
+      within(franja.getByRole('group', { name: 'Vendido hoy' })).getByText('$116.00'),
+    ).toBeTruthy();
+    expect(within(franja.getByRole('group', { name: 'Tickets' })).getByText('1')).toBeTruthy();
+    const sinCancelar = within(franja.getByRole('group', { name: 'Canceladas' }));
+    expect(sinCancelar.getByText('0')).toBeTruthy();
+    expect(sinCancelar.getByText('Ninguna')).toBeTruthy();
+    // La cancelación es una acción destructiva por renglón: contorno rojo, no un botón lleno.
+    const cancelar = screen.getByRole('button', { name: 'Cancelar venta' });
+    expect(cancelar).toHaveClass('boton--peligro-suave');
+    fireEvent.click(cancelar);
+    const dialogo = await screen.findByRole('dialog');
+    fireEvent.change(within(dialogo).getByLabelText('Motivo'), { target: { value: 'Equivocada' } });
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Continuar' }));
+    await waitFor(() => {
+      expect(screen.getByText('Cancelada')).toBeTruthy();
+    });
+    const despues = within(screen.getByRole('region', { name: 'Resumen de las ventas de hoy' }));
+    expect(
+      within(despues.getByRole('group', { name: 'Vendido hoy' })).getByText('$0.00'),
+    ).toBeTruthy();
+    expect(within(despues.getByRole('group', { name: 'Tickets' })).getByText('0')).toBeTruthy();
+    const canceladas = within(despues.getByRole('group', { name: 'Canceladas' }));
+    expect(canceladas.getByText('1')).toBeTruthy();
+    expect(canceladas.getByText('No suman al total')).toBeTruthy();
+  });
+
+  it('la venta va antes que el historial de turnos, para que lo importante quede arriba', async () => {
+    await montar({ actor: admin });
+    const venta = await screen.findByRole('region', { name: 'Venta rápida' });
+    const turnos = screen.getByRole('region', { name: 'Turnos' });
+    const hoy = screen.getByRole('region', { name: 'Ventas de hoy' });
+    const antes = (a: HTMLElement, b: HTMLElement): boolean =>
+      (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+    expect(antes(venta, hoy)).toBe(true);
+    expect(antes(hoy, turnos)).toBe(true);
+  });
+
   it('un cobro mixto suma efectivo y transferencia', async () => {
     const { deps } = await montar();
     await agregarChapa();

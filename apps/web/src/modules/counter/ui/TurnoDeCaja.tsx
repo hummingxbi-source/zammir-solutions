@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { ReactElement, SyntheticEvent } from 'react';
+import type { ReactElement, ReactNode, SyntheticEvent } from 'react';
 import {
   closeCashShift,
   dayReport,
@@ -26,6 +26,7 @@ import { EtiquetaDeEstado } from '../../../shared/ui/EtiquetaDeEstado';
 import { formatearPesos } from '../../../shared/ui/formatos';
 import { Icono } from '../../../shared/ui/Icono';
 import { Indicador } from '../../../shared/ui/Indicador';
+import { PanelDeIndicadores } from '../../../shared/ui/PanelDeIndicadores';
 import { Tarjeta } from '../../../shared/ui/Tarjeta';
 import { DialogoDeAutorizacion } from '../../orders/ui/DialogoDeAutorizacion';
 import type { AutorizacionDeAdministrador } from '../../quotes/ui/DialogoDeDescuento';
@@ -49,6 +50,8 @@ export interface TurnoDeCajaProps {
   readonly onCambio?: () => void;
   /** Imprime el resumen del corte en el ticket térmico (S3-20 en adelante). */
   readonly onImprimir?: (turno: CashShift, resumen: CashShiftSummary) => Promise<string | null>;
+  /** Lo que va entre el turno y su historial (el mostrador pone aquí la venta): así lo importante queda arriba. */
+  readonly children?: ReactNode;
 }
 
 function horaDeMexico(iso: string): string {
@@ -200,7 +203,19 @@ export function TurnoDeCaja(props: TurnoDeCajaProps): ReactElement {
           turno === null ? (
             <EtiquetaDeEstado tono="neutro" texto={t.turnos.cerrado} />
           ) : (
-            <EtiquetaDeEstado tono="listo" texto={t.turnos.abierto} />
+            <span className="turno__cabecera">
+              <EtiquetaDeEstado tono="listo" texto={t.turnos.abierto} />
+              {cerrando ? null : (
+                <Boton
+                  variante="secundario"
+                  onClick={() => {
+                    void empezarCierre();
+                  }}
+                >
+                  {t.turno.cerrar}
+                </Boton>
+              )}
+            </span>
           )
         }
       >
@@ -237,18 +252,28 @@ export function TurnoDeCaja(props: TurnoDeCajaProps): ReactElement {
               {formatearPesos(turno.openingFloatCents)}
             </p>
             {resumen !== null ? (
-              <div className="indicadores">
-                <Indicador rotulo={t.turno.cobrado} valor={formatearPesos(resumen.cashCents)} />
-                <Indicador
-                  rotulo={t.turno.cobradoBanco}
-                  valor={formatearPesos(resumen.transferCents)}
-                />
-                <Indicador
-                  rotulo={t.turno.esperado}
-                  valor={formatearPesos(resumen.expectedCashCents)}
-                  tono="exito"
-                />
-              </div>
+              <PanelDeIndicadores
+                compacto
+                descripcion={t.turno.titulo}
+                items={[
+                  {
+                    clave: 'efectivo',
+                    rotulo: t.turno.cobrado,
+                    valor: formatearPesos(resumen.cashCents),
+                  },
+                  {
+                    clave: 'transferencia',
+                    rotulo: t.turno.cobradoBanco,
+                    valor: formatearPesos(resumen.transferCents),
+                  },
+                  {
+                    clave: 'esperado',
+                    rotulo: t.turno.esperado,
+                    valor: formatearPesos(resumen.expectedCashCents),
+                    tono: 'exito',
+                  },
+                ]}
+              />
             ) : null}
             {cerrando ? (
               <form
@@ -280,18 +305,7 @@ export function TurnoDeCaja(props: TurnoDeCajaProps): ReactElement {
                   </Boton>
                 </div>
               </form>
-            ) : (
-              <div className="turno__acciones">
-                <Boton
-                  variante="secundario"
-                  onClick={() => {
-                    void empezarCierre();
-                  }}
-                >
-                  {t.turno.cerrar}
-                </Boton>
-              </div>
-            )}
+            ) : null}
           </>
         )}
 
@@ -341,6 +355,8 @@ export function TurnoDeCaja(props: TurnoDeCajaProps): ReactElement {
           </section>
         ) : null}
       </Tarjeta>
+
+      {props.children}
 
       <div className="turno__rejilla">
         <Tarjeta rotulo={t.turnos.titulo}>

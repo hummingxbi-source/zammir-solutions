@@ -278,6 +278,35 @@ describe('PanelDeIndicadores', () => {
     expect(otro.querySelector('.panel-kpi__tendencia')).toBeNull();
   });
 
+  it('la variante compacta cambia solo la clase de la franja', () => {
+    const normal = render(
+      <PanelDeIndicadores descripcion="n" items={[{ clave: 'a', rotulo: 'A', valor: '1' }]} />,
+    );
+    expect(normal.container.querySelector('section')?.className).toBe('panel-kpi');
+    const compacto = render(
+      <PanelDeIndicadores
+        compacto
+        descripcion="c"
+        items={[{ clave: 'a', rotulo: 'A', valor: '1' }]}
+      />,
+    );
+    expect(compacto.container.querySelector('section')?.className).toBe(
+      'panel-kpi panel-kpi--compacto',
+    );
+  });
+
+  it('el rótulo y la cifra quedan juntos, y la ayuda va aparte', () => {
+    const { container } = render(
+      <PanelDeIndicadores
+        descripcion="d"
+        items={[{ clave: 'a', rotulo: 'A', valor: '1', ayuda: <button type="button">?</button> }]}
+      />,
+    );
+    const dt = container.querySelector('dt');
+    expect(dt?.nextElementSibling?.textContent).toBe('1');
+    expect(container.querySelector('.panel-kpi__ayuda button')).not.toBeNull();
+  });
+
   it('la mini-tendencia solo sale si se le dan puntos, y con el tono pedido', () => {
     const { container } = render(
       <PanelDeIndicadores
