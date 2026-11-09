@@ -65,6 +65,7 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). L
 
 ### Cambiado
 - Inicio y Reportes pasan de tarjetas con texto a tableros: franja de cifras clave con la variación contra el periodo anterior, tendencia de 31 días en área con eje de valores, dona de medios de pago y de producción, columnas de cobros por persona y barras de antigüedad de saldos. Las explicaciones largas pasan al icono de ayuda y los atajos a las secciones se pliegan cuando hay cifras. Todo en SVG y CSS, sin librerías, con la leyenda y una tabla equivalente en texto para los lectores de pantalla.
+- Mostrador: la venta queda arriba, el turno de caja se vuelve una franja compacta con su cierre a la mano, el historial de turnos pasa al final, el ticket acompaña al desplazarse y las ventas de hoy traen su franja (vendido, tickets, canceladas); cancelar una venta es un botón de contorno rojo. Cotizador: franja con borradores, esperando respuesta y aceptadas, y el historial se filtra por estado.
 
 ### Agregado
 - Documentación base de la Fase 1: alcance, reglas de negocio, requerimientos, glosario, pendientes, hoja de ruta y guías del repositorio.
