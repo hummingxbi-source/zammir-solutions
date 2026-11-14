@@ -1,0 +1,77 @@
+# Despliega a Supabase la estructura de la base (migraciones) y las funciones de servidor.
+# Se corre a mano desde la pestaña Actions, eligiendo el entorno. Las migraciones solo van hacia adelante:
+# nunca se editan a mano en el panel [docs/arquitectura/ENTORNOS.md §4].
+#
+# Cada entorno ("pruebas" y "produccion") se crea en Settings > Environments del repositorio y guarda sus
+# propios secretos. Producción debe pedir aprobación de una persona antes de correr.
+#   SUPABASE_ACCESS_TOKEN  token personal de la cuenta de Supabase (Account > Access Tokens)
+#   SUPABASE_PROJECT_REF   identificador del proyecto (la parte de su URL antes de ".supabase.co")
+#   SUPABASE_DB_PASSWORD   contraseña de la base que se eligió al crear el proyecto
+name: Desplegar a Supabase
+
+on:
+  workflow_dispatch:
+    inputs:
+      entorno:
+        description: 'Entorno al que se despliega'
+        type: choice
+        options: [pruebas, produccion]
+        default: pruebas
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desplegar-supabase-${{ inputs.entorno }}
+  cancel-in-progress: false
+
+jobs:
+  desplegar:
+    name: Migraciones y funciones (${{ inputs.entorno }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: ${{ inputs.entorno }}
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Instalar dependencias
+        run: pnpm install --frozen-lockfile
+
+      - name: Empaquetar el núcleo para las funciones
+        run: pnpm funciones:empaquetar
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Enlazar con el proyecto de ${{ inputs.entorno }}
+        run: supabase link --project-ref "${{ secrets.SUPABASE_PROJECT_REF }}" --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Aplicar las migraciones (solo hacia adelante)
+        run: supabase db push --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Desplegar las funciones de servidor
+        # Cada función comprueba por sí misma quién la llama (sesión de la tablet o del administrador),
+        # igual que en las pruebas de integración, que las sirven con --no-verify-jwt.
+        run: supabase functions deploy --no-verify-jwt --project-ref "${{ secrets.SUPABASE_PROJECT_REF }}"
+
+      - name: Comprobar que el servicio responde
+        run: |
+          for i in 1 2 3 4 5 6; do
+            codigo=$(curl -s -o /dev/null -w '%{http_code}' "https://${{ secrets.SUPABASE_PROJECT_REF }}.supabase.co/functions/v1/salud" || true)
+            echo "intento $i: salud respondió $codigo"
+            if [ "$codigo" = "200" ]; then exit 0; fi
+            sleep 10
+          done
+          echo "La función salud no respondió 200 a tiempo" >&2
+          exit 1
