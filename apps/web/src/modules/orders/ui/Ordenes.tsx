@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
+import { PedirEntrarConPin } from '../../identity/ui/PedirEntrarConPin';
 import type { ReactElement } from 'react';
-import { Link } from 'react-router';
 import {
   balanceCents,
   convertQuoteToWorkOrder,
@@ -110,14 +110,12 @@ export function Ordenes(props: OrdenesProps): ReactElement {
 
   if (actor === null) {
     return (
-      <section>
-        <h1>{t.titulo}</h1>
+      <section className="anima-entrada">
+        <EncabezadoDePagina titulo={t.titulo} />
         <Aviso tipo="error" queHacer={textos.cotizador.sinPersona}>
           {t.sinPersona}
         </Aviso>
-        <Link to="/entrar" className="acceso">
-          {t.elegirPersona}
-        </Link>
+        <PedirEntrarConPin>{t.elegirPersona}</PedirEntrarConPin>
       </section>
     );
   }

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
+import { PedirEntrarConPin } from '../../identity/ui/PedirEntrarConPin';
 import type { ReactElement } from 'react';
-import { Link } from 'react-router';
 import {
   createQuoteDraft,
   displayStatus,
@@ -98,14 +98,12 @@ export function Cotizador(props: CotizadorProps): ReactElement {
 
   if (actor === null) {
     return (
-      <section>
-        <h1>{t.titulo}</h1>
+      <section className="anima-entrada">
+        <EncabezadoDePagina titulo={t.titulo} />
         <Aviso tipo="error" queHacer={t.sinPersona}>
           {textos.personas.errores.DEVICE_NOT_READY.mensaje}
         </Aviso>
-        <Link to="/entrar" className="acceso">
-          {t.elegirPersona}
-        </Link>
+        <PedirEntrarConPin>{t.elegirPersona}</PedirEntrarConPin>
       </section>
     );
   }

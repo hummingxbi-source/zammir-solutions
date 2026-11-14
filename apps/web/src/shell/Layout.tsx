@@ -5,6 +5,7 @@ import type { ActiveUserSession } from '@zammir/core';
 
 import { LogoZammir } from '../shared/ui/LogoZammir';
 import { VidriosDecorativos } from '../shared/ui/VidriosDecorativos';
+import { ContextoDeSeccion } from '../shared/ui/ContextoDeSeccion';
 import { textos } from '../shared/i18n/textos';
 import { Icono, iconoDeSeccion } from '../shared/ui/Icono';
 import { IndicadorDeConexion, type SincronizacionVisible } from './IndicadorDeConexion';
@@ -111,6 +112,7 @@ export function Layout({
   }, [session]);
   const nombre = useSyncExternalStore(suscribir, leerNombre);
 
+  const seccionActual = SECCIONES.find((seccion) => pathname.startsWith(seccion.ruta));
   const principales = seccionesVisibles('principal', interruptores);
   const secundarias = seccionesVisibles('secundaria', interruptores);
 
@@ -197,7 +199,11 @@ export function Layout({
           <CuentaAdmin />
         </header>
 
-        <main className="marco__contenido">{children}</main>
+        <main className="marco__contenido">
+          <ContextoDeSeccion.Provider value={seccionActual?.id ?? null}>
+            {children}
+          </ContextoDeSeccion.Provider>
+        </main>
         <BotonPorDondeEmpiezo interruptores={interruptores} visitadas={visitadas} />
       </div>
     </div>

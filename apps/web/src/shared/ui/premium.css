@@ -568,3 +568,74 @@
     animation-delay: 240ms;
   }
 }
+
+/* ---------- Encabezado de sección con su ilustración de vidrio ---------- */
+.pagina-encabezado--ilustrado {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 1rem;
+  min-block-size: 9.5rem;
+  margin-block-end: 1.5rem;
+  padding: 1.5rem clamp(1.25rem, 3vw, 2rem);
+  overflow: hidden;
+  border: 1px solid rgb(15 92 87 / 12%);
+  border-radius: 22px;
+  background:
+    radial-gradient(22rem 14rem at 96% 0%, rgb(95 179 166 / 30%), transparent 70%),
+    linear-gradient(135deg, #f3f9f7 0%, #dcebe7 100%);
+  box-shadow: var(--sombra-vidrio);
+}
+
+.pagina-encabezado--ilustrado::after {
+  display: none;
+}
+
+.pagina-encabezado__ilustracion {
+  position: absolute;
+  z-index: -1;
+  inset-block: 0.5rem;
+  inset-inline-end: clamp(0.5rem, 3vw, 2.5rem);
+  block-size: calc(100% - 1rem);
+  inline-size: auto;
+  max-inline-size: 42%;
+  pointer-events: none;
+}
+
+.pagina-encabezado--ilustrado .pagina-encabezado__texto {
+  max-inline-size: min(36rem, 62%);
+}
+
+.pagina-encabezado--ilustrado .pagina-encabezado__acciones {
+  position: relative;
+}
+
+@media (max-width: 40rem) {
+  .pagina-encabezado__ilustracion {
+    max-inline-size: 55%;
+    opacity: 0.45;
+  }
+
+  .pagina-encabezado--ilustrado .pagina-encabezado__texto {
+    max-inline-size: 100%;
+  }
+}
+
+/* Pantallas que piden entrar con el PIN: el botón principal, con aire arriba */
+.acceso-acciones--sola {
+  margin-block-start: 1.25rem;
+}
+
+/* La barra lateral: sitio para el nombre completo aun con el número y la palomita */
+@media (min-width: 64rem) {
+  .marco {
+    grid-template-columns: 19.5rem minmax(0, 1fr);
+  }
+
+  .barra .nav__enlace {
+    gap: 0.625rem;
+  }
+}

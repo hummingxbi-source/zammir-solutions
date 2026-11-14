@@ -18,6 +18,8 @@ import type {
   PortalSolicitud,
 } from '@zammir/core';
 
+import { textos } from './shared/i18n/textos';
+import { EncabezadoDePagina } from './shared/ui/EncabezadoDePagina';
 import { Bitacora, type BitacoraProps } from './modules/audit/ui/Bitacora';
 import { ExportarDatos, type ExportarDatosProps } from './modules/export/ui/ExportarDatos';
 import { CatalogoDelAdministrador } from './modules/catalog/ui/Catalogo';
@@ -206,8 +208,11 @@ export function App({
               ) : seccion.soloAdministrador === true ? (
                 <ProtegidaAdmin>
                   {seccion.id === 'configuracion' && legal !== null ? (
-                    <section>
-                      <h1>{seccion.texto}</h1>
+                    <section className="anima-entrada">
+                      <EncabezadoDePagina
+                        titulo={seccion.texto}
+                        descripcion={textos.inicio.descripciones[seccion.id]}
+                      />
                       <AvisoDePrivacidad deps={legal} />
                       <TerminosDelServicio deps={legal} />
                       {condiciones !== null ? (
@@ -217,8 +222,11 @@ export function App({
                     </section>
                   ) : seccion.id === 'usuarios' &&
                     (dispositivos !== null || usuarios !== null || bitacora !== null) ? (
-                    <section>
-                      <h1>{seccion.texto}</h1>
+                    <section className="anima-entrada">
+                      <EncabezadoDePagina
+                        titulo={seccion.texto}
+                        descripcion={textos.inicio.descripciones[seccion.id]}
+                      />
                       {usuarios !== null ? <Usuarios {...usuarios} /> : null}
                       {bitacora !== null ? <Bitacora {...bitacora} /> : null}
                       {dispositivos !== null ? (

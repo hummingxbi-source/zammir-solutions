@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { PedirEntrarConPin } from '../../identity/ui/PedirEntrarConPin';
 import type { ReactElement, SyntheticEvent } from 'react';
-import { Link } from 'react-router';
 import {
   addToTicket,
   balanceCents,
@@ -153,14 +153,12 @@ export function Mostrador(props: MostradorProps): ReactElement {
 
   if (actor === null) {
     return (
-      <section>
-        <h1>{t.titulo}</h1>
+      <section className="anima-entrada">
+        <EncabezadoDePagina titulo={t.titulo} />
         <Aviso tipo="error" queHacer={textos.cotizador.sinPersona}>
           {t.sinPersona}
         </Aviso>
-        <Link to="/entrar" className="acceso">
-          {t.elegirPersona}
-        </Link>
+        <PedirEntrarConPin>{t.elegirPersona}</PedirEntrarConPin>
       </section>
     );
   }

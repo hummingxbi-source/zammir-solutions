@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
+import { PedirEntrarConPin } from '../../identity/ui/PedirEntrarConPin';
 import type { ReactElement } from 'react';
-import { Link } from 'react-router';
 import {
   buildReceivables,
   defaultPermissionPolicy,
@@ -83,14 +83,12 @@ export function CuentasPorCobrar(props: CuentasPorCobrarProps): ReactElement {
 
   if (actor === null) {
     return (
-      <section>
-        <h1>{t.titulo}</h1>
+      <section className="anima-entrada">
+        <EncabezadoDePagina titulo={t.titulo} />
         <Aviso tipo="error" queHacer={textos.cotizador.sinPersona}>
           {textos.mostrador.sinPersona}
         </Aviso>
-        <Link to="/entrar" className="acceso">
-          {textos.mostrador.elegirPersona}
-        </Link>
+        <PedirEntrarConPin>{textos.mostrador.elegirPersona}</PedirEntrarConPin>
       </section>
     );
   }
