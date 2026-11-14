@@ -17,6 +17,8 @@ describe('Boton', () => {
   it.each([
     ['secundario', 'boton--secundario'],
     ['peligro', 'boton--peligro'],
+    ['peligro-suave', 'boton--secundario'],
+    ['peligro-suave', 'boton--peligro-suave'],
   ] as const)('la variante %s agrega %s', (variante, clase) => {
     render(<Boton variante={variante}>Acción</Boton>);
     expect(screen.getByRole('button')).toHaveClass(clase);

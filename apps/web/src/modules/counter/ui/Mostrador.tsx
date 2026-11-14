@@ -43,6 +43,7 @@ import { EncabezadoDePagina } from '../../../shared/ui/EncabezadoDePagina';
 import { EstadoVacio } from '../../../shared/ui/EstadoVacio';
 import { EtiquetaDeEstado } from '../../../shared/ui/EtiquetaDeEstado';
 import { Icono } from '../../../shared/ui/Icono';
+import { PanelDeIndicadores } from '../../../shared/ui/PanelDeIndicadores';
 import { Tarjeta } from '../../../shared/ui/Tarjeta';
 import { CampoNumerico } from '../../../shared/ui/Campo';
 import { Campo } from '../../../shared/ui/Campo';
@@ -369,6 +370,9 @@ export function Mostrador(props: MostradorProps): ReactElement {
       o.totalCents,
       pagos.filter((p) => p.targetId === o.id),
     );
+  const completadasHoy = ventasDeHoy.filter((v) => v.status === 'COMPLETED');
+  const canceladasHoy = ventasDeHoy.filter((v) => v.status !== 'COMPLETED');
+  const vendidoHoy = completadasHoy.reduce((suma, v) => suma + v.totalCents, 0);
   const conSaldo = ordenes.filter((o) => o.status !== 'CANCELLED' && saldoDe(o) > 0);
 
   return (
@@ -413,319 +417,347 @@ export function Mostrador(props: MostradorProps): ReactElement {
         version={version}
         {...(props.impresion === undefined ? {} : { onImprimir: imprimirCorte })}
         {...(props.onPorEnviar === undefined ? {} : { onPorEnviar: props.onPorEnviar })}
-      />
+      >
+        <div className="mostrador__rejilla">
+          <div className="mostrador__venta">
+            <Tarjeta rotulo={t.venta.titulo}>
+              {elegido === null ? (
+                <>
+                  <Campo
+                    etiqueta={t.venta.buscar}
+                    value={busqueda}
+                    onChange={(e) => {
+                      setBusqueda(e.target.value);
+                    }}
+                  />
+                  {productos !== null && productos.length === 0 ? (
+                    <Aviso tipo="error">{t.venta.catalogoVacio}</Aviso>
+                  ) : null}
+                  {busqueda !== '' && encontrados.length === 0 ? (
+                    <p>{t.venta.sinResultados}</p>
+                  ) : null}
+                  <ul className="productos">
+                    {encontrados.map((p) => (
+                      <li key={p.id}>
+                        <button
+                          type="button"
+                          className="producto"
+                          onClick={() => {
+                            elegirProducto(p);
+                          }}
+                        >
+                          <span className="producto__nombre">{p.name}</span>
+                          <span className="producto__precio">{cobra(p.listPrice)}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : (
+                <form className="formulario" onSubmit={agregar}>
+                  <p className="mostrador__elegido">
+                    <strong>{elegido.name}</strong> · {cobra(elegido.listPrice)}
+                  </p>
+                  {medidas ? (
+                    <>
+                      <div className="campo">
+                        <label className="campo__etiqueta" htmlFor="unidad-mostrador">
+                          {t.venta.unidad}
+                        </label>
+                        <select
+                          id="unidad-mostrador"
+                          className="campo__entrada"
+                          value={unidad}
+                          onChange={(e) => {
+                            setUnidad(e.target.value === 'm' ? 'm' : 'cm');
+                          }}
+                        >
+                          <option value="cm">{t.venta.cm}</option>
+                          <option value="m">{t.venta.m}</option>
+                        </select>
+                      </div>
+                      <div className="formulario__par">
+                        <CampoNumerico
+                          etiqueta={`${t.venta.ancho} (${unidad})`}
+                          value={ancho}
+                          onChange={(e) => {
+                            setAncho(e.target.value);
+                          }}
+                        />
+                        <CampoNumerico
+                          etiqueta={`${t.venta.alto} (${unidad})`}
+                          value={alto}
+                          onChange={(e) => {
+                            setAlto(e.target.value);
+                          }}
+                        />
+                      </div>
+                    </>
+                  ) : null}
+                  <CampoNumerico
+                    etiqueta={t.venta.cantidad}
+                    entero
+                    value={cantidad}
+                    onChange={(e) => {
+                      setCantidad(e.target.value);
+                    }}
+                  />
+                  <div className="formulario__acciones">
+                    <Boton type="submit">{t.venta.agregar}</Boton>
+                    <Boton
+                      variante="secundario"
+                      onClick={() => {
+                        setElegido(null);
+                      }}
+                    >
+                      {t.venta.cancelar}
+                    </Boton>
+                  </div>
+                </form>
+              )}
+            </Tarjeta>
 
-      <div className="mostrador__rejilla">
-        <div className="mostrador__venta">
-          <Tarjeta rotulo={t.venta.titulo}>
-            {elegido === null ? (
-              <>
-                <Campo
-                  etiqueta={t.venta.buscar}
-                  value={busqueda}
-                  onChange={(e) => {
-                    setBusqueda(e.target.value);
-                  }}
-                />
-                {productos !== null && productos.length === 0 ? (
-                  <Aviso tipo="error">{t.venta.catalogoVacio}</Aviso>
-                ) : null}
-                {busqueda !== '' && encontrados.length === 0 ? (
-                  <p>{t.venta.sinResultados}</p>
-                ) : null}
-                <ul className="productos">
-                  {encontrados.map((p) => (
-                    <li key={p.id}>
+            <Tarjeta rotulo={t.saldos.titulo}>
+              {conSaldo.length === 0 ? (
+                <p className="mostrador__vacio">{t.saldos.vacio}</p>
+              ) : (
+                <ul className="productos productos--filas">
+                  {conSaldo.map((o) => (
+                    <li key={o.id}>
                       <button
                         type="button"
-                        className="producto"
+                        className="producto producto--fila"
                         onClick={() => {
-                          elegirProducto(p);
+                          setError(null);
+                          setAviso(null);
+                          setDialogo({ tipo: 'cobrar-saldo', orden: o });
                         }}
                       >
-                        <span className="producto__nombre">{p.name}</span>
-                        <span className="producto__precio">{cobra(p.listPrice)}</span>
+                        <span className="producto__nombre">
+                          {t.saldos.cobrar} · {o.folio ?? o.tempFolio} ·{' '}
+                          {clientes.get(o.customerId)?.name ?? '—'}
+                        </span>
+                        <span className="producto__precio">{formatearPesos(saldoDe(o))}</span>
                       </button>
                     </li>
                   ))}
                 </ul>
-              </>
-            ) : (
-              <form className="formulario" onSubmit={agregar}>
-                <p className="mostrador__elegido">
-                  <strong>{elegido.name}</strong> · {cobra(elegido.listPrice)}
-                </p>
-                {medidas ? (
-                  <>
-                    <div className="campo">
-                      <label className="campo__etiqueta" htmlFor="unidad-mostrador">
-                        {t.venta.unidad}
-                      </label>
-                      <select
-                        id="unidad-mostrador"
-                        className="campo__entrada"
-                        value={unidad}
-                        onChange={(e) => {
-                          setUnidad(e.target.value === 'm' ? 'm' : 'cm');
+              )}
+            </Tarjeta>
+          </div>
+
+          <div className="mostrador__lateral">
+            <Tarjeta rotulo={t.ticket.titulo}>
+              {ticket.lines.length === 0 ? (
+                <p className="mostrador__vacio">{t.ticket.vacio}</p>
+              ) : (
+                <>
+                  <ul className="ticket">
+                    {ticket.lines.map((l) => (
+                      <li key={l.id} className="ticket__linea">
+                        <div className="ticket__datos">
+                          <strong className="ticket__nombre">{l.name}</strong>
+                          <span className="ticket__detalle">{l.detail}</span>
+                        </div>
+                        <span className="ticket__importe">{cobra(l.lineTotalCents)}</span>
+                        <div className="ticket__acciones">
+                          <Boton
+                            variante="secundario"
+                            aria-label={`${t.ticket.menos}: ${l.name}`}
+                            disabled={l.quantity <= 1}
+                            onClick={() => {
+                              cambiarCantidad(l.id, l.quantity - 1);
+                            }}
+                          >
+                            −
+                          </Boton>
+                          <span
+                            className="ticket__cantidad"
+                            aria-label={`${t.venta.cantidad}: ${l.name}`}
+                          >
+                            {String(l.quantity)}
+                          </span>
+                          <Boton
+                            variante="secundario"
+                            aria-label={`${t.ticket.mas}: ${l.name}`}
+                            onClick={() => {
+                              cambiarCantidad(l.id, l.quantity + 1);
+                            }}
+                          >
+                            +
+                          </Boton>
+                          <Boton
+                            variante="secundario"
+                            onClick={() => {
+                              setTicket(removeFromTicket(ticket, l.id));
+                            }}
+                          >
+                            {t.ticket.quitar}
+                          </Boton>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                  <dl className="ticket__totales">
+                    <dt>{t.ticket.subtotal}</dt>
+                    <dd>{cobra(totales.subtotalCents)}</dd>
+                    <dt>{t.ticket.iva}</dt>
+                    <dd>{cobra(totales.taxCents)}</dd>
+                    <dt className="ticket__total-rotulo">{t.ticket.total}</dt>
+                    <dd className="cifra ticket__total">{cobra(totales.totalCents)}</dd>
+                  </dl>
+                  {dialogo === null ? (
+                    <div className="ticket__cobrar">
+                      <Boton
+                        onClick={() => {
+                          setError(null);
+                          setDialogo({ tipo: 'cobrar-ticket' });
                         }}
                       >
-                        <option value="cm">{t.venta.cm}</option>
-                        <option value="m">{t.venta.m}</option>
-                      </select>
-                    </div>
-                    <div className="formulario__par">
-                      <CampoNumerico
-                        etiqueta={`${t.venta.ancho} (${unidad})`}
-                        value={ancho}
-                        onChange={(e) => {
-                          setAncho(e.target.value);
-                        }}
-                      />
-                      <CampoNumerico
-                        etiqueta={`${t.venta.alto} (${unidad})`}
-                        value={alto}
-                        onChange={(e) => {
-                          setAlto(e.target.value);
-                        }}
-                      />
-                    </div>
-                  </>
-                ) : null}
-                <CampoNumerico
-                  etiqueta={t.venta.cantidad}
-                  entero
-                  value={cantidad}
-                  onChange={(e) => {
-                    setCantidad(e.target.value);
-                  }}
-                />
-                <div className="formulario__acciones">
-                  <Boton type="submit">{t.venta.agregar}</Boton>
-                  <Boton
-                    variante="secundario"
-                    onClick={() => {
-                      setElegido(null);
-                    }}
-                  >
-                    {t.venta.cancelar}
-                  </Boton>
-                </div>
-              </form>
-            )}
-          </Tarjeta>
-
-          <Tarjeta rotulo={t.saldos.titulo}>
-            {conSaldo.length === 0 ? (
-              <p className="mostrador__vacio">{t.saldos.vacio}</p>
-            ) : (
-              <ul className="productos productos--filas">
-                {conSaldo.map((o) => (
-                  <li key={o.id}>
-                    <button
-                      type="button"
-                      className="producto producto--fila"
-                      onClick={() => {
-                        setError(null);
-                        setAviso(null);
-                        setDialogo({ tipo: 'cobrar-saldo', orden: o });
-                      }}
-                    >
-                      <span className="producto__nombre">
-                        {t.saldos.cobrar} · {o.folio ?? o.tempFolio} ·{' '}
-                        {clientes.get(o.customerId)?.name ?? '—'}
-                      </span>
-                      <span className="producto__precio">{formatearPesos(saldoDe(o))}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Tarjeta>
-        </div>
-
-        <div className="mostrador__lateral">
-          <Tarjeta rotulo={t.ticket.titulo}>
-            {ticket.lines.length === 0 ? (
-              <p className="mostrador__vacio">{t.ticket.vacio}</p>
-            ) : (
-              <>
-                <ul className="ticket">
-                  {ticket.lines.map((l) => (
-                    <li key={l.id} className="ticket__linea">
-                      <div className="ticket__datos">
-                        <strong className="ticket__nombre">{l.name}</strong>
-                        <span className="ticket__detalle">{l.detail}</span>
-                      </div>
-                      <span className="ticket__importe">{cobra(l.lineTotalCents)}</span>
-                      <div className="ticket__acciones">
-                        <Boton
-                          variante="secundario"
-                          aria-label={`${t.ticket.menos}: ${l.name}`}
-                          disabled={l.quantity <= 1}
-                          onClick={() => {
-                            cambiarCantidad(l.id, l.quantity - 1);
-                          }}
-                        >
-                          −
-                        </Boton>
-                        <span
-                          className="ticket__cantidad"
-                          aria-label={`${t.venta.cantidad}: ${l.name}`}
-                        >
-                          {String(l.quantity)}
-                        </span>
-                        <Boton
-                          variante="secundario"
-                          aria-label={`${t.ticket.mas}: ${l.name}`}
-                          onClick={() => {
-                            cambiarCantidad(l.id, l.quantity + 1);
-                          }}
-                        >
-                          +
-                        </Boton>
-                        <Boton
-                          variante="secundario"
-                          onClick={() => {
-                            setTicket(removeFromTicket(ticket, l.id));
-                          }}
-                        >
-                          {t.ticket.quitar}
-                        </Boton>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-                <dl className="ticket__totales">
-                  <dt>{t.ticket.subtotal}</dt>
-                  <dd>{cobra(totales.subtotalCents)}</dd>
-                  <dt>{t.ticket.iva}</dt>
-                  <dd>{cobra(totales.taxCents)}</dd>
-                  <dt className="ticket__total-rotulo">{t.ticket.total}</dt>
-                  <dd className="cifra ticket__total">{cobra(totales.totalCents)}</dd>
-                </dl>
-                {dialogo === null ? (
-                  <div className="ticket__cobrar">
-                    <Boton
-                      onClick={() => {
-                        setError(null);
-                        setDialogo({ tipo: 'cobrar-ticket' });
-                      }}
-                    >
-                      {t.ticket.cobrar}
-                    </Boton>
-                    <Boton
-                      variante="secundario"
-                      onClick={() => {
-                        setTicket(EMPTY_TICKET);
-                      }}
-                    >
-                      {t.ticket.vaciar}
-                    </Boton>
-                  </div>
-                ) : null}
-              </>
-            )}
-          </Tarjeta>
-
-          {props.impresion !== undefined ? <PanelDeImpresora impresion={props.impresion} /> : null}
-        </div>
-      </div>
-
-      {dialogo?.tipo === 'cobrar-ticket' ? (
-        <DialogoDeCobro
-          saldoCents={totales.totalCents}
-          sugeridoCents={null}
-          onRegistrar={cobrarTicket}
-          onCancelar={() => {
-            setDialogo(null);
-          }}
-        />
-      ) : null}
-      {dialogo?.tipo === 'cobrar-saldo' ? (
-        <DialogoDeCobro
-          saldoCents={saldoDe(dialogo.orden)}
-          sugeridoCents={null}
-          onRegistrar={(filas) => cobrarSaldo(dialogo.orden, filas)}
-          onCancelar={() => {
-            setDialogo(null);
-          }}
-        />
-      ) : null}
-      {dialogo?.tipo === 'cancelar' ? (
-        <DialogoDeAutorizacion
-          titulo={t.hoy.cancelar}
-          explicacion={t.hoy.motivoCancelar}
-          pedirMotivo
-          pedirPin={persona.role !== 'ADMIN'}
-          autorizacion={props.autorizacion}
-          onContinuar={(motivo, permiso) => cancelar(dialogo.venta, motivo, permiso)}
-          onCancelar={() => {
-            setDialogo(null);
-          }}
-        />
-      ) : null}
-
-      <Tarjeta rotulo={t.hoy.titulo}>
-        {ventasDeHoy.length === 0 ? (
-          <EstadoVacio titulo={t.hoy.vacioTitulo} descripcion={t.hoy.vacio} icono="mostrador" />
-        ) : (
-          <table className="tabla tabla--apilada" aria-label={t.hoy.titulo}>
-            <thead>
-              <tr>
-                <th scope="col">{t.hoy.folio}</th>
-                <th scope="col">{t.hoy.hora}</th>
-                <th scope="col" className="tabla__num">
-                  {t.hoy.total}
-                </th>
-                <th scope="col">{t.hoy.estado}</th>
-                <th scope="col">
-                  <span className="solo-lectores">{t.hoy.acciones}</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {ventasDeHoy.map((v) => (
-                <tr key={v.id}>
-                  <th scope="row">{v.folio ?? v.tempFolio}</th>
-                  <td data-label={t.hoy.hora}>{horaDeMexico(v.issuedAt)}</td>
-                  <td data-label={t.hoy.total} className="tabla__num">
-                    {cobra(v.totalCents)}
-                  </td>
-                  <td data-label={t.hoy.estado}>
-                    <EtiquetaDeEstado
-                      tono={v.status === 'COMPLETED' ? 'listo' : 'cancelado'}
-                      texto={v.status === 'COMPLETED' ? t.hoy.completada : t.hoy.cancelada}
-                    />
-                  </td>
-                  <td className="tabla__acciones">
-                    {props.impresion !== undefined ? (
+                        {t.ticket.cobrar}
+                      </Boton>
                       <Boton
                         variante="secundario"
                         onClick={() => {
-                          void imprimirVenta(v, true);
+                          setTicket(EMPTY_TICKET);
                         }}
                       >
-                        {t.hoy.reimprimir}
+                        {t.ticket.vaciar}
                       </Boton>
-                    ) : null}
-                    {v.status === 'COMPLETED' && dialogo === null ? (
-                      <Boton
-                        variante="peligro"
-                        onClick={() => {
-                          setError(null);
-                          setDialogo({ tipo: 'cancelar', venta: v });
-                        }}
-                      >
-                        {t.hoy.cancelar}
-                      </Boton>
-                    ) : null}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </Tarjeta>
+                    </div>
+                  ) : null}
+                </>
+              )}
+            </Tarjeta>
+
+            {props.impresion !== undefined ? (
+              <PanelDeImpresora impresion={props.impresion} />
+            ) : null}
+          </div>
+        </div>
+
+        {dialogo?.tipo === 'cobrar-ticket' ? (
+          <DialogoDeCobro
+            saldoCents={totales.totalCents}
+            sugeridoCents={null}
+            onRegistrar={cobrarTicket}
+            onCancelar={() => {
+              setDialogo(null);
+            }}
+          />
+        ) : null}
+        {dialogo?.tipo === 'cobrar-saldo' ? (
+          <DialogoDeCobro
+            saldoCents={saldoDe(dialogo.orden)}
+            sugeridoCents={null}
+            onRegistrar={(filas) => cobrarSaldo(dialogo.orden, filas)}
+            onCancelar={() => {
+              setDialogo(null);
+            }}
+          />
+        ) : null}
+        {dialogo?.tipo === 'cancelar' ? (
+          <DialogoDeAutorizacion
+            titulo={t.hoy.cancelar}
+            explicacion={t.hoy.motivoCancelar}
+            pedirMotivo
+            pedirPin={persona.role !== 'ADMIN'}
+            autorizacion={props.autorizacion}
+            onContinuar={(motivo, permiso) => cancelar(dialogo.venta, motivo, permiso)}
+            onCancelar={() => {
+              setDialogo(null);
+            }}
+          />
+        ) : null}
+
+        <Tarjeta rotulo={t.hoy.titulo}>
+          {ventasDeHoy.length === 0 ? (
+            <EstadoVacio titulo={t.hoy.vacioTitulo} descripcion={t.hoy.vacio} icono="mostrador" />
+          ) : (
+            <>
+              <PanelDeIndicadores
+                compacto
+                descripcion={t.hoy.resumen}
+                items={[
+                  {
+                    clave: 'vendido',
+                    rotulo: t.hoy.vendido,
+                    valor: cobra(vendidoHoy),
+                    tono: 'exito',
+                  },
+                  {
+                    clave: 'tickets',
+                    rotulo: t.hoy.ticketsRotulo,
+                    valor: String(completadasHoy.length),
+                  },
+                  {
+                    clave: 'canceladas',
+                    rotulo: t.hoy.canceladas,
+                    valor: String(canceladasHoy.length),
+                    tono: canceladasHoy.length === 0 ? 'neutro' : 'peligro',
+                    detalle: canceladasHoy.length === 0 ? t.hoy.ninguna : t.hoy.noSuman,
+                  },
+                ]}
+              />
+              <table className="tabla tabla--apilada" aria-label={t.hoy.titulo}>
+                <thead>
+                  <tr>
+                    <th scope="col">{t.hoy.folio}</th>
+                    <th scope="col">{t.hoy.hora}</th>
+                    <th scope="col" className="tabla__num">
+                      {t.hoy.total}
+                    </th>
+                    <th scope="col">{t.hoy.estado}</th>
+                    <th scope="col">
+                      <span className="solo-lectores">{t.hoy.acciones}</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ventasDeHoy.map((v) => (
+                    <tr key={v.id}>
+                      <th scope="row">{v.folio ?? v.tempFolio}</th>
+                      <td data-label={t.hoy.hora}>{horaDeMexico(v.issuedAt)}</td>
+                      <td data-label={t.hoy.total} className="tabla__num">
+                        {cobra(v.totalCents)}
+                      </td>
+                      <td data-label={t.hoy.estado}>
+                        <EtiquetaDeEstado
+                          tono={v.status === 'COMPLETED' ? 'listo' : 'cancelado'}
+                          texto={v.status === 'COMPLETED' ? t.hoy.completada : t.hoy.cancelada}
+                        />
+                      </td>
+                      <td className="tabla__acciones">
+                        {props.impresion !== undefined ? (
+                          <Boton
+                            variante="secundario"
+                            onClick={() => {
+                              void imprimirVenta(v, true);
+                            }}
+                          >
+                            {t.hoy.reimprimir}
+                          </Boton>
+                        ) : null}
+                        {v.status === 'COMPLETED' && dialogo === null ? (
+                          <Boton
+                            variante="peligro-suave"
+                            onClick={() => {
+                              setError(null);
+                              setDialogo({ tipo: 'cancelar', venta: v });
+                            }}
+                          >
+                            {t.hoy.cancelar}
+                          </Boton>
+                        ) : null}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </>
+          )}
+        </Tarjeta>
+      </TurnoDeCaja>
     </section>
   );
 }

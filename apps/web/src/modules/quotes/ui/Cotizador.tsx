@@ -29,6 +29,8 @@ import { EncabezadoDePagina } from '../../../shared/ui/EncabezadoDePagina';
 import { EstadoVacio } from '../../../shared/ui/EstadoVacio';
 import { EtiquetaDeEstado, type TonoDeEstado } from '../../../shared/ui/EtiquetaDeEstado';
 import { Icono } from '../../../shared/ui/Icono';
+import { PanelDeIndicadores } from '../../../shared/ui/PanelDeIndicadores';
+import { Pestanas } from '../../../shared/ui/Pestanas';
 import { Tarjeta } from '../../../shared/ui/Tarjeta';
 import { Campo } from '../../../shared/ui/Campo';
 import { ClienteEnCotizador } from './ClienteEnCotizador';
@@ -72,6 +74,7 @@ export function Cotizador(props: CotizadorProps): ReactElement {
   const [nombres, setNombres] = useState<ReadonlyMap<CustomerId, Customer>>(new Map());
   const [error, setError] = useState<string | null>(null);
   const [filtro, setFiltro] = useState('');
+  const [estadoFiltrado, setEstadoFiltrado] = useState<string>('ALL');
 
   const refrescar = useCallback(async () => {
     const todas = await deps.store.list();
@@ -195,8 +198,20 @@ export function Cotizador(props: CotizadorProps): ReactElement {
   const coincidentes = new Set(
     searchCustomers([...nombres.values()], filtro).map((c) => c.id as string),
   );
-  const visibles =
+  const delCliente =
     filtro.trim() === '' ? emitidas : emitidas.filter((q) => coincidentes.has(q.customerId));
+  const visibles =
+    estadoFiltrado === 'ALL'
+      ? delCliente
+      : delCliente.filter((q) => displayStatus(q, ahora) === estadoFiltrado);
+  const deEstado = (e: ReturnType<typeof displayStatus>): readonly Quote[] =>
+    emitidas.filter((q) => displayStatus(q, ahora) === e);
+  const sumar = (qs: readonly Quote[]): number =>
+    qs.reduce((suma, q) => suma + quoteTotals(q.lines).totalCents, 0);
+  const enEspera = deEstado('SENT');
+  const aceptadas = deEstado('ACCEPTED');
+  const cuantas = (e: ReturnType<typeof displayStatus>): number =>
+    delCliente.filter((q) => displayStatus(q, ahora) === e).length;
   const tonoDe = (estado: ReturnType<typeof displayStatus>): TonoDeEstado =>
     estado === 'DRAFT'
       ? 'espera'
@@ -226,11 +241,35 @@ export function Cotizador(props: CotizadorProps): ReactElement {
       />
       {error !== null ? <Aviso tipo="error">{error}</Aviso> : null}
 
+      <PanelDeIndicadores
+        descripcion={t.panel.titulo}
+        items={[
+          {
+            clave: 'borradores',
+            rotulo: t.panel.borradores,
+            valor: cobra(sumar(borradores)),
+            detalle: t.panel.cotizaciones(borradores.length),
+          },
+          {
+            clave: 'enEspera',
+            rotulo: t.panel.enEspera,
+            valor: cobra(sumar(enEspera)),
+            tono: 'aviso',
+            detalle: t.panel.cotizaciones(enEspera.length),
+          },
+          {
+            clave: 'aceptadas',
+            rotulo: t.panel.aceptadas,
+            valor: cobra(sumar(aceptadas)),
+            tono: 'exito',
+            detalle: t.panel.cotizaciones(aceptadas.length),
+          },
+        ]}
+      />
+
       <div className="cotizador__lista">
-        <Tarjeta rotulo={t.borradores}>
-          {borradores.length === 0 ? (
-            <p className="mostrador__vacio">{t.sinBorradores}</p>
-          ) : (
+        {borradores.length === 0 ? null : (
+          <Tarjeta rotulo={t.borradores}>
             <ul className="productos productos--filas">
               {borradores.map((q) => (
                 <li key={q.id}>
@@ -251,8 +290,8 @@ export function Cotizador(props: CotizadorProps): ReactElement {
                 </li>
               ))}
             </ul>
-          )}
-        </Tarjeta>
+          </Tarjeta>
+        )}
 
         <Tarjeta rotulo={t.historial.titulo}>
           {emitidas.length === 0 ? (
@@ -269,6 +308,24 @@ export function Cotizador(props: CotizadorProps): ReactElement {
                 onChange={(e) => {
                   setFiltro(e.target.value);
                 }}
+              />
+              <Pestanas
+                etiqueta={t.filtro.etiqueta}
+                pestanas={[
+                  { id: 'ALL', texto: `${t.filtro.todas} · ${String(delCliente.length)}` },
+                  { id: 'SENT', texto: `${t.filtro.SENT} · ${String(cuantas('SENT'))}` },
+                  {
+                    id: 'ACCEPTED',
+                    texto: `${t.filtro.ACCEPTED} · ${String(cuantas('ACCEPTED'))}`,
+                  },
+                  {
+                    id: 'REJECTED',
+                    texto: `${t.filtro.REJECTED} · ${String(cuantas('REJECTED'))}`,
+                  },
+                  { id: 'EXPIRED', texto: `${t.filtro.EXPIRED} · ${String(cuantas('EXPIRED'))}` },
+                ]}
+                activa={estadoFiltrado}
+                onCambiar={setEstadoFiltrado}
               />
               {visibles.length === 0 ? <p>{t.historial.sinResultados}</p> : null}
             </>

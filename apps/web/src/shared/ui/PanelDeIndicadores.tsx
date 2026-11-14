@@ -24,13 +24,22 @@ export interface ItemDePanel {
 export interface PanelDeIndicadoresProps {
   readonly descripcion: string;
   readonly items: readonly ItemDePanel[];
+  /** Cifras más chicas, para acompañar una tarea en vez de ser el centro de la pantalla. */
+  readonly compacto?: boolean;
 }
 
 /** Franja de cifras clave en **una sola superficie**, separadas por una línea fina: se lee de un vistazo, sin
  *  una tarjeta por dato. En pantallas angostas se apilan. */
-export function PanelDeIndicadores({ descripcion, items }: PanelDeIndicadoresProps): ReactElement {
+export function PanelDeIndicadores({
+  descripcion,
+  items,
+  compacto = false,
+}: PanelDeIndicadoresProps): ReactElement {
   return (
-    <section className="panel-kpi" aria-label={descripcion}>
+    <section
+      className={compacto ? 'panel-kpi panel-kpi--compacto' : 'panel-kpi'}
+      aria-label={descripcion}
+    >
       {items.map((item) => (
         <dl
           key={item.clave}
@@ -38,10 +47,7 @@ export function PanelDeIndicadores({ descripcion, items }: PanelDeIndicadoresPro
           aria-label={item.rotulo}
           className={`panel-kpi__item panel-kpi__item--${item.tono ?? 'neutro'}`}
         >
-          <div className="panel-kpi__cabecera">
-            <dt className="rotulo panel-kpi__rotulo">{item.rotulo}</dt>
-            {item.ayuda}
-          </div>
+          <dt className="rotulo panel-kpi__rotulo">{item.rotulo}</dt>
           <dd className="cifra panel-kpi__valor">{item.valor}</dd>
           {item.variacion === undefined ? null : (
             <dd className="panel-kpi__variacion">{item.variacion}</dd>
@@ -54,6 +60,7 @@ export function PanelDeIndicadores({ descripcion, items }: PanelDeIndicadoresPro
           {item.detalle === undefined ? null : (
             <dd className="panel-kpi__detalle">{item.detalle}</dd>
           )}
+          {item.ayuda === undefined ? null : <dd className="panel-kpi__ayuda">{item.ayuda}</dd>}
         </dl>
       ))}
     </section>
