@@ -237,14 +237,11 @@
   text-decoration: none;
 }
 
-.barra__logo::after {
-  content: '';
-  align-self: flex-end;
-  width: 0.5rem;
-  height: 0.5rem;
-  margin: 0 0 0.6rem 0.25rem;
-  border-radius: 50%;
-  background: var(--acento);
+.barra__marca {
+  inline-size: 1.875rem;
+  block-size: 1.875rem;
+  margin-inline-end: 0.625rem;
+  color: var(--acento);
 }
 
 .barra__navs {

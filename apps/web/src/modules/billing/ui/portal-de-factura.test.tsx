@@ -113,7 +113,7 @@ function elegir(etiqueta: string, valor: string): void {
 }
 
 async function pasarAlFormulario(s: ReturnType<typeof servidor>): Promise<void> {
-  escribir('Folio de tu ticket', ' v-2026-0001 ');
+  escribir('Folio de su ticket', ' v-2026-0001 ');
   escribir('Código de verificación', 'bbbb-bbbb');
   fireEvent.click(screen.getByRole('button', { name: 'Continuar' }));
   await screen.findByText('Chapa de seguridad');
@@ -135,7 +135,7 @@ describe('paso 1: el ticket', () => {
     montar(s);
     await pasarAlFormulario(s);
     expect(screen.getByText('$116.00', { selector: 'strong' })).toBeTruthy();
-    expect(screen.getByText('Puedes pedir tu factura hasta el 30 nov 2026.')).toBeTruthy();
+    expect(screen.getByText('Puede pedir su factura hasta el 30 nov 2026.')).toBeTruthy();
     // Se manda normalizado, con el campo trampa vacío y el tiempo que tardó.
     expect(s.espias.consultas[0]).toMatchObject({
       folio: 'V-2026-0001',
@@ -149,20 +149,20 @@ describe('paso 1: el ticket', () => {
   it('el QR trae el folio y el código ya puestos, y también se pueden teclear a mano', () => {
     const s = servidor();
     montar(s, { inicial: { folio: 'OT-2026-0007', code: 'CCCCCCCC' } });
-    expect(screen.getByLabelText<HTMLInputElement>('Folio de tu ticket').value).toBe(
+    expect(screen.getByLabelText<HTMLInputElement>('Folio de su ticket').value).toBe(
       'OT-2026-0007',
     );
     expect(screen.getByLabelText<HTMLInputElement>('Código de verificación').value).toBe(
       'CCCCCCCC',
     );
-    escribir('Folio de tu ticket', 'V-2026-0002');
-    expect(screen.getByLabelText<HTMLInputElement>('Folio de tu ticket').value).toBe('V-2026-0002');
+    escribir('Folio de su ticket', 'V-2026-0002');
+    expect(screen.getByLabelText<HTMLInputElement>('Folio de su ticket').value).toBe('V-2026-0002');
   });
 
   it('un folio o código que no cuadran dan siempre el mismo mensaje, que dice qué hacer', async () => {
     const s = servidor({ consulta: { kind: 'NOT_AVAILABLE' } });
     montar(s);
-    escribir('Folio de tu ticket', 'V-2026-0999');
+    escribir('Folio de su ticket', 'V-2026-0999');
     escribir('Código de verificación', 'ZZZZZZZZ');
     fireEvent.click(screen.getByRole('button', { name: 'Continuar' }));
     expect(
@@ -181,7 +181,7 @@ describe('paso 1: el ticket', () => {
     for (const [razon, texto] of motivos) {
       const s = servidor({ consulta: { kind: 'INELIGIBLE', reason: razon } });
       const { unmount } = montar(s);
-      escribir('Folio de tu ticket', 'V-2026-0001');
+      escribir('Folio de su ticket', 'V-2026-0001');
       escribir('Código de verificación', 'BBBBBBBB');
       fireEvent.click(screen.getByRole('button', { name: 'Continuar' }));
       expect(await screen.findByText(texto)).toBeTruthy();
@@ -191,14 +191,14 @@ describe('paso 1: el ticket', () => {
 
   it('con demasiados intentos, sin red o con el servicio caído avisa y dice qué hacer', async () => {
     const casos: [PortalConsultaResultado, string][] = [
-      [{ kind: 'BLOCKED', retryAfterSeconds: 900 }, 'Hiciste demasiados intentos.'],
+      [{ kind: 'BLOCKED', retryAfterSeconds: 900 }, 'Hizo demasiados intentos.'],
       [{ kind: 'NO_NETWORK' }, 'No hay conexión a internet.'],
       [{ kind: 'UNAVAILABLE' }, 'El servicio de facturas no está disponible en este momento.'],
     ];
     for (const [consulta, texto] of casos) {
       const s = servidor({ consulta });
       const { unmount } = montar(s);
-      escribir('Folio de tu ticket', 'V-2026-0001');
+      escribir('Folio de su ticket', 'V-2026-0001');
       escribir('Código de verificación', 'BBBBBBBB');
       fireEvent.click(screen.getByRole('button', { name: 'Continuar' }));
       expect(await screen.findByText(texto)).toBeTruthy();
@@ -206,10 +206,10 @@ describe('paso 1: el ticket', () => {
     }
     const bloqueado = servidor({ consulta: { kind: 'BLOCKED', retryAfterSeconds: 900 } });
     montar(bloqueado);
-    escribir('Folio de tu ticket', 'V-2026-0001');
+    escribir('Folio de su ticket', 'V-2026-0001');
     escribir('Código de verificación', 'BBBBBBBB');
     fireEvent.click(screen.getByRole('button', { name: 'Continuar' }));
-    expect(await screen.findByText(/Espera 15 minutos/)).toBeTruthy();
+    expect(await screen.findByText(/Espere 15 minutos/)).toBeTruthy();
   });
 
   it('el campo trampa existe, está oculto para las personas y viaja con lo que contenga', async () => {
@@ -222,7 +222,7 @@ describe('paso 1: el ticket', () => {
     expect(trampa.closest('[aria-hidden="true"]')).not.toBeNull();
     expect(trampa.tabIndex).toBe(-1);
     fireEvent.change(trampa, { target: { value: 'http://spam.invalid' } });
-    escribir('Folio de tu ticket', 'V-2026-0001');
+    escribir('Folio de su ticket', 'V-2026-0001');
     escribir('Código de verificación', 'BBBBBBBB');
     fireEvent.click(screen.getByRole('button', { name: 'Continuar' }));
     await waitFor(() => {
@@ -245,7 +245,7 @@ describe('paso 1: el ticket', () => {
       },
     };
     montar(s, { siteKey: 'llave-publica' });
-    escribir('Folio de tu ticket', 'V-2026-0001');
+    escribir('Folio de su ticket', 'V-2026-0001');
     escribir('Código de verificación', 'BBBBBBBB');
     expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Continuar' }).disabled).toBe(
       true,
@@ -287,11 +287,11 @@ describe('paso 2: los datos fiscales', () => {
     expect(
       await screen.findByText('El RFC no tiene el formato correcto (12 o 13 caracteres).'),
     ).toBeTruthy();
-    expect(screen.getByText('Falta tu nombre o razón social.')).toBeTruthy();
+    expect(screen.getByText('Falta su nombre o razón social.')).toBeTruthy();
     expect(screen.getByText('El código postal debe tener 5 números.')).toBeTruthy();
-    expect(screen.getByText('Elige tu régimen fiscal.')).toBeTruthy();
-    expect(screen.getByText('Elige el uso de la factura.')).toBeTruthy();
-    expect(screen.getByText('Para continuar debes aceptar el aviso de privacidad.')).toBeTruthy();
+    expect(screen.getByText('Elija su régimen fiscal.')).toBeTruthy();
+    expect(screen.getByText('Elija el uso de la factura.')).toBeTruthy();
+    expect(screen.getByText('Para continuar debe aceptar el aviso de privacidad.')).toBeTruthy();
     expect(s.espias.solicitudes).toHaveLength(0);
   });
 
@@ -303,7 +303,7 @@ describe('paso 2: los datos fiscales', () => {
     fireEvent.click(screen.getByRole('checkbox'));
     fireEvent.click(screen.getByRole('button', { name: 'Pedir mi factura' }));
     expect(
-      await screen.findByText('Para continuar debes aceptar el aviso de privacidad.'),
+      await screen.findByText('Para continuar debe aceptar el aviso de privacidad.'),
     ).toBeTruthy();
     expect(s.espias.solicitudes).toHaveLength(0);
   });
@@ -356,7 +356,7 @@ describe('paso 2: los datos fiscales', () => {
     await pasarAlFormulario(s);
     llenarDatos();
     fireEvent.click(screen.getByRole('button', { name: 'Pedir mi factura' }));
-    expect(await screen.findByText('Tu factura está lista')).toBeTruthy();
+    expect(await screen.findByText('Su factura está lista')).toBeTruthy();
     expect(s.espias.solicitudes[0]).toMatchObject({
       folio: 'V-2026-0001',
       code: 'BBBBBBBB',
@@ -383,8 +383,8 @@ describe('paso 2: los datos fiscales', () => {
     expect(
       await screen.findByText('El RFC no tiene el formato correcto (12 o 13 caracteres).'),
     ).toBeTruthy();
-    expect(screen.getByText('Elige tu régimen fiscal.')).toBeTruthy();
-    expect(screen.queryByText('Tu factura está lista')).toBeNull();
+    expect(screen.getByText('Elija su régimen fiscal.')).toBeTruthy();
+    expect(screen.queryByText('Su factura está lista')).toBeNull();
   });
 
   it('cada motivo por el que no se pudo emitir se explica y manda a pedirla en el negocio', async () => {
@@ -393,12 +393,12 @@ describe('paso 2: los datos fiscales', () => {
         { kind: 'PAYMENT_FORM_UNDEFINED' },
         'Esta compra se pagó de una forma que no podemos facturar por aquí.',
       ],
-      [{ kind: 'NOT_BILLABLE' }, 'No pudimos preparar tu factura por aquí.'],
+      [{ kind: 'NOT_BILLABLE' }, 'No pudimos preparar su factura por aquí.'],
       [{ kind: 'REJECTED' }, 'No se pudo emitir la factura con esos datos.'],
       [{ kind: 'INELIGIBLE', reason: 'ALREADY_INVOICED' }, 'Esta compra ya tiene una factura.'],
       [{ kind: 'NO_NETWORK' }, 'No hay conexión a internet.'],
       [{ kind: 'UNAVAILABLE' }, 'El servicio de facturas no está disponible en este momento.'],
-      [{ kind: 'BLOCKED', retryAfterSeconds: 120 }, 'Hiciste demasiados intentos.'],
+      [{ kind: 'BLOCKED', retryAfterSeconds: 120 }, 'Hizo demasiados intentos.'],
     ];
     for (const [solicitud, texto] of casos) {
       const s = servidor({ solicitud });
@@ -419,9 +419,9 @@ describe('paso 2: los datos fiscales', () => {
     await pasarAlFormulario(s);
     llenarDatos();
     fireEvent.click(screen.getByRole('button', { name: 'Pedir mi factura' }));
-    expect(await screen.findByText('Tu factura se está procesando.')).toBeTruthy();
+    expect(await screen.findByText('Su factura se está procesando.')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Revisar de nuevo' }));
-    expect(await screen.findByText('Tu factura está lista')).toBeTruthy();
+    expect(await screen.findByText('Su factura está lista')).toBeTruthy();
     expect(s.espias.solicitudes.map((x) => x.requestId)).toEqual([ID, ID]);
   });
 
@@ -430,7 +430,7 @@ describe('paso 2: los datos fiscales', () => {
     montar(s);
     await pasarAlFormulario(s);
     fireEvent.click(screen.getByRole('button', { name: 'Cambiar mi ticket' }));
-    expect(screen.getByLabelText('Folio de tu ticket')).toBeTruthy();
+    expect(screen.getByLabelText('Folio de su ticket')).toBeTruthy();
   });
 });
 
@@ -439,7 +439,7 @@ describe('paso 3: la factura', () => {
     await pasarAlFormulario(s);
     llenarDatos();
     fireEvent.click(screen.getByRole('button', { name: 'Pedir mi factura' }));
-    await screen.findByText('Tu factura está lista');
+    await screen.findByText('Su factura está lista');
   }
 
   it('muestra el folio de la factura y ofrece descargar el PDF y el XML', async () => {
@@ -477,7 +477,7 @@ describe('paso 3: la factura', () => {
       [{ kind: 'NO_NETWORK' }, 'No hay conexión a internet.'],
       [{ kind: 'NOT_AVAILABLE' }, 'No encontramos una compra con ese folio y ese código.'],
       [{ kind: 'UNAVAILABLE' }, 'El servicio de facturas no está disponible en este momento.'],
-      [{ kind: 'BLOCKED', retryAfterSeconds: 300 }, 'Hiciste demasiados intentos.'],
+      [{ kind: 'BLOCKED', retryAfterSeconds: 300 }, 'Hizo demasiados intentos.'],
     ];
     for (const [descarga, texto] of casos) {
       const s = servidor({ descarga });
@@ -503,11 +503,11 @@ describe('accesibilidad del portal [RF-M10-16, RNF-28]', () => {
     await pasarAlFormulario(s);
     expect(await revisar()).toEqual([]);
     fireEvent.click(screen.getByRole('button', { name: 'Pedir mi factura' }));
-    await screen.findByText('Para continuar debes aceptar el aviso de privacidad.');
+    await screen.findByText('Para continuar debe aceptar el aviso de privacidad.');
     expect(await revisar()).toEqual([]);
     llenarDatos();
     fireEvent.click(screen.getByRole('button', { name: 'Pedir mi factura' }));
-    await screen.findByText('Tu factura está lista');
+    await screen.findByText('Su factura está lista');
     expect(await revisar()).toEqual([]);
   });
 
@@ -515,13 +515,13 @@ describe('accesibilidad del portal [RF-M10-16, RNF-28]', () => {
     const s = servidor();
     montar(s);
     const pasos = within(
-      screen.getByRole('list', { name: 'Pasos para pedir tu factura' }),
+      screen.getByRole('list', { name: 'Pasos para pedir su factura' }),
     ).getAllByRole('listitem');
-    expect(pasos.map((p) => p.textContent)).toEqual(['1Tu ticket', '2Tus datos', '3Tu factura']);
+    expect(pasos.map((p) => p.textContent)).toEqual(['1Su ticket', '2Sus datos', '3Su factura']);
     expect(pasos[0]?.getAttribute('aria-current')).toBe('step');
     await pasarAlFormulario(s);
     expect(
-      within(screen.getByRole('list', { name: 'Pasos para pedir tu factura' }))
+      within(screen.getByRole('list', { name: 'Pasos para pedir su factura' }))
         .getAllByRole('listitem')[1]
         ?.getAttribute('aria-current'),
     ).toBe('step');
@@ -537,7 +537,7 @@ describe('rutas del portal en la aplicación', () => {
         <App portal={portal} />
       </MemoryRouter>,
     );
-    expect(screen.getByRole('heading', { name: 'Pide tu factura' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Pida su factura' })).toBeTruthy();
     expect(screen.queryByRole('navigation')).toBeNull();
     unmount();
     render(
@@ -545,12 +545,12 @@ describe('rutas del portal en la aplicación', () => {
         <App portal={portal} />
       </MemoryRouter>,
     );
-    const formulario = screen.getByRole('heading', { name: 'Pide tu factura' }).closest('article');
+    const formulario = screen.getByRole('heading', { name: 'Pida su factura' }).closest('article');
     if (formulario === null) {
       throw new Error('falta el formulario');
     }
     const dentro = within(formulario);
-    expect(dentro.getByLabelText<HTMLInputElement>('Folio de tu ticket').value).toBe(
+    expect(dentro.getByLabelText<HTMLInputElement>('Folio de su ticket').value).toBe(
       'OT-2026-0007',
     );
     expect(dentro.getByLabelText<HTMLInputElement>('Código de verificación').value).toBe(

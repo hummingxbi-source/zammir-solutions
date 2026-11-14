@@ -1,6 +1,8 @@
 # Plan de pruebas de aceptación con el cliente
 
 > Historia S4-30. Es el guion que **Luis** (o quien él designe) ejecuta con la tablet de ZAMMIR y firma. Parte de los recorridos E1 a E10 de [`PRUEBAS_DE_ACEPTACION.md`](PRUEBAS_DE_ACEPTACION.md), pero escrito con las palabras del oficio: cada escenario es un día normal en el negocio, no una prueba técnica.
+>
+> **Fechas acordadas con Luis (8 nov 2026):** sábado 28, domingo 29 y lunes 30 de noviembre, con la tablet en el local; falta la hora de cada sesión. Se usan para la capacitación y para ejecutar este guion.
 > Borrador hasta que Juanito lo apruebe. La aceptación firmada es la historia S5-10.
 
 ## Antes de empezar

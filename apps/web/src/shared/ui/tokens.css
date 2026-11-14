@@ -1,32 +1,33 @@
-/* Identidad visual v1 [ADR-0028]: papel, tinta y acento azul; Fraunces para títulos y cifras, Source Serif 4
- * para leer e IBM Plex Mono para rótulos y folios. Las fuentes viajan con la aplicación (se importan en
- * main.tsx) para que se vean sin internet.
+/* Identidad visual v2 [ADR-0037], elegida por Luis: paleta "verde vidrio" (verde botella y menta sobre un papel
+ * claro y fresco) y letra elegante (Playfair Display para títulos y cifras, Source Serif 4 para leer e IBM Plex
+ * Mono para rótulos y folios). Las fuentes viajan con la aplicación (se importan en main.tsx) para que se vean
+ * sin internet. La estructura y los componentes son los de la v1 [ADR-0028]: solo cambian los valores.
  *
- * Contraste de cada pareja de texto (WCAG, calculado): tinta sobre papel 13.8:1, tinta suave 6.8:1,
- * acento sobre papel 7.9:1, blanco sobre acento 8.9:1. La tinta apagada (3.1:1) es solo decoración. */
+ * Contraste de cada pareja de texto (WCAG, calculado): tinta sobre papel 13.5:1, tinta suave sobre papel 6.9:1,
+ * acento sobre papel 7.2:1, blanco sobre acento 7.8:1. La tinta apagada (3.1:1) es solo decoración. */
 
 :root {
   /* Papel y superficies */
-  --papel: #f4f1ec;
-  --panel: #ece8e0;
-  --panel-oscuro: #e0dbd1;
+  --papel: #f2f7f5;
+  --panel: #e4eeeb;
+  --panel-oscuro: #d3e3df;
   --superficie: #ffffff;
 
   /* Tinta */
-  --tinta: #26241f;
-  --tinta-suave: #57534a;
-  --tinta-apagada: #8c8880;
+  --tinta: #1d2b2a;
+  --tinta-suave: #475856;
+  --tinta-apagada: #85938f;
 
-  /* Acento (D1: azul de la demo) y secundario (latón oscuro) */
-  --acento: #0f4c81;
-  --acento-oscuro: #0a3153;
-  --acento-claro: #4a7dab;
-  --acento-tinte: rgb(15 76 129 / 8%);
-  --acento-tinte-fuerte: rgb(15 76 129 / 14%);
+  /* Acento (verde vidrio, elegido por Luis) y secundario (latón oscuro) */
+  --acento: #0f5c57;
+  --acento-oscuro: #0a3f3b;
+  --acento-claro: #5fb3a6;
+  --acento-tinte: rgb(15 92 87 / 8%);
+  --acento-tinte-fuerte: rgb(15 92 87 / 14%);
   --laton: #7a5f2d;
   --laton-decorativo: #9c7a3c;
-  --vidrio: #b9c6cc;
-  --vidrio-claro: #d6e1e5;
+  --vidrio: #b7d4cf;
+  --vidrio-claro: #dcebe8;
   --aluminio: #7c8592;
   --oliva: #5c6b4f;
 
@@ -41,12 +42,12 @@
   --info-fondo: #ebf2f9;
 
   /* Bordes: el de los controles pasa 3:1; el de las tarjetas es solo decorativo */
-  --borde-control: #7c7466;
+  --borde-control: #6b7a77;
   --borde-suave: rgb(124 133 146 / 28%);
   --borde-fuerte: rgb(124 133 146 / 45%);
 
   /* Tipografía */
-  --fuente-titulo: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --fuente-titulo: 'Playfair Display', Georgia, 'Times New Roman', serif;
   --fuente-base: 'Source Serif 4', Georgia, 'Times New Roman', serif;
   --fuente-etiqueta: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
 
@@ -65,10 +66,10 @@
   --tactil-minimo: 44px;
   --espacio: 1rem;
 
-  --sombra-1: 0 1px 3px rgb(38 36 31 / 8%);
-  --sombra-2: 0 4px 12px rgb(38 36 31 / 10%);
-  --sombra-3: 0 12px 32px rgb(38 36 31 / 14%);
-  --sombra-acento: 0 4px 16px rgb(15 76 129 / 22%);
+  --sombra-1: 0 1px 3px rgb(29 43 42 / 8%);
+  --sombra-2: 0 4px 12px rgb(29 43 42 / 10%);
+  --sombra-3: 0 12px 32px rgb(29 43 42 / 14%);
+  --sombra-acento: 0 4px 16px rgb(15 92 87 / 22%);
 
   /* Movimiento: solo transform y opacity, y se apaga con "reducir movimiento" [RF-UX-09] */
   --t-rapida: 150ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -135,7 +136,7 @@ a {
 }
 
 ::selection {
-  background: var(--acento-claro);
+  background: var(--acento);
   color: #ffffff;
 }
 

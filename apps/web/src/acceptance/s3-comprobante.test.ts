@@ -168,7 +168,7 @@ async function comprobante(deps: OrderDeps, id: string, opciones: { baseUrl?: st
     warranty: await outboxWarrantyReader(deps.outbox).get(id),
     conditions: 'Anticipo del 50%.\nSaldo contra entrega.',
     privacyNotice: 'Aviso de prueba',
-    selfInvoicingLegend: 'Pide tu factura antes de que termine el mes.',
+    selfInvoicingLegend: 'Pida su factura antes de que termine el mes.',
     publicBaseUrl: opciones.baseUrl ?? null,
     qrMatrix,
     labels: ETIQUETAS_DEL_COMPROBANTE,
@@ -204,9 +204,9 @@ describe('comprobante de trabajo (PDF con QR)', () => {
     expect(texto).toMatch(/Saldo\s+\$268\.80/);
     expect(texto).toContain('1. Anticipo del 50%.');
     expect(texto).toContain('2. Saldo contra entrega.');
-    expect(texto).toContain('Pide tu factura');
+    expect(texto).toContain('Pida su factura');
     expect(texto).toContain(`Código de verificación: ${orden.publicCode}`);
-    expect(texto).toContain('Pide tu factura antes de que termine el mes.');
+    expect(texto).toContain('Pida su factura antes de que termine el mes.');
     expect(documento.receipt?.isSettled).toBe(false);
   });
 

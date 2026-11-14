@@ -771,124 +771,124 @@ export const textos = {
   },
   /** Portal público de autofacturación (`/factura`) [S4-18, RF-M10-09 a RF-M10-17]. */
   portal: {
-    titulo: 'Pide tu factura',
+    titulo: 'Pida su factura',
     descripcion:
-      'Escribe el folio y el código que vienen en tu ticket o comprobante. Si escaneaste el QR, ya están puestos.',
-    folio: 'Folio de tu ticket',
+      'Escriba el folio y el código que vienen en su ticket o comprobante. Si escaneó el QR, ya están puestos.',
+    folio: 'Folio de su ticket',
     folioAyuda: 'Por ejemplo V-2026-0001 u OT-2026-0001',
     codigo: 'Código de verificación',
     codigoAyuda: 'Son 8 letras y números, sin 0 ni 1',
     continuar: 'Continuar',
     consultando: 'Revisando…',
-    verificando: 'Un momento, estamos verificando que eres una persona.',
-    conceptos: 'Lo que compraste',
+    verificando: 'Un momento, estamos verificando que usted es una persona.',
+    conceptos: 'Lo que compró',
     concepto: 'Concepto',
     cantidad: 'Cantidad',
     importe: 'Importe',
     total: 'Total (con IVA)',
-    plazo: (fecha: string): string => `Puedes pedir tu factura hasta el ${fecha}.`,
+    plazo: (fecha: string): string => `Puede pedir su factura hasta el ${fecha}.`,
     pasos: {
-      etiqueta: 'Pasos para pedir tu factura',
-      ticket: 'Tu ticket',
-      datos: 'Tus datos',
-      factura: 'Tu factura',
+      etiqueta: 'Pasos para pedir su factura',
+      ticket: 'Su ticket',
+      datos: 'Sus datos',
+      factura: 'Su factura',
       actual: 'Paso actual',
     },
     datos: {
-      titulo: 'Tus datos fiscales',
+      titulo: 'Sus datos fiscales',
       descripcion:
-        'Escríbelos tal como aparecen en tu constancia de situación fiscal. Si no coinciden, el SAT rechaza la factura.',
+        'Escríbalos tal como aparecen en su constancia de situación fiscal. Si no coinciden, el SAT rechaza la factura.',
       rfc: 'RFC',
-      rfcAyuda: '12 caracteres si eres empresa y 13 si eres persona',
+      rfcAyuda: '12 caracteres si es empresa y 13 si es persona',
       nombre: 'Nombre o razón social',
-      nombreAyuda: 'Tal como aparece en tu constancia, sin cambiarlo',
+      nombreAyuda: 'Tal como aparece en su constancia, sin cambiarlo',
       codigoPostal: 'Código postal fiscal',
-      codigoPostalAyuda: 'Son 5 números, el de tu constancia',
+      codigoPostalAyuda: 'Son 5 números, el de su constancia',
       regimen: 'Régimen fiscal',
       uso: 'Uso de la factura',
-      elige: 'Elige una opción',
+      elige: 'Elija una opción',
       aviso:
         'Acepto el aviso de privacidad, incluida la transferencia de mis datos fiscales al proveedor que timbra la factura.',
       leerAviso: 'Leer el aviso de privacidad',
       pedir: 'Pedir mi factura',
-      pidiendo: 'Pidiendo tu factura…',
+      pidiendo: 'Pidiendo su factura…',
       volver: 'Cambiar mi ticket',
       errores: {
         'recipient.rfc': 'El RFC no tiene el formato correcto (12 o 13 caracteres).',
-        'recipient.name': 'Falta tu nombre o razón social.',
+        'recipient.name': 'Falta su nombre o razón social.',
         'recipient.fiscalZip': 'El código postal debe tener 5 números.',
-        'recipient.regime': 'Elige tu régimen fiscal.',
-        'recipient.cfdiUse': 'Elige el uso de la factura.',
-        privacy: 'Para continuar debes aceptar el aviso de privacidad.',
+        'recipient.regime': 'Elija su régimen fiscal.',
+        'recipient.cfdiUse': 'Elija el uso de la factura.',
+        privacy: 'Para continuar debe aceptar el aviso de privacidad.',
       },
     },
     resultado: {
-      titulo: 'Tu factura está lista',
-      folio: 'Folio de tu factura',
+      titulo: 'Su factura está lista',
+      folio: 'Folio de su factura',
       guardar:
-        'Descárgala y guárdala. Son dos archivos: el PDF para leer y el XML para tu contador.',
+        'Descárguela y guárdela. Son dos archivos: el PDF para leer y el XML para su contador.',
       pdf: 'Descargar PDF',
       xml: 'Descargar XML',
       descargando: 'Descargando…',
       descargada: (nombre: string): string => `Se descargó ${nombre}.`,
       procesando: {
-        mensaje: 'Tu factura se está procesando.',
-        queHacer: 'Espera un momento y vuelve a tocar el botón; no se genera dos veces.',
+        mensaje: 'Su factura se está procesando.',
+        queHacer: 'Espere un momento y vuelva a tocar el botón; no se genera dos veces.',
       },
       revisar: 'Revisar de nuevo',
     },
     solicitud: {
       PAYMENT_FORM_UNDEFINED: {
         mensaje: 'Esta compra se pagó de una forma que no podemos facturar por aquí.',
-        queHacer: 'Pide tu factura directamente en el negocio.',
+        queHacer: 'Pida su factura directamente en el negocio.',
       },
       NOT_BILLABLE: {
-        mensaje: 'No pudimos preparar tu factura por aquí.',
-        queHacer: 'Pídela directamente en el negocio y con gusto te la hacen.',
+        mensaje: 'No pudimos preparar su factura por aquí.',
+        queHacer: 'Pídala directamente en el negocio y con gusto se la hacen.',
       },
       REJECTED: {
         mensaje: 'No se pudo emitir la factura con esos datos.',
         queHacer:
-          'Revisa tu RFC, tu nombre y tu código postal tal como aparecen en tu constancia, o pídela directamente en el negocio.',
+          'Revise su RFC, su nombre y su código postal tal como aparecen en su constancia, o pídala directamente en el negocio.',
       },
     },
     errores: {
       NOT_AVAILABLE: {
         mensaje: 'No encontramos una compra con ese folio y ese código.',
         queHacer:
-          'Revisa que estén escritos como en tu ticket. Si tu compra es muy reciente o se hizo sin internet, puede tardar un poco en aparecer: intenta de nuevo más tarde.',
+          'Revise que estén escritos como en su ticket. Si su compra es muy reciente o se hizo sin internet, puede tardar un poco en aparecer: intente de nuevo más tarde.',
       },
       BLOCKED: {
-        mensaje: 'Hiciste demasiados intentos.',
+        mensaje: 'Hizo demasiados intentos.',
         queHacer: (minutos: number): string =>
-          `Espera ${String(minutos)} minutos y vuelve a intentar con los datos de tu ticket.`,
+          `Espere ${String(minutos)} minutos y vuelva a intentar con los datos de su ticket.`,
       },
       UNAVAILABLE: {
         mensaje: 'El servicio de facturas no está disponible en este momento.',
-        queHacer: 'Intenta de nuevo en unos minutos.',
+        queHacer: 'Intente de nuevo en unos minutos.',
       },
       NO_NETWORK: {
         mensaje: 'No hay conexión a internet.',
-        queHacer: 'Conéctate a internet e intenta de nuevo.',
+        queHacer: 'Conéctese a internet e intente de nuevo.',
       },
     },
     inelegible: {
       CANCELLED: {
         mensaje: 'Esta compra fue cancelada, por eso no se puede facturar.',
-        queHacer: 'Si crees que es un error, pregunta directamente en el negocio.',
+        queHacer: 'Si cree que es un error, pregunte directamente en el negocio.',
       },
       ALREADY_INVOICED: {
         mensaje: 'Esta compra ya tiene una factura.',
-        queHacer: 'Si necesitas otra copia, pídela directamente en el negocio.',
+        queHacer: 'Si necesita otra copia, pídala directamente en el negocio.',
       },
       NOT_SETTLED: {
         mensaje: 'Esta compra todavía tiene saldo pendiente.',
-        queHacer: 'Podrás pedir tu factura cuando quede liquidada.',
+        queHacer: 'Podrá pedir su factura cuando quede liquidada.',
       },
       EXPIRED: {
         mensaje: 'Ya pasó el plazo para pedir esta factura por aquí.',
         queHacer:
-          'Se puede hasta el último día del mes de tu compra. Pídela directamente en el negocio y con gusto te la hacen.',
+          'Se puede hasta el último día del mes de su compra. Pídala directamente en el negocio y con gusto se la hacen.',
       },
     },
   },
@@ -936,21 +936,21 @@ export const textos = {
     cargando: 'Cargando…',
     version: 'Versión',
     rigeDesde: 'vigente desde',
-    derechos: 'Para ejercer tus derechos sobre tus datos',
-    porWhatsApp: (telefono: string): string => `Escríbenos por WhatsApp al ${telefono}.`,
-    enPersona: (domicilio: string): string => `También puedes acudir a ${domicilio}.`,
-    sinCanal: 'Pregunta a tu vendedor cómo comunicarte con el negocio.',
+    derechos: 'Para ejercer sus derechos sobre sus datos',
+    porWhatsApp: (telefono: string): string => `Escríbanos por WhatsApp al ${telefono}.`,
+    enPersona: (domicilio: string): string => `También puede acudir a ${domicilio}.`,
+    sinCanal: 'Pregunte a su vendedor cómo comunicarse con el negocio.',
     error: {
       mensaje: 'No pudimos cargar el documento.',
-      queHacer: 'Revisa tu conexión a internet e intenta de nuevo.',
+      queHacer: 'Revise su conexión a internet e intente de nuevo.',
     },
     aviso: {
       titulo: 'Aviso de privacidad',
-      vacio: 'Todavía no hay un aviso de privacidad publicado. Pídelo a tu vendedor.',
+      vacio: 'Todavía no hay un aviso de privacidad publicado. Pídalo a su vendedor.',
     },
     terminos: {
       titulo: 'Términos del servicio',
-      vacio: 'Todavía no hay términos del servicio publicados. Pídelos a tu vendedor.',
+      vacio: 'Todavía no hay términos del servicio publicados. Pídalos a su vendedor.',
     },
   },
   terminos: {
@@ -2099,7 +2099,7 @@ export const textos = {
         balance: 'Saldo',
         settled: 'Liquidado',
         warranty: 'Garantía',
-        selfInvoicing: 'Pide tu factura',
+        selfInvoicing: 'Pida su factura',
         verificationCode: 'Código de verificación',
       },
       tipoDePago: { DEPOSIT: 'Anticipo', BALANCE: 'Saldo', SALE: 'Venta' },
@@ -2110,27 +2110,27 @@ export const textos = {
       garantiaExclusiones: 'No cubre: {exclusions}',
       // PD-09: el plazo se confirma con el contador de ZAMMIR; este texto se reemplaza desde la configuración.
       leyendaPorOmision:
-        'Escanea el código para pedir tu factura. El plazo para facturar vence el último día del mes en que liquides tu trabajo.',
+        'Escanee el código para pedir su factura. El plazo para facturar vence el último día del mes en que liquide su trabajo.',
       mensajeWhatsApp: (nombre: string, folio: string, saldo: string): string =>
-        `Hola ${nombre}, te comparto el comprobante de tu trabajo ${folio}. Saldo: ${saldo}. Cualquier duda, con gusto te ayudamos.`,
+        `Hola ${nombre}, le comparto el comprobante de su trabajo ${folio}. Saldo: ${saldo}. Cualquier duda, con gusto le ayudamos.`,
     },
     folioProvisional: 'Folio provisional',
     /** Pie legal de cotizaciones y comprobantes [RF-M9-01, RF-M9-02, RF-M9-04]. */
     legal: {
-      noNotice: 'El aviso de privacidad completo está disponible con tu vendedor.',
+      noNotice: 'El aviso de privacidad completo está disponible con su vendedor.',
       notice: (version: number, desde: string): string =>
         `Aviso de privacidad, versión ${String(version)}, vigente desde ${desde}.`,
-      readFull: (enlace: string): string => `Léelo completo en ${enlace}.`,
+      readFull: (enlace: string): string => `Léalo completo en ${enlace}.`,
       rights: (canal: string): string =>
-        `Para ejercer tus derechos sobre tus datos (acceso, corrección, cancelación u oposición) escribe a ${canal}.`,
+        `Para ejercer sus derechos sobre sus datos (acceso, corrección, cancelación u oposición) escriba a ${canal}.`,
       termsTitle: (version: number): string => `Términos del servicio (versión ${String(version)})`,
       termsLink: (enlace: string): string => `Términos completos en ${enlace}`,
       canalPorWhatsApp: (telefono: string): string => `WhatsApp ${telefono}`,
     },
     avisoAbreviado:
-      'Aviso de privacidad (versión de prueba): tus datos se usan solo para atender esta cotización y no se comparten. El aviso completo está disponible con tu vendedor.',
+      'Aviso de privacidad (versión de prueba): sus datos se usan solo para atender esta cotización y no se comparten. El aviso completo está disponible con su vendedor.',
     mensajeWhatsApp: (nombre: string, folio: string, total: string): string =>
-      `Hola ${nombre}, te comparto tu cotización ${folio} por un total de ${total}. Cualquier duda, con gusto te ayudamos.`,
+      `Hola ${nombre}, le comparto su cotización ${folio} por un total de ${total}. Cualquier duda, con gusto le ayudamos.`,
   },
   sincronizacion: {
     guardadoEnLaTablet: 'Guardado en la tablet',
