@@ -59,7 +59,8 @@ jobs:
 
       - name: Aplicar las migraciones (solo hacia adelante)
         # --remote: sin él, la herramienta actual de Supabase entiende que se habla de la base local.
-        run: supabase db push --remote --password "$SUPABASE_DB_PASSWORD"
+        # --yes: en GitHub no hay terminal para confirmar; el flujo solo corre cuando una persona lo lanza.
+        run: supabase db push --remote --yes --password "$SUPABASE_DB_PASSWORD"
 
       - name: Desplegar las funciones de servidor
         # Cada función comprueba por sí misma quién la llama (sesión de la tablet o del administrador),
