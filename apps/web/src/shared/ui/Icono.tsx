@@ -4,6 +4,7 @@ import type { ReactElement } from 'react';
  *  Son decorativos (el texto siempre va al lado), por eso se ocultan a los lectores de pantalla. */
 const TRAZOS = {
   inicio: 'M4 11l8-7 8 7 M6 10v10h12V10 M10 20v-6h4v6',
+  panelLateral: 'M4 5h16v14H4z M9.5 5v14',
   catalogo: 'M21 8l-9-5-9 5v8l9 5 9-5V8z M3 8l9 5 9-5 M12 13v8',
   cotizador: 'M6 3h8l4 4v14H6z M14 3v4h4 M9 12h6 M9 16h6',
   ordenes: 'M4 5h16v14H4z M4 10h16 M10 10v9',

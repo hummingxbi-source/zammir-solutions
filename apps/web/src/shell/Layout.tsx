@@ -12,6 +12,8 @@ import { IndicadorDeConexion, type SincronizacionVisible } from './IndicadorDeCo
 import { seccionesVisibles, SECCIONES, type Interruptor, type Seccion } from './secciones';
 import { BotonPorDondeEmpiezo } from './PrimerosPasos';
 import { CuentaAdmin } from './CuentaAdmin';
+import { Boton } from '../shared/ui/Boton';
+import { useBarraOculta } from './useBarraOculta';
 import { recordarDondeEstaba } from './donde-estaba';
 import { useSeccionesVisitadas } from './useSeccionesVisitadas';
 
@@ -87,6 +89,7 @@ export function Layout({
 }: LayoutProps): ReactElement {
   const { pathname } = useLocation();
   const { visitadas, marcar } = useSeccionesVisitadas();
+  const { oculta: barraOculta, alternar: alternarBarra } = useBarraOculta();
 
   useEffect(() => {
     const actual = SECCIONES.find((seccion) => pathname.startsWith(seccion.ruta));
@@ -141,8 +144,8 @@ export function Layout({
   }
 
   return (
-    <div className="marco">
-      <aside className="barra">
+    <div className={`marco${barraOculta ? ' marco--sin-barra' : ''}`}>
+      <aside className="barra" id="barra-lateral">
         <Link to="/" className="barra__logo" aria-label={textos.navegacion.irAlInicio}>
           <LogoZammir className="barra__marca" />
           {textos.app.nombre}
@@ -190,11 +193,22 @@ export function Layout({
         <IndicadorDeConexion sincronizacion={sincronizacion} />
 
         <header className="marco__cabecera">
-          <div className="marco__cabecera-texto">
-            <p className="rotulo marco__fecha">{fechaLarga(ahora())}</p>
-            {nombre !== null ? (
-              <p className="marco__saludo">{textos.navegacion.saludo(primerNombre(nombre))}</p>
-            ) : null}
+          <div className="marco__cabecera-izquierda">
+            <Boton
+              variante="secundario"
+              aria-controls="barra-lateral"
+              aria-expanded={!barraOculta}
+              onClick={alternarBarra}
+            >
+              <Icono nombre="panelLateral" />
+              {barraOculta ? textos.navegacion.mostrarMenu : textos.navegacion.ocultarMenu}
+            </Boton>
+            <div className="marco__cabecera-texto">
+              <p className="rotulo marco__fecha">{fechaLarga(ahora())}</p>
+              {nombre !== null ? (
+                <p className="marco__saludo">{textos.navegacion.saludo(primerNombre(nombre))}</p>
+              ) : null}
+            </div>
           </div>
           <CuentaAdmin />
         </header>

@@ -131,7 +131,7 @@ export function Bitacora({ reader, cargarNombres }: BitacoraProps): ReactElement
     id === null ? t.sistema : (nombres.get(id) ?? `${id.slice(0, 8)}…`);
 
   return (
-    <section className="anima-entrada" aria-labelledby="titulo-bitacora">
+    <section className="anima-entrada bloque" aria-labelledby="titulo-bitacora">
       <h2 id="titulo-bitacora">{t.titulo}</h2>
       <p>{t.descripcion}</p>
 

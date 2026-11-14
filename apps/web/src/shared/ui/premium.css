@@ -650,3 +650,23 @@
     padding-inline: 0.25rem;
   }
 }
+
+/* ---------- Ocultar la barra de navegación: la sección ocupa toda la pantalla ---------- */
+.marco__cabecera-izquierda {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+}
+
+.marco--sin-barra {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.marco--sin-barra .barra {
+  display: none;
+}
+
+.marco--sin-barra .marco__contenido {
+  max-inline-size: none;
+}

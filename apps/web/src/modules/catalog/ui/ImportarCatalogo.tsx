@@ -13,6 +13,7 @@ import {
 import { textos } from '../../../shared/i18n/textos';
 import { Aviso } from '../../../shared/ui/Aviso';
 import { Boton } from '../../../shared/ui/Boton';
+import { Icono } from '../../../shared/ui/Icono';
 import { useSesionAdmin } from '../../identity/ui/SesionAdmin';
 
 const t = textos.importar;
@@ -121,26 +122,39 @@ export function ImportarCatalogo({
     >
       {sinTitulo ? null : <h2 id="titulo-importar">{t.titulo}</h2>}
       <p>{t.descripcion}</p>
-      <p>
+      <p className="nota">
+        <Icono nombre="informacion" />
         <strong>{t.reglaTodoONada}</strong>
       </p>
 
-      <Boton variante="secundario" onClick={descargarPlantilla}>
-        {t.plantilla}
-      </Boton>
-
-      <div className="campo">
-        <label className="campo__etiqueta" htmlFor="archivo-catalogo">
-          {t.archivo}
-        </label>
-        <input
-          id="archivo-catalogo"
-          className="campo__entrada"
-          type="file"
-          accept=".csv,text/csv"
-          onChange={(e) => void elegirArchivo(e)}
-        />
-      </div>
+      <ol className="pasos">
+        <li>
+          <h3 className="pasos__titulo">{t.paso1}</h3>
+          <p className="pasos__ayuda">{t.paso1Ayuda}</p>
+          <div className="pasos__control">
+            <Boton variante="secundario" onClick={descargarPlantilla}>
+              <Icono nombre="flechaAbajo" />
+              {t.plantilla}
+            </Boton>
+          </div>
+        </li>
+        <li>
+          <h3 className="pasos__titulo">{t.paso2}</h3>
+          <p className="pasos__ayuda">{t.paso2Ayuda}</p>
+          <div className="pasos__control campo">
+            <label className="campo__etiqueta" htmlFor="archivo-catalogo">
+              {t.archivo}
+            </label>
+            <input
+              id="archivo-catalogo"
+              className="campo__entrada"
+              type="file"
+              accept=".csv,text/csv"
+              onChange={(e) => void elegirArchivo(e)}
+            />
+          </div>
+        </li>
+      </ol>
 
       {error !== null && error.code !== 'IMPORT_INVALID' ? (
         <Aviso tipo="error" queHacer={t.pantalla[error.code].queHacer}>

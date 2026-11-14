@@ -1,7 +1,8 @@
 import { useCallback, useSyncExternalStore } from 'react';
+import { EncabezadoDePagina } from '../../../shared/ui/EncabezadoDePagina';
+import { PedirConectar } from '../../devices/ui/PedirConectar';
 import type { ReactElement } from 'react';
 import { useDatosDeLaTablet } from '../../../shared/ui/use-datos-de-la-tablet';
-import { Link } from 'react-router';
 import type { ActiveUserSession, QuoteActor } from '@zammir/core';
 
 import { textos } from '../../../shared/i18n/textos';
@@ -27,14 +28,12 @@ export function CuentasEnLaTablet({ preparar, session }: CuentasEnLaTabletProps)
   }
   if (props === null) {
     return (
-      <section>
-        <h1>{textos.cuentas.titulo}</h1>
+      <section className="anima-entrada">
+        <EncabezadoDePagina titulo={textos.cuentas.titulo} />
         <Aviso tipo="error" queHacer={textos.personas.errores.NO_USERS_YET.queHacer}>
           {textos.cotizador.noLista}
         </Aviso>
-        <Link to="/conectar" className="acceso">
-          {textos.conectar.titulo}
-        </Link>
+        <PedirConectar>{textos.conectar.titulo}</PedirConectar>
       </section>
     );
   }

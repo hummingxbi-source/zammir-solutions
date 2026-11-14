@@ -96,8 +96,8 @@ export function CuentasPorCobrar(props: CuentasPorCobrarProps): ReactElement {
 
   if (defaultPermissionPolicy.check(persona.role, 'REPORTS_AND_RECEIVABLES') === 'DENY') {
     return (
-      <section>
-        <h1>{t.titulo}</h1>
+      <section className="anima-entrada">
+        <EncabezadoDePagina titulo={t.titulo} />
         <Aviso tipo="error" queHacer={t.soloAdministradores.queHacer}>
           {t.soloAdministradores.mensaje}
         </Aviso>

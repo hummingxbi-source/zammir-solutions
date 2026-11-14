@@ -1,0 +1,280 @@
+/* Contenido de las secciones [Fase C de la revisión de interfaz, ADR-0037]: cada bloque de una pantalla es una
+ * tarjeta con aire entre sus partes, los botones nunca quedan pegados a lo que los precede y los
+ * desplegables tienen forma. Todo sale de tokens.css; objetivos táctiles de 44 px o más. */
+
+/* ---------- Bloque: una tarjeta que reparte su contenido con aire ---------- */
+.bloque {
+  display: grid;
+  gap: 1rem;
+  box-sizing: border-box;
+  min-inline-size: 0;
+  margin-block: 0 1.5rem;
+  padding: clamp(1.25rem, 2.5vw, 1.75rem);
+  border: 1px solid rgb(15 92 87 / 11%);
+  border-radius: 20px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdfc 100%);
+  box-shadow: var(--sombra-vidrio);
+}
+
+.bloque > * {
+  min-inline-size: 0;
+  margin: 0;
+}
+
+.bloque > h2 {
+  position: relative;
+  padding-block-end: 0.875rem;
+  font-size: 1.5rem;
+}
+
+.bloque > h2::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  block-size: 3px;
+  background:
+    linear-gradient(var(--laton-decorativo), var(--laton-decorativo)) left bottom / 2.5rem 3px
+      no-repeat,
+    linear-gradient(90deg, var(--borde-suave), transparent 85%) left bottom / 100% 1px no-repeat;
+}
+
+.bloque h3 {
+  margin: 0;
+  font-size: 1.1875rem;
+}
+
+.bloque form {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+}
+
+.bloque form > .boton,
+.bloque form > button {
+  justify-self: start;
+}
+
+.bloque p {
+  margin-block: 0;
+}
+
+.bloque details {
+  border: 1px solid var(--borde-suave);
+  border-radius: 14px;
+  background: #f6faf9;
+  padding-inline: 1rem;
+}
+
+.bloque details > summary {
+  display: flex;
+  align-items: center;
+  min-block-size: var(--tactil-minimo);
+  color: var(--acento);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.bloque details[open] {
+  padding-block-end: 1rem;
+}
+
+/* ---------- Red de seguridad: botones y campos que van uno tras otro ---------- */
+.campo + .boton,
+.campo + button.boton,
+textarea + .boton,
+.formulario + .boton {
+  margin-block-start: 0.75rem;
+}
+
+/* Tablas de datos: dentro de su tarjeta, con desplazamiento propio si no caben */
+.bloque table {
+  inline-size: 100%;
+}
+
+/* ---------- Pasos numerados (por ejemplo, importar el catálogo) ---------- */
+.pasos {
+  display: grid;
+  gap: 0.875rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: paso;
+}
+
+.pasos > li {
+  position: relative;
+  display: grid;
+  gap: 0.25rem;
+  padding: 1rem 1.125rem 1.125rem 4rem;
+  border: 1px solid var(--borde-suave);
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbfa 100%);
+  counter-increment: paso;
+}
+
+.pasos > li::before {
+  content: counter(paso);
+  position: absolute;
+  inset-block-start: 1rem;
+  inset-inline-start: 1rem;
+  display: grid;
+  place-items: center;
+  inline-size: 2rem;
+  block-size: 2rem;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #13706a 0%, var(--verde-intenso) 100%);
+  box-shadow: 0 6px 12px -6px rgb(15 92 87 / 60%);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.pasos__titulo {
+  margin: 0;
+  font-size: 1.0625rem;
+}
+
+.pasos__ayuda {
+  margin: 0;
+  color: var(--tinta-suave);
+}
+
+.pasos__control {
+  margin-block-start: 0.5rem;
+}
+
+/* Una nota que destaca una regla importante */
+.nota {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0.875rem 1rem;
+  border-radius: 14px;
+  border-inline-start: 4px solid var(--info);
+  background: var(--info-fondo);
+  color: var(--tinta);
+}
+
+.nota .icono {
+  margin-block-start: 0.125rem;
+  color: var(--info);
+}
+
+/* El selector de archivo del navegador, con el aspecto de la aplicación */
+input[type='file'].campo__entrada {
+  padding: 0.625rem;
+  border: 2px dashed rgb(15 92 87 / 40%);
+  background: #f6faf9;
+  cursor: pointer;
+}
+
+input[type='file'].campo__entrada::file-selector-button {
+  margin-inline-end: 0.875rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid rgb(15 92 87 / 38%);
+  border-radius: 8px;
+  background: linear-gradient(180deg, #ffffff 0%, #f3f8f6 100%);
+  color: var(--acento);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.nota {
+  margin-block-end: 1rem;
+}
+
+/* Campos de una fila que se alinean por abajo aunque una etiqueta ocupe dos líneas */
+.formulario__par {
+  align-items: end;
+}
+
+/* Formularios de las tarjetas: los campos se acomodan en columnas; lo largo ocupa toda la fila */
+.bloque form {
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  align-items: end;
+}
+
+.bloque form > h3,
+.bloque form > p,
+.bloque form > .boton,
+.bloque form > button,
+.bloque form > [role='alert'],
+.bloque form > [role='status'],
+.bloque form > details,
+.bloque form > .campo:has(textarea) {
+  grid-column: 1 / -1;
+}
+
+/* Las cifras de arriba de una sección, en su propia tarjeta */
+.indicadores {
+  gap: 1.5rem;
+  margin-block-end: 1.25rem;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid rgb(15 92 87 / 11%);
+  border-radius: 20px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdfc 100%);
+  box-shadow: var(--sombra-vidrio);
+}
+
+/* "¿Por dónde empiezo?" fuera del inicio: solo el ícono, para no tapar botones al fondo de la pantalla */
+.marco__cuerpo:not(:has(.hero)) .por-donde {
+  padding: 0.625rem;
+}
+
+.marco__cuerpo:not(:has(.hero)) .por-donde .por-donde__texto {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.marco__cuerpo:not(:has(.hero)) .por-donde:hover,
+.marco__cuerpo:not(:has(.hero)) .por-donde:focus-visible {
+  padding: 0.625rem 1.125rem;
+}
+
+.marco__cuerpo:not(:has(.hero)) .por-donde:hover .por-donde__texto,
+.marco__cuerpo:not(:has(.hero)) .por-donde:focus-visible .por-donde__texto {
+  position: static;
+  inline-size: auto;
+  block-size: auto;
+  overflow: visible;
+  clip-path: none;
+}
+
+/* Los campos nunca se salen de su columna (un select ancho no debe montarse sobre el de al lado) */
+.campo__entrada,
+.filtros__campos > * {
+  box-sizing: border-box;
+  min-inline-size: 0;
+}
+
+select.campo__entrada,
+input.campo__entrada:not([type='checkbox']):not([type='radio']) {
+  inline-size: 100%;
+}
+
+/* Turnos y corte del día, uno debajo del otro: la tabla de turnos necesita todo el ancho */
+.turno__rejilla {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Tablas: la columna de acciones se queda como celda de tabla (en una caja flexible rompía las líneas de las
+ * filas) y la fecha de un turno no se parte en tres renglones */
+td.tabla__acciones {
+  display: table-cell;
+  text-align: end;
+  white-space: nowrap;
+}
+
+td.tabla__acciones > * + * {
+  margin-inline-start: 0.5rem;
+}
+
+.turno__rejilla .tabla td:nth-child(2) {
+  white-space: nowrap;
+}
