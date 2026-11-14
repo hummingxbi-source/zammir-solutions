@@ -4,6 +4,8 @@ import { Link, useNavigate } from 'react-router';
 import { textos } from '../shared/i18n/textos';
 import { AvisoCerrable } from '../shared/ui/AvisoCerrable';
 import { EncabezadoDePagina } from '../shared/ui/EncabezadoDePagina';
+import { VidriosDecorativos } from '../shared/ui/VidriosDecorativos';
+import { saludoDeLaHora } from './saludo';
 import { EstadoVacio } from '../shared/ui/EstadoVacio';
 import { Icono, iconoDeSeccion } from '../shared/ui/Icono';
 import { Tarjeta } from '../shared/ui/Tarjeta';
@@ -37,7 +39,13 @@ export function PanelDeInicio({
   conectar = false,
   entrar = false,
   resumen = null,
+  nombre = null,
+  ahora = () => new Date(),
 }: {
+  /** Quién usa la tablet, para saludarle por su nombre. */
+  readonly nombre?: string | null;
+  /** Hora actual, para el saludo ("Buenos días") y para probarlo. */
+  readonly ahora?: () => Date;
   readonly interruptores: ReadonlySet<Interruptor>;
   /** Muestra el acceso para conectar esta tablet con un código de registro. */
   readonly conectar?: boolean;
@@ -73,30 +81,38 @@ export function PanelDeInicio({
     </>
   );
 
+  const primerNombre = nombre?.trim().split(/\s+/)[0];
+  const saludo =
+    primerNombre === undefined || primerNombre === ''
+      ? saludoDeLaHora(ahora())
+      : `${saludoDeLaHora(ahora())}, ${primerNombre}`;
+
   return (
     <section className="anima-entrada">
-      <EncabezadoDePagina
-        titulo={textos.inicio.titulo}
-        descripcion={textos.inicio.descripcion}
-        acciones={
-          entrar || conectar ? (
-            <>
-              {entrar ? (
-                <Link to="/entrar" className="boton">
-                  <Icono nombre="usuarios" />
-                  {textos.personas.acceso}
-                </Link>
-              ) : null}
-              {conectar ? (
-                <Link to="/conectar" className="boton boton--secundario">
-                  <Icono nombre="nube" />
-                  {textos.conectar.titulo}
-                </Link>
-              ) : null}
-            </>
-          ) : undefined
-        }
-      />
+      <header className="hero">
+        <VidriosDecorativos className="hero__vidrios" />
+        <div className="hero__texto">
+          <p className="hero__saludo">{saludo}</p>
+          <h1 className="hero__titulo">{textos.inicio.titulo}</h1>
+          <p className="hero__descripcion">{textos.inicio.descripcion}</p>
+        </div>
+        {entrar || conectar ? (
+          <div className="hero__acciones">
+            {entrar ? (
+              <Link to="/entrar" className="boton">
+                <Icono nombre="usuarios" />
+                {textos.personas.acceso}
+              </Link>
+            ) : null}
+            {conectar ? (
+              <Link to="/conectar" className="boton boton--secundario">
+                <Icono nombre="nube" />
+                {textos.conectar.titulo}
+              </Link>
+            ) : null}
+          </div>
+        ) : null}
+      </header>
 
       {!visitadas.has('catalogo') ? (
         <AvisoCerrable

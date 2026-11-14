@@ -53,7 +53,7 @@ import { AvisoDeCatalogo } from './shell/AvisoDeCatalogo';
 import { Layout } from './shell/Layout';
 import { PanelDeInicio, SeccionVacia } from './shell/Paginas';
 import { seccionesVisibles, type Interruptor } from './shell/secciones';
-import { useHayPersona, useTabletConectada } from './shell/estado-de-la-tablet';
+import { useNombreDeLaPersona, useTabletConectada } from './shell/estado-de-la-tablet';
 import { PaginaAdministrador } from './modules/identity/ui/PaginaAdministrador';
 
 export interface AppProps {
@@ -148,7 +148,8 @@ export function App({
     ...seccionesVisibles('secundaria', interruptores),
   ];
   const tabletConectada = useTabletConectada(conectarTablet?.store ?? null);
-  const hayPersona = useHayPersona(entradaConPin?.session ?? null);
+  const nombreDeLaPersona = useNombreDeLaPersona(entradaConPin?.session ?? null);
+  const hayPersona = nombreDeLaPersona !== null;
   // Los accesos del inicio solo ofrecen lo que todavía falta: conectar la tablet o entrar con el PIN.
   const ofrecerConectar = conectarTablet !== null && !tabletConectada;
   const ofrecerEntrar = entradaConPin !== null && !hayPersona;
@@ -166,6 +167,7 @@ export function App({
           element={
             <PanelDeInicio
               interruptores={interruptores}
+              nombre={nombreDeLaPersona}
               conectar={ofrecerConectar}
               entrar={ofrecerEntrar}
               resumen={
@@ -282,6 +284,7 @@ export function App({
           element={
             <PanelDeInicio
               interruptores={interruptores}
+              nombre={nombreDeLaPersona}
               conectar={ofrecerConectar}
               entrar={ofrecerEntrar}
               resumen={

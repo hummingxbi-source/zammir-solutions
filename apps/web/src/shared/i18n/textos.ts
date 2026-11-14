@@ -117,6 +117,10 @@ export const textos = {
       configuracion: 'Condiciones, aviso de privacidad y más.',
     },
   },
+  acceso: {
+    lema: 'Cotiza, cobra y entrega, con o sin internet.',
+    detalle: 'Todo lo que captures se guarda en la tablet y sale solo cuando hay conexión.',
+  },
   cuenta: {
     rotulo: 'Administrador',
     entrar: 'Entrar como administrador',

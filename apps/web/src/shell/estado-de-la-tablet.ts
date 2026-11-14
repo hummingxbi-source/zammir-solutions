@@ -25,6 +25,22 @@ export function useTabletConectada(almacen: { load(): Promise<unknown> } | null)
   return conectada;
 }
 
+/** El nombre de quien está usando la tablet, o `null` si nadie ha entrado. */
+export function useNombreDeLaPersona(sesion: ActiveUserSession | null): string | null {
+  const suscribir = useCallback(
+    (aviso: () => void) => (sesion === null ? () => undefined : sesion.subscribe(aviso)),
+    [sesion],
+  );
+  const leer = useCallback((): string | null => {
+    if (sesion === null) {
+      return null;
+    }
+    const estado = sesion.state();
+    return estado.kind === 'ACTIVE' ? estado.user.name : null;
+  }, [sesion]);
+  return useSyncExternalStore(suscribir, leer);
+}
+
 /** Si alguien ya entró con su PIN en esta tablet. */
 export function useHayPersona(sesion: ActiveUserSession | null): boolean {
   const suscribir = useCallback(

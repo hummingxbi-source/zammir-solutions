@@ -4,6 +4,7 @@ import { Link, NavLink, useLocation } from 'react-router';
 import type { ActiveUserSession } from '@zammir/core';
 
 import { LogoZammir } from '../shared/ui/LogoZammir';
+import { VidriosDecorativos } from '../shared/ui/VidriosDecorativos';
 import { textos } from '../shared/i18n/textos';
 import { Icono, iconoDeSeccion } from '../shared/ui/Icono';
 import { IndicadorDeConexion, type SincronizacionVisible } from './IndicadorDeConexion';
@@ -69,6 +70,9 @@ function EnlaceDeSeccion({
 
 const NINGUNA_SESION = (): (() => void) => () => undefined;
 
+/** Pantallas que se muestran sin la barra de secciones. */
+const RUTAS_DE_ACCESO: readonly string[] = ['/entrar', '/conectar', '/administrador'];
+
 /** Marco de la aplicación: barra lateral con las secciones en el orden del trabajo (numeración discreta y
  *  marca de visitadas) y las demás aparte, encabezado con la fecha y el saludo, y la franja de estado
  *  [RF-UX-01, RF-UX-06, ADR-0028]. En pantallas angostas la barra pasa arriba y se desplaza sola, sin
@@ -109,6 +113,30 @@ export function Layout({
 
   const principales = seccionesVisibles('principal', interruptores);
   const secundarias = seccionesVisibles('secundaria', interruptores);
+
+  // Las pantallas de acceso (PIN, conectar la tablet, administrador) van a pantalla completa, sin la barra
+  // de secciones: todavía no hay nada que navegar.
+  if (RUTAS_DE_ACCESO.includes(pathname)) {
+    return (
+      <div className="acceso-lienzo">
+        <aside className="acceso-marca">
+          <Link to="/" className="acceso-marca__logo" aria-label={textos.navegacion.irAlInicio}>
+            <LogoZammir className="acceso-marca__marca" />
+            {textos.app.nombre}
+          </Link>
+          <VidriosDecorativos className="acceso-marca__vidrios" />
+          <div className="acceso-marca__texto">
+            <p className="acceso-marca__lema">{textos.acceso.lema}</p>
+            <p className="acceso-marca__detalle">{textos.acceso.detalle}</p>
+          </div>
+        </aside>
+        <div className="acceso-lienzo__cuerpo">
+          <IndicadorDeConexion sincronizacion={sincronizacion} />
+          <main className="acceso-lienzo__contenido">{children}</main>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="marco">
