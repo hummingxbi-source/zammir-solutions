@@ -65,6 +65,18 @@ Las 11 de RF-M1-02 más 3 que la investigación sugiere. Marcadas con **NUEVA** 
 6. **Herrajes y accesorios:** ¿les sirve verlos juntos en una sola categoría o prefieren separarlos?
 7. ¿Falta alguna categoría que manejen y no aparece aquí?
 
+## Lo que contestó Luis (8 nov 2026)
+
+Detalle en [`RESPUESTAS_DE_LUIS.md`](RESPUESTAS_DE_LUIS.md).
+
+- **Venden** vidrio laminado, acrílico y policarbonato: las categorías 3 y 8 se quedan **encendidas**.
+- **Canceles de baño, mamparas y barandales:** "depende del trabajo". Se cargan los dos modos (producto armado con un solo precio, o vidrio y herrajes por separado) y el cotizador deja elegir; falta saber cuándo usa cada uno.
+- **Cantos, perforaciones y biselados:** "depende del trabajo" y se cobran **por metro cuadrado**: son cargos adicionales de la regla de precio, no productos.
+- **Aluminio:** venden **perfil suelto** (por largo capturado) y cancelería armada.
+- **Suman:** **canceles comerciales** y **vitrales** (a medida) y **reparaciones y mantenimiento a domicilio** (categoría Servicios).
+- **Herrajes y accesorios:** los 12 artículos de mostrador de la lista caben en las categorías 9, 11 y 12.
+- **No** llevan existencias, no cobran medición, flete ni instalación (la instalación va incluida) y no tienen cobro mínimo.
+
 ## Fuentes consultadas
 
 - Tesis y documentos de la UNAM sobre vidrio en edificación: <https://ru.dgb.unam.mx/bitstream/20.500.14330/TES01000220216/3/0220216.pdf>

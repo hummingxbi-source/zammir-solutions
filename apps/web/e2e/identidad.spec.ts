@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
-// Identidad visual v1 [ADR-0028]: marco con barra lateral, fuentes que viajan con la aplicación, sin
+// Identidad visual [ADR-0028, ADR-0037]: marco con barra lateral, fuentes que viajan con la aplicación, sin
 // desplazamiento de lado en el celular y contraste de los componentes nuevos, medido en el navegador real.
 
 const MUESTRA = `
@@ -58,7 +58,7 @@ test('las fuentes de la identidad se cargan desde la propia aplicación', async 
   await page.goto('/');
   await page.evaluate(() => document.fonts.ready);
   const cargadas = await page.evaluate(() => ({
-    titulo: document.fonts.check('700 16px Fraunces'),
+    titulo: document.fonts.check('700 16px "Playfair Display"'),
     lectura: document.fonts.check('400 16px "Source Serif 4"'),
     etiqueta: document.fonts.check('500 14px "IBM Plex Mono"'),
   }));

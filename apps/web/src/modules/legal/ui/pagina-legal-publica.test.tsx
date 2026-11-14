@@ -72,8 +72,8 @@ describe('página pública del aviso y los términos', () => {
     expect(screen.queryByText('Texto futuro')).toBeNull();
     expect(screen.getByText(/Versión 2 · vigente desde/)).toBeTruthy();
     expect(screen.getByText('ZAMMIR (prueba)')).toBeTruthy();
-    expect(screen.getByText('Para ejercer tus derechos sobre tus datos')).toBeTruthy();
-    expect(screen.getByText('Escríbenos por WhatsApp al 5500000000.')).toBeTruthy();
+    expect(screen.getByText('Para ejercer sus derechos sobre sus datos')).toBeTruthy();
+    expect(screen.getByText('Escríbanos por WhatsApp al 5500000000.')).toBeTruthy();
   });
 
   it('sin datos del negocio no inventa un canal: manda a preguntar al vendedor', async () => {
@@ -82,7 +82,7 @@ describe('página pública del aviso y los términos', () => {
     mostrar(deps, 'PRIVACY_NOTICE', contacto({ name: null, phone: null }));
     expect(await screen.findByText('Aviso')).toBeTruthy();
     expect(
-      screen.getByText('Pregunta a tu vendedor cómo comunicarte con el negocio.'),
+      screen.getByText('Pregunte a su vendedor cómo comunicarse con el negocio.'),
     ).toBeTruthy();
     expect(screen.getByText('ZAMMIR')).toBeTruthy();
   });
@@ -99,7 +99,7 @@ describe('página pública del aviso y los términos', () => {
     mostrar(entorno(), 'TERMS');
     expect(
       await screen.findByText(
-        'Todavía no hay términos del servicio publicados. Pídelos a tu vendedor.',
+        'Todavía no hay términos del servicio publicados. Pídalos a su vendedor.',
       ),
     ).toBeTruthy();
   });

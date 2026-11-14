@@ -42,5 +42,6 @@
 | [0034](docs/decisiones/0034-registro-de-errores-propio-sin-datos-personales-y-salud.md) | Registro de errores propio sin datos personales y comprobación de salud para el monitoreo | Aceptada (propuesta) | 2026-11-05 |
 | [0035](docs/decisiones/0035-revision-de-seguridad-automatizada.md) | Revisión de seguridad automatizada: invariantes de la base, escaneo del paquete y auditoría de producción | Aceptada (propuesta) | 2026-11-08 |
 | [0036](docs/decisiones/0036-exportacion-de-datos-del-negocio.md) | Exportación de los datos del negocio en CSV, JSON y PDF, solo administradores y sin credenciales | Aceptada (propuesta) | 2026-11-08 |
+| [0037](docs/decisiones/0037-identidad-visual-v2-verde-vidrio-y-tono-de-usted.md) | Identidad visual v2 (verde vidrio y letra elegante) y tono de usted con los clientes | Aceptada (propuesta) | 2026-11-14 |
 
 Plantilla para una nueva decisión: [`docs/decisiones/0000-plantilla.md`](docs/decisiones/0000-plantilla.md).
