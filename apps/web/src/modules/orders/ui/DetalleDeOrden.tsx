@@ -194,6 +194,7 @@ export function DetalleDeOrden(props: DetalleDeOrdenProps): ReactElement {
   return (
     <section className="anima-entrada orden">
       <EncabezadoDePagina
+        sinIlustracion
         rotulo={rotulo}
         titulo={`${orden.folio ?? orden.tempFolio} · ${cliente?.name ?? '—'}`}
         acciones={

@@ -4,11 +4,15 @@ import { Link, NavLink, useLocation } from 'react-router';
 import type { ActiveUserSession } from '@zammir/core';
 
 import { LogoZammir } from '../shared/ui/LogoZammir';
+import { VidriosDecorativos } from '../shared/ui/VidriosDecorativos';
+import { ContextoDeSeccion } from '../shared/ui/ContextoDeSeccion';
 import { textos } from '../shared/i18n/textos';
 import { Icono, iconoDeSeccion } from '../shared/ui/Icono';
 import { IndicadorDeConexion, type SincronizacionVisible } from './IndicadorDeConexion';
 import { seccionesVisibles, SECCIONES, type Interruptor, type Seccion } from './secciones';
 import { BotonPorDondeEmpiezo } from './PrimerosPasos';
+import { CuentaAdmin } from './CuentaAdmin';
+import { recordarDondeEstaba } from './donde-estaba';
 import { useSeccionesVisitadas } from './useSeccionesVisitadas';
 
 export interface LayoutProps {
@@ -67,6 +71,9 @@ function EnlaceDeSeccion({
 
 const NINGUNA_SESION = (): (() => void) => () => undefined;
 
+/** Pantallas que se muestran sin la barra de secciones. */
+const RUTAS_DE_ACCESO: readonly string[] = ['/entrar', '/conectar', '/administrador'];
+
 /** Marco de la aplicación: barra lateral con las secciones en el orden del trabajo (numeración discreta y
  *  marca de visitadas) y las demás aparte, encabezado con la fecha y el saludo, y la franja de estado
  *  [RF-UX-01, RF-UX-06, ADR-0028]. En pantallas angostas la barra pasa arriba y se desplaza sola, sin
@@ -85,6 +92,10 @@ export function Layout({
     const actual = SECCIONES.find((seccion) => pathname.startsWith(seccion.ruta));
     if (actual !== undefined) {
       marcar(actual.id);
+      // Para volver aquí después de entrar con el PIN o como administrador.
+      recordarDondeEstaba(pathname);
+    } else if (pathname === '/') {
+      recordarDondeEstaba(null);
     }
   }, [pathname, marcar]);
 
@@ -101,8 +112,33 @@ export function Layout({
   }, [session]);
   const nombre = useSyncExternalStore(suscribir, leerNombre);
 
+  const seccionActual = SECCIONES.find((seccion) => pathname.startsWith(seccion.ruta));
   const principales = seccionesVisibles('principal', interruptores);
   const secundarias = seccionesVisibles('secundaria', interruptores);
+
+  // Las pantallas de acceso (PIN, conectar la tablet, administrador) van a pantalla completa, sin la barra
+  // de secciones: todavía no hay nada que navegar.
+  if (RUTAS_DE_ACCESO.includes(pathname)) {
+    return (
+      <div className="acceso-lienzo">
+        <aside className="acceso-marca">
+          <Link to="/" className="acceso-marca__logo" aria-label={textos.navegacion.irAlInicio}>
+            <LogoZammir className="acceso-marca__marca" />
+            {textos.app.nombre}
+          </Link>
+          <VidriosDecorativos className="acceso-marca__vidrios" />
+          <div className="acceso-marca__texto">
+            <p className="acceso-marca__lema">{textos.acceso.lema}</p>
+            <p className="acceso-marca__detalle">{textos.acceso.detalle}</p>
+          </div>
+        </aside>
+        <div className="acceso-lienzo__cuerpo">
+          <IndicadorDeConexion sincronizacion={sincronizacion} />
+          <main className="acceso-lienzo__contenido">{children}</main>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="marco">
@@ -113,6 +149,11 @@ export function Layout({
         </Link>
 
         <div className="barra__navs">
+          <NavLink to="/" end className="nav__enlace barra__inicio">
+            <Icono nombre="inicio" />
+            <span className="nav__texto">{textos.navegacion.inicio}</span>
+          </NavLink>
+
           <nav aria-label={textos.navegacion.principal} className="barra__grupo">
             <p className="rotulo barra__titulo" aria-hidden="true">
               {textos.navegacion.flujoDeTrabajo}
@@ -149,13 +190,20 @@ export function Layout({
         <IndicadorDeConexion sincronizacion={sincronizacion} />
 
         <header className="marco__cabecera">
-          <p className="rotulo marco__fecha">{fechaLarga(ahora())}</p>
-          {nombre !== null ? (
-            <p className="marco__saludo">{textos.navegacion.saludo(primerNombre(nombre))}</p>
-          ) : null}
+          <div className="marco__cabecera-texto">
+            <p className="rotulo marco__fecha">{fechaLarga(ahora())}</p>
+            {nombre !== null ? (
+              <p className="marco__saludo">{textos.navegacion.saludo(primerNombre(nombre))}</p>
+            ) : null}
+          </div>
+          <CuentaAdmin />
         </header>
 
-        <main className="marco__contenido">{children}</main>
+        <main className="marco__contenido">
+          <ContextoDeSeccion.Provider value={seccionActual?.id ?? null}>
+            {children}
+          </ContextoDeSeccion.Provider>
+        </main>
         <BotonPorDondeEmpiezo interruptores={interruptores} visitadas={visitadas} />
       </div>
     </div>

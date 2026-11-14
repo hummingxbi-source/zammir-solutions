@@ -358,9 +358,17 @@
 
 /* Encabezado: fecha en monoespaciada y saludo */
 .marco__cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  padding: 1.75rem clamp(1rem, 3vw, 2.5rem) 0;
+}
+
+.marco__cabecera-texto {
   display: grid;
   gap: 0.25rem;
-  padding: 1.75rem clamp(1rem, 3vw, 2.5rem) 0;
 }
 
 .marco__fecha {
@@ -384,6 +392,9 @@
 @media (max-width: 63.99rem) {
   .marco {
     grid-template-columns: minmax(0, 1fr);
+    /* La barra solo ocupa lo suyo; el contenido se lleva el resto (sin esto el espacio sobrante se
+     * reparte entre las dos filas y aparece un hueco arriba del contenido). */
+    grid-template-rows: auto minmax(0, 1fr);
   }
 
   .barra {

@@ -285,6 +285,7 @@ export function EditorDeCotizacion({
   return (
     <section className="cotizador anima-entrada">
       <EncabezadoDePagina
+        sinIlustracion
         {...(rotulo === undefined ? {} : { rotulo })}
         titulo={`${t.titulo} · ${cliente.name}`}
         acciones={

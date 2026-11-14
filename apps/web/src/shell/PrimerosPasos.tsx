@@ -67,6 +67,9 @@ export function PrimerosPasos({
                   <span className="guia__titulo">{paso.texto}</span>
                   <span className="guia__detalle">{DESCRIPCIONES[paso.id] ?? ''}</span>
                 </span>
+                <span className="guia__flecha" aria-hidden="true">
+                  <Icono nombre="flechaDerecha" />
+                </span>
               </Link>
             </li>
           );

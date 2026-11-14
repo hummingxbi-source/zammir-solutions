@@ -21,6 +21,8 @@ import './shared/ui/tokens.css';
 import './shared/ui/estilos.css';
 import './shared/ui/componentes.css';
 import './shared/ui/graficas.css';
+import './shared/ui/acceso.css';
+import './shared/ui/premium.css';
 
 // Guarda la aplicación en la tablet para abrirla sin internet [RNF-01].
 registerSW({ immediate: true });

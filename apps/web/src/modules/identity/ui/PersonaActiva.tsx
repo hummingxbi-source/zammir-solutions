@@ -5,6 +5,7 @@ import type { ActiveUserSession } from '@zammir/core';
 
 import { textos } from '../../../shared/i18n/textos';
 import { Boton } from '../../../shared/ui/Boton';
+import { Inicial } from '../../../shared/ui/Inicial';
 
 /** Cada cuánto se revisa si ya pasó el tiempo sin actividad. */
 const REVISION_MS = 5_000;
@@ -53,8 +54,10 @@ export function PersonaActiva({
   }
   return (
     <div className="persona-activa" role="status">
-      <span>
-        {textos.personas.activa} <strong>{estado.user.name}</strong>
+      <Inicial nombre={estado.user.name} />
+      <span className="persona-activa__texto">
+        <span className="persona-activa__etiqueta">{textos.personas.activa}</span>{' '}
+        <strong>{estado.user.name}</strong>
       </span>
       <Boton
         variante="secundario"

@@ -41,6 +41,7 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). L
 **Reportes e inicio**
 - Reportes de ventas por día, semana (de lunes a domingo) y mes, en hora de México y con comparativo; por medio de pago y por persona; lo más vendido; trabajos por estatus.
 - Panel de inicio según quién entró, "Primeros pasos" y botón "¿Por dónde empiezo?"; el inicio del cajero muestra su turno abierto y lo que falta por enviar.
+- Entrada ordenada tras la revisión en pruebas: "Panel de inicio" en la navegación; el acceso del administrador (correo y contraseña) arriba a la derecha en todas las pantallas, una sola vez; pantalla del PIN con tarjetas por persona, texto de ayuda y teclado de 3×4; conexión de la tablet en tarjeta, sin el botón de conectar cuando ya está conectada; barra "Está usando la tablet" bien separada; "Primeros pasos" en filas alineadas; tras entrar con el PIN se vuelve a la sección donde se estaba; corregido el hueco arriba del contenido en tablet vertical.
 
 **Legal y facturación**
 - Aviso de privacidad y términos del servicio versionados, y canal para ejercer derechos.

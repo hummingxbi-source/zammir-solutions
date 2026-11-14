@@ -1446,10 +1446,11 @@ h3.reportes__subtitulo:not(.rotulo) {
   color: var(--tinta-suave);
 }
 
+/* Una fila por paso: el número, qué es y para qué sirve, y la flecha. Siempre alineadas, sin importar
+ * cuántos pasos haya ni qué tan ancha sea la pantalla. */
 .guia__pasos {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
-  gap: 0.75rem;
+  gap: 0.5rem;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -1457,12 +1458,11 @@ h3.reportes__subtitulo:not(.rotulo) {
 
 .guia__paso {
   display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
+  align-items: center;
+  gap: 1rem;
   box-sizing: border-box;
-  block-size: 100%;
   min-block-size: 44px;
-  padding: 1rem;
+  padding: 0.875rem 1.25rem;
   border: 1px solid var(--borde-suave);
   border-radius: var(--radio-medio);
   background: var(--superficie);
@@ -1506,8 +1506,20 @@ h3.reportes__subtitulo:not(.rotulo) {
 
 .guia__texto {
   display: grid;
+  flex: 1;
   gap: 0.125rem;
   min-inline-size: 0;
+}
+
+.guia__flecha {
+  display: inline-flex;
+  flex: none;
+  color: var(--tinta-suave);
+}
+
+.guia__paso:hover .guia__flecha,
+.guia__paso--siguiente .guia__flecha {
+  color: var(--acento);
 }
 
 .guia__rotulo {

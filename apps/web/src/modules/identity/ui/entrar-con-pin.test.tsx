@@ -101,6 +101,18 @@ describe('entrada con PIN en la tablet', () => {
     expect(session.actingUser()?.name).toBe('Ana');
   });
 
+  it('después de entrar vuelve a la sección donde estaba, no al inicio', async () => {
+    sessionStorage.setItem('zammir-donde-estaba', '/clientes');
+    await montar();
+    await elegir('Ana');
+    teclear('4829');
+    fireEvent.click(screen.getByRole('button', { name: 'Entrar' }));
+    // Está en Clientes (la sección recordada) y no en el panel de inicio.
+    expect(await screen.findByRole('heading', { name: 'Clientes' })).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Panel de inicio' })).toBeNull();
+    sessionStorage.clear();
+  });
+
   it('el PIN no se ve: solo puntos', async () => {
     await montar();
     await elegir('Ana');
