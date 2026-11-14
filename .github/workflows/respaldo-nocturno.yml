@@ -1,0 +1,62 @@
+# Respaldo nocturno de la base de producción, fuera de Supabase [RNF-21, S4-27, PD-32].
+# El plan Pro de Supabase guarda 7 días de respaldos diarios; ZAMMIR pide 30. Cada noche se saca una copia
+# cifrada y se guarda como artefacto del repositorio privado con 30 días de vida: son 30 copias a la mano.
+#
+# Secretos del entorno "produccion" (Settings > Environments):
+#   SUPABASE_DB_URL       cadena de conexión de la base (Connect > Session pooler), con su contraseña
+#   CLAVE_DE_RESPALDO     frase larga para cifrar las copias. Guárdela también FUERA de GitHub (gestor de
+#                         contraseñas): sin ella una copia no se puede abrir.
+# Cómo se restaura una copia: docs/operacion/RESTAURACION.md.
+name: Respaldo nocturno
+
+on:
+  schedule:
+    - cron: '0 8 * * *' # 08:00 UTC = 02:00 en la Ciudad de México (sin horario de verano)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: respaldo-nocturno
+  cancel-in-progress: false
+
+jobs:
+  respaldar:
+    name: Copia cifrada de la base de producción
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: produccion
+    steps:
+      - name: Sacar la copia (estructura y datos de la aplicación, y las cuentas)
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          mkdir copia
+          # pg_dump de la misma versión mayor que la base (17), sin instalar nada en el equipo
+          docker run --rm -e SUPABASE_DB_URL postgres:17 sh -c \
+            'pg_dump --dbname "$SUPABASE_DB_URL" --format=custom --no-owner --schema=public' > copia/public.dump
+          docker run --rm -e SUPABASE_DB_URL postgres:17 sh -c \
+            'pg_dump --dbname "$SUPABASE_DB_URL" --format=custom --no-owner --data-only --table=auth.users --table=auth.identities' > copia/auth.dump
+          test -s copia/public.dump && test -s copia/auth.dump
+
+      - name: Cifrar y juntar
+        env:
+          CLAVE_DE_RESPALDO: ${{ secrets.CLAVE_DE_RESPALDO }}
+        run: |
+          set -euo pipefail
+          fecha=$(date -u +%Y-%m-%d)
+          tar -C copia -cf - public.dump auth.dump \
+            | openssl enc -aes-256-cbc -pbkdf2 -iter 600000 -salt -pass env:CLAVE_DE_RESPALDO \
+            > "respaldo-zammir-${fecha}.tar.enc"
+          ls -l "respaldo-zammir-${fecha}.tar.enc"
+          echo "FECHA_DE_COPIA=${fecha}" >> "$GITHUB_ENV"
+
+      - name: Guardar 30 días
+        uses: actions/upload-artifact@v4
+        with:
+          name: respaldo-zammir-${{ env.FECHA_DE_COPIA }}
+          path: respaldo-zammir-*.tar.enc
+          retention-days: 30
+          if-no-files-found: error
