@@ -455,8 +455,16 @@ describe('Gráficas', () => {
     const trazo = container.querySelector('.linea__trazo')?.getAttribute('d') ?? '';
     expect(trazo.startsWith('M')).toBe(true);
     expect(trazo.match(/L/g)).toHaveLength(2);
-    expect(container.querySelector('.linea__extremos')?.textContent).toBe('01/1103/11');
-    expect(container.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
+    expect(container.querySelector('.linea__extremos')?.textContent).toBe('01/1102/1103/11');
+    // El eje trae números redondos de abajo hacia arriba y la base del dibujo
+    expect([...container.querySelectorAll('.linea__eje li')].map((li) => li.textContent)).toEqual([
+      '$320',
+      '$240',
+      '$160',
+      '$80',
+      '$0',
+    ]);
+    expect(container.querySelector('.linea__cuerpo')?.getAttribute('aria-hidden')).toBe('true');
   });
 
   it('una línea sin puntos o con uno solo no truena', () => {
@@ -467,7 +475,7 @@ describe('Gráficas', () => {
       <GraficaDeLinea descripcion="u" formatear={pesos} puntos={[{ etiqueta: 'a', valor: 0 }]} />,
     );
     expect(uno.container.querySelector('.linea__trazo')?.getAttribute('d')).toMatch(
-      /^M300\.0 172\.0$/,
+      /^M300\.0 200\.0$/,
     );
   });
 });

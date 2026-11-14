@@ -36,6 +36,7 @@ export const textos = {
   inicio: {
     titulo: 'Panel de inicio',
     descripcion: 'Elige por dónde quieres empezar. Cada sección sigue el orden real del trabajo.',
+    atajos: 'Atajos a todas las secciones',
     nota: 'Todo lo que captures se guarda en la tablet y sale solo cuando hay internet. Puedes seguir trabajando sin conexión.',
     resumen: {
       ayudaVentas:
@@ -57,6 +58,12 @@ export const textos = {
       produccion: 'En producción',
       trabajos: (n: number): string => (n === 1 ? '1 trabajo' : `${String(n)} trabajos`),
       tendencia: 'Ingresos de los últimos 31 días',
+      resumenDelDia: 'Cifras clave de hoy',
+      cobrosDeHoy: 'cobros hoy',
+      cobrosPorPersona: 'Cobros de hoy por persona',
+      produccionPorEstatus: 'Producción por estatus',
+      activas: 'activos',
+      antiguedad: 'Lo que te deben, por antigüedad',
       tuTurno: 'Tus cobros de hoy',
       miTurno: 'Mi turno de caja',
       ayudaMiTurno:
@@ -984,6 +991,8 @@ export const textos = {
   },
   reportes: {
     titulo: 'Reportes',
+    tendencia: 'Ingresos de los últimos 31 días',
+    cobros: { titulo: 'Cobros', periodo: 'Periodo' },
     sinNombre: 'Persona desconocida',
     soloAdministradores: {
       mensaje: 'Los reportes son solo para administradores.',
@@ -1017,6 +1026,7 @@ export const textos = {
       baja: 'Baja',
       igual: 'Igual',
       sinBase: 'Sin ventas en el periodo anterior para comparar',
+      sinBaseCorta: 'Sin base para comparar',
     },
     productos: {
       titulo: 'Lo más vendido',

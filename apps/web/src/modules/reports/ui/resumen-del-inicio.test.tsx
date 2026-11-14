@@ -132,16 +132,16 @@ describe('resumen del inicio', () => {
 
   it('el administrador ve las ventas de hoy contra ayer, lo que le deben y la producción', async () => {
     await montar(admin);
-    const hoy = within(await screen.findByRole('region', { name: 'Ventas de hoy' }));
+    const hoy = within(await screen.findByRole('group', { name: 'Ventas de hoy' }));
     // Hoy: venta 116 + transferencia 300; la venta cancelada no suma. Ayer: 200.
     expect(hoy.getByText('$416.00')).toBeTruthy();
     expect(hoy.getByText('Ayer: $200.00')).toBeTruthy();
     expect(hoy.getByText('Sube 108.00 %')).toBeTruthy();
     // Orden de $1,000 con $300 pagados: se deben $700.
-    const cobrar = within(screen.getByRole('region', { name: 'Por cobrar' }));
+    const cobrar = within(screen.getByRole('group', { name: 'Por cobrar' }));
     expect(cobrar.getByText('$700.00')).toBeTruthy();
-    expect(cobrar.getByText('1 cuenta')).toBeTruthy();
-    const produccion = within(screen.getByRole('region', { name: 'En producción' }));
+    expect(cobrar.getByText(/^1 cuenta/)).toBeTruthy();
+    const produccion = within(screen.getByRole('group', { name: 'En producción' }));
     expect(produccion.getByText('$1,000.00')).toBeTruthy();
     expect(produccion.getByText('1 trabajo')).toBeTruthy();
   });
@@ -153,7 +153,7 @@ describe('resumen del inicio', () => {
     );
     expect(medios.getByText('$116.00')).toBeTruthy();
     expect(medios.getByText('$300.00')).toBeTruthy();
-    expect(medios.getByText('2 cobros')).toBeTruthy();
+    expect(medios.getByText('cobros hoy')).toBeTruthy();
     const tendencia = within(
       screen.getByRole('region', { name: 'Ingresos de los últimos 31 días' }),
     );
@@ -165,7 +165,7 @@ describe('resumen del inicio', () => {
 
   it('cada tarjeta con cifras trae su ayuda que se abre con un toque', async () => {
     await montar(admin);
-    await screen.findByRole('region', { name: 'Ventas de hoy' });
+    await screen.findByRole('group', { name: 'Ventas de hoy' });
     expect(screen.getAllByRole('button', { name: /^Ayuda sobre/ }).length).toBeGreaterThanOrEqual(
       3,
     );
@@ -173,18 +173,18 @@ describe('resumen del inicio', () => {
 
   it('el cajero ve solo lo que cobró él hoy, sin cifras del negocio', async () => {
     await montar(ana);
-    const suyos = within(await screen.findByRole('region', { name: 'Tus cobros de hoy' }));
+    const suyos = within(await screen.findByRole('group', { name: 'Tus cobros de hoy' }));
     expect(suyos.getByText('$116.00')).toBeTruthy();
     expect(suyos.getByText('1 cobro')).toBeTruthy();
-    expect(screen.queryByRole('region', { name: 'Por cobrar' })).toBeNull();
-    expect(screen.queryByRole('region', { name: 'Ventas de hoy' })).toBeNull();
-    expect(screen.getByRole('region', { name: 'En producción' })).toBeTruthy();
+    expect(screen.queryByRole('group', { name: 'Por cobrar' })).toBeNull();
+    expect(screen.queryByRole('group', { name: 'Ventas de hoy' })).toBeNull();
+    expect(screen.getByRole('group', { name: 'En producción' })).toBeTruthy();
   });
 
   it('sin movimiento enseña qué hacer en vez de mostrar ceros de relleno', async () => {
     await montar(admin, false);
     expect(await screen.findByText('Todavía no hay movimiento')).toBeTruthy();
-    expect(screen.queryByRole('region', { name: 'Ventas de hoy' })).toBeNull();
+    expect(screen.queryByRole('group', { name: 'Ventas de hoy' })).toBeNull();
   });
 
   it('el cajero ve su turno abierto, con la hora de México y su fondo, y lo que falta por enviar', async () => {
@@ -222,14 +222,14 @@ describe('resumen del inicio', () => {
 
   it('el administrador no ve las tarjetas del cajero', async () => {
     await montar(admin, true, { turno: turnoAbierto, porEnviar: 3 });
-    await screen.findByRole('region', { name: 'Ventas de hoy' });
+    await screen.findByRole('group', { name: 'Ventas de hoy' });
     expect(screen.queryByRole('region', { name: 'Mi turno de caja' })).toBeNull();
     expect(screen.queryByRole('region', { name: 'Por enviar' })).toBeNull();
   });
 
   it('sin turnos ni cola conectados (como en las muestras) no aparecen esas tarjetas', async () => {
     await montar(ana);
-    await screen.findByRole('region', { name: 'Tus cobros de hoy' });
+    await screen.findByRole('group', { name: 'Tus cobros de hoy' });
     expect(screen.queryByRole('region', { name: 'Mi turno de caja' })).toBeNull();
     expect(screen.queryByRole('region', { name: 'Por enviar' })).toBeNull();
   });
