@@ -49,9 +49,9 @@ const t = textos.reportes;
 
 const TONO_DE_ESTATUS: Record<WorkOrderStatus, TonoDeGrafica> = {
   WAITING: 'aluminio',
-  IN_PROCESS: 'acento',
+  IN_PROCESS: 'laton',
   READY: 'exito',
-  DELIVERED: 'laton',
+  DELIVERED: 'acento',
   CANCELLED: 'peligro',
 };
 
@@ -328,8 +328,8 @@ export function Reportes(props: ReportesProps): ReactElement {
             formatear={formatearPesos}
             centro={{ valor: String(metodos.count), rotulo: t.metodos.cobros.toLowerCase() }}
             datos={[
-              { etiqueta: t.metodos.efectivo, valor: metodos.cashCents, tono: 'exito' },
-              { etiqueta: t.metodos.transferencia, valor: metodos.transferCents, tono: 'acento' },
+              { etiqueta: t.metodos.efectivo, valor: metodos.cashCents, tono: 'acento' },
+              { etiqueta: t.metodos.transferencia, valor: metodos.transferCents, tono: 'laton' },
             ]}
           />
           <p className="reportes__pie">

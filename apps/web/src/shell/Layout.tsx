@@ -3,6 +3,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { Link, NavLink, useLocation } from 'react-router';
 import type { ActiveUserSession } from '@zammir/core';
 
+import { LogoZammir } from '../shared/ui/LogoZammir';
 import { textos } from '../shared/i18n/textos';
 import { Icono, iconoDeSeccion } from '../shared/ui/Icono';
 import { IndicadorDeConexion, type SincronizacionVisible } from './IndicadorDeConexion';
@@ -107,6 +108,7 @@ export function Layout({
     <div className="marco">
       <aside className="barra">
         <Link to="/" className="barra__logo" aria-label={textos.navegacion.irAlInicio}>
+          <LogoZammir className="barra__marca" />
           {textos.app.nombre}
         </Link>
 

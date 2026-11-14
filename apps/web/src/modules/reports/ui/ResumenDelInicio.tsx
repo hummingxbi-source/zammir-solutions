@@ -218,9 +218,9 @@ export function ResumenDelInicio(props: ResumenDelInicioProps): ReactElement | n
     props.personas.find((p) => p.id === id)?.name ?? r.sinNombre;
   const TONO_DE_ESTATUS: Record<WorkOrderStatus, TonoDeGrafica> = {
     WAITING: 'aluminio',
-    IN_PROCESS: 'acento',
+    IN_PROCESS: 'laton',
     READY: 'exito',
-    DELIVERED: 'laton',
+    DELIVERED: 'acento',
     CANCELLED: 'peligro',
   };
 
@@ -288,8 +288,8 @@ export function ResumenDelInicio(props: ResumenDelInicioProps): ReactElement | n
             formatear={formatearPesos}
             centro={{ valor: String(metodos.count), rotulo: t.cobrosDeHoy }}
             datos={[
-              { etiqueta: t.efectivo, valor: metodos.cashCents, tono: 'exito' },
-              { etiqueta: t.transferencia, valor: metodos.transferCents, tono: 'acento' },
+              { etiqueta: t.efectivo, valor: metodos.cashCents, tono: 'acento' },
+              { etiqueta: t.transferencia, valor: metodos.transferCents, tono: 'laton' },
             ]}
           />
         </Tarjeta>
