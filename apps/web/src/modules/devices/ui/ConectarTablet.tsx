@@ -12,6 +12,7 @@ import { textos } from '../../../shared/i18n/textos';
 import { Aviso } from '../../../shared/ui/Aviso';
 import { Boton } from '../../../shared/ui/Boton';
 import { Campo } from '../../../shared/ui/Campo';
+import { Icono } from '../../../shared/ui/Icono';
 
 const t = textos.conectar;
 
@@ -70,57 +71,74 @@ export function ConectarTablet({ deps, onCambio }: ConectarTabletProps): ReactEl
   }
 
   return (
-    <section className="anima-entrada" aria-labelledby="titulo-conectar">
-      <h1 id="titulo-conectar">{t.titulo}</h1>
+    <section className="acceso-pagina anima-entrada" aria-labelledby="titulo-conectar">
+      <div className="acceso-tarjeta">
+        <div className="acceso-encabezado">
+          <span
+            className={`acceso-sello${actual !== null ? ' acceso-sello--exito' : ''}`}
+            aria-hidden="true"
+          >
+            <Icono nombre={actual !== null ? 'verificar' : 'nube'} tamano={24} />
+          </span>
+          <h1 id="titulo-conectar">{t.titulo}</h1>
+        </div>
 
-      {olvidada ? <Aviso tipo="exito">{t.olvidada}</Aviso> : null}
+        {olvidada ? <Aviso tipo="exito">{t.olvidada}</Aviso> : null}
 
-      {actual !== null ? (
-        <>
-          <Aviso tipo="exito">
-            {recienConectada ? t.listo : t.yaConectada} <strong>{actual.device.name}</strong>.
-          </Aviso>
-          <p>
-            <Link to="/" className="acceso">
-              {t.irAlInicio}
-            </Link>
-          </p>
-          <Boton variante="secundario" onClick={() => void olvidar()}>
-            {t.olvidar}
-          </Boton>
-        </>
-      ) : (
-        <>
-          <p>{t.descripcion}</p>
-          {error !== null ? (
-            <Aviso tipo="error" queHacer={t.errores[error.code].queHacer}>
-              {t.errores[error.code].mensaje}
+        {actual !== null ? (
+          <>
+            <Aviso tipo="exito">
+              {recienConectada ? t.listo : t.yaConectada} <strong>{actual.device.name}</strong>.
             </Aviso>
-          ) : null}
-          <form onSubmit={(e) => void conectar(e)}>
-            <Campo
-              etiqueta={t.codigo}
-              autoCapitalize="characters"
-              autoComplete="off"
-              value={codigo}
-              onChange={(e) => {
-                setCodigo(e.target.value);
-              }}
-            />
-            <Campo
-              etiqueta={t.nombre}
-              autoComplete="off"
-              value={nombre}
-              onChange={(e) => {
-                setNombre(e.target.value);
-              }}
-            />
-            <Boton type="submit" disabled={conectando}>
-              {conectando ? t.conectando : t.boton}
-            </Boton>
-          </form>
-        </>
-      )}
+            <div className="acceso-acciones">
+              <Link to="/" className="boton">
+                {t.irAlInicio}
+              </Link>
+            </div>
+            <div className="acceso-aparte">
+              <p>{t.olvidarAyuda}</p>
+              <div className="acceso-acciones">
+                <Boton variante="peligro-suave" onClick={() => void olvidar()}>
+                  {t.olvidar}
+                </Boton>
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="acceso-ayuda">{t.descripcion}</p>
+            {error !== null ? (
+              <Aviso tipo="error" queHacer={t.errores[error.code].queHacer}>
+                {t.errores[error.code].mensaje}
+              </Aviso>
+            ) : null}
+            <form className="formulario" onSubmit={(e) => void conectar(e)}>
+              <Campo
+                etiqueta={t.codigo}
+                autoCapitalize="characters"
+                autoComplete="off"
+                value={codigo}
+                onChange={(e) => {
+                  setCodigo(e.target.value);
+                }}
+              />
+              <Campo
+                etiqueta={t.nombre}
+                autoComplete="off"
+                value={nombre}
+                onChange={(e) => {
+                  setNombre(e.target.value);
+                }}
+              />
+              <div className="formulario__acciones">
+                <Boton type="submit" disabled={conectando}>
+                  {conectando ? t.conectando : t.boton}
+                </Boton>
+              </div>
+            </form>
+          </>
+        )}
+      </div>
     </section>
   );
 }

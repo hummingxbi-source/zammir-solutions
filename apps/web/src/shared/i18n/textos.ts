@@ -16,6 +16,7 @@ export const textos = {
     principal: 'Secciones del trabajo',
     secundaria: 'Otras secciones',
     mas: 'Más',
+    inicio: 'Panel de inicio',
     flujoDeTrabajo: 'Flujo de trabajo',
     administracion: 'Administración',
     saludo: (nombre: string): string => `Hola, ${nombre}.`,
@@ -116,6 +117,15 @@ export const textos = {
       configuracion: 'Condiciones, aviso de privacidad y más.',
     },
   },
+  cuenta: {
+    rotulo: 'Administrador',
+    entrar: 'Entrar como administrador',
+    salir: 'Salir',
+    cuenta: 'Cuenta',
+    salirDeLaCuenta: 'Salir de esta cuenta',
+    yaEntro: 'Ya entraste como administrador.',
+    ir: 'Ir al inicio',
+  },
   entrada: {
     titulo: 'Entrar',
     soloAdministradores:
@@ -161,6 +171,8 @@ export const textos = {
     irAlInicio: 'Ir al inicio',
     yaConectada: 'Esta tablet ya está conectada como',
     olvidar: 'Olvidar el registro de esta tablet',
+    olvidarAyuda:
+      'Si olvidas el registro, esta tablet deja de recibir datos hasta que un administrador le dé un código nuevo. Lo que ya capturaste no se pierde.',
     olvidada: 'Se olvidó el registro. Pide un código nuevo para conectarla otra vez.',
     errores: {
       INVALID_INPUT: {
@@ -189,6 +201,9 @@ export const textos = {
     titulo: '¿Quién va a usar la tablet?',
     acceso: 'Entrar con PIN',
     descripcion: 'Toca tu nombre y escribe tu PIN.',
+    ayudaPin:
+      'Escribe tu PIN de acceso. Te lo da el dueño del negocio; si lo olvidaste, pídele que lo restablezca.',
+    roles: { ADMIN: 'Administrador', STAFF: 'Cajero / vendedor' },
     cargando: 'Cargando personas…',
     sinPersonas: 'Todavía no hay personas dadas de alta para esta tablet.',
     pin: 'PIN',

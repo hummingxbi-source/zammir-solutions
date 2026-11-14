@@ -9,6 +9,8 @@ import { Icono, iconoDeSeccion } from '../shared/ui/Icono';
 import { IndicadorDeConexion, type SincronizacionVisible } from './IndicadorDeConexion';
 import { seccionesVisibles, SECCIONES, type Interruptor, type Seccion } from './secciones';
 import { BotonPorDondeEmpiezo } from './PrimerosPasos';
+import { CuentaAdmin } from './CuentaAdmin';
+import { recordarDondeEstaba } from './donde-estaba';
 import { useSeccionesVisitadas } from './useSeccionesVisitadas';
 
 export interface LayoutProps {
@@ -85,6 +87,10 @@ export function Layout({
     const actual = SECCIONES.find((seccion) => pathname.startsWith(seccion.ruta));
     if (actual !== undefined) {
       marcar(actual.id);
+      // Para volver aquí después de entrar con el PIN o como administrador.
+      recordarDondeEstaba(pathname);
+    } else if (pathname === '/') {
+      recordarDondeEstaba(null);
     }
   }, [pathname, marcar]);
 
@@ -113,6 +119,11 @@ export function Layout({
         </Link>
 
         <div className="barra__navs">
+          <NavLink to="/" end className="nav__enlace barra__inicio">
+            <Icono nombre="inicio" />
+            <span className="nav__texto">{textos.navegacion.inicio}</span>
+          </NavLink>
+
           <nav aria-label={textos.navegacion.principal} className="barra__grupo">
             <p className="rotulo barra__titulo" aria-hidden="true">
               {textos.navegacion.flujoDeTrabajo}
@@ -149,10 +160,13 @@ export function Layout({
         <IndicadorDeConexion sincronizacion={sincronizacion} />
 
         <header className="marco__cabecera">
-          <p className="rotulo marco__fecha">{fechaLarga(ahora())}</p>
-          {nombre !== null ? (
-            <p className="marco__saludo">{textos.navegacion.saludo(primerNombre(nombre))}</p>
-          ) : null}
+          <div className="marco__cabecera-texto">
+            <p className="rotulo marco__fecha">{fechaLarga(ahora())}</p>
+            {nombre !== null ? (
+              <p className="marco__saludo">{textos.navegacion.saludo(primerNombre(nombre))}</p>
+            ) : null}
+          </div>
+          <CuentaAdmin />
         </header>
 
         <main className="marco__contenido">{children}</main>

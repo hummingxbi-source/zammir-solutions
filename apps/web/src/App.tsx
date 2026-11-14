@@ -53,6 +53,8 @@ import { AvisoDeCatalogo } from './shell/AvisoDeCatalogo';
 import { Layout } from './shell/Layout';
 import { PanelDeInicio, SeccionVacia } from './shell/Paginas';
 import { seccionesVisibles, type Interruptor } from './shell/secciones';
+import { useHayPersona, useTabletConectada } from './shell/estado-de-la-tablet';
+import { PaginaAdministrador } from './modules/identity/ui/PaginaAdministrador';
 
 export interface AppProps {
   /** Interruptores encendidos. Por defecto P1 y P2 están apagados. */
@@ -145,6 +147,11 @@ export function App({
     ...seccionesVisibles('principal', interruptores),
     ...seccionesVisibles('secundaria', interruptores),
   ];
+  const tabletConectada = useTabletConectada(conectarTablet?.store ?? null);
+  const hayPersona = useHayPersona(entradaConPin?.session ?? null);
+  // Los accesos del inicio solo ofrecen lo que todavía falta: conectar la tablet o entrar con el PIN.
+  const ofrecerConectar = conectarTablet !== null && !tabletConectada;
+  const ofrecerEntrar = entradaConPin !== null && !hayPersona;
 
   const marco = (
     <Layout
@@ -159,8 +166,8 @@ export function App({
           element={
             <PanelDeInicio
               interruptores={interruptores}
-              conectar={conectarTablet !== null}
-              entrar={entradaConPin !== null}
+              conectar={ofrecerConectar}
+              entrar={ofrecerEntrar}
               resumen={
                 prepararReportes !== null && entradaConPin !== null ? (
                   <ResumenDelInicioEnLaTablet
@@ -172,6 +179,7 @@ export function App({
             />
           }
         />
+        <Route path="/administrador" element={<PaginaAdministrador />} />
         {entradaConPin !== null ? (
           <Route
             path="/entrar"
@@ -274,8 +282,8 @@ export function App({
           element={
             <PanelDeInicio
               interruptores={interruptores}
-              conectar={conectarTablet !== null}
-              entrar={entradaConPin !== null}
+              conectar={ofrecerConectar}
+              entrar={ofrecerEntrar}
               resumen={
                 prepararReportes !== null && entradaConPin !== null ? (
                   <ResumenDelInicioEnLaTablet
