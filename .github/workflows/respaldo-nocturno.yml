@@ -1,5 +1,5 @@
 # Respaldo nocturno de la base de producción, fuera de Supabase [RNF-21, S4-27, PD-32].
-# El plan Pro de Supabase guarda 7 días de respaldos diarios; ZAMMIR pide 30. Cada noche se saca una copia
+# El plan gratuito de Supabase no incluye respaldos de la plataforma [ADR-0038]; ZAMMIR pide 30 días. Cada noche se saca una copia
 # cifrada y se guarda como artefacto del repositorio privado con 30 días de vida: son 30 copias a la mano.
 #
 # Secretos del entorno "produccion" (Settings > Environments):

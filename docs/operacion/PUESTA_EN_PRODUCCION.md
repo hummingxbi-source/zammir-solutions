@@ -9,7 +9,7 @@
 | Entorno | Base y funciones | Aplicación | Para qué |
 |---|---|---|---|
 | **Pruebas** | Supabase `zammir-pruebas` (plan gratuito) | Vercel `zammir-pruebas` (rama `main`) | Probar cada cambio con la tablet real |
-| **Producción** | Supabase `zammir-produccion` (plan Pro) | Vercel `zammir-produccion` (rama `produccion`) | ZAMMIR trabajando con datos reales |
+| **Producción** | Supabase `zammir-produccion` (plan gratuito, [ADR-0038]) | Vercel `zammir-produccion` (rama `produccion`) | ZAMMIR trabajando con datos reales |
 
 - La **estructura** de la base (migraciones) y las **funciones** se suben con el flujo de GitHub *Desplegar a Supabase* (`.github/workflows/desplegar-supabase.yml`), una vez por entorno.
 - La **aplicación** la despliega Vercel sola al fusionar a su rama.
@@ -34,7 +34,7 @@
    where email = 'CORREO-DEL-ADMINISTRADOR';
    ```
 
-6. Repetir los pasos 2 a 5 para **producción** (`zammir-produccion`, plan **Pro**) cuando ya se haya probado todo en pruebas.
+6. Repetir los pasos 2 a 5 para **producción** (`zammir-produccion`, plan **gratuito**, [ADR-0038]) cuando ya se haya probado todo en pruebas.
 
 > **No** usar `supabase config push`: empujaría la configuración de desarrollo (por ejemplo, registro abierto) al proyecto real. Los ajustes de Authentication se hacen en el panel.
 
@@ -95,7 +95,7 @@ En **Edge Functions → Secrets** (o con `supabase secrets set`), por entorno:
 
 ## Paso 7 · Respaldos nocturnos (solo producción)
 
-El plan Pro de Supabase guarda **7 días** de respaldos diarios y ZAMMIR pide **30** [RNF-21, PD-32]. El flujo `.github/workflows/respaldo-nocturno.yml` saca cada noche una copia **cifrada** y la guarda 30 días.
+El plan gratuito de Supabase **no incluye respaldos de la plataforma** y ZAMMIR pide **30 días** de historial [RNF-21, PD-32, ADR-0038]: este respaldo nocturno es **la única copia**, así que activarlo y ensayar su restauración es obligatorio antes de operar con datos reales. El flujo `.github/workflows/respaldo-nocturno.yml` saca cada noche una copia **cifrada** y la guarda 30 días.
 
 1. En el entorno `produccion` de GitHub, agregar los secretos:
    - `SUPABASE_DB_URL`: la cadena de conexión (Supabase → *Connect → Session pooler*), con su contraseña.

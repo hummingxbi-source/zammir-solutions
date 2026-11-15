@@ -28,7 +28,7 @@
 **Costos de producción**, a trasladar en el contrato (PD-20):
 - El plan gratuito de Vercel solo admite uso personal no comercial; el uso comercial requiere Pro o Enterprise. Fuente: [Vercel, Fair Use Guidelines](https://vercel.com/docs/v2/platform/fair-use-policy).
 - El plan gratuito de Supabase pausa proyectos con poca actividad en 7 días; los planes de pago no se pausan. Fuente: [Supabase, Project Pausing](https://supabase.com/docs/guides/platform/free-project-pausing).
-- Desarrollo y pruebas pueden usar los planes gratuitos; producción usa planes de pago.
+- Desarrollo y pruebas pueden usar los planes gratuitos; producción usa planes de pago. **Modificado el 2026-11-14 por [ADR-0038]:** producción también usa los planes gratuitos, con los riesgos y coberturas que ese ADR registra.
 
 **Riesgo:** dependencia de proveedores. Se mitiga manteniendo la lógica del negocio fuera de Supabase y de React (ver arquitectura, Fase 2).
 
