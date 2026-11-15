@@ -278,3 +278,24 @@ td.tabla__acciones > * + * {
 .turno__rejilla .tabla td:nth-child(2) {
   white-space: nowrap;
 }
+
+/* Cuenta del administrador: el botón no se estira a lo alto de la fila */
+.cuenta {
+  align-content: flex-start;
+}
+
+/* Acciones de una fila que se apilan (por ejemplo, Registrar pago y Recordatorio): del mismo ancho */
+span.tabla__acciones {
+  justify-content: flex-end;
+}
+
+span.tabla__acciones > .boton {
+  flex: 1 1 auto;
+  justify-content: center;
+}
+
+/* Un botón que es un enlace (<a class="boton">) medía 18 px de más: su caja no incluía el relleno. Todos
+ * los botones, sean botón o enlace, miden lo mismo. */
+.boton {
+  box-sizing: border-box;
+}
