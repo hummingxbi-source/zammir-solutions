@@ -95,7 +95,7 @@ export function Dispositivos({
   }
 
   return (
-    <section className="anima-entrada" aria-labelledby="titulo-tablets">
+    <section className="anima-entrada bloque" aria-labelledby="titulo-tablets">
       <h2 id="titulo-tablets">{t.titulo}</h2>
       <p>{t.descripcion}</p>
 

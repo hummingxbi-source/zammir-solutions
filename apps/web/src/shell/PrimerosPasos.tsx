@@ -97,7 +97,7 @@ export function BotonPorDondeEmpiezo({
         }}
       >
         <Icono nombre="ayuda" tamano={20} />
-        {t.boton}
+        <span className="por-donde__texto">{t.boton}</span>
       </button>
       {abierto ? (
         <Ventana

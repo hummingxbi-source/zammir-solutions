@@ -128,7 +128,7 @@ export function Usuarios({ deps, cargarPolitica }: UsuariosProps): ReactElement 
   }
 
   return (
-    <section className="anima-entrada" aria-labelledby="titulo-personas">
+    <section className="anima-entrada bloque" aria-labelledby="titulo-personas">
       <h2 id="titulo-personas">{t.titulo}</h2>
       <p>{t.descripcion}</p>
 

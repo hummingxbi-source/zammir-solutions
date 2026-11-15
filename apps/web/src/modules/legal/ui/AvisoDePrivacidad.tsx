@@ -76,7 +76,7 @@ export function AvisoDePrivacidad({
   const esBorrador = vigente?.body.includes('BORRADOR') === true;
 
   return (
-    <section className="anima-entrada" aria-labelledby={idTitulo}>
+    <section className="anima-entrada bloque" aria-labelledby={idTitulo}>
       <h2 id={idTitulo}>{t.titulo}</h2>
       <p>{t.descripcion}</p>
 

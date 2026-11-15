@@ -54,7 +54,7 @@ export function CondicionesDeCotizacion({ store }: CondicionesDeCotizacionProps)
   }
 
   return (
-    <section className="anima-entrada" aria-labelledby="titulo-condiciones">
+    <section className="anima-entrada bloque" aria-labelledby="titulo-condiciones">
       <h2 id="titulo-condiciones">{t.titulo}</h2>
       <p>{t.descripcion}</p>
       {error !== null ? (
