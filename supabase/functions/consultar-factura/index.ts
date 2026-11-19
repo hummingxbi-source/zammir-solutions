@@ -12,6 +12,7 @@ import {
   clienteDeServicio,
   dependenciasDelPortal,
   entradaDelPortal,
+  facturacionActiva,
   leerCuerpo,
   responder,
 } from '../_shared/portal.ts';
@@ -22,6 +23,9 @@ servir('consultar-factura', async (req: Request) => {
   }
   if (req.method !== 'POST') {
     return responder(405, { error: 'METHOD_NOT_ALLOWED' });
+  }
+  if (!facturacionActiva()) {
+    return responder(404, { error: 'NOT_AVAILABLE' });
   }
   const cuerpo = await leerCuerpo(req);
   if (cuerpo === null) {

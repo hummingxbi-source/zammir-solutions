@@ -43,6 +43,8 @@ export interface ComprobanteDeps {
   /** Dirección base del QR (PD-10); `null` usa un dominio de prueba. */
   readonly direccionBase: string | null;
   readonly qrMatrix: (texto: string) => readonly (readonly boolean[])[];
+  /** Si el comprobante lleva QR y leyenda de autofacturación [ADR-0039]. */
+  readonly autofacturacion: boolean;
   /** Aviso y términos para el pie del comprobante; sin esto se usa el aviso abreviado de prueba. */
   readonly legal?: DocumentLegal;
 }
@@ -67,6 +69,7 @@ export function compartirComprobante(
       selfInvoicingLegend: deps.leyendaDeAutofacturacion ?? c.leyendaPorOmision,
       publicBaseUrl: deps.direccionBase,
       qrMatrix: deps.qrMatrix,
+      autofacturacion: deps.autofacturacion,
       labels: ETIQUETAS_DEL_COMPROBANTE,
     });
     const saldo = orden.totalCents - pagos.reduce((suma, p) => suma + p.amountCents, 0);

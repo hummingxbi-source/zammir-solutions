@@ -479,6 +479,7 @@ describe('Mostrador · impresión', () => {
     const impresion: ImpresionDeTickets = {
       width: 32,
       business: { name: 'ZAMMIR (datos de prueba)', phone: null, address: null },
+      autofacturacion: true,
       selfInvoicingLegend: 'Factura en 30 días.',
       publicBaseUrl: null,
       estado: () => Promise.resolve({ state: 'READY', name: 'PT-210' }),

@@ -151,7 +151,11 @@ async function recorrido(semilla = 8) {
   return { deps, id: creada.value.id };
 }
 
-async function comprobante(deps: OrderDeps, id: string, opciones: { baseUrl?: string } = {}) {
+async function comprobante(
+  deps: OrderDeps,
+  id: string,
+  opciones: { baseUrl?: string; autofacturacion?: boolean } = {},
+) {
   const orden = await deps.orders.get(id);
   if (orden === null) {
     throw new Error('orden');
@@ -171,6 +175,7 @@ async function comprobante(deps: OrderDeps, id: string, opciones: { baseUrl?: st
     selfInvoicingLegend: 'Pida su factura antes de que termine el mes.',
     publicBaseUrl: opciones.baseUrl ?? null,
     qrMatrix,
+    autofacturacion: opciones.autofacturacion ?? true,
     labels: ETIQUETAS_DEL_COMPROBANTE,
   });
   const pdf = await pdfLibRenderer().render(documento);
@@ -181,6 +186,16 @@ async function comprobante(deps: OrderDeps, id: string, opciones: { baseUrl?: st
 }
 
 describe('comprobante de trabajo (PDF con QR)', () => {
+  it('con la facturación en pausa el PDF no menciona la factura ni lleva QR [ADR-0039]', async () => {
+    const { deps, id } = await recorrido();
+    const { texto, documento, orden } = await comprobante(deps, id, { autofacturacion: false });
+    expect(texto).toContain('COMPROBANTE DE TRABAJO');
+    expect(texto).not.toMatch(/factura/i);
+    expect(texto).not.toContain('Código de verificación');
+    expect(texto).not.toContain(orden.publicCode);
+    expect(documento.receipt?.qr).toBeNull();
+  });
+
   it('al cobrar el anticipo trae folio, cliente, medidas, total, anticipo, saldo, condiciones y QR', async () => {
     const { deps, id } = await recorrido();
     const cobro = await registerWorkOrderPayment(deps, cajero, id, [
@@ -214,8 +229,8 @@ describe('comprobante de trabajo (PDF con QR)', () => {
     const { deps, id } = await recorrido();
     const { documento, orden } = await comprobante(deps, id, { baseUrl: 'https://zammir.example' });
     const esperado = `https://zammir.example/f/${orden.tempFolio}/${orden.publicCode}`;
-    expect(documento.receipt?.qr.url).toBe(esperado);
-    expect(leerQr(documento.receipt?.qr.matrix ?? [])).toBe(esperado);
+    expect(documento.receipt?.qr?.url).toBe(esperado);
+    expect(leerQr(documento.receipt?.qr?.matrix ?? [])).toBe(esperado);
   });
 
   it('el QR de la orden ya enviada usa el folio definitivo', async () => {
@@ -227,7 +242,7 @@ describe('comprobante de trabajo (PDF con QR)', () => {
     await deps.orders.save({ ...o, folio: 'OT-2026-0042', syncStatus: 'SENT' });
     const { documento, orden } = await comprobante(deps, id);
     const esperado = `https://pruebas.zammir.invalid/f/OT-2026-0042/${orden.publicCode}`;
-    expect(leerQr(documento.receipt?.qr.matrix ?? [])).toBe(esperado);
+    expect(leerQr(documento.receipt?.qr?.matrix ?? [])).toBe(esperado);
     expect(documento.folioLabel).toBe('OT-2026-0042');
   });
 

@@ -15,6 +15,7 @@ import type {
 import { describe, expect, it, vi } from 'vitest';
 
 import { App } from '../../../App';
+import type { Interruptor } from '../../../shell/secciones';
 import { PortalDeFactura } from './PortalDeFactura';
 
 vi.setConfig({ testTimeout: 30_000 });
@@ -528,13 +529,30 @@ describe('accesibilidad del portal [RF-M10-16, RNF-28]', () => {
   });
 });
 
+const FACTURACION_ENCENDIDA: ReadonlySet<Interruptor> = new Set<Interruptor>(['FACTURACION']);
+
 describe('rutas del portal en la aplicación', () => {
+  it('con la facturación en pausa ni /factura ni el QR abren el portal [ADR-0039]', () => {
+    const s = servidor();
+    const portal = { consultar: s.consultar, solicitar: s.solicitar, descargar: s.descargar };
+    for (const ruta of ['/factura', '/f/OT-2026-0007/CCCCCCCC']) {
+      const { unmount } = render(
+        <MemoryRouter initialEntries={[ruta]}>
+          <App portal={portal} />
+        </MemoryRouter>,
+      );
+      expect(screen.queryByRole('heading', { name: 'Pida su factura' })).toBeNull();
+      expect(s.espias.consultas).toHaveLength(0);
+      unmount();
+    }
+  });
+
   it('/factura abre el portal sin el marco; /f/:folio/:codigo lo abre con el QR puesto', () => {
     const s = servidor();
     const portal = { consultar: s.consultar, solicitar: s.solicitar, descargar: s.descargar };
     const { unmount } = render(
       <MemoryRouter initialEntries={['/factura']}>
-        <App portal={portal} />
+        <App portal={portal} interruptores={FACTURACION_ENCENDIDA} />
       </MemoryRouter>,
     );
     expect(screen.getByRole('heading', { name: 'Pida su factura' })).toBeTruthy();
@@ -542,7 +560,7 @@ describe('rutas del portal en la aplicación', () => {
     unmount();
     render(
       <MemoryRouter initialEntries={['/f/OT-2026-0007/CCCCCCCC']}>
-        <App portal={portal} />
+        <App portal={portal} interruptores={FACTURACION_ENCENDIDA} />
       </MemoryRouter>,
     );
     const formulario = screen.getByRole('heading', { name: 'Pida su factura' }).closest('article');

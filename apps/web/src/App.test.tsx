@@ -51,24 +51,36 @@ describe('App y navegación', () => {
     expect(numeros).toEqual(['1', '2', '3', '4', '5']);
   });
 
+  it('con la facturación en pausa no hay sección Facturas; encendida, aparece [ADR-0039]', () => {
+    const enlacesDelMenu = (): string[] =>
+      [
+        ...screen
+          .getByRole('navigation', { name: 'Otras secciones', hidden: true })
+          .querySelectorAll('a'),
+      ].map((e) => e.textContent);
+    const { unmount } = render(
+      <MemoryRouter>
+        <App />
+      </MemoryRouter>,
+    );
+    expect(enlacesDelMenu()).not.toContain('Facturas');
+    unmount();
+    mostrar('/', new Set<Interruptor>(['FACTURACION']));
+    expect(enlacesDelMenu()).toContain('Facturas');
+  });
+
   it('clientes, cuentas por cobrar, usuarios y configuración van en el menú secundario', () => {
     mostrar();
     const secundaria = screen.getByRole('navigation', { name: 'Otras secciones', hidden: true });
     const enlaces = [...secundaria.querySelectorAll('a')].map((e) => e.textContent);
-    expect(enlaces).toEqual([
-      'Clientes',
-      'Cuentas por cobrar',
-      'Facturas',
-      'Usuarios',
-      'Configuración',
-    ]);
+    expect(enlaces).toEqual(['Clientes', 'Cuentas por cobrar', 'Usuarios', 'Configuración']);
   });
 
   it('el panel de inicio ofrece accesos a las secciones y la guía, sin cifras de dinero', () => {
     mostrar();
     expect(screen.getByRole('heading', { name: 'Panel de inicio' })).toBeInTheDocument();
     const main = screen.getByRole('main');
-    expect(main.querySelectorAll('.tablero a')).toHaveLength(10);
+    expect(main.querySelectorAll('.tablero a')).toHaveLength(9);
     expect(within(main).getByRole('heading', { name: 'Primeros pasos' })).toBeInTheDocument();
     expect(main.querySelectorAll('.guia__paso')).toHaveLength(5);
     expect(main.textContent).not.toMatch(/\$/);

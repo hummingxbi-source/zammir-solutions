@@ -59,6 +59,8 @@ jobs:
         # Las funciones de servidor de las pruebas usan el proveedor de timbrado simulado (sin validez fiscal).
         env:
           BILLING_PROVIDER: simulated
+          # La facturación está en pausa por omisión [ADR-0039]; las pruebas del portal la encienden.
+          FACTURACION_ACTIVA: 'true'
         run: |
           # Las funciones de servidor importan el núcleo ya empaquetado (S0-17); el archivo no se versiona.
           pnpm funciones:empaquetar

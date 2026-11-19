@@ -1,8 +1,9 @@
 import { textos } from '../shared/i18n/textos';
 
-/** Interruptores de lo que el cliente puede activar (P1: portal de seguimiento, P2: existencias).
+/** Interruptores de lo que el cliente puede activar (P1: portal de seguimiento, P2: existencias,
+ *  FACTURACION: facturas y autofacturación, en pausa [ADR-0039]).
  *  Apagados por defecto: sus secciones no aparecen en la navegación [docs/producto/ALCANCE.md §3]. */
-export type Interruptor = 'P1' | 'P2';
+export type Interruptor = 'P1' | 'P2' | 'FACTURACION';
 
 export type GrupoSeccion = 'principal' | 'secundaria';
 
@@ -47,6 +48,7 @@ export const SECCIONES: readonly Seccion[] = [
     ruta: '/facturas',
     texto: s.facturas,
     grupo: 'secundaria',
+    interruptor: 'FACTURACION',
     soloAdministrador: true,
   },
   {

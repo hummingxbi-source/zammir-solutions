@@ -306,6 +306,7 @@ export function Mostrador(props: MostradorProps): ReactElement {
       payments: pagos.filter((p) => p.targetType === 'COUNTER_SALE' && p.targetId === venta.id),
       customerName: cliente?.name ?? null,
       cashierName: props.personas.find((x) => x.id === venta.userId)?.name ?? persona.userId,
+      autofacturacion: impresion.autofacturacion,
       selfInvoicingLegend: impresion.selfInvoicingLegend,
       publicBaseUrl: impresion.publicBaseUrl,
     });

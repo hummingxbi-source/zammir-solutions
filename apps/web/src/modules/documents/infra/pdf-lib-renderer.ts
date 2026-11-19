@@ -376,7 +376,8 @@ const SILENCIO = 4;
  *  código de verificación y la leyenda del plazo a un lado [RF-M3-06, RN-26]. */
 function codigoQr(e: Estado): void {
   const r = e.doc.receipt;
-  if (r === undefined) {
+  if (r === undefined || r.qr === null) {
+    // Facturación en pausa [ADR-0039]: el comprobante no lleva QR ni leyenda.
     return;
   }
   const n = r.qr.matrix.length;

@@ -255,6 +255,7 @@ async function armar(): Promise<MostradorProps> {
     impresion: {
       width: 32,
       business: { name: 'ZAMMIR (datos de prueba)', phone: null, address: null },
+      autofacturacion: false,
       selfInvoicingLegend: '',
       publicBaseUrl: null,
       estado: () => Promise.resolve({ state: 'READY', name: 'PT-210' }),

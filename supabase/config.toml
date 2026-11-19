@@ -389,6 +389,8 @@ deno_version = 2
 # solo se enciende donde se define BILLING_PROVIDER=simulated (pruebas y desarrollo), nunca en producción [ADR-0031].
 [edge_runtime.secrets]
 BILLING_PROVIDER = "env(BILLING_PROVIDER)"
+# Con FACTURACION_ACTIVA vacío, las funciones públicas del portal contestan "no disponible" [ADR-0039].
+FACTURACION_ACTIVA = "env(FACTURACION_ACTIVA)"
 
 [analytics]
 enabled = true

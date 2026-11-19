@@ -78,13 +78,14 @@ export interface ReceiptExtras {
   readonly paymentLines: readonly string[];
   /** Renglones de la garantía; vacío mientras la orden no se entregue. */
   readonly warrantyLines: readonly string[];
-  /** QR de autofacturación: matriz de módulos (true = oscuro), la dirección que contiene y el código. */
+  /** QR de autofacturación: matriz de módulos (true = oscuro), la dirección que contiene y el código.
+   *  `null` mientras la facturación esté en pausa [ADR-0039]. */
   readonly qr: {
     readonly matrix: readonly (readonly boolean[])[];
     readonly url: string;
     readonly code: string;
     readonly legend: readonly string[];
-  };
+  } | null;
 }
 
 /** Modelo de documento YA CALCULADO: lo recibe el renderizador y la vista previa. No conoce

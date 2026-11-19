@@ -83,6 +83,7 @@ import { supabaseDocumentReplica } from '../modules/orders/infra/supabase-docume
 import { supabaseCustomerReplica } from '../modules/customers/infra/supabase-customer-replica';
 import { supabaseCustomers } from '../modules/customers/infra/supabase-customers';
 import { textos } from '../shared/i18n/textos';
+import type { Interruptor } from '../shell/secciones';
 import { functionPortalConsulta } from '../modules/billing/infra/function-portal-consulta';
 import { supabaseAdminInvoices } from '../modules/billing/infra/supabase-admin-invoices';
 import { renderExportPdf } from '../modules/export/infra/pdf-export-renderer';
@@ -157,6 +158,8 @@ export interface Composition {
   } | null;
   /** Para enviar por WhatsApp la factura emitida. */
   readonly compartirFacturas: ShareService;
+  /** Interruptores encendidos; hoy solo `FACTURACION`, apagado por omisión [ADR-0039]. */
+  readonly interruptores: ReadonlySet<Interruptor>;
   /** Portal público de autofacturación: solo habla con la función de servidor [S4-18]. */
   readonly portal: {
     readonly consultar: PortalConsulta;
@@ -224,6 +227,8 @@ export interface EntornoSupabase {
   readonly anonKey?: string | undefined;
   /** Llave pública de Cloudflare Turnstile para el portal de autofacturación (opcional). */
   readonly turnstileSiteKey?: string | undefined;
+  /** Si la facturación está activa (interruptor `FACTURACION`, apagado por omisión) [ADR-0039]. */
+  readonly facturacion?: boolean | undefined;
 }
 
 const registroDeReglas = createPriceRegistry(defaultRules);
@@ -526,6 +531,8 @@ function crearPreparadorDeOrdenes(d: {
   readonly envio: NonNullable<Composition['envio']>;
   readonly entradaConPin: NonNullable<Composition['entradaConPin']>;
   readonly credenciales: CredencialesDeLaTablet;
+  /** Si el comprobante lleva QR y leyenda de autofacturación [ADR-0039]. */
+  readonly autofacturacion: boolean;
 }): PrepararOrdenes {
   const identidad = dexieIdentity();
   return async () => {
@@ -628,6 +635,7 @@ function crearPreparadorDeOrdenes(d: {
           address: copia.business?.address ?? null,
         },
         condiciones: copia.quote?.conditionsText ?? '',
+        autofacturacion: d.autofacturacion,
         leyendaDeAutofacturacion: copia.orders.selfInvoicingLegend,
         direccionBase: copia.orders.publicBaseUrl,
         qrMatrix,
@@ -649,6 +657,8 @@ function crearPreparadorDelMostrador(d: {
   readonly entradaConPin: NonNullable<Composition['entradaConPin']>;
   readonly credenciales: CredencialesDeLaTablet;
   readonly reglas: NonNullable<typeof reglas>;
+  /** Si el ticket lleva QR y leyenda de autofacturación [ADR-0039]. */
+  readonly autofacturacion: boolean;
 }): PrepararMostrador {
   const identidad = dexieIdentity();
   return async () => {
@@ -705,6 +715,7 @@ function crearPreparadorDelMostrador(d: {
         phone: copia.business?.phone ?? null,
         address: copia.business?.address ?? null,
       },
+      autofacturacion: d.autofacturacion,
       selfInvoicingLegend: copia.orders.selfInvoicingLegend ?? '',
       publicBaseUrl: copia.orders.publicBaseUrl,
       estado: () => bluetooth.status(),
@@ -777,6 +788,7 @@ function crearPreparadorDelMostrador(d: {
 }
 
 export function createComposition(entorno: EntornoSupabase = {}): Composition {
+  const facturacionActiva = entorno.facturacion === true;
   const cliente = createSupabaseClient(entorno.url, entorno.anonKey);
   const ajustes = cliente === null ? null : supabaseSettingsRepository(cliente);
   const legal: LegalDeps | null =
@@ -815,6 +827,7 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
           envio,
           entradaConPin,
           credenciales: credencialesDeLaTablet,
+          autofacturacion: facturacionActiva,
         });
 
   const historialDeCliente =
@@ -884,6 +897,7 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
           entradaConPin,
           credenciales: credencialesDeLaTablet,
           reglas,
+          autofacturacion: facturacionActiva,
         });
 
   return {
@@ -923,8 +937,11 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
     exportacionDeDatos:
       cliente === null ? null : { source: supabaseDataExport(cliente), renderPdf: renderExportPdf },
     compartirFacturas: webShareService(entornoDelNavegador()),
+    interruptores: facturacionActiva
+      ? new Set<Interruptor>(['FACTURACION'])
+      : new Set<Interruptor>(),
     portal:
-      entorno.url === undefined || entorno.anonKey === undefined
+      !facturacionActiva || entorno.url === undefined || entorno.anonKey === undefined
         ? null
         : {
             consultar: functionPortalConsulta({ url: entorno.url, anonKey: entorno.anonKey }),
