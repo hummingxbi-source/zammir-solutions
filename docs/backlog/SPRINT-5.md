@@ -9,9 +9,9 @@
 - **Requerimientos:** RNF-13, RNF-37 · **Pendientes:** PD-10 (el dominio se fija **antes** de imprimir el primer ticket real)
 - **Criterios de aceptación:**
   - Dado el dominio de ZAMMIR, cuando se publica, entonces responde por HTTPS con DNS en Cloudflare.
-  - Dados los QR, cuando se imprime el primer ticket real, entonces apuntan a ese dominio y las rutas son estables.
+  - Dados los QR (solo si la facturación está activa [ADR-0039]), cuando se imprime el primer comprobante real, entonces apuntan a ese dominio y las rutas son estables.
 
-### S5-02 · CSD y adaptador del PAC en producción · M · 4 h  · ⛔ PD-04 · PD-05
+### S5-02 · CSD y adaptador del PAC en producción · M · 4 h  · ⏸ en pausa [ADR-0039] · PD-04 · PD-05
 - **Requerimientos:** RF-M10-01, RF-M10-02 · **Decisión:** ADR-0007
 - **Criterios de aceptación:**
   - Dado el CSD, cuando se sube, entonces va directo al PAC con ZAMMIR presente y nunca pasa por nuestro código ni base.
@@ -31,11 +31,11 @@
   - Dados los usuarios reales y sus PIN, cuando se crean con Luis presente, entonces cada quien conoce el suyo.
   - Dada la base de producción, cuando se revisa, entonces no hay ningún dato de prueba.
 
-### S5-05 · Equipo: tablets e impresora · M · 4 h  · `tablet`
+### S5-05 · Equipo: tablets e impresión en hoja carta · M · 4 h  · `tablet`
 - **Requerimientos:** RNF-31 · **Pendientes:** PD-15, PD-16
 - **Criterios de aceptación:**
   - Dadas las tablets, cuando se instala la PWA desde el dominio de producción, entonces quedan registradas como dispositivos.
-  - Dada la impresora, cuando se empareja y prueba en cada tablet, entonces imprime el ticket de prueba.
+  - Dada la impresora Wi-Fi de Luis (PD-54), cuando se imprime un comprobante desde cada tablet, entonces sale en hoja carta con logo y detalle [ADR-0040].
 
 ### S5-06 · Restauración de respaldo (E9) · M · 4 h
 - **Reglas:** E9 · **Requerimientos:** RNF-21

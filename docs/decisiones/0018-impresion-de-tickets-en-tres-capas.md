@@ -1,6 +1,6 @@
 # ADR-0018: Impresión de tickets en tres capas
 
-- **Estado:** Aceptada como estrategia. El modelo de impresora y el resultado de la capa 1 se registran en un ADR nuevo al terminar la prueba de concepto del Sprint 0
+- **Estado:** Sustituida por [ADR-0040] el 2026-11-19. Antes: aceptada como estrategia. El modelo de impresora y el resultado de la capa 1 se registran en un ADR nuevo al terminar la prueba de concepto del Sprint 0
 - **Fecha:** 2026-10-27
 - **Decide:** Juanito (adopta [DC §8.3])
 - **Completa:** [ADR-0008]; sustituye la línea "Impresión de tickets: sin elegir" de [ADR-0014]
