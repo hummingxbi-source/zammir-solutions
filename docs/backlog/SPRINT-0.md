@@ -179,7 +179,7 @@ para saber si la hipótesis de ADR-0016 se sostiene.
   - Dada una función de ejemplo que usa un tipo de `packages/core`, cuando se ejecuta en Supabase local, entonces responde correctamente.
   - Dado el resultado, cuando se registra, entonces queda escrito en ADR-0016 o ADR-0014 (funciona o requiere alternativa).
 
-### S0-18 · Prueba de concepto de impresión · L · 8 h  · `tablet` · ⛔ PD-15
+### S0-18 · Prueba de concepto de impresión · L · 8 h  · `tablet` · ❌ cancelada [ADR-0040]
 Como Juanito (desarrollador)
 quiero imprimir un ticket de 80 mm desde la PWA con la impresora real del lote que se va a comprar
 para saber ahora si el proyecto puede imprimir.

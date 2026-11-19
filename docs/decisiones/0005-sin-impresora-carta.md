@@ -1,6 +1,6 @@
 # ADR-0005: Impresión tamaño carta fuera del alcance
 
-- **Estado:** Aceptada
+- **Estado:** Sustituida por [ADR-0040] el 2026-11-19
 - **Fecha:** 2026-10-26
 - **Decide:** Juanito
 

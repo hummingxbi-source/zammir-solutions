@@ -59,7 +59,7 @@
 - **RF-M2-03** Cargos adicionales (instalación, medición, cantos) como líneas de servicio. Descuentos o ajustes de precio requieren permiso de administrador y quedan registrados.
 - **RF-M2-04** Vista previa del documento en vivo. En pantallas grandes, dos paneles (datos a la izquierda, documento a la derecha); en pantallas chicas, una pestaña de vista previa.
 - **RF-M2-05** PDF tamaño carta: logo y datos de ZAMMIR, folio, fecha, vigencia, datos del cliente, conceptos con medidas, cantidades e importes, total, condiciones, espacio de firma y aviso de privacidad abreviado. **Se genera en el dispositivo** para funcionar sin internet.
-- **RF-M2-06** Enviar: compartir el PDF con el menú de compartir del dispositivo (opción WhatsApp) y, como respaldo, abrir un enlace de WhatsApp con mensaje prellenado y descargar el PDF. **[Cambio]** Se elimina la impresión en impresora tamaño carta [ADR-0005].
+- **RF-M2-06** Enviar: compartir el PDF con el menú de compartir del dispositivo (opción WhatsApp) y, como respaldo, abrir un enlace de WhatsApp con mensaje prellenado y descargar el PDF. **[Cambio]** La acción principal es "Enviar por WhatsApp" y junto a ella, siempre visible, "Imprimir" en hoja tamaño carta con el servicio de impresión de Android [ADR-0040].
 - **RF-M2-07** Estados: borrador, enviada, aceptada, rechazada, vencida. Historial por cliente.
 - **RF-M2-08** Convertir una cotización aceptada en orden de trabajo en un solo paso, sin recapturar.
 - **RF-M2-09** Duplicar cotizaciones. Guardado automático de borradores.
@@ -76,7 +76,7 @@
 - **RF-M3-03** Registrar el anticipo (50% sugerido, editable) con método de pago y quién cobró. El saldo se calcula y queda visible hasta liquidarse.
 - **RF-M3-04** No se puede marcar "entregado" con saldo mayor a cero sin autorización de un administrador y un motivo; en ese caso el saldo pasa a cuentas por cobrar.
 - **RF-M3-05** Al entregar se crea el registro de garantía: fecha de inicio, duración, cobertura y exclusiones.
-- **RF-M3-06** Comprobante de trabajo en PDF tamaño carta: folio, cliente, descripción y medidas, total, anticipo pagado, saldo, condiciones, garantía y QR con código de verificación para autofacturación. Se genera al cobrar el anticipo y se vuelve a generar con el saldo liquidado al entregar. **[Cambio]** Se comparte por WhatsApp; no se imprime [ADR-0005].
+- **RF-M3-06** Comprobante de trabajo en PDF tamaño carta: folio, cliente, descripción y medidas, total, anticipo pagado, saldo, condiciones, garantía logo de ZAMMIR y, solo si la facturación está activa [ADR-0039], QR con código de verificación para autofacturación. Se genera al cobrar el anticipo y se vuelve a generar con el saldo liquidado al entregar. **[Cambio]** Se envía por WhatsApp y se puede imprimir en la misma hoja carta [ADR-0040].
 - **RF-M3-07** Vistas: tablero por estatus y lista con filtros (estatus, cliente, responsable, fechas). Resumen con valor en producción y saldo por cobrar de lo que ya está listo.
 - **RF-M3-08** Cancelación solo por administradores, con motivo. El tratamiento del anticipo se registra según el contrato **[POR DEFINIR]**.
 
@@ -87,10 +87,10 @@
 - **RF-M4-01** Venta rápida: elegir productos (piezas estándar, servicios y vidrio a medida con captura de medida), ajustar cantidades y ver el ticket actual.
 - **RF-M4-02** Cobro en efectivo (monto recibido y cambio), transferencia (referencia opcional) o mixto.
 - **RF-M4-03** Cada venta y cada pago guardan usuario activo, dispositivo y hora.
-- **RF-M4-04** Ticket térmico de 80 mm: nombre del negocio, folio, fecha, cajero, conceptos, total, forma de pago, y QR más código para autofacturación con la leyenda del plazo.
+- **RF-M4-04** Comprobante de venta en hoja tamaño carta [ADR-0040]: logo y nombre del negocio, folio, fecha, cajero, cliente cuando lo hay, conceptos, total y forma de pago. Se envía por WhatsApp (acción principal) y se puede imprimir en cada venta. El QR y la leyenda de autofacturación solo aparecen si la facturación está activa [ADR-0039]; en pausa el comprobante no menciona la factura.
 - **RF-M4-05** Los anticipos y saldos de órdenes se cobran también desde Mostrador y cuentan en la caja de quien los recibió.
 - **RF-M4-06** Corte de caja en dos niveles.
-  - *Nivel 1, por cajero o turno:* apertura con fondo inicial opcional, ventas y cobros por método de pago, efectivo esperado, efectivo contado, diferencia (sobrante o faltante) y resumen imprimible en ticket.
+  - *Nivel 1, por cajero o turno:* apertura con fondo inicial opcional, ventas y cobros por método de pago, efectivo esperado, efectivo contado, diferencia (sobrante o faltante) y resumen imprimible en hoja carta [ADR-0040].
   - *Nivel 2, consolidado del día (administradores):* por método y por cajero.
   - Un corte cerrado no se edita; solo un administrador lo reabre, con rastro.
 - **RF-M4-07** Cancelar una venta: solo administradores, con motivo y rastro.
@@ -138,10 +138,12 @@ La sección se llama "Reportes": sin predicciones ni periodos de calibración.
 - **RF-M9-02** Términos del servicio de ZAMMIR (anticipo, garantía, cancelación, tiempos de entrega), visibles en cotizaciones y comprobantes.
 - **RF-M9-03** Al capturar un cliente, registrar que se le informó el aviso de privacidad.
 - **RF-M9-04** Canal visible para ejercer derechos sobre sus datos (correo o WhatsApp del negocio).
-- **RF-M9-05** El aviso declara la transferencia de datos fiscales al PAC cuando se factura.
+- **RF-M9-05** El aviso declara la transferencia de datos fiscales al PAC cuando se factura. *(En pausa con la facturación [ADR-0039].)*
 
 
 ## M10. Facturación CFDI y autofacturación
+
+> **En pausa [ADR-0039]:** todo este módulo queda construido pero apagado con el interruptor `FACTURACION`, hasta que ZAMMIR tenga en orden sus datos fiscales. No bloquea la entrega. Con el interruptor apagado no hay sección Facturas, portal `/factura`, QR ni leyenda en los documentos.
 
 **Propósito:** que ZAMMIR deje de depender de un contador que cobra cada vez que un cliente pide factura, por dos caminos: un administrador factura desde el sistema en segundos, o el propio cliente se factura en un portal público con los datos de su ticket [DC §7.1]. Reglas: [RN-24] a [RN-28].
 
@@ -185,7 +187,7 @@ La sección se llama "Reportes": sin predicciones ni periodos de calibración.
 - **RF-UX-03** Botón fijo "¿Por dónde empiezo?" [DC §12.2 punto 2].
 - **RF-UX-04** Recorrido guiado opcional con globos de ayuda [DC §12.2 punto 2]. *Fuera de la entrega salvo decisión en contrario de Juanito [ADR-0019].*
 - **RF-UX-05** Avisos contextuales que se pueden cerrar cuando una sección depende de otra (por ejemplo, "revisa primero tu catálogo") [DC §12.2 punto 2].
-- **RF-UX-06** Estados siempre visibles: conexión a internet, operaciones pendientes de enviar ("N pendientes") e impresora conectada o desconectada [DC §9, §12.2 punto 7, §8.3].
+- **RF-UX-06** Estados siempre visibles: conexión a internet, operaciones pendientes de enviar ("N pendientes") [DC §9, §12.2 punto 7]. **[Cambio]** Ya no hay estado de impresora [ADR-0040].
 - **RF-UX-07** Estados vacíos que enseñan qué hacer; nunca datos de relleno [RN-23].
 - **RF-UX-08** Confirmación en toda acción destructiva y mensajes de error humanos que digan qué hacer [DC §10.5].
 - **RF-UX-09** Animaciones sobrias que respetan la preferencia de reducir movimiento [DC §12.2 punto 8].
