@@ -4,9 +4,9 @@ import { join } from 'node:path';
 import type { CounterSale, Payment } from '@zammir/core';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { pdfLibRenderer } from '../../documents/infra/pdf-lib-renderer';
-import { qrMatrix } from '../../documents/infra/qr-matrix';
-import { comprobanteDeVenta } from './comprobante-de-venta';
+import { pdfLibRenderer } from '../modules/documents/infra/pdf-lib-renderer';
+import { qrMatrix } from '../modules/documents/infra/qr-matrix';
+import { comprobanteDeVenta } from '../modules/counter/ui/comprobante-de-venta';
 
 // S4-36 · El comprobante de una venta de mostrador sale en hoja carta, con el logo y el detalle, y su PDF se
 // lee por un camino independiente: lo escrito es lo que dice la venta, al centavo [ADR-0040].
@@ -16,7 +16,7 @@ beforeAll(async () => {
 });
 
 const LOGO = new Uint8Array(
-  readFileSync(join(import.meta.dirname, '../../../../public/logo-zammir.png')),
+  readFileSync(join(import.meta.dirname, '../../public/logo-zammir.png')),
 );
 
 async function abrir(bytes: Uint8Array) {
