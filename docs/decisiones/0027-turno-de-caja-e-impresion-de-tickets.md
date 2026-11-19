@@ -1,6 +1,6 @@
 # ADR-0027: Turno de caja por persona e impresión de tickets por medios intercambiables
 
-- **Estado:** Aceptada (propuesta por el desarrollador; Juanito puede cambiarla)
+- **Estado:** Aceptada (propuesta por el desarrollador; Juanito puede cambiarla). **La parte de impresión de tickets (puntos 7 a 9) quedó sustituida por [ADR-0040] el 2026-11-19 y su código se retiró en S4-38; el turno de caja sigue vigente.**
 - **Fecha:** 2026-10-31
 - **Decide:** Juanito (propuesta del desarrollador)
 - **Concreta:** [ADR-0016], [ADR-0026], [RN-11], [RN-17], [RN-18], PD-15, PD-24, PD-36, PD-37, PD-44

@@ -80,7 +80,7 @@ Cada puerto es una interfaz pequeña, con un solo propósito:
 | `SyncOutbox` | Cola de cambios pendientes de enviar | IndexedDB |
 | `FolioAllocator` | Folio temporal en dispositivo y definitivo en servidor | Serie local por dispositivo; función SQL en servidor |
 | `DocumentRenderer` | Generar PDF de cotización y comprobante | Librería PDF en el dispositivo |
-| `TicketPrinter` | Imprimir ticket de 80 mm | Tres capas [ADR-0018]: Web Bluetooth + ESC/POS, impresión de Android con `window.print()`, compartir por WhatsApp; impresora falsa en pruebas |
+| `DocumentPrinter` y `SheetPrinter` | Imprimir un comprobante o el corte de caja en hoja carta [ADR-0040] | Una página HTML al servicio de impresión de Android; si no se puede, guardar el PDF o compartirlo por WhatsApp. Sustituyen a `TicketPrinter` (ADR-0018), retirado en S4-38 |
 | `ShareService` | Compartir PDF o abrir WhatsApp | Menú de compartir del dispositivo; enlace de WhatsApp |
 | `BillingProvider` | Timbrar, cancelar y consultar CFDI | Simulado; PAC elegido [ADR-0007] |
 | `PinHasher` | Verificar PIN | Algoritmo de hash definido en Fase 2 |

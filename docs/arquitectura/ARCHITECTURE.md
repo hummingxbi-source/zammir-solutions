@@ -17,7 +17,7 @@ flowchart LR
   sys["Sistema ZAMMIR"]
   sys --> pac["PAC<br/>(timbrado CFDI) ⚠ PD-01"]
   sys --> wa["WhatsApp<br/>(enlace y menú de compartir)"]
-  sys --> imp["Impresora térmica 80 mm ⚠ PD-01"]
+  sys --> imp["Impresora de red o Wi-Fi (impresión de Android) [ADR-0040]"]
 ```
 
 ## 3. Contenedores (C4 nivel 2)
@@ -54,7 +54,7 @@ Se confirma el estilo de `00-principios-de-ingenieria.md` §1.1: dominio → apl
 | `packages/core/src/shared-kernel` | Dominio compartido (`Money`, `TaxCalculator`, `Folio`, `Clock`, `IdGenerator`, `Result`) | Nada externo |
 | `packages/core/src/modules/<m>/domain` | Dominio del módulo | Dominio |
 | `packages/core/src/modules/<m>/application` | Casos de uso y puertos | Dominio |
-| `apps/web/src/modules/<m>/infra` y `shared/infra` | Adaptadores (Dexie, Supabase, PDF, impresora, compartir) | Aplicación, dominio, SDKs |
+| `apps/web/src/modules/<m>/infra` y `shared/infra` | Adaptadores (Dexie, Supabase, PDF, página de impresión, compartir) | Aplicación, dominio, SDKs |
 | `apps/web/src/modules/<m>/ui` y `shared/ui` | Pantallas y componentes | Aplicación, dominio (tipos y formato) |
 | `apps/web/src/composition` | Raíz de composición | Todo |
 | `supabase/functions` | Adaptadores de servidor | `packages/core` |
@@ -66,7 +66,7 @@ Se confirma el estilo de `00-principios-de-ingenieria.md` §1.1: dominio → apl
 | M1 Catálogo | `catalog` | Reglas de precio (`PricingRule`) como estrategias [ADR-0006] |
 | M2 Cotizador | `quotes` | Congela el precio al emitir [RN-03]; PDF por `DocumentRenderer`; WhatsApp por `ShareService` |
 | M3 Órdenes de trabajo | `work-orders` | Máquina de estados; anticipo, saldo y garantía |
-| M4 Mostrador | `counter` | Ventas, tickets (`TicketPrinter`), corte de caja |
+| M4 Mostrador | `counter` | Ventas, comprobante en hoja carta (`DocumentPrinter`), corte de caja (`SheetPrinter`) [ADR-0040] |
 | M5 Clientes | `customers` | Ficha, historial, derechos sobre datos |
 | M6 Cuentas por cobrar | `receivables` | Solo lectura sobre órdenes |
 | M7 Reportes | `reports` | Un reporte = una definición independiente; base de cálculo en [RN-20] |
