@@ -13,6 +13,22 @@ export interface DocumentRenderer {
   render(documento: QuoteDocument): Promise<Result<Uint8Array, RenderError>>;
 }
 
+export type PrintErrorCode = 'PRINT_UNAVAILABLE' | 'PRINT_FAILED';
+
+export interface PrintError {
+  readonly code: PrintErrorCode;
+}
+
+/** Puerto: manda un documento a la impresión del dispositivo (en Android, el servicio de impresión del
+ *  sistema, con cualquier impresora que ya conozca) [ADR-0040]. Éxito significa que se abrió la impresión;
+ *  lo que la persona haga en ese diálogo ya no lo sabe el sistema. `copia` marca la hoja como reimpresión. */
+export interface DocumentPrinter {
+  print(
+    documento: QuoteDocument,
+    opciones?: { readonly copia: boolean },
+  ): Promise<Result<void, PrintError>>;
+}
+
 export type ShareErrorCode = 'SHARE_CANCELLED' | 'SHARE_UNAVAILABLE';
 
 export interface ShareError {

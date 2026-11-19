@@ -13,8 +13,10 @@ import {
   seededRandom,
   type IssueQuoteDeps,
   type ManageCustomersDeps,
+  type DocumentPrinter,
   type ProductReader,
   type QuoteActor,
+  type QuoteDocument,
   type SellableProduct,
   type ShareableFile,
   type ShareService,
@@ -96,7 +98,11 @@ const ids = {
 };
 
 function montar(
-  opciones: { actor?: QuoteActor | null; productos?: readonly SellableProduct[] } = {},
+  opciones: {
+    actor?: QuoteActor | null;
+    productos?: readonly SellableProduct[];
+    impresora?: DocumentPrinter;
+  } = {},
 ) {
   const reloj = fixedClock(new Date('2026-10-30T18:00:00.000Z'));
   const outbox = inMemorySyncOutbox({ clock: reloj });
@@ -139,6 +145,7 @@ function montar(
     clientes,
     renderer: { render: () => Promise.resolve(ok(Uint8Array.of(0x25, 0x50, 0x44, 0x46))) },
     share,
+    ...(opciones.impresora === undefined ? {} : { impresora: opciones.impresora }),
     negocio: { name: 'Vidriería de prueba', phone: null, address: null },
     condicionesPorDefecto: 'Condiciones por defecto',
     autorizacion: {
@@ -327,12 +334,56 @@ describe('Cotizador', () => {
     await empezarConClienteNuevo();
     await agregarVidrio();
     fireEvent.click(screen.getByRole('button', { name: 'Emitir cotización' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Compartir por WhatsApp' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Enviar por WhatsApp' }));
     await waitFor(() => {
       expect(e.llamadas).toEqual(['compartir']);
     });
     expect(e.archivos[0]?.name).toBe('Cotizacion-T1-0001.pdf');
     expect(await screen.findByText('Listo: elige WhatsApp en el menú.')).toBeTruthy();
+  });
+
+  it('"Enviar por WhatsApp" e "Imprimir" van juntos, con el envío primero', async () => {
+    montar();
+    await empezarConClienteNuevo();
+    await agregarVidrio();
+    fireEvent.click(screen.getByRole('button', { name: 'Emitir cotización' }));
+    const grupo = await screen.findByRole('group', { name: 'Enviar o imprimir' });
+    expect(
+      within(grupo)
+        .getAllByRole('button')
+        .map((b) => b.textContent),
+    ).toEqual(['Enviar por WhatsApp', 'Imprimir']);
+  });
+
+  it('imprimir una cotización emitida abre la impresión con su documento', async () => {
+    const impresos: QuoteDocument[] = [];
+    montar({
+      impresora: {
+        print: (documento) => {
+          impresos.push(documento);
+          return Promise.resolve(ok(undefined));
+        },
+      },
+    });
+    await empezarConClienteNuevo();
+    await agregarVidrio();
+    fireEvent.click(screen.getByRole('button', { name: 'Emitir cotización' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Imprimir' }));
+    expect(await screen.findByText('Se abrió la impresión. Elija su impresora.')).toBeTruthy();
+    expect(impresos).toHaveLength(1);
+    expect(impresos[0]?.labels.title).toBe('Cotización');
+    expect(impresos[0]?.folioLabel).toContain('T1-0001');
+  });
+
+  it('si no hay impresión disponible dice qué hacer y no pierde la cotización', async () => {
+    montar();
+    await empezarConClienteNuevo();
+    await agregarVidrio();
+    fireEvent.click(screen.getByRole('button', { name: 'Emitir cotización' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Imprimir' }));
+    expect(await screen.findByText('No se pudo abrir la impresión.')).toBeTruthy();
+    expect(screen.getByText(/Guarde el PDF o compártalo por WhatsApp/)).toBeTruthy();
+    expect((await screen.findAllByText(/Folio provisional T1-0001/)).length).toBeGreaterThan(0);
   });
 
   it('se puede marcar como aceptada y deja de ofrecer aceptar o rechazar', async () => {

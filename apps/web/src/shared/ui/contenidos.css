@@ -299,3 +299,15 @@ span.tabla__acciones > .boton {
 .boton {
   box-sizing: border-box;
 }
+
+/* "Enviar por WhatsApp" e "Imprimir" juntos [S4-37]: el envío es el botón principal y imprimir va a su lado. */
+.acciones-documento {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+td.tabla__acciones .acciones-documento {
+  justify-content: flex-end;
+}

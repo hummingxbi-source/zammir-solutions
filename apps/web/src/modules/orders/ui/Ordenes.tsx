@@ -64,6 +64,10 @@ export interface OrdenesProps {
   readonly fotos?: FotosDeLaOrden;
   /** Comprobante de trabajo por WhatsApp (S3-09). */
   readonly onComprobante?: (orden: WorkOrder, cliente: Customer | null) => Promise<string | null>;
+  readonly onImprimirComprobante?: (
+    orden: WorkOrder,
+    cliente: Customer | null,
+  ) => Promise<string | null>;
 }
 
 /** Pantalla de órdenes de trabajo: lista por estatus, cotizaciones aceptadas por convertir y detalle
@@ -148,6 +152,9 @@ export function Ordenes(props: OrdenesProps): ReactElement {
               onComprobante: (o: WorkOrder) =>
                 props.onComprobante?.(o, nombres.get(o.customerId) ?? null) ??
                 Promise.resolve(null),
+              onImprimirComprobante: (o: WorkOrder) =>
+                props.onImprimirComprobante?.(o, nombres.get(o.customerId) ?? null) ??
+                Promise.resolve('PRINT_UNAVAILABLE'),
             })}
       />
     );

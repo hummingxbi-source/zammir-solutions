@@ -18,15 +18,17 @@ import {
   outboxQuoteStore,
   outboxWorkOrderStore,
   seededRandom,
-  toPlainLines,
   type CashDeps,
   type CounterDeps,
+  type DocumentPrinter,
   type ManageCustomersDeps,
   type OrderDeps,
   type PrintDocument,
   type ProductReader,
+  type ShareService,
   type Quote,
   type QuoteActor,
+  type QuoteDocument,
   type QuoteLine,
   type SellableProduct,
 } from '@zammir/core';
@@ -34,7 +36,8 @@ import { clientesEnMemoriaDePrueba } from '@zammir/core/testing';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { ImpresionDeTickets } from '../../printing/ui/impresion';
-import { Mostrador, type MostradorProps } from './Mostrador';
+import { Mostrador, type ComprobanteDelMostrador, type MostradorProps } from './Mostrador';
+import { marcarComoImpresa } from '../../documents/ui/registro-de-impresiones';
 
 const registro = (() => {
   const r = createPriceRegistry(defaultRules);
@@ -129,6 +132,7 @@ async function montar(
     productos?: readonly SellableProduct[];
     conOrden?: boolean;
     impresion?: ImpresionDeTickets;
+    comprobante?: ComprobanteDelMostrador;
   } = {},
 ) {
   const reloj = fixedClock(new Date('2026-10-31T18:00:00.000Z'));
@@ -229,6 +233,7 @@ async function montar(
         ),
     },
     ...(opciones.impresion === undefined ? {} : { impresion: opciones.impresion }),
+    ...(opciones.comprobante === undefined ? {} : { comprobante: opciones.comprobante }),
     onPorEnviar: porEnviar,
   };
   render(
@@ -526,44 +531,168 @@ describe('Mostrador · impresión', () => {
     expect(await screen.findByText(/Ticket enviado a la impresora/)).toBeTruthy();
     expect(impresos[0]?.title).toBe('PRUEBA DE IMPRESORA');
   });
+});
 
-  it('imprime el ticket de la venta recién cobrada, con su cambio y el nombre de quien cobró', async () => {
-    const { impresion, impresos } = impresionFalsa();
-    await montar({ impresion });
+describe('Mostrador · comprobante en hoja carta', () => {
+  async function primerGrupo(): Promise<HTMLElement> {
+    const grupos = await screen.findAllByRole('group', { name: 'Enviar o imprimir' });
+    const primero = grupos[0];
+    if (primero === undefined) {
+      throw new Error('falta el grupo de acciones');
+    }
+    return primero;
+  }
+
+  function comprobanteFalso(opciones: { falla?: boolean; autofacturacion?: boolean } = {}) {
+    const impresos: { documento: QuoteDocument; copia: boolean }[] = [];
+    const compartidos: string[] = [];
+    const impresora: DocumentPrinter = {
+      print: (documento, o) => {
+        if (opciones.falla === true) {
+          return Promise.resolve(err({ code: 'PRINT_FAILED' as const }));
+        }
+        impresos.push({ documento, copia: o?.copia === true });
+        return Promise.resolve(ok(undefined));
+      },
+    };
+    const share: ShareService = {
+      canShareFile: () => true,
+      shareFile: (archivo, mensaje) => {
+        compartidos.push(`${archivo.name} | ${mensaje}`);
+        return Promise.resolve(ok(undefined));
+      },
+      openLink: vi.fn(),
+      download: vi.fn(),
+    };
+    const comprobante: ComprobanteDelMostrador = {
+      deps: {
+        negocio: { name: 'ZAMMIR (datos de prueba)', phone: null, address: null },
+        condiciones: 'Sin cambios ni devoluciones.',
+        autofacturacion: opciones.autofacturacion ?? false,
+        leyendaDeAutofacturacion: null,
+        direccionBase: null,
+        qrMatrix: () => [[true]],
+      },
+      renderer: { render: () => Promise.resolve(ok(Uint8Array.of(0x25, 0x50, 0x44, 0x46))) },
+      share,
+      impresora,
+    };
+    return { comprobante, impresos, compartidos };
+  }
+
+  async function cobrarUnaChapa(): Promise<void> {
+    await agregarChapa();
+    fireEvent.click(screen.getByRole('button', { name: 'Cobrar' }));
+    const dialogo = await screen.findByRole('dialog', { name: 'Cobrar' });
+    fireEvent.change(within(dialogo).getByLabelText('Transferencia'), { target: { value: '0' } });
+    fireEvent.change(within(dialogo).getByLabelText('Efectivo recibido'), {
+      target: { value: '200' },
+    });
+    fireEvent.change(within(dialogo).getByLabelText('Efectivo que se aplica'), {
+      target: { value: '116' },
+    });
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Registrar cobro' }));
+    await screen.findByText(/Venta registrada/, { selector: 'strong' });
+  }
+
+  it('sin comprobante configurado no se ofrece enviar ni imprimir', async () => {
+    await montar();
     await cobrarUnaChapa();
-    fireEvent.click(await screen.findByRole('button', { name: 'Imprimir ticket' }));
+    expect(screen.queryByRole('group', { name: 'Enviar o imprimir' })).toBeNull();
+  });
+
+  it('al cobrar, "Enviar por WhatsApp" e "Imprimir" aparecen juntos, con el envío primero', async () => {
+    const { comprobante } = comprobanteFalso();
+    await montar({ comprobante });
+    await cobrarUnaChapa();
+    const grupo = await primerGrupo();
+    const botones = within(grupo).getAllByRole('button');
+    expect(botones.map((b) => b.textContent)).toEqual(['Enviar por WhatsApp', 'Imprimir']);
+  });
+
+  it('imprimir abre la impresión con el comprobante de la venta, al centavo y sin factura', async () => {
+    const { comprobante, impresos } = comprobanteFalso();
+    await montar({ comprobante });
+    await cobrarUnaChapa();
+    const grupo = await primerGrupo();
+    fireEvent.click(within(grupo).getByRole('button', { name: 'Imprimir' }));
+    expect(await screen.findByText('Se abrió la impresión. Elija su impresora.')).toBeTruthy();
+    expect(impresos).toHaveLength(1);
+    const { documento, copia } = impresos[0] as { documento: QuoteDocument; copia: boolean };
+    expect(documento.labels.title).toBe('Comprobante de venta');
+    expect(documento.folioLabel).toBe('Folio provisional T1-0001');
+    expect(documento.total).toBe('$116.00');
+    expect(documento.receipt?.attendedBy).toBe('Atendió: Beto');
+    expect(documento.receipt?.paymentLines[0]).toContain('Cambio $84.00');
+    expect(documento.receipt?.qr).toBeNull();
+    expect(copia).toBe(false);
+  });
+
+  it('la segunda vez que se imprime la misma venta sale marcada COPIA', async () => {
+    const { comprobante, impresos } = comprobanteFalso();
+    await montar({ comprobante });
+    await cobrarUnaChapa();
+    const imprimir = async (): Promise<void> => {
+      const grupo = await primerGrupo();
+      fireEvent.click(within(grupo).getByRole('button', { name: 'Imprimir' }));
+    };
+    await imprimir();
     await waitFor(() => {
       expect(impresos).toHaveLength(1);
     });
-    const texto = toPlainLines(impresos[0] ?? { title: '', width: 32, blocks: [] }).join(' | ');
-    expect(texto).toContain('VENTA');
-    expect(texto).toContain('Folio T1-0001');
-    expect(texto).toContain('Atendió: Beto');
-    expect(texto).toContain('Chapa de baño');
-    expect(texto).toContain('Cambio');
-    expect(texto).not.toContain('REIMPRESIÓN');
-    expect(texto).toContain('Factura en 30 días.');
+    await imprimir();
+    await waitFor(() => {
+      expect(impresos).toHaveLength(2);
+    });
+    expect(impresos.map((i) => i.copia)).toEqual([false, true]);
   });
 
-  it('reimprimir una venta de hoy marca el ticket como reimpresión', async () => {
-    const { impresion, impresos } = impresionFalsa();
-    await montar({ impresion });
+  it('una venta ya impresa en esta tablet sale como copia aunque se abra la pantalla de nuevo', async () => {
+    const { comprobante, impresos } = comprobanteFalso();
+    const { deps } = await montar({ comprobante });
     await cobrarUnaChapa();
-    fireEvent.click(await screen.findByRole('button', { name: 'Reimprimir ticket' }));
+    const venta = await primerGrupo();
+    // Como si ya se hubiera impreso antes: se marca desde otra apertura de la pantalla.
+    marcarComoImpresa((await deps.sales.list())[0]?.id ?? '');
+    fireEvent.click(within(venta).getByRole('button', { name: 'Imprimir' }));
     await waitFor(() => {
       expect(impresos).toHaveLength(1);
     });
-    expect(toPlainLines(impresos[0] ?? { title: '', width: 32, blocks: [] }).join(' | ')).toContain(
-      'REIMPRESIÓN',
-    );
+    expect(impresos[0]?.copia).toBe(true);
   });
 
-  it('si el ticket no sale dice qué hacer y la venta sigue guardada', async () => {
-    const { impresion } = impresionFalsa('PRINTER_UNAVAILABLE');
-    await montar({ impresion });
+  it('enviar por WhatsApp comparte el PDF del comprobante con el menú del dispositivo', async () => {
+    const { comprobante, compartidos } = comprobanteFalso();
+    await montar({ comprobante });
     await cobrarUnaChapa();
-    fireEvent.click(await screen.findByRole('button', { name: 'Imprimir ticket' }));
-    expect(await screen.findByText('No se pudo hablar con la impresora.')).toBeTruthy();
+    const grupo = await primerGrupo();
+    fireEvent.click(within(grupo).getByRole('button', { name: 'Enviar por WhatsApp' }));
+    expect(await screen.findByText('Listo: elige WhatsApp en el menú.')).toBeTruthy();
+    expect(compartidos).toHaveLength(1);
+    expect(compartidos[0]).toContain('Comprobante-T1-0001.pdf');
+    expect(compartidos[0]).toContain('Hola, le comparto el comprobante de su compra T1-0001');
+  });
+
+  it('si no se puede imprimir dice qué hacer y la venta sigue guardada', async () => {
+    const { comprobante } = comprobanteFalso({ falla: true });
+    await montar({ comprobante });
+    await cobrarUnaChapa();
+    const grupo = await primerGrupo();
+    fireEvent.click(within(grupo).getByRole('button', { name: 'Imprimir' }));
+    expect(await screen.findByText('No se pudo abrir la impresión.')).toBeTruthy();
+    expect(screen.getByText(/Guarde el PDF o compártalo por WhatsApp/)).toBeTruthy();
     expect(screen.getAllByText('T1-0001').length).toBeGreaterThan(0);
+  });
+
+  it('con la facturación encendida el comprobante lleva el QR', async () => {
+    const { comprobante, impresos } = comprobanteFalso({ autofacturacion: true });
+    await montar({ comprobante });
+    await cobrarUnaChapa();
+    const grupo = await primerGrupo();
+    fireEvent.click(within(grupo).getByRole('button', { name: 'Imprimir' }));
+    await waitFor(() => {
+      expect(impresos).toHaveLength(1);
+    });
+    expect(impresos[0]?.documento.receipt?.qr).not.toBeNull();
   });
 });

@@ -3,7 +3,7 @@
 > Plan: [`docs/plan/fase-08-sprint-4-cobranza-reportes-legal-facturacion.md`](../plan/fase-08-sprint-4-cobranza-reportes-legal-facturacion.md). Formato y tallas: [`README.md`](README.md).
 > **Objetivo:** cobrar lo pendiente, ver cómo va el negocio, cumplir con la parte legal y facturar (desde el sistema y con el portal público), y adelantar la preparación de producción [ADR-0019].
 > **Entra si:** Sprint 3 cerrado en verde. ~~El PAC debe estar elegido antes de empezar este sprint~~: **en pausa [ADR-0039]**.
-> **Cambios del 19 de noviembre** [ADR-0039], [ADR-0040]: la facturación queda en pausa (apagada con el interruptor `FACTURACION`) y el comprobante pasa a hoja tamaño carta sin impresora térmica. Historias nuevas al final: S4-35 a S4-39. Las historias de facturación ya construidas se quedan; S4-14, S4-15 y S4-31 se aplazan.
+> **Cambios del 19 de noviembre** [ADR-0039], [ADR-0040]: la facturación queda en pausa (apagada con el interruptor `FACTURACION`) y el comprobante pasa a hoja tamaño carta sin impresora térmica. Historias nuevas al final: S4-35 a S4-39. **Orden de construcción: S4-35, S4-36, S4-37, S4-39 y al final S4-38**, que retira de golpe el código y el panel de la impresora térmica cuando el corte de caja ya imprime en carta. Las historias de facturación ya construidas se quedan; S4-14, S4-15 y S4-31 se aplazan.
 > **Fuera de la entrega** [ADR-0019]: P1 (portal de seguimiento) y el recorrido guiado (RF-UX-04). Ver `DESPUES_DE_LA_ENTREGA.md`.
 
 ## Cuentas por cobrar
@@ -324,7 +324,7 @@ para dárselo al cliente como él prefiera.
   - Dado un comprobante, cuando se muestra, entonces "Enviar por WhatsApp" es el botón principal e "Imprimir" está siempre visible junto a él.
   - Dado "Imprimir", cuando se toca, entonces abre el servicio de impresión de Android con la hoja carta lista, sin imprimir sola.
   - Dada una tablet sin impresora, cuando se toca "Imprimir", entonces ofrece guardar el PDF o compartirlo, con un mensaje claro.
-  - Dada una reimpresión, cuando se hace, entonces queda marcada como copia y con rastro [RN-19].
+  - Dada una venta que ya se imprimió en la tablet, cuando se vuelve a imprimir, entonces sale marcada COPIA. *(El rastro en la bitácora queda en PP-14, por aprobar: exige una operación nueva en la base y en la sincronización.)*
   - Dada una pantalla sin conexión a internet, cuando se envía por WhatsApp, entonces el comprobante ya está guardado en la tablet y se envía al reconectar o con el menú de compartir.
 
 ### S4-38 · Retirar la impresora térmica · M · 4 h  · [ADR-0040]

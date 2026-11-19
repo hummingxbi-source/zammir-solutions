@@ -31,6 +31,10 @@ function fakeDocumentRenderer(): DocumentRenderer {
 }
 
 describe('whatsappUrl', () => {
+  it('sin teléfono abre WhatsApp para elegir el contacto', () => {
+    expect(whatsappUrl('', 'Hola')).toBe('https://wa.me/?text=Hola');
+  });
+
   it('lleva la clave de México, el teléfono y el mensaje bien codificado con acentos y ñ', () => {
     const url = whatsappUrl('5512345678', mensaje);
     expect(url.startsWith('https://wa.me/525512345678?text=')).toBe(true);

@@ -22,9 +22,9 @@ import { textos } from '../../../shared/i18n/textos';
 import { Aviso } from '../../../shared/ui/Aviso';
 import { AreaDeTexto } from '../../../shared/ui/AreaDeTexto';
 import { Boton } from '../../../shared/ui/Boton';
+import { AccionesDelDocumento } from '../../documents/ui/AccionesDelDocumento';
 import { EncabezadoDePagina } from '../../../shared/ui/EncabezadoDePagina';
 import { EtiquetaDeEstado, type TonoDeEstado } from '../../../shared/ui/EtiquetaDeEstado';
-import { Icono } from '../../../shared/ui/Icono';
 import { Tarjeta } from '../../../shared/ui/Tarjeta';
 import { Campo } from '../../../shared/ui/Campo';
 import { Seleccion } from '../../../shared/ui/Seleccion';
@@ -66,6 +66,8 @@ export interface DetalleDeOrdenProps {
   readonly fotos?: FotosDeLaOrden;
   /** Comprobante de trabajo por WhatsApp (S3-09); sin esto no se ofrece. */
   readonly onComprobante?: (orden: WorkOrder) => Promise<string | null>;
+  /** Abre la impresión del comprobante en hoja carta [ADR-0040]. */
+  readonly onImprimirComprobante?: (orden: WorkOrder) => Promise<string | null>;
 }
 
 type Dialogo = 'cobro' | 'avanzar' | 'entregar' | 'cancelar' | null;
@@ -483,23 +485,28 @@ export function DetalleDeOrden(props: DetalleDeOrdenProps): ReactElement {
 
             {props.onComprobante !== undefined && orden.status !== 'CANCELLED' ? (
               <div className="orden__comprobante">
-                <Boton
-                  variante="secundario"
-                  onClick={() => {
+                <AccionesDelDocumento
+                  onEnviar={async () => {
                     setAviso(t.acciones.preparando);
-                    void props.onComprobante?.(orden).then((falla) => {
-                      if (falla === null) {
-                        setAviso(t.acciones.compartido);
-                      } else {
-                        setAviso(null);
-                        mostrarError(falla);
-                      }
-                    });
+                    const falla = await props.onComprobante?.(orden);
+                    if (falla === null || falla === undefined) {
+                      setAviso(t.acciones.compartido);
+                    } else {
+                      setAviso(null);
+                      mostrarError(falla);
+                    }
                   }}
-                >
-                  <Icono nombre="whatsapp" />
-                  {t.acciones.comprobante}
-                </Boton>
+                  onImprimir={async () => {
+                    setAviso(null);
+                    const falla = await props.onImprimirComprobante?.(orden);
+                    if (falla === null) {
+                      setError(null);
+                      setAviso(textos.documento.acciones.impresionAbierta);
+                    } else {
+                      setError(textos.documento.acciones.errorDeImpresion);
+                    }
+                  }}
+                />
               </div>
             ) : null}
           </Tarjeta>

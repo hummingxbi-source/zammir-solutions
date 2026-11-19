@@ -11,7 +11,9 @@ import type {
 /** Enlace de WhatsApp con el mensaje ya escrito [RF-M2-06]. El teléfono son los 10 dígitos de México y
  *  el mensaje se codifica para que acentos, ñ y signos viajen bien. */
 export function whatsappUrl(telefono10: string, mensaje: string): string {
-  return `https://wa.me/52${telefono10}?text=${encodeURIComponent(mensaje)}`;
+  // Sin teléfono (venta de mostrador sin cliente) WhatsApp deja elegir a quién mandarlo.
+  const destino = telefono10 === '' ? '' : `52${telefono10}`;
+  return `https://wa.me/${destino}?text=${encodeURIComponent(mensaje)}`;
 }
 
 /** Nombre del archivo: `Cotizacion-COT-2026-0012.pdf` o `Comprobante-OT-2026-0012.pdf`; con el folio

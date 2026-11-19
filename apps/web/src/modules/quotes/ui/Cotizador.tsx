@@ -12,6 +12,7 @@ import {
   type BusinessIdentity,
   type Customer,
   type CustomerId,
+  type DocumentPrinter,
   type DocumentRenderer,
   type IssueQuoteDeps,
   type ManageCustomersDeps,
@@ -47,6 +48,7 @@ export interface CotizadorProps {
   readonly clientes: ManageCustomersDeps;
   readonly renderer: DocumentRenderer;
   readonly share: ShareService;
+  readonly impresora?: DocumentPrinter;
   readonly negocio: BusinessIdentity;
   readonly condicionesPorDefecto: string;
   /** Aviso y términos para el pie del documento; sin esto se usa el aviso abreviado de prueba. */
@@ -141,6 +143,7 @@ export function Cotizador(props: CotizadorProps): ReactElement {
         catalogo={props.catalogo}
         renderer={props.renderer}
         share={props.share}
+        {...(props.impresora === undefined ? {} : { impresora: props.impresora })}
         negocio={props.negocio}
         condicionesPorDefecto={props.condicionesPorDefecto}
         {...(props.legal === undefined ? {} : { legal: props.legal })}
