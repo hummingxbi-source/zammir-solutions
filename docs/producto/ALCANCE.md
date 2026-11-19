@@ -24,16 +24,16 @@
 | M1 | Catálogo | Productos y servicios limpios, con tipo, unidad de cobro, precio y datos fiscales |
 | M2 | Cotizador | En mostrador y a domicilio, PDF generado en el dispositivo y envío por WhatsApp |
 | M3 | Órdenes de trabajo | Seguimiento por estatus, anticipo, saldo y garantía documentada |
-| M4 | Mostrador | Venta rápida, ticket térmico de 80 mm y corte de caja por cajero |
+| M4 | Mostrador | Venta rápida, comprobante en hoja carta [ADR-0040] y corte de caja por cajero |
 | M5 | Clientes | Ficha, historial y derechos sobre datos personales |
 | M6 | Cuentas por cobrar | Saldos pendientes de trabajos, recordatorio por WhatsApp |
 | M7 | Reportes | Las cinco vistas que pidió Luis: sumas, conteos y comparativos |
 | M8 | Usuarios y roles | Usuarios, PIN, dispositivos registrados y bitácora |
 | M9 | Legal | Aviso de privacidad y términos dentro del sistema |
-| M10 | Facturación | CFDI 4.0 desde el sistema y portal público de autofacturación para los clientes de ZAMMIR |
+| M10 | Facturación | CFDI 4.0 desde el sistema y portal público de autofacturación para los clientes de ZAMMIR. **En pausa [ADR-0039]** |
 
 **Transversales** (detalle en `REQUERIMIENTOS.md` y `REQUERIMIENTOS_NO_FUNCIONALES.md`):
-- Aplicación web instalable (PWA) para tablets Android, que funciona sin internet para cotizar, vender, cobrar, avanzar órdenes e imprimir tickets [DC §3.1, §9].
+- Aplicación web instalable (PWA) para tablets Android, que funciona sin internet para cotizar, vender, cobrar, avanzar órdenes e imprimir comprobantes en hoja carta [ADR-0040] [DC §3.1, §9].
 - Experiencia para usuarios sin experiencia con sistemas: navegación en el orden del trabajo, "Primeros pasos", ayuda contextual y estados siempre visibles [DC §12.2].
 - Configuración del negocio en una tabla (nombre, logo, textos legales, folios, porcentajes) para poder reutilizar el sistema más adelante [DC §10.8].
 
@@ -53,7 +53,7 @@ No construir, aunque parezca natural [DC §3.3, §7.8]:
 - Inventario completo: compras a proveedor, mermas, costos, descuento de material por m², valuación.
 - Terminal de pago con tarjeta y cobros en línea.
 - Cajón de dinero, escáner de código de barras, monitor táctil y computadora [DC §8.1].
-- Más dispositivos de los acordados (dos tablets y una impresora térmica).
+- Más dispositivos de los acordados (dos tablets).
 - Aplicación nativa iOS o Android. Solo aplicación web.
 - Integraciones con contabilidad, ERP o marketplaces.
 - API oficial de WhatsApp Business. Solo enlaces y el menú de compartir del dispositivo.
@@ -61,7 +61,7 @@ No construir, aunque parezca natural [DC §3.3, §7.8]:
 - Inteligencia de negocio predictiva.
 - Multi-sucursal.
 - Factura global, contabilidad, **complemento de pago, notas de crédito complejas y cualquier otro complemento del CFDI**. El contador de ZAMMIR se encarga de lo que no sea emitir facturas desde el sistema.
-- **Impresión en impresora tamaño carta** [ADR-0005]. Los PDF tamaño carta (cotización, comprobante) se generan y se comparten por WhatsApp, pero no se imprimen desde el sistema. Lo único que se imprime es el ticket térmico de 80 mm. *El documento fuente sí la incluía (§8.1, §8.5); ver [ADR-0017].*
+- **Ticket térmico de 80 mm e impresora Bluetooth** [ADR-0040]. Luis no quiere tickets pequeños: el comprobante es una hoja tamaño carta que se envía por WhatsApp y que se puede imprimir en cada venta en una impresora Wi-Fi. *Antes, la impresión carta estaba fuera [ADR-0005].*
 
 ## 5. Equipo y dispositivos
 
@@ -69,13 +69,13 @@ El cliente compra el equipo directamente; HummingX recomienda modelos y configur
 
 | Elemento | Detalle | Fuente |
 |---|---|---|
-| 2 tablets Android | Una fija en el mostrador y otra para visitas a domicilio. Android 13 o superior con Google Play y Chrome actualizado; **nunca iPad**, porque iOS no permite imprimir por Bluetooth desde una página web. Candidata: Samsung Galaxy Tab A11+ 5G (SM-X236B, 11 pulgadas, Bluetooth 5, datos 5G) | [DC §8.1, §8.2, §10.6], PD-16 |
-| 1 impresora térmica de 80 mm | Con **Bluetooth de baja energía (BLE)** utilizable desde el navegador. Candidata: Epson serie TM-m30; modelo exacto por definir tras la prueba de concepto | [DC §8.1, §8.3], PD-15 |
+| 2 tablets Android | Una fija en el mostrador y otra para visitas a domicilio. Android 13 o superior con Google Play y Chrome actualizado; **nunca iPad**, porque el sistema se prueba y se opera solo en Android. Candidata: Samsung Galaxy Tab A11+ 5G (SM-X236B, 11 pulgadas, Bluetooth 5, datos 5G) | [DC §8.1, §8.2, §10.6], PD-16 |
+| ~~Impresora térmica de 80 mm~~ | **Cancelada** [ADR-0040]. Luis usará una impresora tamaño carta de red o Wi-Fi, que él define; se prueba con su impresora real | [ADR-0040], PD-15 |
 | Plan de datos de la tablet de campo | Lo paga ZAMMIR | [DC §8.6] |
 | Internet del local | Telmex, único proveedor | [DC §1.2, §9] |
 | Usuarios previstos | 2 administradores y 3 a 5 empleados, sin límite técnico | [DC RF-M8-04] |
 
-La idea detrás: si ZAMMIR abre otro mostrador, solo agrega una tablet y una impresora térmica, sin computadora [DC §8.1].
+La idea detrás: si ZAMMIR abre otro mostrador, solo agrega una tablet, sin computadora [DC §8.1].
 
 ## 6. Calendario comprometido
 

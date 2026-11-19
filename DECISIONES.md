@@ -10,7 +10,7 @@
 | [0002](docs/decisiones/0002-construir-desde-cero.md) | Construir desde cero; la demo solo es referencia | Aceptada | 2026-10-26 |
 | [0003](docs/decisiones/0003-stack-base.md) | Stack base: React + Vite + TypeScript, Supabase y Vercel | Aceptada en lo general | 2026-10-26 |
 | [0004](docs/decisiones/0004-precios-con-iva-incluido.md) | Los precios del catálogo incluyen IVA | Aceptada (redondeo: ver 0011) | 2026-10-26 |
-| [0005](docs/decisiones/0005-sin-impresora-carta.md) | Impresión tamaño carta fuera del alcance | Aceptada | 2026-10-26 |
+| [0005](docs/decisiones/0005-sin-impresora-carta.md) | Impresión tamaño carta fuera del alcance | Sustituida por ADR-0040 | 2026-10-26 |
 | [0006](docs/decisiones/0006-reglas-de-precio-configurables.md) | Reglas de precio configurables por producto | Aceptada | 2026-10-26 |
 | [0007](docs/decisiones/0007-facturacion-detras-de-interfaz.md) | Facturación detrás de una interfaz; PAC real al final | Aceptada | 2026-10-26 |
 | [0008](docs/decisiones/0008-prueba-de-impresion-y-despliegue-continuo.md) | Prueba de impresión en semana 1 y despliegue continuo a pruebas | Aceptada | 2026-10-26 |
@@ -23,7 +23,7 @@
 | [0015](docs/decisiones/0015-convenciones-del-modelo-de-datos.md) | Convenciones del modelo de datos | **Propuesta** | 2026-10-26 |
 | [0016](docs/decisiones/0016-protocolo-de-operaciones-y-folios.md) | Protocolo de operaciones y asignación de folios | **Aceptada** (validada por ADR-0023) | 2026-10-26 |
 | [0017](docs/decisiones/0017-reconciliacion-con-el-documento-completo.md) | Reconciliación con el documento de construcción completo: qué decisión manda | Aceptada (calendario abierto: PD-34) | 2026-10-27 |
-| [0018](docs/decisiones/0018-impresion-de-tickets-en-tres-capas.md) | Impresión de tickets en tres capas (Web Bluetooth, impresión de Android, compartir) | Aceptada como estrategia | 2026-10-27 |
+| [0018](docs/decisiones/0018-impresion-de-tickets-en-tres-capas.md) | Impresión de tickets en tres capas (Web Bluetooth, impresión de Android, compartir) | Sustituida por ADR-0040 | 2026-10-27 |
 | [0019](docs/decisiones/0019-calendario-plan-actual-con-recortes.md) | Calendario: se mantiene el plan actual de sprints, con recortes desde ahora | Aceptada | 2026-10-27 |
 | [0020](docs/decisiones/0020-importacion-del-catalogo-todo-o-nada.md) | Importación del catálogo: todo o nada, primero CSV | Aceptada | 2026-10-30 |
 | [0021](docs/decisiones/0021-clientes-alta-directa-desde-la-tablet-transitoria.md) | La tablet da de alta clientes directo en la base (transitorio hasta el Sprint 2) | Sustituida por ADR-0024 | 2026-10-30 |
@@ -44,5 +44,7 @@
 | [0036](docs/decisiones/0036-exportacion-de-datos-del-negocio.md) | Exportación de los datos del negocio en CSV, JSON y PDF, solo administradores y sin credenciales | Aceptada (propuesta) | 2026-11-08 |
 | [0037](docs/decisiones/0037-identidad-visual-v2-verde-vidrio-y-tono-de-usted.md) | Identidad visual v2 (verde vidrio y letra elegante) y tono de usted con los clientes | Aceptada (propuesta) | 2026-11-14 |
 | [0038](docs/decisiones/0038-planes-gratuitos-de-supabase-y-vercel-en-produccion.md) | Producción en los planes gratuitos de Supabase y Vercel; dominio y proveedor de facturas contratados | Aceptada | 2026-11-14 |
+| [0039](docs/decisiones/0039-facturacion-en-pausa.md) | Facturación en pausa hasta que ZAMMIR tenga en orden sus datos fiscales | Aceptada | 2026-11-19 |
+| [0040](docs/decisiones/0040-comprobante-en-hoja-carta-sin-impresora-termica.md) | Comprobante en hoja tamaño carta; sin impresora térmica | Aceptada | 2026-11-19 |
 
 Plantilla para una nueva decisión: [`docs/decisiones/0000-plantilla.md`](docs/decisiones/0000-plantilla.md).

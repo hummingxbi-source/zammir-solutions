@@ -21,14 +21,14 @@
 | Cuentas por cobrar | Lista de trabajos con saldo mayor a cero. No es crédito [RN-09] | `receivables` |
 | Garantía | Registro escrito de duración, cobertura y exclusiones de un trabajo entregado [RN-14] | `Warranty` |
 | Comprobante de trabajo | PDF con folio, saldo, garantía y QR de autofacturación [DC RF-M3-06] | `WorkReceipt` |
-| Ticket | Comprobante térmico de 80 mm de una venta o cobro [DC RF-M4-04] | `Ticket` |
+| Comprobante de venta (antes, "ticket") | Hoja tamaño carta con logo y detalle de una venta o cobro; se envía por WhatsApp o se imprime [ADR-0040] | `Ticket` |
 | Medición a domicilio | Visita para tomar medidas en obra; ZAMMIR siempre mide | servicio del catálogo |
 | Instalación | Colocación en obra; ZAMMIR instala con su propio personal | servicio del catálogo |
 | Obra | Domicilio donde se mide, entrega o instala | `SiteAddress` |
 | Folio | Identificador consecutivo de un documento [RN-15] | `folio` |
 | Folio temporal | Folio provisional de un dispositivo sin conexión, como `T1-0001` [RN-16] | `tempFolio` |
 | Autofacturación | Portal donde el cliente final genera su factura con el código del comprobante | `selfInvoicing` |
-| Código de verificación | Código aleatorio impreso en ticket y comprobante (por ejemplo, de 6 caracteres) que, junto con el folio, permite autofacturar [DC §7.6] | `publicCode` |
+| Código de verificación | Código aleatorio impreso en ticket y comprobante (por ejemplo, de 6 caracteres) que, junto con el folio, permite autofacturar [DC §7.6] | `publicCode` *(en pausa [ADR-0039])* |
 | Panel de inicio | Pantalla aparte, accesible desde el logo; contenido por rol por definir (PD-31) [DC §12.2] | `home` |
 | Primeros pasos | Pantalla del primer ingreso con cinco tarjetas en el orden del trabajo [DC §12.2] | `gettingStarted` |
 | Cliente recurrente | Cliente con dos o más trabajos entregados [DC RF-M5-03] | `isRecurring` |
@@ -82,9 +82,9 @@
 |---|---|
 | Derechos ARCO | Acceso, rectificación, cancelación y oposición sobre datos personales [RF-M5-05] |
 | PWA | Aplicación web que se instala en el dispositivo |
-| BLE | Bluetooth de baja energía; la impresora debe tenerlo para imprimir desde el navegador [DC §8.3] |
-| Web Bluetooth | Tecnología con la que una página web habla con un dispositivo Bluetooth; existe en Chrome para Android y no en iOS [DC §8.2] |
-| ESC/POS | Lenguaje de comandos de las impresoras de tickets |
+| BLE | Bluetooth de baja energía; la impresora debe tenerlo para imprimir desde el navegador [DC §8.3] (ya no se usa [ADR-0040]) |
+| Web Bluetooth | Tecnología con la que una página web habla con un dispositivo Bluetooth; existe en Chrome para Android y no en iOS [DC §8.2] (ya no se usa [ADR-0040]) |
+| ESC/POS | Lenguaje de comandos de las impresoras de tickets (ya no se usa [ADR-0040]) |
 | Mopria | Estándar de impresión de Android |
 | RLS | Seguridad a nivel de fila en la base de datos |
 

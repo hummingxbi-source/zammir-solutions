@@ -1,5 +1,7 @@
 # ADR-0008: Prueba de impresión en la semana 1 y despliegue continuo a pruebas
 
+> **Modificada por [ADR-0040] (2026-11-19):** la prueba de concepto de la impresora térmica se cancela; el despliegue continuo sigue igual.
+
 - **Estado:** Aceptada
 - **Fecha:** 2026-10-26
 - **Decide:** Juanito

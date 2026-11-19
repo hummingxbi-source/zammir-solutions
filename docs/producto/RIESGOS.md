@@ -5,8 +5,8 @@
 
 | ID | Riesgo | Mitigación según el documento | Dónde se atiende |
 |---|---|---|---|
-| R1 | La impresora Bluetooth no expone BLE y no imprime desde el navegador | Prueba de concepto en la primera semana; capas 2 y 3 de impresión; cambio de modelo antes de que el cliente compre más equipo | Sprint 0 [ADR-0008], [ADR-0018], PD-15 |
-| R2 | Datos fiscales, CSD o PAC no están a tiempo | Entorno de pruebas del PAC y activación en producción al final; avisar pronto | [ADR-0007], PD-04, PD-05, Sprint 5 |
+| R1 | ~~La impresora Bluetooth no expone BLE y no imprime desde el navegador~~ **Cerrado el 2026-11-19**: se elimina la impresora térmica | Prueba de concepto en la primera semana; capas 2 y 3 de impresión; cambio de modelo antes de que el cliente compre más equipo | Sprint 0 [ADR-0040] |
+| R2 | Datos fiscales, CSD o PAC no están a tiempo | Entorno de pruebas del PAC y activación en producción al final; avisar pronto | [ADR-0007], PD-04, PD-05, Sprint 5. **Fuera del camino crítico de la entrega [ADR-0039]** |
 | R3 | Plazo corto de cinco semanas | Orden por riesgo, alcance cerrado, nada fuera de lo listado | `docs/plan/README.md` (regla de avance), [ADR-0019] |
 | R4 | El cliente tarda en entregar su catálogo | Importador y plantilla desde la primera fase de construcción; fecha comprometida por el cliente | Sprint 1 (RF-M1-05), PD-03 |
 | R5 | Duplicados o folios mal asignados al sincronizar | UUID por operación, folios temporales, prueba E3 | Sprint 2, [ADR-0012], [ADR-0016], `spike/sync` |
@@ -27,3 +27,5 @@
 | R15 | Semana de estabilización insuficiente | Se mantiene el plan actual con recortes desde ahora (P1, P2 y recorrido guiado) y preparación de producción durante el Sprint 4 | [ADR-0019] |
 | R16 | El corte de caja por cajero no corresponde a cómo ZAMMIR maneja el efectivo (cajón compartido por tres personas, una tablet que cobra en campo) | Preguntar a Luis antes del Sprint 3; el modelo separa turno de caja y cobros por cajero | PD-36, PD-37, `REVISION_DE_NEGOCIO.md` §4 |
 | R17 | La medición final en obra cambia el precio que se congeló al cotizar | Ajuste en la orden por un administrador, con motivo y bitácora (propuesta) | PD-38, [RN-03], [RN-13] |
+| R18 | La impresora Wi-Fi de Luis no aparece en la tablet o la hoja sale mal (márgenes, logo) | Probar con su impresora real antes de la entrega; respaldo: guardar el PDF o enviarlo por WhatsApp | [ADR-0040], PD-54 |
+| R19 | Durante la pausa de facturación, ZAMMIR sigue dependiendo de su contador y puede pensar que el sistema ya factura | Decírselo a Luis por escrito; interruptor apagado y sin menciones en pantalla ni documentos | [ADR-0039] |

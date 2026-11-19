@@ -26,12 +26,18 @@
 
 | Sprint | Fechas | Objetivo |
 |---|---|---|
-| S0 | 29 oct – 1 nov | Repositorio listo (estructura, linter, pruebas, CI, despliegue a pruebas). **Prueba de concepto de impresión en tablet real** [ADR-0018]. Autenticación de administradores y registro de dispositivo. Navegación base |
+| S0 | 29 oct – 1 nov | Repositorio listo (estructura, linter, pruebas, CI, despliegue a pruebas). ~~Prueba de concepto de impresión en tablet real~~ (cancelada [ADR-0040]). Autenticación de administradores y registro de dispositivo. Navegación base |
 | S1 | 2 – 8 nov | Núcleo del dominio: dinero e IVA [ADR-0004], reglas de precio [ADR-0006]. Catálogo con importación CSV, clientes, usuarios con PIN y bitácora |
 | S2 | 9 – 15 nov | Cotizador completo: captura en tablet, PDF en el dispositivo, envío por WhatsApp, modo sin conexión y folios temporales |
-| S3 | 16 – 22 nov (16 feriado) | Órdenes de trabajo con anticipo, saldo y garantía. Mostrador: venta, ticket térmico en tres capas y corte de caja |
-| S4 | 23 – 29 nov | Cuentas por cobrar, reportes, legal, facturación (desde el sistema y portal) con adaptador simulado y PAC en pruebas [ADR-0007], "Primeros pasos" y botón "¿Por dónde empiezo?". Preparar producción vacía, dominio y manuales [ADR-0019] |
-| S5 | 30 nov – 1 dic | Salida a producción: dominio, PAC en producción, carga del catálogo real, E1 a E10 con el equipo real, capacitación (3 sesiones de 3 horas) y acta de entrega |
+| S3 | 16 – 22 nov (16 feriado) | Órdenes de trabajo con anticipo, saldo y garantía. Mostrador: venta, comprobante (se construyó como ticket térmico y se reemplaza por hoja carta [ADR-0040]) y corte de caja |
+| S4 | 23 – 29 nov | Cuentas por cobrar, reportes, legal, facturación (desde el sistema y portal) con adaptador simulado [ADR-0007]. **La facturación queda construida pero en pausa [ADR-0039]**; sin PAC en pruebas, "Primeros pasos" y botón "¿Por dónde empiezo?". Preparar producción vacía, dominio y manuales [ADR-0019] |
+| S5 | 30 nov – 1 dic | Salida a producción: dominio, (PAC en producción: en pausa [ADR-0039]), carga del catálogo real, E1 a E10 con el equipo real, capacitación (3 sesiones de 3 horas) y acta de entrega |
+
+## Cambios de alcance del 19 de noviembre
+
+- **Facturación en pausa** [ADR-0039]: Luis todavía no tiene en orden sus datos fiscales. El módulo M10 queda construido y apagado con el interruptor `FACTURACION`. El CSD y el PAC salen del camino crítico de la entrega; las pruebas E5 y E6 pasan a la reactivación.
+- **Comprobante en hoja tamaño carta, sin impresora térmica** [ADR-0040]: se cancela la compra y la prueba de la impresora de tickets. El comprobante lleva logo y detalle, se envía por WhatsApp y se puede imprimir en una impresora Wi-Fi.
+- Trabajo nuevo: S4-35 a S4-38 en [`backlog/SPRINT-4.md`](backlog/SPRINT-4.md).
 
 ## Calendario: decidido, opción A (PD-34, [ADR-0019])
 

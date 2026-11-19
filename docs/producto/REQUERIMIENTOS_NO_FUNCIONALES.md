@@ -16,7 +16,7 @@ El internet del local es de Telmex, único proveedor, y la tablet de campo traba
 | Ventas de mostrador | Facturación y portal de autofacturación |
 | Cobros y anticipos | Sincronización |
 | Avanzar el estatus de órdenes | Importaciones |
-| Imprimir tickets por Bluetooth | Administración de usuarios |
+| Imprimir el comprobante (depende de la impresora; se confirma con la de Luis) [ADR-0040] | Administración de usuarios |
 
 **RNF-02 Implementación base.** PWA con service worker que guarda la aplicación en el dispositivo, y almacén local (IndexedDB) con copia del catálogo y una cola de operaciones pendientes. Detalle en `docs/arquitectura/SINCRONIZACION.md`.
 
@@ -78,7 +78,7 @@ Volúmenes pequeños: cientos de operaciones por mes.
 | RNF-23 | Carga inicial, en 4G y en la tablet objetivo | Menos de 3 segundos |
 | RNF-24 | Interacciones | Sin retrasos perceptibles |
 | RNF-25 | PDF de cotización | Menos de 3 segundos |
-| RNF-26 | Ticket impreso tras cobrar | Menos de 5 segundos |
+| RNF-26 | Comprobante listo para enviar o imprimir tras cobrar | Menos de 5 segundos |
 | RNF-27 | Reportes con 12 meses de datos | Menos de 3 segundos |
 
 ## Usabilidad y accesibilidad [DC §10.5]
@@ -91,7 +91,7 @@ Volúmenes pequeños: cientos de operaciones por mes.
 
 ## Compatibilidad [DC §10.6]
 
-**RNF-31** Chrome actual en Android 13 o superior (tablet objetivo) para toda la operación. Chrome en computadora y celular para consulta y reportes. iOS puede consultar reportes pero no imprime por Bluetooth.
+**RNF-31** Chrome actual en Android 13 o superior (tablet objetivo) para toda la operación. Chrome en computadora y celular para consulta y reportes. iOS puede consultar reportes.
 
 ## Mantenibilidad y observabilidad [DC §10.7]
 
@@ -107,4 +107,4 @@ Volúmenes pequeños: cientos de operaciones por mes.
 
 **RNF-36** La configuración del negocio (nombre, logo, textos legales, folios, porcentajes) vive en una tabla de configuración, para facilitar reutilizar el sistema más adelante.
 
-**RNF-37** Dominio de ZAMMIR en HTTPS, administrado por HummingX y transferible a ZAMMIR si lo pide. Como los QR impresos apuntan a ese dominio, **no puede cambiar después de empezar a imprimir**: las rutas públicas (como `/factura`) son estables (PD-10). DNS en Cloudflare [DC §11.1].
+**RNF-37** Dominio de ZAMMIR en HTTPS, administrado por HummingX y transferible a ZAMMIR si lo pide. Como los QR impresos apuntan a ese dominio, **no puede cambiar después de empezar a imprimir**: las rutas públicas (como `/factura`) son estables (PD-10). DNS en Cloudflare [DC §11.1]. Mientras la facturación esté en pausa [ADR-0039] no se imprime ningún QR; la regla se conserva para cuando se reactive.

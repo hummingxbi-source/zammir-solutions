@@ -1,5 +1,7 @@
 # ADR-0007: Facturación detrás de una interfaz; el PAC real se conecta al final
 
+> **Modificada por [ADR-0039] (2026-11-19):** el PAC real ya no se conecta al final de este proyecto; se conecta cuando se reactive la facturación.
+
 - **Estado:** Aceptada
 - **Fecha:** 2026-10-26
 - **Decide:** Juanito

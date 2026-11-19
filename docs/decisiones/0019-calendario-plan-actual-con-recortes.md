@@ -1,5 +1,7 @@
 # ADR-0019: Calendario — se mantiene el plan actual de sprints, con recortes desde ahora
 
+> **Modificada por [ADR-0039] y [ADR-0040] (2026-11-19):** el CSD y el PAC salen del camino crítico de la entrega, y la prueba de la impresora térmica se cancela.
+
 - **Estado:** Aceptada
 - **Fecha:** 2026-10-27
 - **Decide:** Juanito
