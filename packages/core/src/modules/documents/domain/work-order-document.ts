@@ -60,6 +60,8 @@ export interface BuildReceiptInput {
   readonly publicBaseUrl: string | null;
   /** Genera la matriz del QR; viene de la capa de infraestructura. */
   readonly qrMatrix: (texto: string) => readonly (readonly boolean[])[];
+  /** Si el comprobante lleva QR y leyenda de autofacturación; en pausa no se menciona la factura [ADR-0039]. */
+  readonly autofacturacion: boolean;
   readonly labels: ReceiptLabels;
 }
 
@@ -102,7 +104,8 @@ export function buildWorkOrderDocument(entrada: BuildReceiptInput): QuoteDocumen
     folioLabel: enviada ? folio : `${labels.provisionalNote} ${order.tempFolio}`,
     folio: order.folio,
     tempFolio: order.tempFolio,
-    publicCode: order.publicCode,
+    // Sin facturación el código no sirve de nada en el papel [ADR-0039].
+    publicCode: entrada.autofacturacion ? order.publicCode : null,
     provisionalNote: enviada ? null : labels.provisionalNote,
     issuedDate: formatDate(mexicoDate(new Date(order.issuedAt))),
     validUntilDate: '',
@@ -133,12 +136,14 @@ export function buildWorkOrderDocument(entrada: BuildReceiptInput): QuoteDocumen
       isSettled: saldo === 0,
       paymentLines: lineasDePago,
       warrantyLines: garantia,
-      qr: {
-        matrix: entrada.qrMatrix(url),
-        url,
-        code: order.publicCode,
-        legend: splitConditions(entrada.selfInvoicingLegend),
-      },
+      qr: entrada.autofacturacion
+        ? {
+            matrix: entrada.qrMatrix(url),
+            url,
+            code: order.publicCode,
+            legend: splitConditions(entrada.selfInvoicingLegend),
+          }
+        : null,
     },
   };
 }

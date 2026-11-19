@@ -16,6 +16,12 @@ export const cabeceras = {
   'access-control-allow-headers': 'content-type, authorization, apikey',
 };
 
+/** Si la facturación está activa en el servidor (secreto `FACTURACION_ACTIVA=true`). En pausa [ADR-0039] las
+ *  funciones públicas del portal responden como si el folio no existiera, sin revelar nada. */
+export function facturacionActiva(): boolean {
+  return Deno.env.get('FACTURACION_ACTIVA') === 'true';
+}
+
 export function responder(
   estado: number,
   cuerpo: unknown,

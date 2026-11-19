@@ -149,6 +149,7 @@ function armar(cambios: Partial<Parameters<typeof buildWorkOrderDocument>[0]> = 
     selfInvoicingLegend: 'Factura antes de fin de mes.',
     publicBaseUrl: null,
     qrMatrix: matrizFalsa,
+    autofacturacion: true,
     labels: etiquetas,
     ...cambios,
   });
@@ -233,9 +234,24 @@ describe('comprobante de trabajo', () => {
       },
     });
     expect(pedido).toBe('https://zammir.example/f/OT-2026-0012/ABCD2345');
-    expect(doc.receipt?.qr.url).toBe(pedido);
-    expect(doc.receipt?.qr.code).toBe('ABCD2345');
-    expect(doc.receipt?.qr.legend).toEqual(['Factura antes de fin de mes.']);
+    expect(doc.receipt?.qr?.url).toBe(pedido);
+    expect(doc.receipt?.qr?.code).toBe('ABCD2345');
+    expect(doc.receipt?.qr?.legend).toEqual(['Factura antes de fin de mes.']);
+  });
+
+  it('con la facturación en pausa el comprobante no lleva QR ni leyenda [ADR-0039]', () => {
+    let pidioQr = false;
+    const doc = armar({
+      order: orden({ folio: 'OT-2026-0012' }),
+      autofacturacion: false,
+      qrMatrix: () => {
+        pidioQr = true;
+        return [[true]];
+      },
+    });
+    expect(doc.receipt?.qr).toBeNull();
+    expect(pidioQr).toBe(false);
+    expect(JSON.stringify(doc)).not.toContain('Factura antes de fin de mes.');
   });
 
   it('la garantía solo sale con lo que se haya definido: nunca una duración inventada', () => {

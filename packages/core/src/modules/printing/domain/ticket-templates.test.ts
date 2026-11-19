@@ -129,6 +129,7 @@ describe('ticket de venta', () => {
     payments: [pago()],
     customerName: 'Ana López',
     cashierName: 'Beto',
+    autofacturacion: true,
     selfInvoicingLegend: 'Factura en 30 días.',
     publicBaseUrl: 'https://pruebas.zammir.invalid',
   });
@@ -182,6 +183,7 @@ describe('ticket de venta', () => {
       payments: [pago()],
       customerName: null,
       cashierName: 'Beto',
+      autofacturacion: true,
       selfInvoicingLegend: '',
       publicBaseUrl: null,
     });
@@ -192,6 +194,24 @@ describe('ticket de venta', () => {
     expect(texto).toContain('pruebas.zammir.invalid/f/T1-0007/ABCDEFGH');
   });
 
+  it('con la facturación en pausa el ticket no lleva QR, código ni leyenda [ADR-0039]', () => {
+    const d = saleTicket({
+      ...comun,
+      sale: venta({ folio: 'V-2026-0007' }),
+      payments: [pago()],
+      customerName: null,
+      cashierName: 'Beto',
+      autofacturacion: false,
+      selfInvoicingLegend: 'Factura en 30 días.',
+      publicBaseUrl: 'https://zammir.example',
+    });
+    const texto = toPlainLines(d).join('\n');
+    expect(d.blocks.some((b) => b.kind === 'qr')).toBe(false);
+    expect(texto).not.toContain('Factura en 30 días.');
+    expect(texto).not.toContain('zammir.example');
+    expect(texto).not.toContain('ABCDEFGH');
+  });
+
   it('una reimpresión se marca, y una venta cancelada también', () => {
     const d = saleTicket({
       ...comun,
@@ -200,6 +220,7 @@ describe('ticket de venta', () => {
       payments: [],
       customerName: null,
       cashierName: 'Beto',
+      autofacturacion: true,
       selfInvoicingLegend: '',
       publicBaseUrl: null,
     });
@@ -215,6 +236,7 @@ describe('ticket de venta', () => {
       payments: [pago({ method: 'TRANSFER', cashReceivedCents: null, changeCents: null })],
       customerName: null,
       cashierName: 'Beto',
+      autofacturacion: true,
       selfInvoicingLegend: '',
       publicBaseUrl: null,
     });
@@ -231,6 +253,7 @@ describe('ticket de venta', () => {
       payments: [pago({ cashReceivedCents: 52_000, changeCents: 0 })],
       customerName: null,
       cashierName: 'Beto',
+      autofacturacion: true,
       selfInvoicingLegend: '',
       publicBaseUrl: null,
     });
@@ -247,6 +270,7 @@ describe('ticket de venta', () => {
       payments: [pago()],
       customerName: null,
       cashierName: 'Beto',
+      autofacturacion: true,
       selfInvoicingLegend: '',
       publicBaseUrl: null,
     });
@@ -279,6 +303,7 @@ describe('comprobante de cobro de una orden', () => {
       payments: [anticipo],
       customerName: 'Ana López',
       cashierName: 'Beto',
+      autofacturacion: true,
       selfInvoicingLegend: '',
       publicBaseUrl: null,
     });

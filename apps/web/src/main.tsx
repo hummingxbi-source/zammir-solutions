@@ -43,6 +43,7 @@ const composition = createComposition({
   url: import.meta.env.VITE_SUPABASE_URL,
   anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
   turnstileSiteKey: import.meta.env.VITE_TURNSTILE_SITE_KEY,
+  facturacion: import.meta.env.VITE_FACTURACION === 'true',
 });
 
 // Pone al día el catálogo guardado en la tablet al abrir y cada vez que vuelve la conexión.
@@ -80,6 +81,7 @@ createRoot(root).render(
             clientes={composition.clientes}
             legal={composition.legal}
             contactoPublico={composition.contactoPublico}
+            interruptores={composition.interruptores}
             facturas={composition.facturas}
             exportacion={composition.exportacionDeDatos}
             compartirFacturas={composition.compartirFacturas}

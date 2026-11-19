@@ -276,7 +276,7 @@ export function App({
                   <Clientes
                     deps={clientes}
                     {...(historialDeCliente === null ? {} : { historial: historialDeCliente })}
-                    {...(facturas === null
+                    {...(facturas === null || !interruptores.has('FACTURACION')
                       ? {}
                       : { facturasDelCliente: (id: CustomerId) => facturas.customerInvoices(id) })}
                   />
@@ -313,7 +313,7 @@ export function App({
   const sinContacto = (): Promise<ContactoPublico | null> => Promise.resolve(null);
   return (
     <Routes>
-      {portal !== null ? (
+      {portal !== null && interruptores.has('FACTURACION') ? (
         <>
           <Route
             path="/factura"

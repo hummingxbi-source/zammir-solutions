@@ -125,8 +125,14 @@ function pieDeAutofactura(
   codigo: string,
   leyenda: string,
   baseUrl: string | null,
+  autofacturacion: boolean,
 ): PrintBlock[] {
   const bloques: PrintBlock[] = [{ kind: 'rule' }];
+  if (!autofacturacion) {
+    // Facturación en pausa [ADR-0039]: ni QR, ni código, ni leyenda; solo el agradecimiento.
+    bloques.push({ kind: 'text', text: l.thanks, align: 'center' }, { kind: 'feed', lines: 1 });
+    return bloques;
+  }
   if (leyenda.trim() !== '') {
     bloques.push({ kind: 'text', text: leyenda.trim() });
   }
@@ -144,6 +150,8 @@ export interface SaleTicketInput extends TicketCommon {
   readonly payments: readonly Payment[];
   readonly customerName: string | null;
   readonly cashierName: string;
+  /** Si el ticket lleva QR y leyenda de autofacturación [ADR-0039]. */
+  readonly autofacturacion: boolean;
   /** Leyenda del plazo de autofacturación (PD-09, configurable). */
   readonly selfInvoicingLegend: string;
   readonly publicBaseUrl: string | null;
@@ -182,7 +190,14 @@ export function saleTicket(e: SaleTicketInput): PrintDocument {
     { kind: 'pair', left: l.tax, right: dinero(sale.taxCents) },
     { kind: 'pair', left: l.total, right: dinero(sale.totalCents), bold: true },
     ...cobros(l, e.payments),
-    ...pieDeAutofactura(l, folio, sale.publicCode, e.selfInvoicingLegend, e.publicBaseUrl),
+    ...pieDeAutofactura(
+      l,
+      folio,
+      sale.publicCode,
+      e.selfInvoicingLegend,
+      e.publicBaseUrl,
+      e.autofacturacion,
+    ),
   );
   return { title: `${l.sale} ${folio}`, width: e.width, blocks: bloques };
 }
@@ -195,6 +210,8 @@ export interface OrderPaymentTicketInput extends TicketCommon {
   readonly payments: readonly Payment[];
   readonly customerName: string;
   readonly cashierName: string;
+  /** Si el ticket lleva QR y leyenda de autofacturación [ADR-0039]. */
+  readonly autofacturacion: boolean;
   readonly selfInvoicingLegend: string;
   readonly publicBaseUrl: string | null;
 }
@@ -228,7 +245,14 @@ export function orderPaymentTicket(e: OrderPaymentTicketInput): PrintDocument {
       right: dinero(balanceCents(order.totalCents, e.payments)),
       bold: true,
     },
-    ...pieDeAutofactura(l, folio, order.publicCode, e.selfInvoicingLegend, e.publicBaseUrl),
+    ...pieDeAutofactura(
+      l,
+      folio,
+      order.publicCode,
+      e.selfInvoicingLegend,
+      e.publicBaseUrl,
+      e.autofacturacion,
+    ),
   );
   return { title: `${l.orderPayment} ${folio}`, width: e.width, blocks: bloques };
 }

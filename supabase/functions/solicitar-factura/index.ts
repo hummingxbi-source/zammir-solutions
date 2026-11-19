@@ -13,6 +13,7 @@ import {
   clienteDeServicio,
   dependenciasDelPortal,
   entradaDelPortal,
+  facturacionActiva,
   leerCuerpo,
   proveedorDeTimbrado,
   responder,
@@ -30,6 +31,9 @@ servir('solicitar-factura', async (req: Request) => {
   }
   if (req.method !== 'POST') {
     return responder(405, { error: 'METHOD_NOT_ALLOWED' });
+  }
+  if (!facturacionActiva()) {
+    return responder(404, { error: 'NOT_AVAILABLE' });
   }
   const cuerpo = await leerCuerpo(req);
   const receptor = cuerpo?.recipient;

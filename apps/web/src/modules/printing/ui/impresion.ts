@@ -6,6 +6,8 @@ export interface ImpresionDeTickets {
   /** Caracteres por renglón del papel; configurable mientras no se defina la impresora (PD-15). */
   readonly width: PaperWidth;
   readonly business: TicketBusiness;
+  /** Si el ticket lleva QR y leyenda de autofacturación; en pausa no se menciona la factura [ADR-0039]. */
+  readonly autofacturacion: boolean;
   /** Leyenda del plazo de autofacturación (PD-09, configurable). */
   readonly selfInvoicingLegend: string;
   readonly publicBaseUrl: string | null;
