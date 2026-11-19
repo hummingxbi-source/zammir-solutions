@@ -119,8 +119,10 @@ import {
   imprimirComprobante,
   type ComprobanteDeps,
 } from '../modules/orders/ui/comprobante';
+import { pdfLibSheetRenderer } from '../modules/documents/infra/pdf-lib-sheet-renderer';
 import {
   htmlDocumentPrinter,
+  htmlSheetPrinter,
   imprimirHtmlDesdeElNavegador,
 } from '../modules/documents/infra/html-document-printer';
 import type { ComprobanteDeVentaDeps } from '../modules/counter/ui/comprobante-de-venta';
@@ -766,6 +768,12 @@ function crearPreparadorDelMostrador(d: {
     return {
       cash,
       impresion,
+      corteEnCarta: {
+        negocio,
+        renderer: pdfLibSheetRenderer(),
+        share: webShareService(entornoDelNavegador()),
+        impresora: htmlSheetPrinter(imprimirHtmlDesdeElNavegador(window)),
+      },
       comprobante: {
         deps: comprobanteDeVentaDeps,
         renderer: pdfLibRenderer(),

@@ -1,6 +1,7 @@
-import { err, ok, type DocumentPrinter } from '@zammir/core';
+import { err, ok, type DocumentPrinter, type SheetPrinter } from '@zammir/core';
 
 import { documentoAHtml } from './documento-html';
+import { hojaAHtml } from './hoja-html';
 
 /** Lo que necesita del navegador: mostrar una página en un marco oculto y mandarla a imprimir. */
 export interface EntornoDeImpresionDeDocumentos {
@@ -23,6 +24,25 @@ export function htmlDocumentPrinter(
         await entorno.imprimirHtml(
           documentoAHtml(documento, { copia: opciones?.copia === true, rotuloDeCopia }),
         );
+        return ok(undefined);
+      } catch {
+        return err({ code: 'PRINT_FAILED' as const });
+      }
+    },
+  };
+}
+
+/** Imprime la hoja de resumen (el corte de caja) con la impresión del sistema [ADR-0040]. */
+export function htmlSheetPrinter(
+  entorno: EntornoDeImpresionDeDocumentos | undefined,
+): SheetPrinter {
+  return {
+    async print(hoja) {
+      if (entorno === undefined) {
+        return err({ code: 'PRINT_UNAVAILABLE' as const });
+      }
+      try {
+        await entorno.imprimirHtml(hojaAHtml(hoja));
         return ok(undefined);
       } catch {
         return err({ code: 'PRINT_FAILED' as const });

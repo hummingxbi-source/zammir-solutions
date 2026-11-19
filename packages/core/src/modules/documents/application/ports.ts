@@ -1,5 +1,6 @@
 import type { Result } from '../../../shared-kernel/result';
 import type { QuoteDocument } from '../domain/quote-document';
+import type { SummarySheet } from '../domain/summary-sheet';
 
 export type RenderErrorCode = 'RENDER_FAILED';
 
@@ -27,6 +28,16 @@ export interface DocumentPrinter {
     documento: QuoteDocument,
     opciones?: { readonly copia: boolean },
   ): Promise<Result<void, PrintError>>;
+}
+
+/** Puerto: convierte una hoja de resumen (el corte de caja) en PDF carta, en la tablet y sin internet. */
+export interface SheetRenderer {
+  render(hoja: SummarySheet): Promise<Result<Uint8Array, RenderError>>;
+}
+
+/** Puerto: manda una hoja de resumen a la impresión del dispositivo [ADR-0040]. */
+export interface SheetPrinter {
+  print(hoja: SummarySheet): Promise<Result<void, PrintError>>;
 }
 
 export type ShareErrorCode = 'SHARE_CANCELLED' | 'SHARE_UNAVAILABLE';

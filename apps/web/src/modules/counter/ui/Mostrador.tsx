@@ -15,7 +15,6 @@ import {
   removeFromTicket,
   searchProducts,
   shareQuote,
-  shiftCutTicket,
   setTicketQuantity,
   ticketTotals,
   type Authorization,
@@ -58,7 +57,7 @@ import { formatearPesos } from '../../../shared/ui/formatos';
 import { DialogoDeAutorizacion } from '../../orders/ui/DialogoDeAutorizacion';
 import type { ImpresionDeTickets } from '../../printing/ui/impresion';
 import { PanelDeImpresora } from '../../printing/ui/PanelDeImpresora';
-import { TurnoDeCaja, type Persona } from './TurnoDeCaja';
+import { TurnoDeCaja, type HojaDelCorte, type Persona } from './TurnoDeCaja';
 import { DialogoDeCobro } from '../../orders/ui/DialogoDeCobro';
 import type { AutorizacionDeAdministrador } from '../../quotes/ui/DialogoDeDescuento';
 
@@ -93,6 +92,8 @@ export interface MostradorProps {
   readonly impresion?: ImpresionDeTickets;
   /** Comprobante en hoja carta de una venta: enviarlo por WhatsApp o imprimirlo [S4-37, ADR-0040]. */
   readonly comprobante?: ComprobanteDelMostrador;
+  /** Hoja del corte de caja en tamaño carta [S4-39, ADR-0040]. */
+  readonly corteEnCarta?: HojaDelCorte;
   readonly onPorEnviar?: () => void;
   readonly alCambiarElEnvio?: (aviso: () => void) => () => void;
 }
@@ -374,29 +375,6 @@ export function Mostrador(props: MostradorProps): ReactElement {
     setAviso(textos.documento.acciones.impresionAbierta);
   }
 
-  async function imprimirCorte(
-    turno: Parameters<NonNullable<React.ComponentProps<typeof TurnoDeCaja>['onImprimir']>>[0],
-    resumen: Parameters<NonNullable<React.ComponentProps<typeof TurnoDeCaja>['onImprimir']>>[1],
-  ): Promise<string | null> {
-    const impresion = props.impresion;
-    if (impresion === undefined) {
-      return 'PRINTER_NOT_CONFIGURED';
-    }
-    const r = await impresion.imprimir(
-      shiftCutTicket({
-        business: impresion.business,
-        labels: textos.impresion.rotulos,
-        width: impresion.width,
-        cashierName: props.personas.find((x) => x.id === turno.cashierId)?.name ?? '—',
-        openedAt: turno.openedAt,
-        closedAt: turno.closedAt,
-        summary: resumen,
-        countedCashCents: turno.countedCashCents,
-      }),
-    );
-    return 'error' in r ? r.error : null;
-  }
-
   async function cancelar(
     venta: CounterSale,
     motivo: string,
@@ -460,7 +438,7 @@ export function Mostrador(props: MostradorProps): ReactElement {
         personas={props.personas}
         autorizacion={props.autorizacion}
         version={version}
-        {...(props.impresion === undefined ? {} : { onImprimir: imprimirCorte })}
+        {...(props.corteEnCarta === undefined ? {} : { hoja: props.corteEnCarta })}
         {...(props.onPorEnviar === undefined ? {} : { onPorEnviar: props.onPorEnviar })}
       >
         <div className="mostrador__rejilla">

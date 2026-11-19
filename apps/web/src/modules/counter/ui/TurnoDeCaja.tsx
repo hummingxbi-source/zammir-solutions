@@ -10,18 +10,26 @@ import {
   reopenCashShift,
   shiftSummary,
   visibleShifts,
+  buildShiftCutSheet,
+  shareSheet,
   type Authorization,
+  type BusinessIdentity,
   type CashDeps,
   type CashShift,
   type CashShiftSummary,
   type DaySummary,
   type QuoteActor,
+  type SheetPrinter,
+  type SheetRenderer,
+  type ShareService,
+  type SummarySheet,
 } from '@zammir/core';
 
 import { textos } from '../../../shared/i18n/textos';
 import { Aviso } from '../../../shared/ui/Aviso';
 import { Boton } from '../../../shared/ui/Boton';
 import { Campo, CampoNumerico } from '../../../shared/ui/Campo';
+import { AccionesDelDocumento } from '../../documents/ui/AccionesDelDocumento';
 import { EtiquetaDeEstado } from '../../../shared/ui/EtiquetaDeEstado';
 import { formatearPesos } from '../../../shared/ui/formatos';
 import { Icono } from '../../../shared/ui/Icono';
@@ -38,6 +46,14 @@ export interface Persona {
   readonly name: string;
 }
 
+/** Lo que hace falta para sacar la hoja del corte de caja. */
+export interface HojaDelCorte {
+  readonly negocio: BusinessIdentity;
+  readonly renderer: SheetRenderer;
+  readonly share: ShareService;
+  readonly impresora?: SheetPrinter;
+}
+
 export interface TurnoDeCajaProps {
   readonly cash: CashDeps;
   readonly actor: QuoteActor;
@@ -48,8 +64,8 @@ export interface TurnoDeCajaProps {
   readonly onPorEnviar?: () => void;
   /** Avisa que el turno cambió (se abrió, se cerró o se reabrió). */
   readonly onCambio?: () => void;
-  /** Imprime el resumen del corte en el ticket térmico (S3-20 en adelante). */
-  readonly onImprimir?: (turno: CashShift, resumen: CashShiftSummary) => Promise<string | null>;
+  /** Hoja del corte en tamaño carta: enviarla por WhatsApp o imprimirla [S4-39, ADR-0040]. */
+  readonly hoja?: HojaDelCorte;
   /** Lo que va entre el turno y su historial (el mostrador pone aquí la venta): así lo importante queda arriba. */
   readonly children?: ReactNode;
 }
@@ -195,6 +211,72 @@ export function TurnoDeCaja(props: TurnoDeCajaProps): ReactElement {
 
   const nombre = (id: string): string => personas.find((p) => p.id === id)?.name ?? '—';
 
+  /** Arma la hoja del corte de un turno cerrado; `null` si no se puede (turno abierto). */
+  function hojaDe(x: { turno: CashShift; resumen: CashShiftSummary }): SummarySheet | null {
+    if (props.hoja === undefined) {
+      return null;
+    }
+    const r = buildShiftCutSheet({
+      shift: x.turno,
+      summary: x.resumen,
+      cashierName: nombre(x.turno.cashierId),
+      business: props.hoja.negocio,
+      labels: textos.documento.corte,
+    });
+    return r.ok ? r.sheet : null;
+  }
+
+  async function enviarCorte(x: { turno: CashShift; resumen: CashShiftSummary }): Promise<void> {
+    const hoja = hojaDe(x);
+    if (hoja === null || props.hoja === undefined) {
+      setError(textos.documento.corte.noSePudo);
+      return;
+    }
+    setAviso(textos.documento.acciones.preparando);
+    const dia = mexicoDate(new Date(x.turno.openedAt));
+    const r = await shareSheet(
+      { renderer: props.hoja.renderer, share: props.hoja.share },
+      hoja,
+      `Corte-de-caja-${dia}.pdf`,
+      textos.documento.corte.mensajeWhatsApp(nombre(x.turno.cashierId), dia),
+    );
+    if (!r.ok) {
+      setAviso(null);
+      setError(textos.documento.corte.noSePudo);
+      return;
+    }
+    setError(null);
+    setAviso(
+      r.value === 'SHARED'
+        ? textos.cotizador.acciones.compartida
+        : r.value === 'FALLBACK'
+          ? textos.cotizador.acciones.respaldo
+          : null,
+    );
+  }
+
+  async function imprimirCorte(x: { turno: CashShift; resumen: CashShiftSummary }): Promise<void> {
+    const hoja = hojaDe(x);
+    setAviso(null);
+    if (hoja === null || props.hoja?.impresora === undefined) {
+      setError(textos.documento.acciones.errorDeImpresion);
+      return;
+    }
+    const r = await props.hoja.impresora.print(hoja);
+    if (!r.ok) {
+      setError(textos.documento.acciones.errorDeImpresion);
+      return;
+    }
+    setError(null);
+    setAviso(textos.documento.acciones.impresionAbierta);
+  }
+
+  async function verCorte(x: CashShift): Promise<void> {
+    setError(null);
+    setAviso(null);
+    setCorte({ turno: x, resumen: await shiftSummary(cash, x) });
+  }
+
   return (
     <div className="turno">
       <Tarjeta
@@ -337,20 +419,11 @@ export function TurnoDeCaja(props: TurnoDeCajaProps): ReactElement {
                 </>
               ) : null}
             </dl>
-            {props.onImprimir !== undefined ? (
-              <Boton
-                variante="secundario"
-                onClick={() => {
-                  void props.onImprimir?.(corte.turno, corte.resumen).then((falla) => {
-                    if (falla !== null) {
-                      mostrarError(falla);
-                    }
-                  });
-                }}
-              >
-                <Icono nombre="imprimir" />
-                {t.corte.imprimir}
-              </Boton>
+            {props.hoja !== undefined ? (
+              <AccionesDelDocumento
+                onEnviar={() => enviarCorte(corte)}
+                onImprimir={() => imprimirCorte(corte)}
+              />
             ) : null}
           </section>
         ) : null}
@@ -402,6 +475,16 @@ export function TurnoDeCaja(props: TurnoDeCajaProps): ReactElement {
                       )}
                     </td>
                     <td className="tabla__acciones">
+                      {x.status === 'CLOSED' && props.hoja !== undefined ? (
+                        <Boton
+                          variante="secundario"
+                          onClick={() => {
+                            void verCorte(x);
+                          }}
+                        >
+                          {t.turnos.verCorte}
+                        </Boton>
+                      ) : null}
                       {x.status === 'CLOSED' && reabrir === null ? (
                         <Boton
                           variante="secundario"

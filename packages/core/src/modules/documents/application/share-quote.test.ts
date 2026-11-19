@@ -2,8 +2,15 @@ import { describe, expect, it } from 'vitest';
 
 import { err, ok } from '../../../shared-kernel/result';
 import { documentoDePrueba } from '../contracts/document-renderer.contract';
-import type { DocumentRenderer, ShareableFile, ShareError, ShareService } from './ports';
-import { pdfFileName, shareQuote, whatsappUrl } from './share-quote';
+import type {
+  DocumentRenderer,
+  ShareableFile,
+  ShareError,
+  ShareService,
+  SheetRenderer,
+} from './ports';
+import type { SummarySheet } from '../domain/summary-sheet';
+import { pdfFileName, shareQuote, shareSheet, whatsappUrl } from './share-quote';
 
 function servicio(opciones: { puede: boolean; resultado?: ShareError }) {
   const llamadas: string[] = [];
@@ -111,5 +118,58 @@ describe('shareQuote', () => {
   it('no existe forma de imprimir en tamaño carta en el puerto', () => {
     const s = servicio({ puede: true });
     expect(Object.keys(s.share)).not.toContain('print');
+  });
+});
+
+describe('shareSheet', () => {
+  const hoja: SummarySheet = {
+    business: { name: 'ZAMMIR', phone: null, address: null },
+    title: 'Corte de caja',
+    subtitle: null,
+    meta: [],
+    sections: [],
+    note: null,
+    pageLabel: 'Página {n} de {total}',
+  };
+  const renderer: SheetRenderer = {
+    render: () => Promise.resolve(ok(Uint8Array.of(0x25, 0x50, 0x44, 0x46))),
+  };
+
+  it('comparte el PDF con el nombre que se le da y el mensaje', async () => {
+    const { share, llamadas, archivo } = servicio({ puede: true });
+    const r = await shareSheet({ renderer, share }, hoja, 'Corte-de-caja-2026-10-31.pdf', 'Corte');
+    expect(r).toEqual(ok('SHARED'));
+    expect(archivo()?.name).toBe('Corte-de-caja-2026-10-31.pdf');
+    expect(archivo()?.mimeType).toBe('application/pdf');
+    expect(llamadas).toEqual(['compartir:Corte']);
+  });
+
+  it('si el dispositivo no comparte archivos, descarga el PDF y abre WhatsApp sin número', async () => {
+    const { share, llamadas } = servicio({ puede: false });
+    const r = await shareSheet({ renderer, share }, hoja, 'Corte.pdf', 'Corte');
+    expect(r).toEqual(ok('FALLBACK'));
+    expect(llamadas).toEqual(['descarga:Corte.pdf', 'enlace:https://wa.me/?text=Corte']);
+  });
+
+  it('si la persona cierra el menú, no es un error', async () => {
+    const { share } = servicio({ puede: true, resultado: { code: 'SHARE_CANCELLED' } });
+    expect(await shareSheet({ renderer, share }, hoja, 'Corte.pdf', 'Corte')).toEqual(
+      ok('CANCELLED'),
+    );
+  });
+
+  it('si no se pudo armar el PDF, devuelve el error y no comparte nada', async () => {
+    const { share, llamadas } = servicio({ puede: true });
+    const r = await shareSheet(
+      {
+        renderer: { render: () => Promise.resolve(err({ code: 'RENDER_FAILED' as const })) },
+        share,
+      },
+      hoja,
+      'Corte.pdf',
+      'Corte',
+    );
+    expect(r).toEqual(err({ code: 'RENDER_FAILED' }));
+    expect(llamadas).toEqual([]);
   });
 });

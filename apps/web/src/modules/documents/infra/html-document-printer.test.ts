@@ -1,7 +1,11 @@
 import { documentoDePrueba } from '@zammir/core/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { htmlDocumentPrinter, imprimirHtmlDesdeElNavegador } from './html-document-printer';
+import {
+  htmlDocumentPrinter,
+  htmlSheetPrinter,
+  imprimirHtmlDesdeElNavegador,
+} from './html-document-printer';
 
 afterEach(() => {
   document.body.innerHTML = '';
@@ -58,6 +62,37 @@ afterEach(() => {
   if (DESCRIPTOR !== undefined) {
     Object.defineProperty(HTMLIFrameElement.prototype, 'contentWindow', DESCRIPTOR);
   }
+});
+
+describe('impresión de la hoja de resumen', () => {
+  const hoja = {
+    business: { name: 'ZAMMIR', phone: null, address: null },
+    title: 'Corte de caja',
+    subtitle: null,
+    meta: [],
+    sections: [],
+    note: null,
+    pageLabel: 'Página {n} de {total}',
+  };
+
+  it('manda la página de la hoja a imprimir', async () => {
+    const imprimirHtml = vi.fn(() => Promise.resolve());
+    const r = await htmlSheetPrinter({ imprimirHtml }).print(hoja);
+    expect(r.ok).toBe(true);
+    expect(String((imprimirHtml.mock.calls as unknown as string[][])[0]?.[0])).toContain(
+      'Corte de caja',
+    );
+  });
+
+  it('sin impresión o si falla, responde el error', async () => {
+    expect(await htmlSheetPrinter(undefined).print(hoja)).toEqual({
+      ok: false,
+      error: { code: 'PRINT_UNAVAILABLE' },
+    });
+    expect(
+      await htmlSheetPrinter({ imprimirHtml: () => Promise.reject(new Error('x')) }).print(hoja),
+    ).toEqual({ ok: false, error: { code: 'PRINT_FAILED' } });
+  });
 });
 
 describe('impresión desde el navegador', () => {
