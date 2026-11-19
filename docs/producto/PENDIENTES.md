@@ -48,7 +48,7 @@
 | PD-52 | Orden de los regímenes fiscales y usos de CFDI en el portal: los que más piden los clientes de ZAMMIR primero (pregunta 62) | Luis | No | En pausa [ADR-0039] | Orden del SAT por omisión, ajustable en un solo lugar |
 | PD-53 | Qué productos llevan IVA 0 % o exento. **[Luis, 2026-11-08]**: "sí, algunas cosas" | Luis y su contador | No | Antes de cargar el catálogo real | Todo con IVA 16 %; el catálogo ya marca un producto como exento |
 | PD-54 | **Impresora tamaño carta de Luis**: marca y modelo, y que sea de red o Wi-Fi o compatible con el servicio de impresión de Android. Probar con ella que la tablet la encuentre y que la hoja salga bien (carta, márgenes, logo) [ADR-0040] | Luis | No | Antes de S5-05 | Respaldo: guardar el PDF o enviarlo por WhatsApp |
-| PD-55 | **Logo original de ZAMMIR** en buena resolución (idealmente vectorial), porque ahora va en cada comprobante [ADR-0040] | Luis | No | Antes de S4-36 con el diseño final | Logo provisional del sistema |
+| PD-55 | ~~Logo original de ZAMMIR en buena resolución~~ **Resuelto el 2026-11-19**: Juanito confirma que la marca vectorial que ya usa la aplicación es el logo original. El PNG de los documentos sale de ella (`apps/web/public/logo-zammir.png`); si Luis entrega otro archivo, se reemplaza sin tocar código [ADR-0040] | Juanito | No | Resuelto | `apps/web/public/logo-zammir.png` |
 
 ## Resueltos
 

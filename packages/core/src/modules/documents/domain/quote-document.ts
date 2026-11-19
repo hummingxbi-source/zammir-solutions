@@ -69,7 +69,10 @@ export interface ReceiptExtras {
     readonly verificationCode: string;
   };
   readonly status: string;
-  readonly depositRequired: string;
+  /** Anticipo exigido; `null` en una venta de mostrador, que se paga completa. */
+  readonly depositRequired: string | null;
+  /** `Atendió: Beto`, ya redactado; `null` si no aplica. */
+  readonly attendedBy: string | null;
   readonly paid: string;
   /** `Liquidado` cuando el saldo es cero; si no, el importe. */
   readonly balance: string;

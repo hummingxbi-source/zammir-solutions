@@ -18,6 +18,9 @@ const GRIS = rgb(0.35, 0.35, 0.35);
 const NEGRO = rgb(0, 0, 0);
 const LINEA = rgb(0.75, 0.75, 0.75);
 const ROJO = rgb(0.75, 0.1, 0.1);
+// Verde vidrio de la marca [ADR-0037]: título, filetes y encabezado de la tabla.
+const ACENTO = rgb(15 / 255, 92 / 255, 87 / 255);
+const TINTE = rgb(0.92, 0.95, 0.94);
 
 interface Fuentes {
   readonly normal: PDFFont;
@@ -107,12 +110,14 @@ function texto(
 function encabezadoDeTabla(e: Estado): void {
   const l = e.doc.labels;
   const y = e.y;
+  e.page.drawRectangle({ x: MARGEN, y: y - 6, width: UTIL, height: 20, color: TINTE });
   e.page.drawLine({
-    start: { x: MARGEN, y: y + 12 },
-    end: { x: MARGEN + UTIL, y: y + 12 },
-    color: LINEA,
+    start: { x: MARGEN, y: y + 14 },
+    end: { x: MARGEN + UTIL, y: y + 14 },
+    color: ACENTO,
+    thickness: 1,
   });
-  texto(e, '#', MARGEN, y, { size: 8, bold: true, color: GRIS });
+  texto(e, '#', MARGEN + 2, y, { size: 8, bold: true, color: GRIS });
   texto(e, l.concept, MARGEN + COL_POS, y, { size: 8, bold: true, color: GRIS });
   texto(e, l.quantity, 0, y, {
     size: 8,
@@ -165,7 +170,7 @@ async function encabezadoPrincipal(e: Estado): Promise<void> {
       doc.business.logo.format === 'png'
         ? await e.pdf.embedPng(doc.business.logo.bytes)
         : await e.pdf.embedJpg(doc.business.logo.bytes);
-    const escala = Math.min(60 / imagen.width, 60 / imagen.height, 1);
+    const escala = Math.min(64 / imagen.width, 64 / imagen.height, 1);
     e.page.drawImage(imagen, {
       x: MARGEN,
       y: e.y - imagen.height * escala,
@@ -182,7 +187,12 @@ async function encabezadoPrincipal(e: Estado): Promise<void> {
       yNegocio -= 12;
     }
   }
-  texto(e, l.title.toUpperCase(), 0, e.y - 12, { size: 14, bold: true, alignRight: MARGEN + UTIL });
+  texto(e, l.title.toUpperCase(), 0, e.y - 12, {
+    size: 14,
+    bold: true,
+    color: ACENTO,
+    alignRight: MARGEN + UTIL,
+  });
   texto(e, doc.folioLabel, 0, e.y - 28, { size: 11, bold: true, alignRight: MARGEN + UTIL });
   if (doc.publicCode !== null) {
     texto(e, `${l.publicCode} ${doc.publicCode}`, 0, e.y - 41, {
@@ -199,11 +209,12 @@ async function encabezadoPrincipal(e: Estado): Promise<void> {
       alignRight: MARGEN + UTIL,
     });
   }
-  e.y -= Math.max(70, e.y - yNegocio + 14);
+  e.y -= Math.max(76, e.y - yNegocio + 14);
   e.page.drawLine({
     start: { x: MARGEN, y: e.y },
     end: { x: MARGEN + UTIL, y: e.y },
-    color: LINEA,
+    color: ACENTO,
+    thickness: 1.5,
   });
   e.y -= 16;
 
@@ -218,14 +229,20 @@ async function encabezadoPrincipal(e: Estado): Promise<void> {
   e.y -= 16;
   texto(e, `${l.customer}: ${doc.customer.name}`, MARGEN, e.y, { size: 10, bold: true });
   e.y -= 13;
-  texto(
-    e,
-    `${l.phone}: ${doc.customer.phone.slice(0, 2)} ${doc.customer.phone.slice(2, 6)} ${doc.customer.phone.slice(6)}`,
-    MARGEN,
-    e.y,
-    { size: 10 },
-  );
-  e.y -= 13;
+  if (doc.customer.phone !== '') {
+    texto(
+      e,
+      `${l.phone}: ${doc.customer.phone.slice(0, 2)} ${doc.customer.phone.slice(2, 6)} ${doc.customer.phone.slice(6)}`,
+      MARGEN,
+      e.y,
+      { size: 10 },
+    );
+    e.y -= 13;
+  }
+  if (doc.receipt?.attendedBy !== null && doc.receipt?.attendedBy !== undefined) {
+    texto(e, doc.receipt.attendedBy, MARGEN, e.y, { size: 10 });
+    e.y -= 13;
+  }
   if (doc.siteAddress !== null) {
     for (const renglon of envolver(`${l.site}: ${doc.siteAddress}`, e.fuentes.normal, 10, UTIL)) {
       texto(e, renglon, MARGEN, e.y, { size: 10 });
@@ -259,9 +276,10 @@ function filas(e: Estado): void {
     texto(e, linea.unitPrice, 0, e.y, { size: 10, alignRight: MARGEN + UTIL - COL_IMPORTE });
     texto(e, linea.amount, 0, e.y, { size: 10, bold: true, alignRight: MARGEN + UTIL });
     e.y -= alto;
+    // El filete va entre este renglón y el siguiente, sin cruzar el texto de ninguno.
     e.page.drawLine({
-      start: { x: MARGEN, y: e.y + 4 },
-      end: { x: MARGEN + UTIL, y: e.y + 4 },
+      start: { x: MARGEN, y: e.y + 12 },
+      end: { x: MARGEN + UTIL, y: e.y + 12 },
       color: LINEA,
     });
   }
@@ -328,6 +346,7 @@ function pagosYSaldo(e: Estado): void {
   }
   const renglonesDePago = r.paymentLines.flatMap((p) => envolver(p, e.fuentes.normal, 9, UTIL));
   asegurarEspacio(e, 30 + renglonesDePago.length * 11 + 56, false);
+  e.y -= 4;
   texto(e, `${r.labels.payments} (${r.status})`, MARGEN, e.y, { size: 10, bold: true });
   e.y -= 14;
   for (const renglon of renglonesDePago) {
@@ -336,11 +355,14 @@ function pagosYSaldo(e: Estado): void {
   }
   e.y -= 6;
   const etiquetaX = MARGEN + UTIL - COL_IMPORTE - COL_UNIT;
-  for (const [etiqueta, valor, negrita] of [
-    [r.labels.depositRequired, r.depositRequired, false],
+  const renglonesDeSaldo: readonly (readonly [string, string, boolean])[] = [
+    ...(r.depositRequired === null
+      ? []
+      : ([[r.labels.depositRequired, r.depositRequired, false]] as const)),
     [r.labels.paid, r.paid, false],
     [r.labels.balance, r.balance, true],
-  ] as const) {
+  ];
+  for (const [etiqueta, valor, negrita] of renglonesDeSaldo) {
     texto(e, etiqueta, 0, e.y, {
       size: negrita ? 12 : 10,
       bold: negrita,
