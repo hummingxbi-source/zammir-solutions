@@ -84,6 +84,7 @@ import { supabaseCustomerReplica } from '../modules/customers/infra/supabase-cus
 import { supabaseCustomers } from '../modules/customers/infra/supabase-customers';
 import { textos } from '../shared/i18n/textos';
 import type { Interruptor } from '../shell/secciones';
+import { negocioConLogo } from '../modules/documents/infra/logo-de-zammir';
 import { functionPortalConsulta } from '../modules/billing/infra/function-portal-consulta';
 import { supabaseAdminInvoices } from '../modules/billing/infra/supabase-admin-invoices';
 import { renderExportPdf } from '../modules/export/infra/pdf-export-renderer';
@@ -492,11 +493,11 @@ function crearPreparadorDelCotizador(d: {
       },
       renderer: pdfLibRenderer(),
       share: webShareService(entornoDelNavegador()),
-      negocio: {
+      negocio: await negocioConLogo({
         name: copia.business?.name ?? 'ZAMMIR (datos de prueba)',
         phone: copia.business?.phone ?? null,
         address: copia.business?.address ?? null,
-      },
+      }),
       condicionesPorDefecto: copia.quote.conditionsText,
       legal: pieLegal(copia),
       autorizacion: {
@@ -629,11 +630,11 @@ function crearPreparadorDeOrdenes(d: {
         orderDeps,
         renderer: pdfLibRenderer(),
         share: webShareService(entornoDelNavegador()),
-        negocio: {
+        negocio: await negocioConLogo({
           name: copia.business?.name ?? 'ZAMMIR (datos de prueba)',
           phone: copia.business?.phone ?? null,
           address: copia.business?.address ?? null,
-        },
+        }),
         condiciones: copia.quote?.conditionsText ?? '',
         autofacturacion: d.autofacturacion,
         leyendaDeAutofacturacion: copia.orders.selfInvoicingLegend,

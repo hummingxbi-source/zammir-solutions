@@ -37,7 +37,7 @@
 
 - **Facturación en pausa** [ADR-0039]: Luis todavía no tiene en orden sus datos fiscales. El módulo M10 queda construido y apagado con el interruptor `FACTURACION`. El CSD y el PAC salen del camino crítico de la entrega; las pruebas E5 y E6 pasan a la reactivación.
 - **Comprobante en hoja tamaño carta, sin impresora térmica** [ADR-0040]: se cancela la compra y la prueba de la impresora de tickets. El comprobante lleva logo y detalle, se envía por WhatsApp y se puede imprimir en una impresora Wi-Fi.
-- Trabajo nuevo: S4-35 a S4-38 en [`backlog/SPRINT-4.md`](backlog/SPRINT-4.md).
+- Trabajo nuevo: S4-35 a S4-39 en [`backlog/SPRINT-4.md`](backlog/SPRINT-4.md).
 
 ## Calendario: decidido, opción A (PD-34, [ADR-0019])
 

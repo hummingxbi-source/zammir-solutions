@@ -2139,6 +2139,37 @@ export const textos = {
       mensajeWhatsApp: (nombre: string, folio: string, saldo: string): string =>
         `Hola ${nombre}, le comparto el comprobante de su trabajo ${folio}. Saldo: ${saldo}. Cualquier duda, con gusto le ayudamos.`,
     },
+    /** Comprobante de una venta de mostrador, en hoja carta [RF-M4-04, ADR-0040]. */
+    venta: {
+      rotulos: {
+        title: 'Comprobante de venta',
+        folio: 'Folio',
+        date: 'Fecha',
+        validUntil: 'Vigencia',
+        customer: 'Cliente',
+        phone: 'Teléfono',
+        site: 'Obra',
+        concept: 'Concepto',
+        quantity: 'Cant.',
+        unitPrice: 'Precio unit.',
+        amount: 'Importe',
+        subtotal: 'Subtotal',
+        tax: 'IVA',
+        total: 'Total',
+        conditions: 'Condiciones',
+        signature: 'Firma de conformidad',
+        publicCode: 'Código',
+        page: 'Página {n} de {total}',
+        draft: 'BORRADOR',
+      },
+      tipoDePago: 'Venta',
+      estados: { COMPLETED: 'Pagada', CANCELLED: 'Cancelada' },
+      clienteDeMostrador: 'Cliente de mostrador',
+      atendio: 'Atendió: {name}',
+      cambio: 'Cambio {amount}',
+      mensajeWhatsApp: (nombre: string, folio: string, total: string): string =>
+        `Hola ${nombre}, le comparto el comprobante de su compra ${folio} por un total de ${total}. Gracias por su preferencia.`,
+    },
     folioProvisional: 'Folio provisional',
     /** Pie legal de cotizaciones y comprobantes [RF-M9-01, RF-M9-02, RF-M9-04]. */
     legal: {

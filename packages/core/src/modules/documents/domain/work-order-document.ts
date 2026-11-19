@@ -131,6 +131,7 @@ export function buildWorkOrderDocument(entrada: BuildReceiptInput): QuoteDocumen
       labels: labels.extras,
       status: labels.status[order.status],
       depositRequired: dinero(order.depositRequiredCents),
+      attendedBy: null,
       paid: dinero(pagado),
       balance: saldo === 0 ? labels.extras.settled : dinero(saldo),
       isSettled: saldo === 0,

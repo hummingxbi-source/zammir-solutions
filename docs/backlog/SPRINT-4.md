@@ -3,7 +3,7 @@
 > Plan: [`docs/plan/fase-08-sprint-4-cobranza-reportes-legal-facturacion.md`](../plan/fase-08-sprint-4-cobranza-reportes-legal-facturacion.md). Formato y tallas: [`README.md`](README.md).
 > **Objetivo:** cobrar lo pendiente, ver cómo va el negocio, cumplir con la parte legal y facturar (desde el sistema y con el portal público), y adelantar la preparación de producción [ADR-0019].
 > **Entra si:** Sprint 3 cerrado en verde. ~~El PAC debe estar elegido antes de empezar este sprint~~: **en pausa [ADR-0039]**.
-> **Cambios del 19 de noviembre** [ADR-0039], [ADR-0040]: la facturación queda en pausa (apagada con el interruptor `FACTURACION`) y el comprobante pasa a hoja tamaño carta sin impresora térmica. Historias nuevas al final: S4-35 a S4-38. Las historias de facturación ya construidas se quedan; S4-14, S4-15 y S4-31 se aplazan.
+> **Cambios del 19 de noviembre** [ADR-0039], [ADR-0040]: la facturación queda en pausa (apagada con el interruptor `FACTURACION`) y el comprobante pasa a hoja tamaño carta sin impresora térmica. Historias nuevas al final: S4-35 a S4-39. Las historias de facturación ya construidas se quedan; S4-14, S4-15 y S4-31 se aplazan.
 > **Fuera de la entrega** [ADR-0019]: P1 (portal de seguimiento) y el recorrido guiado (RF-UX-04). Ver `DESPUES_DE_LA_ENTREGA.md`.
 
 ## Cuentas por cobrar
@@ -336,3 +336,14 @@ para no mantener lo que ya no se usa.
   - Dada la barra de estados, cuando se muestra, entonces no hay "impresora conectada o desconectada".
   - Dadas las pruebas que cubrían la impresora térmica, cuando se retiran, entonces la cobertura y los umbrales no bajan: se reemplazan por pruebas del comprobante carta.
   - Dada la compuerta común, cuando se corre, entonces está en verde.
+
+### S4-39 · Corte de caja en hoja tamaño carta · M · 4 h  · `tablet` · [ADR-0040]
+Como cajero
+quiero el resumen del corte de caja en una hoja carta
+para entregarlo o guardarlo, ahora que no hay ticket térmico.
+- **Requerimientos:** RF-M4-06 (nivel 1) · **Decisión:** ADR-0040
+- **Criterios de aceptación:**
+  - Dado un turno cerrado, cuando se genera el resumen, entonces es una hoja carta con logo, cajero, apertura y cierre, fondo, efectivo y transferencias cobrados, efectivo esperado, contado y diferencia (sobrante o faltante), y ventas canceladas.
+  - Dados los importes, cuando se imprimen, entonces coinciden al centavo con los de la pantalla.
+  - Dada la hoja, cuando se envía por WhatsApp o se imprime, entonces usa los mismos botones que el comprobante [S4-37].
+  - Dado el turno sin cerrar, cuando se pide el resumen, entonces no se genera.
