@@ -75,6 +75,7 @@ Resultado del 8 de noviembre de 2026, con los datos que dejan las pruebas de int
 | Fecha | Dónde | Quién | Resultado | Tiempo | Notas |
 |---|---|---|---|---|---|
 | 8 nov 2026 | Local (datos inventados) | Claude | Aprobado: 28 tablas idénticas | ~45 s | Primer ensayo; ver sección 4 |
+| 20 nov 2026 | Local (datos inventados, tras llenar la base con las pruebas de integración) | Claude | Aprobado: 28 tablas idénticas (3,841 renglones), la cuenta de administrador restaurada inicia sesión y la numeración sigue sin chocar | respaldo 0.7 s · base limpia 38.4 s · restauración 1.4 s | Segundo ensayo, con todas las migraciones actuales (umbral, hoja carta); 439 pruebas de la base y 317 de integración en verde antes del ensayo |
 | *(pendiente)* | Producción, con un respaldo real | Juanito | | | S5-06 completo; confirmar el punto 7 de las tablets |
 
 ## 7. Pendientes que afectan a este documento

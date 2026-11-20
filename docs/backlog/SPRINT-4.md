@@ -227,7 +227,7 @@ para ver cómo va el negocio al entrar.
   - Dado el contenido definido por Juanito, cuando se construye, entonces cada bloque usa los mismos cálculos que los reportes.
   - Dada la falta de definición, cuando llegue el sprint, entonces el panel se queda con accesos sin cifras (S0-12).
 
-### S4-25 · Estados vacíos, errores y vocabulario en todo el sistema · S · 2 h
+### S4-25 · Estados vacíos, errores y vocabulario en todo el sistema · S · 2 h · ✅ hecha
 - **Requerimientos:** RF-UX-07, RF-UX-08 · **Reglas:** RN-23
 - **Criterios de aceptación:**
   - Dada cada pantalla sin datos, cuando se abre, entonces dice qué hacer, sin datos de relleno.
