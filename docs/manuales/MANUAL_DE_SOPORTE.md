@@ -76,12 +76,22 @@ Un administrador entra a **Usuarios** → *Dar de alta a una persona*: nombre, r
 
 ## 5. Facturación
 
+- **En pausa [ADR-0039].** El interruptor `FACTURACION` está **apagado** por omisión: no aparecen *Facturas*, el historial de facturas del cliente ni el portal `/factura`; los documentos no llevan QR y las funciones públicas del portal responden "no disponible" (404). Para reactivarla hay que prender **los dos lados**: `VITE_FACTURACION=true` en el navegador (Vercel) y `FACTURACION_ACTIVA=true` en las funciones de servidor (Supabase), y completar antes la lista de reactivación del ADR-0039 (datos fiscales del contador, PAC, CSD).
+
 - **Simulada vs. real.** Con `BILLING_PROVIDER=simulated` las facturas son de prueba y **no tienen validez fiscal**. Antes de operar con datos reales hace falta el proveedor (PD-05) y el certificado de ZAMMIR subido **directo al proveedor** (PD-04). El adaptador del proveedor real es la historia S4-15 **(pendiente)**.
 - **Facturas "en proceso".** Si el proveedor no contesta, la solicitud queda guardada completa y se reintenta con **el mismo identificador**, así que nunca se timbra dos veces. Un administrador puede tocar **Reintentar** en **Facturas** → **Emitidas**. La pasada automática la hace la función `reintentar-facturas` llamada con la llave de servicio; **programarla (cron) está pendiente (S4-26)**, por eso hoy los reintentos son manuales.
 - **Cancelar una factura mal emitida.** Solo administradores, con uno de los motivos del SAT (01 a 04; el 01 pide el folio de la factura que la sustituye). Queda en la bitácora con motivo y quién la canceló. Nada se borra.
 - **Timbres del año.** Se compara lo timbrado con el límite del paquete, que se guarda en el ajuste `stamps_yearly_limit` (y el porcentaje de aviso en `stamps_warning_percent`, 80 % por omisión). **Sin límite configurado no hay aviso** **(pendiente: cuántos incluye la anualidad, PD-26)**.
 - **El cliente no encuentra su compra en el portal.** Puede que el documento todavía no haya llegado al servidor (la tablet envía al tener internet). Revisa en la tablet si hay operaciones **sin enviar**.
 - **Factura global del público en general:** la hace el contador de ZAMMIR, no el sistema [ALCANCE §3].
+
+## Impresión
+
+- **Todo sale en hoja tamaño carta** [ADR-0040]. Ya no hay impresora de tickets, ni Bluetooth, ni ESC/POS.
+- **Cómo imprime:** la aplicación abre una página de impresión y usa la impresión de Android de la tablet. La impresora debe ser de **Wi-Fi o red** y estar dada de alta en la tablet (Mopria o el complemento del fabricante). El modelo de la impresora de Luis sigue por confirmar (PD-54).
+- **Si no imprime:** el usuario puede guardar el PDF o mandarlo por WhatsApp; el envío por WhatsApp es el camino principal y no depende de la impresora.
+- **Marca COPIA:** la tablet recuerda qué documentos ya imprimió. Es solo local; el rastro de cada reimpresión en la bitácora está pendiente (PP-14).
+- **Prueba en la tablet con la impresora real:** pendiente (S5-05).
 
 ## 6. Vigilar el sistema
 
@@ -130,6 +140,7 @@ El aviso de privacidad vigente se edita en **Configuración** (cada edición cre
 | Hay operaciones *sin enviar* desde hace horas | La tablet no ha tenido internet | Conectarla; se envían solas. No borres datos de la tablet |
 | *"Hay un problema con un documento. Avisa a soporte."* | El servidor rechazó una operación estructuralmente | Anotar el folio provisional y la hora; revisar `error_log` y la bitácora |
 | El corte de caja puede cambiar | Hay operaciones sin enviar | Esperar a que lleguen al servidor antes de revisar el corte |
+| Una cuenta por cobrar no se resalta como atrasada | Pasaron menos días que el umbral | **Configuración** → *Cuentas por cobrar atrasadas* (1 a 365 días; por omisión 10). La tablet recuerda el último valor para trabajar sin internet |
 | Una factura está *En proceso* | El proveedor de timbrado no contestó | **Reintentar** en **Emitidas**; nunca se duplica |
 | *"Esta cuenta no es de administrador"* | Falta el rol en la cuenta | Ver §4, *Un administrador nuevo* |
 | El portal rechaza un folio | Ya facturado, fuera de plazo (fin de mes) o código incorrecto | Un administrador puede facturar desde **Facturas** aun fuera de plazo |
@@ -147,6 +158,8 @@ El aviso de privacidad vigente se edita en **Configuración** (cada edición cre
 |---|---|
 | Despliegue y variables de producción | Dominio y producción (PD-10, S4-26, S5-01) |
 | Aviso automático de caídas | Cuenta del monitoreo (PP-32) |
+| Volver a generar las capturas del manual de usuario con la interfaz nueva (hoja carta, Enviar por WhatsApp, Ver corte, Configuración); las de la venta registrada y el corte todavía muestran los botones anteriores | Supabase local con Docker (`pnpm manual:capturas`, ver `README.md`) |
+| Probar la impresión en la tablet con la impresora de Wi-Fi de Luis | Modelo de la impresora (PD-54) y la tablet (S5-05) |
 | Reintentos y purga programados | Mantenimiento programado (S4-26) |
 | Proveedor de timbrado y certificado | PD-04, PD-05, S4-15 |
 | Retención de respaldos y ensayo de restauración | PD-32, S4-27, S5-06 |
