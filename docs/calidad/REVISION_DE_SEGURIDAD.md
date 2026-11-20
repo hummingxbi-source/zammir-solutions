@@ -44,6 +44,21 @@ La base y el código cumplen lo que se pidió. Se encontró **un permiso de sobr
 2. **Las huellas del PIN viajan a las tablets.** La vista `login_users` entrega a toda tablet activa el hash y la sal de los PIN, para poder entrar sin internet [ADR-0013]. Es una decisión de diseño conocida: un PIN de 4 a 6 dígitos se puede adivinar si alguien extrae esos datos de una tablet. Se mitiga con la revocación de tablets, el límite de intentos y PIN más largo para administradores; está en los riesgos de `AUTENTICACION.md` y sigue vigente.
 3. **Cuentas de administrador.** Hoy el rol se pone a mano en la cuenta de Supabase. Para producción conviene activar la verificación en dos pasos de esas cuentas y documentar quién tiene acceso (manual de soporte, S5-14).
 
+## Actualización del 20 de noviembre de 2026
+
+Se repitió la revisión sobre `main` después de los cambios de las últimas dos semanas (facturación en pausa, comprobante en hoja carta, corte en carta, reportes y umbral de antigüedad).
+
+**Lo que se corrió:** `pnpm audit --prod --audit-level high` (sin vulnerabilidades), `pnpm build` y `pnpm check:bundle` (7 archivos, sin secretos) y `seguridad-del-codigo.test.ts` (9 pruebas). **No se corrió** `pnpm test:db` en esta revisión (necesita Supabase local con Docker); la prueba 22 corre en el CI de cada Pull Request.
+
+| Cambio | Qué se revisó | Resultado |
+|---|---|---|
+| Página de impresión HTML (comprobante y corte) [ADR-0040] | Todo texto que viene de datos (cliente, conceptos, notas) pasa por escape antes de entrar a la página; la página se arma en un marco oculto del mismo origen. | Cumple. Hay pruebas con `<script>` en el nombre del cliente (`documento-html.test.ts`, `hoja-html.test.ts`). |
+| Interruptor `FACTURACION` apagado [ADR-0039] | Las funciones públicas del portal (`consultar-`, `solicitar-` y `descargar-factura`) responden 404 si el interruptor está apagado. | Mejora: con la facturación en pausa **no hay superficie pública** que atacar. |
+| Umbral de antigüedad en Configuración | Se guarda en `business_settings` con la política existente: solo administradores cambian el valor. La tablet recuerda el número en `localStorage` (no es un dato personal ni un secreto). | Cumple; la prueba de integración confirma que un cajero no lo cambia. |
+| Registro de impresiones (marca COPIA) | Solo guarda folios y fechas en `localStorage`, sin datos de clientes. | Cumple. |
+
+**Sigue pendiente:** la `Content-Security-Policy` (`vercel.json` ya trae `X-Content-Type-Options`, `Referrer-Policy` y `X-Frame-Options`, pero no la política de contenido; definirla junto con el despliegue de producción y probarla en la tablet, PP-33), la verificación en dos pasos de las cuentas de administrador y el hallazgo de las huellas del PIN, sin cambios.
+
 ## Cómo se repite esta revisión
 
 ```bash
