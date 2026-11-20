@@ -252,16 +252,6 @@ async function armar(): Promise<MostradorProps> {
       administradores: () => Promise.resolve([{ id: ADMIN, name: 'Luis Zambrano' }]),
       autorizar: () => Promise.resolve(err({ code: 'AUTH_FAILED' as const })),
     },
-    impresion: {
-      width: 32,
-      business: { name: 'ZAMMIR (datos de prueba)', phone: null, address: null },
-      autofacturacion: false,
-      selfInvoicingLegend: '',
-      publicBaseUrl: null,
-      estado: () => Promise.resolve({ state: 'READY', name: 'PT-210' }),
-      conectar: () => Promise.resolve(null),
-      imprimir: () => Promise.resolve({ via: 'Impresora Bluetooth' }),
-    },
   };
 }
 

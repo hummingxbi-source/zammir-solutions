@@ -55,8 +55,6 @@ import { CampoNumerico } from '../../../shared/ui/Campo';
 import { Campo } from '../../../shared/ui/Campo';
 import { formatearPesos } from '../../../shared/ui/formatos';
 import { DialogoDeAutorizacion } from '../../orders/ui/DialogoDeAutorizacion';
-import type { ImpresionDeTickets } from '../../printing/ui/impresion';
-import { PanelDeImpresora } from '../../printing/ui/PanelDeImpresora';
 import { TurnoDeCaja, type HojaDelCorte, type Persona } from './TurnoDeCaja';
 import { DialogoDeCobro } from '../../orders/ui/DialogoDeCobro';
 import type { AutorizacionDeAdministrador } from '../../quotes/ui/DialogoDeDescuento';
@@ -88,8 +86,6 @@ export interface MostradorProps {
   readonly registry: PriceRegistry;
   readonly taxRateBps: number;
   readonly autorizacion: AutorizacionDeAdministrador;
-  /** Impresora de tickets; sin ella no se ofrece imprimir [S3-20 a S3-24]. */
-  readonly impresion?: ImpresionDeTickets;
   /** Comprobante en hoja carta de una venta: enviarlo por WhatsApp o imprimirlo [S4-37, ADR-0040]. */
   readonly comprobante?: ComprobanteDelMostrador;
   /** Hoja del corte de caja en tamaño carta [S4-39, ADR-0040]. */
@@ -652,10 +648,6 @@ export function Mostrador(props: MostradorProps): ReactElement {
                 </>
               )}
             </Tarjeta>
-
-            {props.impresion !== undefined ? (
-              <PanelDeImpresora impresion={props.impresion} />
-            ) : null}
           </div>
         </div>
 

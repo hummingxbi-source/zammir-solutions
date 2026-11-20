@@ -12,7 +12,7 @@ Una por módulo del negocio (M1 a M10) y las técnicas que los sostienen. El có
 | `ds` | Sistema de diseño y experiencia | PWA, variables de diseño, componentes táctiles, textos centralizados, navegación, Primeros pasos, estados | 0, 4 |
 | `core` | Núcleo del dominio | Dinero, medidas, IVA, reglas de precio, permisos | 1 |
 | `sync` | Sincronización y folios | Cola de salida, servidor idempotente, folios temporales y definitivos, conflictos | 2 |
-| `print` | Impresión | Prueba de concepto, `TicketPrinter` con tres adaptadores, plantillas | 0, 3 |
+| `print` | Impresión | ~~Prueba de concepto, `TicketPrinter` con tres adaptadores, plantillas~~ Sustituida: hoja carta con la impresión de Android [ADR-0040]; el código térmico se retiró en S4-38 | 0, 3, 4 |
 | `doc` | Documentos de entrega | Manuales, plan de aceptación, guía de operación, soporte, capacitación, acta | 4, 5 |
 
 ## Por módulo

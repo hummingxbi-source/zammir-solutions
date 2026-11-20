@@ -327,7 +327,7 @@ para dárselo al cliente como él prefiera.
   - Dada una venta que ya se imprimió en la tablet, cuando se vuelve a imprimir, entonces sale marcada COPIA. *(El rastro en la bitácora queda en PP-14, por aprobar: exige una operación nueva en la base y en la sincronización.)*
   - Dada una pantalla sin conexión a internet, cuando se envía por WhatsApp, entonces el comprobante ya está guardado en la tablet y se envía al reconectar o con el menú de compartir.
 
-### S4-38 · Retirar la impresora térmica · M · 4 h  · [ADR-0040]
+### S4-38 · Retirar la impresora térmica · M · 4 h  · [ADR-0040] · ✅ hecha
 Como Juanito (desarrollador)
 quiero quitar el código de la impresora térmica
 para no mantener lo que ya no se usa.
