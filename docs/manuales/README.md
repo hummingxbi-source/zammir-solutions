@@ -19,4 +19,6 @@ pnpm --filter @zammir/web exec vite preview --port 4180 --strictPort
 pnpm manual:capturas
 ```
 
+**Facturación:** el script recorre también *Facturas* y el portal, así que la aplicación se construye con `VITE_FACTURACION=true` (en PowerShell: `$env:VITE_FACTURACION = "true"` antes de `build`) y las funciones de servidor con `FACTURACION_ACTIVA=true` (ya viene en `pruebas.env`). Con la facturación en pausa [ADR-0039], esas capturas (25 a 29) quedan como referencia para cuando se reactive; en la aplicación real no aparecen.
+
 El segundo y tercer paso se corren en otra terminal (el último necesita la aplicación sirviéndose). Las funciones de servidor deben estar encendidas (`pnpm exec supabase functions serve --no-verify-jwt --env-file supabase/functions/pruebas.env`) para que la factura de prueba se pueda emitir.
