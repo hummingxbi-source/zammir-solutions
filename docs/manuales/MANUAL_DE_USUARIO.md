@@ -69,7 +69,7 @@ El **Cotizador** sirve para armar el presupuesto con el cliente, incluso en la o
 
    ![Una cotización emitida](capturas/05-cotizacion-emitida.png)
 
-6. **Compártela** con **Compartir por WhatsApp**: se prepara el PDF y eliges WhatsApp en el menú. Si tu tablet no tiene menú de compartir, se descarga el PDF y se abre WhatsApp con el mensaje.
+6. **Envíala** con **Enviar por WhatsApp**, el botón principal: se prepara el PDF en hoja tamaño carta, con el logo y el detalle, y eliges WhatsApp en el menú. Si tu tablet no tiene menú de compartir, se descarga el PDF y se abre WhatsApp con el mensaje. Junto a ese botón está **Imprimir**, para cuando el cliente la pida en papel (ver *Imprimir un documento*, más abajo).
 7. Cuando el cliente responda, toca **Marcar como aceptada** o **Marcar como rechazada**.
 
 **Descuentos.** **Dar descuento** pide el **PIN de un administrador**. El nuevo precio nunca puede ser mayor que el del catálogo ni negativo.
@@ -103,7 +103,7 @@ El **Mostrador** es para ventas inmediatas (piezas, servicios y vidrio a medida)
 
    ![Cobrar una venta](capturas/08-mostrador-cobrar.png)
 
-4. Toca **Registrar cobro**. Aparece **Venta registrada**, con su folio provisional, el **cambio** y la leyenda *"Guardada en la tablet"*. Toca **Imprimir ticket** (sale con su QR y su código de verificación).
+4. Toca **Registrar cobro**. Aparece **Venta registrada**, con su folio provisional, el **cambio** y la leyenda *"Guardada en la tablet"*. Toca **Enviar por WhatsApp** para mandar el comprobante (hoja tamaño carta con el logo y el detalle de la venta). Si el cliente lo pide en papel, toca **Imprimir**. Si la venta no tiene el teléfono del cliente, se abre WhatsApp para que elijas a quién mandarlo.
 
    ![Venta registrada](capturas/08b-venta-registrada.png)
 
@@ -145,15 +145,26 @@ Una **orden de trabajo** es un trabajo aceptado que se fabrica o instala. Lleva 
 - **Empezar sin anticipo** necesita el **PIN de un administrador**.
 - **Entregar con saldo pendiente** necesita el **PIN de un administrador** y un **motivo**.
 - **Cancelar la orden** necesita el **PIN de un administrador** y un **motivo**. Nada se borra.
-- **Comprobante por WhatsApp:** un PDF con el folio, el saldo, la garantía y el **QR para que el cliente pida su factura**.
+- **Comprobante:** una hoja tamaño carta con el logo, el folio, el detalle, el saldo y la garantía. Se manda con **Enviar por WhatsApp** o se imprime con **Imprimir**, igual que una cotización.
 
 ---
 
 ## 5. Cuentas por cobrar
 
-**Cuentas por cobrar** lista las órdenes con saldo pendiente, **de la más atrasada a la más reciente**, y resalta las que llevan muchos días. Desde ahí toca **Registrar pago**. No es crédito: es el seguimiento de lo que falta por cobrar de trabajos ya en marcha.
+**Cuentas por cobrar** lista las órdenes con saldo pendiente, **de la más atrasada a la más reciente**, y resalta las que llevan muchos días. Desde ahí toca **Registrar pago**. A partir de cuántos días se resalta una cuenta lo cambia un administrador en **Configuración**, en *Cuentas por cobrar atrasadas* (por omisión, 10 días). No es crédito: es el seguimiento de lo que falta por cobrar de trabajos ya en marcha.
 
 ![Cuentas por cobrar](capturas/13-cuentas-por-cobrar.png)
+
+---
+
+## Imprimir un documento
+
+Las cotizaciones, los comprobantes de trabajo, las ventas de mostrador y el corte de caja salen **en hoja tamaño carta**, con el logo de ZAMMIR y el detalle. **Ya no se usa impresora de tickets.**
+
+- **Enviar por WhatsApp** es el botón principal; **Imprimir** está siempre a su lado. Imprime solo cuando el cliente lo pida.
+- Al tocar **Imprimir** se abre la impresión de la tablet: elige la **impresora de Wi-Fi** y confirma.
+- Si ese documento ya se imprimió antes, la hoja sale marcada **COPIA** para que no se confunda con el original.
+- Si la impresión no abre, **guarda el PDF** o **mándalo por WhatsApp** y vuelve a intentarlo después. Nada se pierde.
 
 ---
 
@@ -166,7 +177,7 @@ Al terminar tu turno:
 
    ![Cerrar el turno](capturas/14-cerrar-turno.png)
 
-3. Toca **Cerrar y calcular el corte**. El sistema muestra el **efectivo esperado**, el **contado** y la **diferencia**: **Exacto**, **Sobrante** o **Faltante**. Toca **Imprimir resumen**.
+3. Toca **Cerrar y calcular el corte**. El sistema muestra el **efectivo esperado**, el **contado** y la **diferencia**: **Exacto**, **Sobrante** o **Faltante**. Aparece la hoja del corte en tamaño carta: toca **Enviar por WhatsApp** (por ejemplo, para mandársela a Luis) o **Imprimir**. Si ya cerraste el turno y quieres verla otra vez, en *Mi turno de caja* toca **Ver corte**.
 
    ![El corte de caja](capturas/15-corte-de-caja.png)
 
@@ -237,6 +248,8 @@ Al final de **Configuración** está **Exportar los datos**. Sirve para llevarte
 
 ## 9. Facturas (administradores)
 
+> **En pausa.** Por ahora la facturación está apagada [ADR-0039]: las secciones *Facturas* y el portal del cliente no aparecen y los documentos no llevan el QR. Esta parte del manual se conserva para cuando se reactive.
+
 En **Facturas** hay dos pestañas: **Por facturar** y **Emitidas**. Arriba ves cuántas hay por facturar y los **timbres del año**.
 
 > **Importante:** mientras no se conecte el proveedor de timbrado real y el certificado de ZAMMIR **(pendiente)**, las facturas son **de prueba y no tienen validez fiscal**.
@@ -270,6 +283,8 @@ En **Emitidas** ves cada factura con su estado: **Vigente**, **Cancelada**, **En
 ---
 
 ## 10. Cuando el cliente pide su factura
+
+> **En pausa.** Mientras la facturación esté apagada, los documentos no traen QR y el portal no está disponible. Si un cliente pide factura, anota sus datos y avisa a un administrador.
 
 Cada **ticket** y cada **comprobante de trabajo** trae un **QR**. El cliente lo escanea con su teléfono y llega al portal **Pide tu factura**, sin cuenta ni contraseña.
 
@@ -310,5 +325,5 @@ El cliente puede pedirla **hasta el último día del mes** de su compra. Despué
 | **Venta de mostrador** | Una venta inmediata, sin orden de trabajo. |
 | **Corte de caja** | El cierre de tu turno: esperado, contado y diferencia. |
 | **Folio provisional** | El número que lleva un documento mientras la tablet no lo ha enviado (`T1-0001`). |
-| **Código de verificación** | El código del ticket o comprobante que el cliente usa, con el folio, para pedir su factura. |
+| **Código de verificación** | El código del comprobante que el cliente usa, con el folio, para pedir su factura (solo cuando la facturación esté activa). |
 | **Cliente recurrente** | Un cliente con dos o más trabajos entregados. |
