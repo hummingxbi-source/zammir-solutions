@@ -91,7 +91,7 @@ describe('E7 · los periodos son de México y van de lunes a domingo', () => {
 });
 
 describe('E7 · las ventas coinciden al centavo con los pagos', () => {
-  const r = salesReport({ payments: PAGOS, sales: VENTAS, now: AHORA });
+  const r = salesReport({ payments: PAGOS, sales: VENTAS, now: AHORA, mode: 'FULL_PERIOD' });
 
   it('hoy: 10,000 + 3,333 + 1,500 de la venta buena; la cancelada no cuenta', () => {
     expect(r.DAY.comparison.currentCents).toBe(14_833);
