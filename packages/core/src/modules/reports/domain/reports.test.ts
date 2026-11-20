@@ -119,7 +119,9 @@ describe('periodos en hora de México', () => {
 
   it('comparar contra el periodo completo o solo contra el mismo tramo (PP-13)', () => {
     const mes = periodContaining('2026-11-12', 'MONTH');
-    expect(comparisonPeriod(mes, '2026-11-12')).toEqual(previousPeriod(mes));
+    expect(comparisonPeriod(mes, '2026-11-12', 'FULL_PERIOD')).toEqual(previousPeriod(mes));
+    // Por omisión se compara el mismo tramo (PP-13 aprobado).
+    expect(comparisonPeriod(mes, '2026-11-12').end).toBe('2026-10-12');
     expect(comparisonPeriod(mes, '2026-11-12', 'SAME_SPAN')).toEqual({
       kind: 'MONTH',
       start: '2026-10-01',
@@ -203,7 +205,7 @@ describe('ventas del día, la semana y el mes (efectivo recibido)', () => {
   ];
 
   it('coincide al centavo con los datos armados a mano', () => {
-    const r = salesReport({ payments: pagos, sales: ventas, now: ahora });
+    const r = salesReport({ payments: pagos, sales: ventas, now: ahora, mode: 'FULL_PERIOD' });
     expect(r.DAY.comparison.currentCents).toBe(15_000);
     expect(r.DAY.comparison.previousCents).toBe(7_000);
     expect(r.WEEK.comparison.currentCents).toBe(15_000 + 7_000 + 3_000);
@@ -213,7 +215,7 @@ describe('ventas del día, la semana y el mes (efectivo recibido)', () => {
   });
 
   it('el comparativo trae porcentaje y tendencia', () => {
-    const r = salesReport({ payments: pagos, sales: ventas, now: ahora });
+    const r = salesReport({ payments: pagos, sales: ventas, now: ahora, mode: 'FULL_PERIOD' });
     expect(r.DAY.comparison).toMatchObject({ trend: 'UP', percentBps: 11_429 });
     expect(r.MONTH.comparison).toMatchObject({ trend: 'UP', percentBps: 41_667 });
   });
@@ -243,6 +245,17 @@ describe('ventas del día, la semana y el mes (efectivo recibido)', () => {
     const tramo = salesReport({ payments: base, sales: ventas, now: ahora, mode: 'SAME_SPAN' });
     expect(completo.MONTH.comparison.previousCents).toBe(1_100);
     expect(tramo.MONTH.comparison.previousCents).toBe(200);
+  });
+
+  it('por omisión compara el mismo tramo, no el periodo anterior completo (PP-13)', () => {
+    const base = [
+      pago(1_000, '2026-11-20T15:00:00.000Z'),
+      pago(200, '2026-10-03T15:00:00.000Z'), // dentro del tramo
+      pago(900, '2026-10-28T15:00:00.000Z'), // fuera del tramo
+    ];
+    const r = salesReport({ payments: base, sales: ventas, now: ahora });
+    expect(r.MONTH.comparison.previousCents).toBe(200);
+    expect(r.MONTH.previous).toEqual({ kind: 'MONTH', start: '2026-10-01', end: '2026-10-20' });
   });
 
   it('una venta cancelada no suma y el pago de una orden con el mismo id sí', () => {

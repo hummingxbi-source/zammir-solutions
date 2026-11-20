@@ -10,8 +10,8 @@ export interface Period {
   readonly end: string;
 }
 
-/** Contra qué se compara un periodo en curso (PP-13 por aprobar): el periodo anterior completo (por
- *  omisión) o solo el mismo tramo del anterior (por ejemplo, los primeros 12 días del mes pasado). */
+/** Contra qué se compara un periodo en curso (PP-13, aprobado): el mismo tramo del anterior (por omisión) o el
+ *  periodo anterior completo (por ejemplo, los primeros 12 días del mes pasado). */
 export type ComparisonMode = 'FULL_PERIOD' | 'SAME_SPAN';
 
 function partes(fecha: string): { y: number; m: number; d: number } {
@@ -62,7 +62,7 @@ function diasEntre(desde: string, hasta: string): number {
 export function comparisonPeriod(
   actual: Period,
   hoy: string,
-  modo: ComparisonMode = 'FULL_PERIOD',
+  modo: ComparisonMode = 'SAME_SPAN',
 ): Period {
   const anterior = previousPeriod(actual);
   if (modo === 'FULL_PERIOD') {

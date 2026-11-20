@@ -116,7 +116,7 @@
 
 **Propósito:** las cinco vistas que pidió Luis, nada más. Solo administradores. Legibles en celular.
 
-- **RF-M7-01** Ventas del día, semana y mes, cada una contra el periodo anterior, con porcentaje y flecha. Base de cálculo según [RN-20].
+- **RF-M7-01** Ventas del día, semana y mes, cada una contra el mismo tramo del periodo anterior (a mitad de mes, los mismos días del mes pasado; PP-13), con porcentaje y flecha. Base de cálculo según [RN-20].
 - **RF-M7-02** Producto o tipo de vidrio más vendido, por importe y por cantidad, en la semana y el mes.
 - **RF-M7-03** Trabajos pendientes por estatus, con conteo y valor.
 - **RF-M7-04** Cuentas por cobrar con antigüedad.

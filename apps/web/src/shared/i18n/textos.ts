@@ -1040,7 +1040,7 @@ export const textos = {
     periodos: { DAY: 'Hoy', WEEK: 'Esta semana', MONTH: 'Este mes' },
     ventas: {
       titulo: 'Ventas',
-      base: 'Aquí "ventas" es el efectivo recibido: lo cobrado en el mostrador más los pagos que llegaron de las órdenes de trabajo en el periodo. No incluye lo que todavía te deben ni las ventas canceladas. La semana va de lunes a domingo, en hora de la Ciudad de México.',
+      base: 'Aquí "ventas" es el efectivo recibido: lo cobrado en el mostrador más los pagos que llegaron de las órdenes de trabajo en el periodo. No incluye lo que todavía te deben ni las ventas canceladas. La semana va de lunes a domingo, en hora de la Ciudad de México. Cada periodo se compara con el mismo tramo del anterior: a mitad de mes, con los mismos días del mes pasado.',
       periodo: 'Periodo',
       ventas: 'Ventas',
       anterior: 'Periodo anterior',
