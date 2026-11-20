@@ -4,7 +4,7 @@
 > **Objetivo:** un repositorio donde es imposible fusionar código que rompa las reglas, una PWA vacía desplegada a pruebas, entrada de administradores, registro de tablets y la respuesta a **¿se puede imprimir el ticket desde la tablet?**
 > **Entra si:** Fase 2 aprobada (ver `CAPACIDAD.md` sobre el cruce con el cierre de la Fase 2), una tablet Android disponible y un modelo de impresora candidato (PD-15).
 
-### S0-01 · Estructura del repositorio y TypeScript estricto · M · 4 h
+### S0-01 · Estructura del repositorio y TypeScript estricto · M · 4 h · ✅ hecha
 Como Juanito (desarrollador)
 quiero el monorepo con `apps/web`, `packages/core` y `supabase/` configurado con TypeScript estricto
 para que todo el código nazca con las mismas reglas.
@@ -13,7 +13,7 @@ para que todo el código nazca con las mismas reglas.
   - Dado un clon nuevo, cuando se instalan las dependencias, entonces el comando de construcción termina sin errores en todos los paquetes.
   - Dado `strict` y `noUncheckedIndexedAccess`, cuando se escribe un `any` o el operador `!`, entonces la revisión de tipos o el lint lo rechaza.
 
-### S0-02 · Lint, formato y reglas de dependencia entre capas · S · 2 h
+### S0-02 · Lint, formato y reglas de dependencia entre capas · S · 2 h · ✅ hecha
 Como Juanito (desarrollador)
 quiero lint con cero advertencias y una herramienta que verifique las capas
 para que el dominio nunca importe React ni Supabase.
@@ -22,7 +22,7 @@ para que el dominio nunca importe React ni Supabase.
   - Dado el dominio, cuando importa `supabase-js`, `dexie` o React, entonces la verificación de dependencias falla.
   - Dado cualquier advertencia de lint, cuando corre la verificación, entonces falla (cero advertencias).
 
-### S0-03 · Herramientas de prueba y umbrales · L · 8 h
+### S0-03 · Herramientas de prueba y umbrales · L · 8 h · ✅ hecha
 Como Juanito (desarrollador)
 quiero configuradas las pruebas unitarias, de propiedades, de componentes, extremo a extremo y de mutación, cada una con un ejemplo que pasa
 para tener la red de seguridad desde el primer día.
@@ -34,7 +34,7 @@ para tener la red de seguridad desde el primer día.
   - Dado un navegador con tamaño de tablet, cuando corre una prueba extremo a extremo de ejemplo, entonces carga la aplicación.
   - Dadas pruebas con zonas horarias distintas a México, cuando corren, entonces el ejemplo pasa en todas [`00-principios` §4.3].
 
-### S0-04 · Integración continua en el orden de la compuerta · L · 8 h
+### S0-04 · Integración continua en el orden de la compuerta · L · 8 h · ✅ hecha
 Como Juanito (desarrollador)
 quiero un pipeline que corra los pasos de `00-principios` §5.1 y se detenga en el primer fallo
 para que nada roto llegue a `main`.
@@ -45,7 +45,7 @@ para que nada roto llegue a `main`.
   - Dado un secreto falso en el código, cuando corre el escaneo, entonces falla.
   - Dadas las plantillas de Pull Request e Issues en `.github/`, cuando se abre uno nuevo, entonces aparecen los campos de requerimiento, regla, cómo se probó y capturas con datos inventados.
 
-### S0-05 · Supabase local, migraciones desde cero y variables · M · 4 h
+### S0-05 · Supabase local, migraciones desde cero y variables · M · 4 h · ✅ hecha
 Como Juanito (desarrollador)
 quiero Supabase local y migraciones versionadas que se aplican desde cero en cada corrida
 para probar la base y sus políticas sin tocar la nube.
@@ -55,7 +55,7 @@ para probar la base y sus políticas sin tocar la nube.
   - Dado `.env.example`, cuando se compara con las variables que usa el código, entonces están todas y ninguna trae valor real.
   - Dado el clon nuevo, cuando se sigue el README, entonces se levanta Supabase local.
 
-### S0-06 · Despliegue automático a pruebas y vista previa por Pull Request · M · 4 h
+### S0-06 · Despliegue automático a pruebas y vista previa por Pull Request · M · 4 h · ✅ hecha
 Como Juanito (desarrollador)
 quiero que cada fusión a `main` se despliegue al entorno de pruebas y cada Pull Request tenga su vista previa
 para probar en la tablet real desde el primer día.
@@ -64,7 +64,7 @@ para probar en la tablet real desde el primer día.
   - Dada una fusión a `main`, cuando termina la integración continua, entonces la versión nueva está en el entorno de pruebas por HTTPS.
   - Dado un Pull Request, cuando termina la construcción, entonces existe una dirección de vista previa y las pruebas extremo a extremo corren contra ella.
 
-### S0-07 · La compuerta se prueba a sí misma · S · 2 h
+### S0-07 · La compuerta se prueba a sí misma · S · 2 h · ✅ hecha
 Como Juanito (desarrollador)
 quiero demostrar que cuatro tipos de error y un secreto quedan bloqueados
 para confiar en que la compuerta funciona.
@@ -74,7 +74,7 @@ para confiar en que la compuerta funciona.
   - Dado un Pull Request con un secreto falso, cuando corre el escaneo, entonces queda bloqueado.
   - Dadas las capturas, cuando se documentan en el Pull Request de cierre, entonces los cinco Pull Requests de prueba se cierran sin fusionar.
 
-### S0-08 · Núcleo compartido y raíz de composición · M · 4 h
+### S0-08 · Núcleo compartido y raíz de composición · M · 4 h · ✅ hecha
 Como Juanito (desarrollador)
 quiero `Result`, `Clock`, `IdGenerator`, identificadores tipados y la raíz de composición
 para que el dominio sea determinista y probable sin red ni navegador.
@@ -85,7 +85,7 @@ para que el dominio sea determinista y probable sin red ni navegador.
   - Dado el generador real, cuando se piden 10 000 identificadores, entonces no se repite ninguno; el fijo es determinista.
   - Dados un id de cliente y uno de orden, cuando se pasa uno donde va el otro, entonces no compila (prueba de tipos).
 
-### S0-09 · PWA instalable que abre sin conexión · L · 8 h  · `tablet`
+### S0-09 · PWA instalable que abre sin conexión · L · 8 h  · `tablet` · ✅ hecha
 Como cajero
 quiero instalar la aplicación en la tablet y abrirla aunque no haya internet
 para poder trabajar en la obra.
@@ -95,7 +95,7 @@ para poder trabajar en la obra.
   - Dada la aplicación ya cargada, cuando se corta la red y se vuelve a abrir, entonces carga y muestra el indicador de sin conexión con lenguaje del oficio.
   - *(manual)* Instalar desde el entorno de pruebas y abrirla en modo avión en la tablet real.
 
-### S0-10 · Sistema de diseño base · L · 8 h  · `tablet`
+### S0-10 · Sistema de diseño base · L · 8 h  · `tablet` · ✅ hecha
 Como cajero
 quiero botones y campos grandes que se usen bien con el dedo y un campo numérico con teclado numérico
 para capturar medidas y montos sin errores.
@@ -108,7 +108,7 @@ para capturar medidas y montos sin errores.
   - Dada una acción destructiva, cuando se intenta, entonces pide confirmación; un error muestra qué hacer.
   - Dadas las pantallas existentes, cuando corre la revisión de accesibilidad, entonces no hay violaciones graves.
 
-### S0-11 · Textos centralizados y prueba de vocabulario · S · 2 h
+### S0-11 · Textos centralizados y prueba de vocabulario · S · 2 h · ✅ hecha
 Como Juanito (desarrollador)
 quiero todos los textos de la interfaz en un solo lugar con una prueba de palabras prohibidas
 para que "checkout", "carrito" o "Punto de Venta" nunca lleguen a la pantalla.
@@ -117,7 +117,7 @@ para que "checkout", "carrito" o "Punto de Venta" nunca lleguen a la pantalla.
   - Dado un texto con una palabra prohibida del glosario, cuando corre la prueba, entonces falla.
   - Dada la prueba, cuando se agrega una palabra prohibida temporalmente, entonces falla (se verifica que sí detecta).
 
-### S0-12 · Navegación base y panel de inicio con accesos · M · 4 h
+### S0-12 · Navegación base y panel de inicio con accesos · M · 4 h · ✅ hecha
 Como administrador
 quiero ver las secciones en el orden del trabajo, con un panel de inicio aparte
 para saber por dónde empezar.
@@ -127,7 +127,7 @@ para saber por dónde empezar.
   - Dado el logo, cuando se toca, entonces abre el panel de inicio; Clientes, Cuentas por cobrar, Usuarios y configuración quedan en un menú secundario.
   - Dado P1 y P2 apagados, cuando se navega, entonces sus rutas no aparecen.
 
-### S0-13 · Configuración del negocio e interruptores · M · 4 h
+### S0-13 · Configuración del negocio e interruptores · M · 4 h · ✅ hecha
 Como administrador
 quiero que los porcentajes, plazos y interruptores estén en una tabla de ajustes
 para cambiarlos sin pedir un cambio de código.
@@ -138,7 +138,7 @@ para cambiarlos sin pedir un cambio de código.
   - Dado el puerto `FeatureFlags`, cuando P1 y P2 están apagados, entonces devuelve falso.
   - Dado un valor [POR DEFINIR], cuando se revisa su ajuste, entonces está vacío o de prueba y cita su PD.
 
-### S0-14 · Entrada de administradores · M · 4 h
+### S0-14 · Entrada de administradores · M · 4 h · ✅ hecha
 Como administrador
 quiero entrar con correo y contraseña y que la sesión se cierre por inactividad
 para proteger el sistema.
@@ -148,7 +148,7 @@ para proteger el sistema.
   - Dado el tiempo de inactividad configurado, cuando se cumple (reloj fijo), entonces la sesión se cierra.
   - Dado un rol de cajero, cuando intenta una pantalla de administrador, entonces no se le muestra.
 
-### S0-15 · Bitácora de acciones sensibles · M · 4 h
+### S0-15 · Bitácora de acciones sensibles · M · 4 h · ✅ hecha
 Como administrador
 quiero que las acciones sensibles queden registradas con usuario, dispositivo, fecha y valores anterior y nuevo
 para saber quién hizo qué.
@@ -157,7 +157,7 @@ para saber quién hizo qué.
   - Dada una acción sensible, cuando ocurre, entonces `RecordAuditEntry` guarda usuario, dispositivo, hora en UTC, valor anterior y nuevo.
   - Dado cualquier rol, cuando intenta modificar o borrar una entrada de bitácora, entonces la base lo rechaza.
 
-### S0-16 · Registro, listado y revocación de dispositivos · L · 8 h  · `tablet`
+### S0-16 · Registro, listado y revocación de dispositivos · L · 8 h  · `tablet` · ✅ hecha
 Como administrador
 quiero registrar la tablet con un código de un solo uso, ver los dispositivos y revocarlos
 para que solo los equipos de ZAMMIR operen.
@@ -170,7 +170,7 @@ para que solo los equipos de ZAMMIR operen.
   - Dados registrar, listar y revocar, cuando ocurren, entonces generan su entrada de bitácora.
   - Dado el repositorio de dispositivos, cuando corre la batería de contrato, entonces pasan memoria y Supabase la misma.
 
-### S0-17 · Validación: `packages/core` dentro de una función de servidor · S · 2 h
+### S0-17 · Validación: `packages/core` dentro de una función de servidor · S · 2 h · ✅ hecha
 Como Juanito (desarrollador)
 quiero comprobar que una función de Supabase puede usar `packages/core`
 para saber si la hipótesis de ADR-0016 se sostiene.
@@ -194,7 +194,7 @@ para saber ahora si el proyecto puede imprimir.
   - Dado el resultado, cuando se escribe el ADR, entonces incluye modelo, servicio, fragmento, página de códigos, tiempos, limitaciones y fotos, y Juanito lo acepta.
 - **Si la capa 1 falla:** se prueba la capa 2 y se avisa a Juanito ese mismo día; ZAMMIR no compra más equipo hasta cambiar de modelo [DC §8.4].
 
-### S0-19 · README de arranque probado desde cero · XS · 1 h
+### S0-19 · README de arranque probado desde cero · XS · 1 h · ✅ hecha
 Como Juanito (desarrollador)
 quiero un README con "Cómo levantarlo en local" probado en un clon nuevo
 para retomar el trabajo sin recordar nada.

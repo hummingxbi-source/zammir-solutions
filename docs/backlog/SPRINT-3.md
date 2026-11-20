@@ -8,7 +8,7 @@
 
 ## Órdenes de trabajo
 
-### S3-01 · Crear la orden desde una cotización aceptada · L · 8 h
+### S3-01 · Crear la orden desde una cotización aceptada · L · 8 h · ✅ hecha
 Como cajero
 quiero convertir una cotización aceptada en orden de trabajo en un solo paso
 para no volver a capturar nada.
@@ -19,7 +19,7 @@ para no volver a capturar nada.
   - Dada la emisión, cuando se guarda, entonces lleva folio provisional y, al enviarse, `OT-AAAA-0001`.
   - Dado el anticipo exigido, cuando se calcula, entonces es el porcentaje configurado redondeado hacia arriba [ADR-0011].
 
-### S3-02 · Datos de la orden: responsables, fecha estimada y notas · M · 4 h
+### S3-02 · Datos de la orden: responsables, fecha estimada y notas · M · 4 h · ✅ hecha
 Como cajero
 quiero registrar quién mide, fabrica e instala, la fecha estimada y notas
 para que el trabajo no dependa de la memoria de alguien.
@@ -28,7 +28,7 @@ para que el trabajo no dependa de la memoria de alguien.
   - Dada una orden, cuando se asignan responsables, entonces se guarda cada rol con su usuario.
   - Dados dos cambios al mismo campo desde dos tablets, cuando llegan, entonces gana el último y queda en bitácora [RNF-05].
 
-### S3-03 · Fotos opcionales de la medición · M · 4 h  · `tablet`
+### S3-03 · Fotos opcionales de la medición · M · 4 h  · `tablet` · ✅ hecha
 Como cajero
 quiero adjuntar fotos de la medición a la orden
 para recordar el sitio al fabricar.
@@ -38,7 +38,7 @@ para recordar el sitio al fabricar.
   - Dada la tablet sin conexión, cuando se toma la foto, entonces se guarda y se envía al volver la conexión, sin bloquear la operación de la orden.
 - **Candidata a moverse a "después de la entrega"** si el sprint no cabe (ver `CAPACIDAD.md`).
 
-### S3-04 · Estatus de la orden y botón "Avanzar" · M · 4 h
+### S3-04 · Estatus de la orden y botón "Avanzar" · M · 4 h · ✅ hecha
 Como cajero
 quiero avanzar la orden al siguiente estatus con un botón
 para que todos sepan en qué punto va.
@@ -48,7 +48,7 @@ para que todos sepan en qué punto va.
   - Dado cada cambio, cuando ocurre, entonces guarda usuario, dispositivo y hora.
   - Dada una transición ya inválida por un cambio de otra tablet, cuando llega, entonces se aplica como "por revisar".
 
-### S3-05 · Anticipos y pagos de una orden · L · 8 h
+### S3-05 · Anticipos y pagos de una orden · L · 8 h · ✅ hecha
 Como cajero
 quiero registrar el anticipo y los pagos con su método y quién cobró, y ver el saldo
 para que lo que se debe esté siempre claro.
@@ -60,7 +60,7 @@ para que lo que se debe esté siempre claro.
   - Dados efectivo y transferencia en la misma operación, cuando se registran, entonces son filas de pago distintas del mismo documento.
   - Dado un pago, cuando se guarda, entonces nunca se sobrescribe ni se borra.
 
-### S3-06 · Entrega con saldo pendiente · S · 2 h
+### S3-06 · Entrega con saldo pendiente · S · 2 h · ✅ hecha
 Como administrador
 quiero poder entregar con saldo solo con mi autorización y un motivo
 para que no se entregue sin cobrar por descuido.
@@ -69,7 +69,7 @@ para que no se entregue sin cobrar por descuido.
   - Dado un cajero, cuando intenta entregar con saldo, entonces se rechaza.
   - Dado un administrador (o autorización con PIN), cuando entrega con saldo y motivo, entonces se registra y el saldo pasa a cuentas por cobrar.
 
-### S3-07 · Garantía al entregar · M · 4 h
+### S3-07 · Garantía al entregar · M · 4 h · ✅ hecha
 Como administrador
 quiero que al entregar se cree el registro de garantía
 para que la garantía sea escrita y no verbal.
@@ -78,7 +78,7 @@ para que la garantía sea escrita y no verbal.
   - Dada una orden entregada, cuando se registra, entonces se crea la garantía con inicio, duración, cobertura y exclusiones desde la configuración o el producto.
   - Dada la duración sin definir, cuando se crea, entonces el campo queda vacío y editable, no con un valor supuesto.
 
-### S3-08 · Cancelación de la orden · S · 2 h
+### S3-08 · Cancelación de la orden · S · 2 h · ✅ hecha
 Como administrador
 quiero cancelar una orden con motivo
 para cerrarla sin borrarla.
@@ -87,7 +87,7 @@ para cerrarla sin borrarla.
   - Dado un administrador, cuando cancela con motivo, entonces la orden queda cancelada con la etapa en que estaba y entrada de bitácora.
   - Dado un cajero, cuando intenta cancelar, entonces se rechaza.
 
-### S3-09 · Comprobante de trabajo en PDF con QR · L · 8 h  · `tablet`
+### S3-09 · Comprobante de trabajo en PDF con QR · L · 8 h  · `tablet` · ✅ hecha
 Como cajero
 quiero un comprobante con saldo, garantía y QR de autofacturación
 para que el cliente tenga su documento.
@@ -98,7 +98,7 @@ para que el cliente tenga su documento.
   - Dado el QR, cuando otro teléfono lo escanea, entonces lee la dirección con el folio y el código.
   - Dado el comprobante, cuando se envía, entonces se comparte por WhatsApp y no se imprime en carta.
 
-### S3-10 · Tablero y lista de órdenes con resumen · M · 4 h
+### S3-10 · Tablero y lista de órdenes con resumen · M · 4 h · ✅ hecha
 Como administrador
 quiero ver las órdenes por estatus y filtrarlas
 para saber qué hay en producción y cuánto falta por cobrar.
@@ -110,7 +110,7 @@ para saber qué hay en producción y cuánto falta por cobrar.
 
 ## Mostrador
 
-### S3-11 · Venta rápida y ticket actual · M · 4 h
+### S3-11 · Venta rápida y ticket actual · M · 4 h · ✅ hecha
 Como cajero
 quiero elegir productos, ajustar cantidades y ver el ticket actual
 para vender en segundos.
@@ -120,7 +120,7 @@ para vender en segundos.
   - Dado el ticket actual, cuando se cambia una cantidad, entonces el total y el desglose se actualizan con `TaxCalculator`.
   - Dado un ticket vacío, cuando se muestra, entonces enseña qué hacer.
 
-### S3-12 · Cobro: efectivo, transferencia y mixto · M · 4 h
+### S3-12 · Cobro: efectivo, transferencia y mixto · M · 4 h · ✅ hecha
 Como cajero
 quiero cobrar en efectivo con cambio, en transferencia con referencia, o mixto
 para cerrar la venta.
@@ -130,7 +130,7 @@ para cerrar la venta.
   - Dado un pago mixto, cuando se registra, entonces la suma de las formas de pago es igual al total.
   - Dada una venta, cuando se cobra, entonces se paga completa; no hay anticipo en mostrador.
 
-### S3-13 · Atribución y folio de la venta · S · 2 h
+### S3-13 · Atribución y folio de la venta · S · 2 h · ✅ hecha
 Como administrador
 quiero que cada venta y pago guarden usuario, dispositivo y hora
 para saber quién cobró qué.
@@ -139,7 +139,7 @@ para saber quién cobró qué.
   - Dada una venta o un pago, cuando se guarda, entonces lleva el usuario activo, el dispositivo y la hora en UTC.
   - Dada la venta, cuando se emite, entonces lleva folio provisional y luego `V-AAAA-0001`.
 
-### S3-14 · Cobrar anticipos y saldos desde el mostrador · S · 2 h
+### S3-14 · Cobrar anticipos y saldos desde el mostrador · S · 2 h · ✅ hecha
 Como cajero
 quiero cobrar el saldo de una orden desde el mostrador
 para cobrar en la misma pantalla.
@@ -147,7 +147,7 @@ para cobrar en la misma pantalla.
 - **Criterios de aceptación:**
   - Dada una orden con saldo, cuando se cobra desde el mostrador, entonces se usa el mismo caso de uso `RegisterPayment` y cuenta en la caja de quien lo recibió.
 
-### S3-15 · Cancelar una venta · S · 2 h
+### S3-15 · Cancelar una venta · S · 2 h · ✅ hecha
 Como administrador
 quiero cancelar una venta con motivo
 para corregir un error sin borrar nada.
@@ -156,7 +156,7 @@ para corregir un error sin borrar nada.
   - Dado un administrador, cuando cancela con motivo, entonces la venta queda cancelada con bitácora.
   - Dado un cajero, cuando intenta cancelar, entonces se rechaza.
 
-### S3-16 · Turno de caja: apertura y fondo inicial · M · 4 h  · ⛔ PD-36
+### S3-16 · Turno de caja: apertura y fondo inicial · M · 4 h  · ⛔ PD-36 · ✅ construida
 Como cajero
 quiero abrir mi turno con un fondo inicial opcional
 para que mis cobros queden en mi caja.
@@ -166,7 +166,7 @@ para que mis cobros queden en mi caja.
   - Dado un pago o venta, cuando se cobra, entonces se liga al turno abierto.
   - Dada la unidad del corte, cuando Luis responda PD-36, entonces se ajusta la historia antes de construirla.
 
-### S3-17 · Corte de caja por cajero · L · 8 h  · ⛔ PD-36
+### S3-17 · Corte de caja por cajero · L · 8 h  · ⛔ PD-36 · ✅ construida
 Como cajero
 quiero cerrar mi turno con el efectivo contado y ver la diferencia
 para saber si cuadra.
@@ -178,7 +178,7 @@ para saber si cuadra.
   - Dado un corte con datos armados a mano, cuando se calcula, entonces coincide al centavo.
   - Dado el resumen, cuando se imprime, entonces sale en ticket térmico.
 
-### S3-18 · Corte consolidado del día · M · 4 h
+### S3-18 · Corte consolidado del día · M · 4 h · ✅ hecha
 Como administrador
 quiero ver el corte del día completo por método y por cajero
 para revisar la caja de ZAMMIR.
@@ -187,7 +187,7 @@ para revisar la caja de ZAMMIR.
   - Dado un día en hora de México, cuando se calcula, entonces suma los turnos y pagos de ese día por método y por cajero.
   - Dado un cajero, cuando intenta verlo, entonces no tiene acceso.
 
-### S3-19 · Cerrar el corte con operaciones sin enviar · S · 2 h
+### S3-19 · Cerrar el corte con operaciones sin enviar · S · 2 h · ✅ hecha
 Como cajero
 quiero que me avise si cierro con operaciones sin enviar
 para no cerrar con cifras incompletas.
@@ -198,7 +198,7 @@ para no cerrar con cifras incompletas.
 
 ## Impresión
 
-### S3-20 · Puerto `TicketPrinter`, plantillas y adaptador falso · L · 8 h
+### S3-20 · Puerto `TicketPrinter`, plantillas y adaptador falso · L · 8 h · ✅ hecha
 Como Juanito (desarrollador)
 quiero el puerto de impresión con plantillas independientes de los adaptadores
 para cambiar de método sin tocar la aplicación.
@@ -208,7 +208,7 @@ para cambiar de método sin tocar la aplicación.
   - Dado el adaptador falso, cuando corre la batería de contrato de `TicketPrinter`, entonces pasa.
   - Dado un tipo de ticket nuevo, cuando se agrega, entonces no se modifica el adaptador.
 
-### S3-21 · Adaptador capa 1: Web Bluetooth y ESC/POS · L · 8 h  · `tablet` · ⛔ PD-15
+### S3-21 · Adaptador capa 1: Web Bluetooth y ESC/POS · L · 8 h  · `tablet` · ⛔ PD-15 · ✅ construida
 Como cajero
 quiero imprimir el ticket por Bluetooth desde la tablet
 para entregarlo al cliente al cobrar.
@@ -219,7 +219,7 @@ para entregarlo al cliente al cobrar.
   - Dado el cobro, cuando se mide hasta el ticket, entonces tarda menos de 5 segundos.
   - *(manual)* Imprimir con la impresora real y con la tablet sin internet.
 
-### S3-22 · Adaptadores capa 2 y capa 3 · M · 4 h  · `tablet`
+### S3-22 · Adaptadores capa 2 y capa 3 · M · 4 h  · `tablet` · ✅ hecha
 Como cajero
 quiero un respaldo si la impresora Bluetooth no funciona
 para no quedarme sin ticket.
@@ -229,7 +229,7 @@ para no quedarme sin ticket.
   - Dada la capa 3, cuando no hay impresora, entonces el ticket se comparte como PDF o imagen por WhatsApp.
   - Dados los tres adaptadores, cuando corren en la tablet, entonces pasan la misma batería de contrato.
 
-### S3-23 · Estado de la impresora, prueba y reimpresión · M · 4 h  · `tablet`
+### S3-23 · Estado de la impresora, prueba y reimpresión · M · 4 h  · `tablet` · ✅ hecha
 Como cajero
 quiero ver si la impresora está conectada, hacer una prueba y reimprimir un ticket
 para resolver fallas sin perder la venta.
@@ -239,7 +239,7 @@ para resolver fallas sin perder la venta.
   - Dado el botón de configuración, cuando se toca "Prueba de impresión", entonces imprime un ticket de prueba.
   - Dada una impresora apagada o sin papel, cuando se cobra, entonces la venta queda guardada y el ticket se puede reimprimir.
 
-### S3-24 · Ticket de venta con QR y leyenda de autofacturación · M · 4 h  · `tablet`
+### S3-24 · Ticket de venta con QR y leyenda de autofacturación · M · 4 h  · `tablet` · ✅ hecha
 Como cliente final
 quiero un ticket con QR y código para pedir mi factura
 para facturar sin ir con un contador.
@@ -250,7 +250,7 @@ para facturar sin ir con un contador.
 
 ## Clientes y aceptación
 
-### S3-25 · Historial del cliente y cliente recurrente · M · 4 h
+### S3-25 · Historial del cliente y cliente recurrente · M · 4 h · ✅ hecha
 Como cajero
 quiero ver todo lo que un cliente ha hecho con ZAMMIR
 para atenderlo mejor.
@@ -259,7 +259,7 @@ para atenderlo mejor.
   - Dado un cliente, cuando se abre su ficha, entonces lista cotizaciones, órdenes, ventas, pagos y garantías.
   - Dado un cliente con dos o más trabajos entregados, cuando se muestra, entonces aparece como recurrente (vista, no dato guardado).
 
-### S3-26 · Aceptación E1: del cotizador a la garantía · L · 8 h  · `tablet`
+### S3-26 · Aceptación E1: del cotizador a la garantía · L · 8 h  · `tablet` · ✅ hecha
 Como Juanito (desarrollador)
 quiero automatizar el recorrido completo de un trabajo
 para probar el corazón del negocio de punta a punta.
@@ -268,13 +268,13 @@ para probar el corazón del negocio de punta a punta.
   - Dado el recorrido, cuando se ejecuta (medir, cotizar, PDF, compartir, aceptar, crear la orden, anticipo, avanzar, entregar, saldo y comprobante), entonces todos los pasos pasan con totales exactos.
   - *(manual)* Repetir en la tablet real.
 
-### S3-27 · Aceptación E2: mostrador y corte · M · 4 h  · `tablet`
+### S3-27 · Aceptación E2: mostrador y corte · M · 4 h  · `tablet` · ✅ hecha
 - **Reglas:** E2 · **Pendientes:** PD-36
 - **Criterios de aceptación:**
   - Dadas ventas en efectivo, transferencia y mixta, cuando se hace el corte por cajero y consolidado, entonces la diferencia queda calculada.
   - *(manual)* Ticket térmico con QR en la impresora real.
 
-### S3-28 · Aceptación E3 (ventas) y E4 (cobros por PIN) · M · 4 h  · `tablet`
+### S3-28 · Aceptación E3 (ventas) y E4 (cobros por PIN) · M · 4 h  · `tablet` · ✅ hecha
 - **Reglas:** E3 (10 ventas en modo avión), E4 (cobros atribuidos), RNF-07
 - **Criterios de aceptación:**
   - Dadas 10 ventas en modo avión, cuando se reconecta, entonces hay cero duplicados, folios correctos y totales exactos.

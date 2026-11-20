@@ -4,7 +4,7 @@
 > **Objetivo:** el dinero que nunca se equivoca, las reglas de precio, un catálogo limpio, la ficha de clientes y la entrada de empleados con PIN.
 > **Entra si:** Sprint 0 cerrado en verde; ADR-0011 aceptada y tabla de casos de oro validada (`docs/calidad/CASOS_DE_ORO_DINERO.md`).
 
-### S1-01 · Dinero en centavos · M · 4 h
+### S1-01 · Dinero en centavos · M · 4 h · ✅ hecha
 Como Juanito (desarrollador)
 quiero un tipo `Money` con aritmética en centavos enteros
 para que ningún total salga con errores de flotantes.
@@ -16,7 +16,7 @@ para que ningún total salga con errores de flotantes.
   - Dados montos cualesquiera, cuando se propone una propiedad, entonces la suma es conmutativa y asociativa y sumar y restar lo mismo regresa al original.
   - Dado el módulo, cuando se mide, entonces tiene 100 % de líneas y ramas y mutación ≥ 90 %.
 
-### S1-02 · Medidas en milímetros enteros · S · 2 h
+### S1-02 · Medidas en milímetros enteros · S · 2 h · ✅ hecha
 Como cajero
 quiero capturar ancho y alto en cm o m, con decimales
 para que el sistema las guarde sin errores de redondeo.
@@ -26,7 +26,7 @@ para que el sistema las guarde sin errores de redondeo.
   - Dada una medida cero, negativa o mayor al límite configurable, cuando se captura, entonces se rechaza con error tipado.
   - Dadas dos medidas, cuando se calcula el área, entonces se obtiene en mm² enteros para combinaciones típicas y extremas.
 
-### S1-03 · Desglose de IVA y casos de oro · L · 8 h
+### S1-03 · Desglose de IVA y casos de oro · L · 8 h · ✅ hecha
 Como administrador
 quiero que el desglose de IVA sea idéntico en ticket, PDF y factura
 para que todo cuadre al centavo.
@@ -40,7 +40,7 @@ para que todo cuadre al centavo.
   - Dado un anticipo, cuando se calcula, entonces se redondea hacia arriba y el saldo es la resta [ADR-0011].
   - Dado el módulo, cuando se mide, entonces tiene 100 % de líneas y ramas y mutación ≥ 90 %.
 
-### S1-04 · Reglas de precio como estrategias · L · 8 h
+### S1-04 · Reglas de precio como estrategias · L · 8 h · ✅ hecha
 Como administrador
 quiero que cada producto calcule su importe con una regla de precio configurable
 para poder cambiar las reglas sin tocar el código.
@@ -53,7 +53,7 @@ para poder cambiar las reglas sin tocar el código.
   - Dada una regla nueva de prueba, cuando se registra, entonces no se modifica ninguna regla existente.
   - Dado el módulo, cuando se mide, entonces tiene 100 % de líneas y ramas y mutación ≥ 90 %.
 
-### S1-05 · Catálogo: modelo y categorías iniciales · M · 4 h
+### S1-05 · Catálogo: modelo y categorías iniciales · M · 4 h · ✅ hecha
 Como administrador
 quiero el catálogo con sus categorías y datos fiscales predeterminados
 para que cada producto nazca completo.
@@ -64,7 +64,7 @@ para que cada producto nazca completo.
   - Dado el repositorio de productos, cuando corre la batería de contrato, entonces pasan memoria y Supabase la misma.
   - Dado un producto, cuando se pide su lectura para vender, entonces `ProductReader` no expone lo de administración.
 
-### S1-06 · Catálogo: alta, edición, desactivación e historial de precios · M · 4 h
+### S1-06 · Catálogo: alta, edición, desactivación e historial de precios · M · 4 h · ✅ hecha
 Como administrador
 quiero dar de alta, editar y desactivar productos sin intervención técnica
 para mantener limpio mi catálogo sin borrar nada.
@@ -75,7 +75,7 @@ para mantener limpio mi catálogo sin borrar nada.
   - Dado un cambio de precio, cuando se guarda, entonces queda historial y bitácora con valor anterior y nuevo.
   - Dado un cajero, cuando intenta editar catálogo o precios, entonces se rechaza.
 
-### S1-07 · Catálogo: búsqueda tolerante y filtros · S · 2 h
+### S1-07 · Catálogo: búsqueda tolerante y filtros · S · 2 h · ✅ hecha
 Como cajero
 quiero buscar un producto sin preocuparme por acentos ni mayúsculas
 para encontrarlo rápido en el mostrador o en la obra.
@@ -84,7 +84,7 @@ para encontrarlo rápido en el mostrador o en la obra.
   - Dado "vidrio", cuando se busca, entonces encuentra "Vídrio"; "TEMPLADO" encuentra "templado".
   - Dados filtros por categoría y tipo, cuando se combinan, entonces devuelven la intersección.
 
-### S1-08 · Catálogo: importación CSV o Excel con vista previa · L · 8 h
+### S1-08 · Catálogo: importación CSV o Excel con vista previa · L · 8 h · ✅ hecha
 Como administrador
 quiero importar el catálogo desde un archivo con una plantilla y ver los errores antes de confirmar
 para cargar los 50 a 150 productos sin capturar uno por uno.
@@ -95,7 +95,7 @@ para cargar los 50 a 150 productos sin capturar uno por uno.
   - Dado un archivo con codificación con acentos, cuando se lee, entonces los acentos se conservan.
   - Dada la decisión de qué hacer con filas inválidas, cuando se documenta, entonces queda escrita en la historia y en la pantalla.
 
-### S1-09 · Catálogo disponible sin conexión · M · 4 h  · `tablet`
+### S1-09 · Catálogo disponible sin conexión · M · 4 h  · `tablet` · ✅ hecha
 Como cajero
 quiero consultar el catálogo en la tablet aunque no haya internet
 para cotizar en casa del cliente.
@@ -105,7 +105,7 @@ para cotizar en casa del cliente.
   - Dado un cambio de precio en el servidor, cuando la tablet se reconecta, entonces recibe la versión nueva por cursor sin duplicar productos.
   - *(manual)* Buscar en el catálogo en modo avión en la tablet real.
 
-### S1-10 · Clientes: ficha con validaciones · M · 4 h
+### S1-10 · Clientes: ficha con validaciones · M · 4 h · ✅ hecha
 Como cajero
 quiero capturar un cliente con nombre y WhatsApp como mínimo
 para cotizarle sin trabas.
@@ -117,7 +117,7 @@ para cotizarle sin trabas.
   - Dada una lista vacía, cuando se abre Clientes, entonces el estado vacío dice qué hacer.
   - Dado el repositorio de clientes, cuando corre la batería de contrato, entonces pasan memoria, IndexedDB y Supabase.
 
-### S1-11 · Clientes: búsqueda y aviso de duplicados · S · 2 h
+### S1-11 · Clientes: búsqueda y aviso de duplicados · S · 2 h · ✅ hecha
 Como cajero
 quiero que el sistema me avise si el teléfono ya existe
 para no duplicar clientes.
@@ -126,7 +126,7 @@ para no duplicar clientes.
   - Dado un teléfono ya registrado en otro formato (con espacios, guiones o lada), cuando se captura, entonces avisa del posible duplicado.
   - Dado un nombre parcial, cuando se busca, entonces encuentra al cliente rápido.
 
-### S1-12 · Clientes: anonimización · S · 2 h
+### S1-12 · Clientes: anonimización · S · 2 h · ✅ hecha
 Como administrador
 quiero corregir o anonimizar los datos de un cliente que lo solicite
 para cumplir con sus derechos sobre sus datos.
@@ -136,7 +136,7 @@ para cumplir con sus derechos sobre sus datos.
   - Dada la anonimización, cuando termina, entonces hay entrada de bitácora y `anonymized_at`.
   - Dado un cajero, cuando intenta anonimizar, entonces se rechaza.
 
-### S1-13 · Aviso de privacidad versionado y su registro · M · 4 h
+### S1-13 · Aviso de privacidad versionado y su registro · M · 4 h · ✅ hecha
 Como administrador
 quiero editar el aviso de privacidad con versión y fecha, y registrar que se le informó al cliente
 para cumplir con la ley.
@@ -146,7 +146,7 @@ para cumplir con la ley.
   - Dado un cliente nuevo, cuando se captura, entonces se registra la versión del aviso que se le informó.
   - Dado un cajero, cuando intenta editar el aviso, entonces se rechaza.
 
-### S1-14 · Usuarios: alta, edición, desactivación y PIN · M · 4 h
+### S1-14 · Usuarios: alta, edición, desactivación y PIN · M · 4 h · ✅ hecha
 Como administrador
 quiero dar de alta empleados, asignarles rol y PIN y desactivarlos
 para que cada quien tenga su acceso.
@@ -158,7 +158,7 @@ para que cada quien tenga su acceso.
   - Dado un restablecimiento de PIN, cuando ocurre, entonces solo un administrador en línea lo hace y queda bitácora.
   - Dados 2 administradores y 5 empleados, cuando se crean, entonces no hay límite técnico.
 
-### S1-15 · Entrada con PIN en la tablet registrada · L · 8 h  · `tablet` · ⛔ PD-22
+### S1-15 · Entrada con PIN en la tablet registrada · L · 8 h  · `tablet` · ⛔ PD-22 · ✅ construida
 Como cajero
 quiero elegir mi nombre y teclear mi PIN en la tablet
 para entrar sin internet.
@@ -171,7 +171,7 @@ para entrar sin internet.
   - Dado el verificador del PIN, cuando se revisa lo guardado en la tablet, entonces no está el PIN y se compara en tiempo constante.
   - *(manual)* Entrar con PIN sin internet en la tablet real.
 
-### S1-16 · Cambio de usuario y bloqueo por inactividad · S · 2 h  · `tablet`
+### S1-16 · Cambio de usuario y bloqueo por inactividad · S · 2 h  · `tablet` · ✅ hecha
 Como cajero
 quiero cambiar de usuario en un toque y que la tablet se bloquee sola
 para que nadie cobre con mi nombre.
@@ -181,7 +181,7 @@ para que nadie cobre con mi nombre.
   - Dado un cambio de usuario, cuando se hace, entonces las acciones siguientes quedan atribuidas al nuevo usuario y lo capturado no se pierde.
   - *(manual)* Cambiar de usuario y esperar el bloqueo en la tablet.
 
-### S1-17 · Autorización de administrador por PIN · S · 2 h
+### S1-17 · Autorización de administrador por PIN · S · 2 h · ✅ hecha
 Como cajero
 quiero pedirle a un administrador que autorice con su PIN una acción restringida
 para poder seguir trabajando sin pedirle que tome la tablet.
@@ -190,7 +190,7 @@ para poder seguir trabajando sin pedirle que tome la tablet.
   - Dado el PIN de un administrador activo, cuando autoriza, entonces la acción procede y queda `authorizedBy` en bitácora.
   - Dado el PIN de un cajero o uno incorrecto, cuando se intenta autorizar, entonces se rechaza.
 
-### S1-18 · Matriz de permisos completa en dominio y base · L · 8 h
+### S1-18 · Matriz de permisos completa en dominio y base · L · 8 h · ✅ hecha
 Como administrador
 quiero que cada rol haga solo lo que la matriz permite
 para que un cajero no vea reportes, precios ni cortes ajenos.
@@ -200,7 +200,7 @@ para que un cajero no vea reportes, precios ni cortes ajenos.
   - Dada cada tabla con datos sensibles, cuando se consulta con cada rol por la base, entonces las políticas por rol dan el mismo resultado que el dominio.
   - Dadas las acciones sensibles de este sprint, cuando ocurren, entonces generan bitácora.
 
-### S1-19 · Pantalla de bitácora consultable · S · 2 h
+### S1-19 · Pantalla de bitácora consultable · S · 2 h · ✅ hecha
 Como administrador
 quiero consultar la bitácora con filtros
 para revisar quién hizo qué.
@@ -209,7 +209,7 @@ para revisar quién hizo qué.
   - Dado un administrador, cuando abre la bitácora, entonces ve usuario, dispositivo, fecha en hora de México, acción y valores anterior y nuevo.
   - Dado un cajero, cuando intenta abrirla, entonces no tiene acceso.
 
-### S1-20 · Aceptación E4 (PIN) y E8 (matriz) · S · 2 h
+### S1-20 · Aceptación E4 (PIN) y E8 (matriz) · S · 2 h · ✅ hecha
 Como Juanito (desarrollador)
 quiero automatizar la parte del Sprint 1 de los recorridos E4 y E8
 para tenerlos listos al cerrar el sprint.
@@ -218,7 +218,7 @@ para tenerlos listos al cerrar el sprint.
   - Dados tres usuarios con PIN en la misma tablet, cuando cada uno realiza acciones, entonces cada acción queda atribuida a quien la hizo y el bloqueo por inactividad funciona.
   - Dados un cajero y un administrador, cuando intentan acciones de la matriz, entonces el cajero queda limitado en dominio y en base de datos.
 
-### S1-21 · Cierre del Sprint 1 · S · 2 h  · `tablet`
+### S1-21 · Cierre del Sprint 1 · S · 2 h  · `tablet` · ✅ hecha
 Como Juanito (desarrollador)
 quiero cerrar el sprint con la compuerta y la prueba de mutación completa
 para empezar el cotizador sobre dinero que no se equivoca.

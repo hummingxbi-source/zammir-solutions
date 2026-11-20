@@ -6,7 +6,7 @@
 
 ## Sincronización y folios
 
-### S2-01 · Validación `spike/sync` con dos tablets simuladas · L · 8 h
+### S2-01 · Validación `spike/sync` con dos tablets simuladas · L · 8 h · ✅ hecha
 Como Juanito (desarrollador)
 quiero demostrar que la cola propia, la idempotencia y los folios sin huecos funcionan bajo concurrencia y cortes
 para cerrar ADR-0012 y ADR-0016 con evidencia.
@@ -19,7 +19,7 @@ para cerrar ADR-0012 y ADR-0016 con evidencia.
   - Dada una operación fuera de orden, cuando llega, entonces se detecta y se corrige con reenvío.
   - Dada la función del servidor, cuando corre `packages/core` con una conexión directa a Postgres y una transacción, entonces funciona; si no, se documenta la alternativa en SQL.
 
-### S2-02 · Cola de salida en la tablet · L · 8 h
+### S2-02 · Cola de salida en la tablet · L · 8 h · ✅ hecha
 Como cajero
 quiero que todo lo que capture se guarde primero en la tablet y espere su turno para enviarse
 para no perder nada si se va el internet.
@@ -30,7 +30,7 @@ para no perder nada si se va el internet.
   - Dada una operación con formato inválido, cuando se intenta encolar, entonces la validación la rechaza antes de guardarla.
   - Dada la aplicación actualizada, cuando hay operaciones viejas en cola, entonces no se borran.
 
-### S2-03 · Receptor de operaciones idempotente · L · 8 h
+### S2-03 · Receptor de operaciones idempotente · L · 8 h · ✅ hecha
 Como administrador
 quiero que el servidor aplique cada operación una sola vez
 para que reenviar no duplique cotizaciones ni pagos.
@@ -41,7 +41,7 @@ para que reenviar no duplique cotizaciones ni pagos.
   - Dado un dispositivo revocado, un usuario desactivado o un tipo desconocido, cuando llega la operación, entonces se rechaza de forma estructural o se marca "por revisar" según [ADR-0013].
   - Dado un resultado, cuando se guarda, entonces queda en `operations` con `received_at`.
 
-### S2-04 · Folio definitivo sin huecos ni duplicados · M · 4 h
+### S2-04 · Folio definitivo sin huecos ni duplicados · M · 4 h · ✅ hecha
 Como administrador
 quiero folios `COT-AAAA-0001` consecutivos asignados por el servidor
 para que ZAMMIR tenga una numeración confiable.
@@ -53,7 +53,7 @@ para que ZAMMIR tenga una numeración confiable.
   - Dado el contrato de `FolioAllocator`, cuando corre la batería, entonces pasan el local y el del servidor.
   - Dada una cotización cancelada, cuando se revisa, entonces conserva su folio.
 
-### S2-05 · Folio temporal por dispositivo · S · 2 h
+### S2-05 · Folio temporal por dispositivo · S · 2 h · ✅ hecha
 Como cajero
 quiero que una cotización hecha sin conexión lleve un folio provisional como `T1-0004`
 para identificarla mientras no se envía.
@@ -63,7 +63,7 @@ para identificarla mientras no se envía.
   - Dado un documento emitido sin conexión, cuando se muestra, entonces dice "Folio provisional T1-0004" y lleva un código público único.
   - Dado un borrador, cuando se revisa, entonces no tiene folio.
 
-### S2-06 · Envío automático, reintentos y estado visible · M · 4 h  · `tablet`
+### S2-06 · Envío automático, reintentos y estado visible · M · 4 h  · `tablet` · ✅ hecha
 Como cajero
 quiero que lo guardado se envíe solo al volver el internet y ver si ya salió
 para no preocuparme.
@@ -75,7 +75,7 @@ para no preocuparme.
   - Dado un error estructural, cuando ocurre, entonces la cola de ese dispositivo se detiene y aparece un aviso para llamar a soporte.
   - Dado que no se usan las palabras "sincronizar" ni "offline", cuando corre la prueba de vocabulario, entonces pasa.
 
-### S2-07 · Descarga de documentos propios y reconciliación del folio · M · 4 h
+### S2-07 · Descarga de documentos propios y reconciliación del folio · M · 4 h · ✅ hecha
 Como cajero
 quiero que el folio definitivo aparezca solo en mis documentos
 para ver el número real sin hacer nada.
@@ -86,7 +86,7 @@ para ver el número real sin hacer nada.
   - Dados cambios pendientes locales, cuando llega la versión del servidor, entonces se vuelven a aplicar encima los no enviados.
   - Dado que no se bajan los datos fiscales de todos los clientes, cuando se revisa lo replicado, entonces solo están los necesarios [RNF-06].
 
-### S2-08 · Conflictos entre tablets · M · 4 h
+### S2-08 · Conflictos entre tablets · M · 4 h · ✅ hecha
 Como administrador
 quiero que dos tablets que editan lo mismo no pierdan información
 para confiar en los datos.
@@ -98,7 +98,7 @@ para confiar en los datos.
 
 ## Cotizador
 
-### S2-09 · Cotización: líneas del catálogo y cálculo visible · L · 8 h  · `tablet`
+### S2-09 · Cotización: líneas del catálogo y cálculo visible · L · 8 h  · `tablet` · ✅ hecha
 Como cajero
 quiero agregar productos del catálogo, capturar ancho, alto y cantidad y ver el cálculo
 para dar un presupuesto correcto en minutos.
@@ -110,7 +110,7 @@ para dar un presupuesto correcto en minutos.
   - Dada una línea, cuando se muestra, entonces el desglose de IVA coincide con `TaxCalculator`.
   - Dado el catálogo vacío, cuando se abre el cotizador, entonces el aviso contextual dice "Revisa primero tu catálogo" y se puede cerrar.
 
-### S2-10 · Cotizador: buscar o capturar al cliente sin salir · S · 2 h
+### S2-10 · Cotizador: buscar o capturar al cliente sin salir · S · 2 h · ✅ hecha
 Como cajero
 quiero buscar o capturar al cliente dentro del cotizador
 para no cambiar de pantalla.
@@ -119,7 +119,7 @@ para no cambiar de pantalla.
   - Dado un cliente existente, cuando se busca, entonces se selecciona con nombre y WhatsApp; el domicilio de la obra es opcional.
   - Dado un cliente nuevo, cuando se captura nombre y WhatsApp, entonces se guarda y se registra el aviso de privacidad informado.
 
-### S2-11 · Cargos adicionales y descuentos con autorización · M · 4 h
+### S2-11 · Cargos adicionales y descuentos con autorización · M · 4 h · ✅ hecha
 Como cajero
 quiero agregar instalación, medición o cantos como líneas de servicio, y pedir un descuento autorizado
 para cotizar el trabajo completo.
@@ -129,7 +129,7 @@ para cotizar el trabajo completo.
   - Dado un descuento o cambio de precio de una línea, cuando lo pide un cajero, entonces exige PIN de administrador y deja bitácora con valor anterior y nuevo.
   - Dado un administrador, cuando aplica un descuento, entonces también queda registrado.
 
-### S2-12 · Vista previa en vivo · M · 4 h  · `tablet`
+### S2-12 · Vista previa en vivo · M · 4 h  · `tablet` · ✅ hecha
 Como cajero
 quiero ver el documento al mismo tiempo que lo armo
 para corregir antes de enviar.
@@ -138,7 +138,7 @@ para corregir antes de enviar.
   - Dada una pantalla grande, cuando se arma la cotización, entonces hay dos paneles: datos a la izquierda y documento a la derecha, actualizado en vivo.
   - Dada una pantalla chica, cuando se arma, entonces la vista previa es una pestaña.
 
-### S2-13 · Emitir la cotización: precio congelado, vigencia y folio · M · 4 h
+### S2-13 · Emitir la cotización: precio congelado, vigencia y folio · M · 4 h · ✅ hecha
 Como cajero
 quiero emitir la cotización con su folio, vigencia y condiciones
 para entregar un documento formal.
@@ -149,7 +149,7 @@ para entregar un documento formal.
   - Dada la emisión sin conexión, cuando termina, entonces lleva folio provisional; al enviarse, el definitivo.
   - Dada la emisión, cuando se guarda, entonces usa el caso de uso `IssueQuote` y guarda la versión del catálogo usada.
 
-### S2-14 · Estados de la cotización · S · 2 h
+### S2-14 · Estados de la cotización · S · 2 h · ✅ hecha
 Como cajero
 quiero marcar una cotización como enviada, aceptada o rechazada, y que se muestre vencida al pasar la vigencia
 para saber en qué punto está cada presupuesto.
@@ -158,7 +158,7 @@ para saber en qué punto está cada presupuesto.
   - Dada una transición no permitida, cuando se intenta, entonces la tabla de transiciones la rechaza.
   - Dada la fecha posterior a `valid_until`, cuando se muestra la cotización, entonces aparece como vencida sin proceso aparte (reloj fijo).
 
-### S2-15 · Duplicar y guardado automático de borradores · S · 2 h
+### S2-15 · Duplicar y guardado automático de borradores · S · 2 h · ✅ hecha
 Como cajero
 quiero duplicar una cotización y que mis borradores se guarden solos
 para no repetir captura ni perder lo hecho.
@@ -167,7 +167,7 @@ para no repetir captura ni perder lo hecho.
   - Dada una cotización, cuando se duplica, entonces nace un borrador nuevo sin folio con los mismos conceptos y precios actuales del catálogo.
   - Dado un borrador a medias, cuando se cierra la aplicación o se bloquea la tablet, entonces se recupera al volver.
 
-### S2-16 · Historial de cotizaciones por cliente · S · 2 h
+### S2-16 · Historial de cotizaciones por cliente · S · 2 h · ✅ hecha
 Como cajero
 quiero ver las cotizaciones anteriores de un cliente
 para retomar lo que ya se le dio.
@@ -175,7 +175,7 @@ para retomar lo que ya se le dio.
 - **Criterios de aceptación:**
   - Dado un cliente, cuando se abre su ficha o el cotizador, entonces lista sus cotizaciones con folio, fecha, estado y total.
 
-### S2-17 · Uso en campo: vertical, horizontal y teclado numérico · S · 2 h  · `tablet`
+### S2-17 · Uso en campo: vertical, horizontal y teclado numérico · S · 2 h  · `tablet` · ✅ hecha
 Como cajero
 quiero usar la tablet en vertical y horizontal con botones grandes y teclado numérico
 para capturar medidas en la obra.
@@ -185,7 +185,7 @@ para capturar medidas en la obra.
   - Dado un campo de medida, cuando se toca, entonces abre el teclado numérico.
   - *(manual)* Cotizar con una mano en la tablet real.
 
-### S2-18 · Condiciones por defecto editables · S · 2 h
+### S2-18 · Condiciones por defecto editables · S · 2 h · ✅ hecha
 Como administrador
 quiero editar las condiciones que salen en cada cotización
 para ajustarlas sin pedir cambios de código.
@@ -196,7 +196,7 @@ para ajustarlas sin pedir cambios de código.
 
 ## Documento y envío
 
-### S2-19 · PDF carta generado en la tablet · L · 8 h  · `tablet`
+### S2-19 · PDF carta generado en la tablet · L · 8 h  · `tablet` · ✅ hecha
 Como cajero
 quiero generar el PDF de la cotización sin internet
 para entregarlo en casa del cliente.
@@ -209,7 +209,7 @@ para entregarlo en casa del cliente.
   - Dados los totales del PDF, cuando se comparan con los de pantalla, entonces coinciden al centavo.
   - *(manual)* Abrir el PDF en el teléfono de otra persona.
 
-### S2-20 · Compartir por WhatsApp · M · 4 h  · `tablet`
+### S2-20 · Compartir por WhatsApp · M · 4 h  · `tablet` · ✅ hecha
 Como cajero
 quiero enviar el PDF con el menú de compartir del dispositivo
 para mandarlo al cliente en un toque.
@@ -221,7 +221,7 @@ para mandarlo al cliente en un toque.
 
 ## Aceptación y cierre
 
-### S2-21 · Aceptación E3 (parte de cotizaciones) · M · 4 h  · `tablet`
+### S2-21 · Aceptación E3 (parte de cotizaciones) · M · 4 h  · `tablet` · ✅ hecha
 Como Juanito (desarrollador)
 quiero automatizar el modo avión con tres cotizaciones
 para probar el corazón del sistema.
@@ -231,7 +231,7 @@ para probar el corazón del sistema.
   - Dada la reconexión, cuando se envían, entonces hay cero duplicados, folios definitivos correctos y totales exactos.
   - *(manual)* Repetir en la tablet real en modo avión.
 
-### S2-22 · Cierre del Sprint 2 · S · 2 h  · `tablet`
+### S2-22 · Cierre del Sprint 2 · S · 2 h  · `tablet` · ✅ hecha
 Como Juanito (desarrollador)
 quiero cerrar el sprint con la compuerta, los ADR del motor y la lista de tablet
 para empezar órdenes y mostrador con la sincronización probada.

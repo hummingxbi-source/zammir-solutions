@@ -8,7 +8,7 @@
 
 ## Cuentas por cobrar
 
-### S4-01 · Lista de cuentas por cobrar con antigüedad · M · 4 h
+### S4-01 · Lista de cuentas por cobrar con antigüedad · M · 4 h · ✅ hecha
 Como administrador
 quiero ver las órdenes con saldo y cuántos días llevan
 para saber a quién cobrar primero.
@@ -19,7 +19,7 @@ para saber a quién cobrar primero.
   - Dada una orden con saldo cero, cuando se revisa la lista, entonces no aparece.
   - Dada una fecha de orden futura o inválida, cuando se calcula, entonces no muestra días absurdos.
 
-### S4-02 · Registrar el pago desde la lista · S · 2 h
+### S4-02 · Registrar el pago desde la lista · S · 2 h · ✅ hecha
 Como cajero
 quiero registrar el pago del saldo desde la lista
 para cobrar sin buscar la orden.
@@ -27,7 +27,7 @@ para cobrar sin buscar la orden.
 - **Criterios de aceptación:**
   - Dado un saldo, cuando se registra un pago, entonces usa `RegisterPayment`, se atribuye al usuario activo y actualiza el saldo.
 
-### S4-03 · Recordatorio por WhatsApp · S · 2 h
+### S4-03 · Recordatorio por WhatsApp · S · 2 h · ✅ hecha
 Como administrador
 quiero enviar un recordatorio amable al cliente
 para cobrar sin llamar por teléfono.
@@ -85,14 +85,14 @@ para saber qué hay en producción.
 - **Criterios de aceptación:**
   - Dados pagos de varios cajeros, cuando se pide hoy, la semana y el mes, entonces suma por cajero al centavo.
 
-### S4-10 · Cobros por método de pago · S · 2 h
+### S4-10 · Cobros por método de pago · S · 2 h · ✅ hecha
 - **Requerimientos:** RF-M7-06 · **Reglas:** RN-10
 - **Criterios de aceptación:**
   - Dados pagos en efectivo y transferencia, cuando se pide un periodo, entonces separa por método al centavo.
 
 ## Legal
 
-### S4-11 · Términos del servicio y enlaces del aviso en los documentos · M · 4 h
+### S4-11 · Términos del servicio y enlaces del aviso en los documentos · M · 4 h · ✅ hecha
 Como cliente final
 quiero ver el aviso de privacidad y los términos en mis documentos
 para saber qué acepto.
@@ -101,7 +101,7 @@ para saber qué acepto.
   - Dado un administrador, cuando edita los términos, entonces se crea una versión con fecha.
   - Dados cotizaciones, comprobantes y portal de autofacturación, cuando se generan, entonces enlazan el aviso y muestran los términos vigentes.
 
-### S4-12 · Derechos sobre datos y declaración del PAC · S · 2 h
+### S4-12 · Derechos sobre datos y declaración del PAC · S · 2 h · ✅ hecha
 - **Requerimientos:** RF-M9-04, RF-M9-05, RNF-17 · **Pendientes:** PD-12
 - **Criterios de aceptación:**
   - Dado el aviso, cuando se muestra, entonces tiene un canal visible (correo o WhatsApp del negocio) para ejercer derechos.
@@ -109,7 +109,7 @@ para saber qué acepto.
 
 ## Facturación
 
-### S4-13 · Puerto de facturación y adaptador simulado · L · 8 h
+### S4-13 · Puerto de facturación y adaptador simulado · L · 8 h · ✅ hecha
 Como Juanito (desarrollador)
 quiero el contrato de facturación con un adaptador simulado
 para construir todo el flujo sin depender del PAC.
@@ -137,7 +137,7 @@ para que el cambio final no rompa nada.
   - Dado el entorno de pruebas del PAC, cuando corre la batería de contrato, entonces la pasa igual que el simulado.
   - Dada la tolerancia de centavos del PAC, cuando se verifica con casos de oro, entonces se resuelve R12 y se actualiza ADR-0011 si hay que ajustar.
 
-### S4-16 · Facturar desde el sistema (camino A) · L · 8 h  · ⛔ PD-28
+### S4-16 · Facturar desde el sistema (camino A) · L · 8 h  · ⛔ PD-28 · ✅ construida
 Como administrador
 quiero facturar una venta u orden liquidada en segundos
 para no depender de un contador cada vez.
@@ -149,13 +149,13 @@ para no depender de un contador cada vez.
   - Dados totales, cuando se calculan, entonces usan el mismo módulo de dinero e IVA que el ticket [RN-07].
   - Dada la factura, cuando se pide, entonces se puede reenviar por correo o WhatsApp.
 
-### S4-17 · Permisos para facturar y folio de factura · S · 2 h
+### S4-17 · Permisos para facturar y folio de factura · S · 2 h · ✅ hecha
 - **Requerimientos:** RF-M10-08 · **Reglas:** RN-15, RN-19
 - **Criterios de aceptación:**
   - Dado un administrador, cuando factura, entonces procede; un cajero solo con autorización de un administrador por PIN.
   - Dada la factura, cuando se crea, entonces lleva folio `F-AAAA-0001`.
 
-### S4-18 · Portal `/factura`: validaciones y protecciones · L · 8 h
+### S4-18 · Portal `/factura`: validaciones y protecciones · L · 8 h · ✅ hecha
 Como cliente final
 quiero entrar con el QR de mi ticket y ver solo lo mío
 para facturarme sin ayuda.
@@ -168,7 +168,7 @@ para facturarme sin ayuda.
   - Dado el portal, cuando recibe tráfico automatizado, entonces una verificación ligera lo frena.
   - Dado el portal, cuando se llama a la base, entonces solo pasa por funciones del servidor, nunca por tablas directas.
 
-### S4-19 · Portal `/factura`: formulario, resultado y diseño para todos · L · 8 h  · `tablet`
+### S4-19 · Portal `/factura`: formulario, resultado y diseño para todos · L · 8 h  · `tablet` · ✅ hecha
 Como cliente final
 quiero capturar mis datos fiscales y descargar mi factura
 para terminar en pocos pasos.
@@ -180,7 +180,7 @@ para terminar en pocos pasos.
   - Dada la factura timbrada, cuando termina, entonces ofrece PDF y XML y envío por correo si se captura.
   - *(manual)* Probar con una persona mayor o poco familiarizada con la tecnología [R11].
 
-### S4-20 · Idempotencia, reintentos y plazos · M · 4 h  · ⛔ PD-09
+### S4-20 · Idempotencia, reintentos y plazos · M · 4 h  · ⛔ PD-09 · ✅ construida
 Como administrador
 quiero que un PAC lento no duplique timbres y que lo fuera de plazo se explique con amabilidad
 para evitar problemas fiscales.
@@ -191,7 +191,7 @@ para evitar problemas fiscales.
   - Dado un folio fuera del último día del mes, cuando se intenta, entonces el portal explica con amabilidad que se pida al negocio; un administrador sí puede facturar.
   - Dado un documento emitido sin conexión que aún no llega al servidor, cuando se intenta, entonces dice que aún no está disponible.
 
-### S4-21 · Tratamiento de anticipos y cancelación de CFDI · M · 4 h  · ⛔ PD-27
+### S4-21 · Tratamiento de anticipos y cancelación de CFDI · M · 4 h  · ⛔ PD-27 · ✅ construida
 Como administrador
 quiero cancelar una factura con los motivos del SAT y que los anticipos se traten como indique el contador
 para cumplir con lo fiscal.
@@ -200,7 +200,7 @@ para cumplir con lo fiscal.
   - Dado el ajuste de anticipos, cuando está en la opción (a), entonces se emite un solo CFDI por el total al liquidar; la opción (b) no se construye.
   - Dado un administrador, cuando cancela con un motivo del SAT, entonces queda en bitácora; un cajero no puede.
 
-### S4-22 · Timbres y factura en el historial · S · 2 h  · ⛔ PD-26
+### S4-22 · Timbres y factura en el historial · S · 2 h  · ⛔ PD-26 · ✅ construida
 - **Requerimientos:** RF-M10-20, RF-M10-21, RF-M5-02 · **Pendientes:** PD-26 (límite anual configurable)
 - **Criterios de aceptación:**
   - Dado el límite configurable, cuando se usa el 80 %, entonces el panel avisa.
@@ -208,7 +208,7 @@ para cumplir con lo fiscal.
 
 ## Experiencia, preparación de producción y documentos
 
-### S4-23 · Primeros pasos y "¿Por dónde empiezo?" · M · 4 h  · `tablet`
+### S4-23 · Primeros pasos y "¿Por dónde empiezo?" · M · 4 h  · `tablet` · ✅ hecha (como U8)
 Como administrador
 quiero una guía en el primer ingreso y un botón fijo de ayuda
 para no perderme al empezar.
@@ -218,7 +218,7 @@ para no perderme al empezar.
   - Dado el botón "¿Por dónde empiezo?", cuando se toca, entonces vuelve a abrir la guía.
   - Dada una sección que depende de otra, cuando se abre, entonces muestra un aviso cerrable.
 
-### S4-24 · Panel de inicio con contenido por rol · M · 4 h  · ⛔ PD-31
+### S4-24 · Panel de inicio con contenido por rol · M · 4 h  · ⛔ PD-31 · ✅ construida (como U8); el contenido por rol espera a PD-31
 Como administrador
 quiero un panel de inicio con lo importante del día
 para ver cómo va el negocio al entrar.
@@ -240,36 +240,36 @@ para ver cómo va el negocio al entrar.
   - Dados los proyectos de producción en planes de pago, cuando se crean, entonces están separados de pruebas y con sus variables solo en los paneles.
   - Dadas las migraciones, cuando se aplican desde cero en producción, entonces terminan sin errores y sin datos de prueba.
 
-### S4-27 · Respaldos con 30 días de historial · M · 4 h  · ⛔ PD-32
+### S4-27 · Respaldos con 30 días de historial · M · 4 h  · ⛔ PD-32 · ✅ construida; falta activarla con los secretos de producción (PD-32)
 - **Requerimientos:** RNF-21 · **Pendientes:** PD-32 (retención del plan de Supabase)
 - **Criterios de aceptación:**
   - Dada la retención del plan, cuando se verifica, entonces cubre 30 días o hay exportación nocturna a almacenamiento externo.
 
-### S4-28 · Registro de errores y monitoreo sin datos personales · M · 4 h
+### S4-28 · Registro de errores y monitoreo sin datos personales · M · 4 h · ✅ hecha
 - **Requerimientos:** RNF-34
 - **Criterios de aceptación:**
   - Dado un error de cliente o servidor, cuando se registra, entonces no contiene datos personales.
   - Dada una caída del servicio, cuando ocurre, entonces el monitoreo avisa a Juanito.
 
-### S4-29 · Manual de usuario y manual de soporte (borrador) · L · 8 h
+### S4-29 · Manual de usuario y manual de soporte (borrador) · L · 8 h · ✅ hecha
 - **Requerimientos:** RNF-29 · **Reglas:** DC §13
 - **Criterios de aceptación:**
   - Dado el manual de usuario, cuando se lee, entonces tiene capturas con datos inventados y lenguaje del oficio.
   - Dado el manual de soporte, cuando se lee, entonces cubre despliegue, restauración y atención a solicitudes de datos.
 
-### S4-30 · Plan de pruebas de aceptación con el cliente · S · 2 h
+### S4-30 · Plan de pruebas de aceptación con el cliente · S · 2 h · ✅ hecha
 - **Criterios de aceptación:**
   - Dado el plan, cuando se escribe, entonces enlista escenarios del día a día (cotizar sin señal, cobrar un anticipo, entregar, hacer el corte, facturar) que Luis ejecuta y firma.
 
 ## Aceptación y cierre
 
-### S4-31 · Aceptación E5 y E6 (facturación) · M · 4 h  · ⏸ en pausa [ADR-0039]
+### S4-31 · Aceptación E5 y E6 (facturación) · M · 4 h  · ⏸ en pausa [ADR-0039] · ✅ construida
 - **Reglas:** E5, E6 · **Pendientes:** PD-05 (contra el entorno de pruebas del PAC)
 - **Criterios de aceptación:**
   - Dado un folio liquidado, cuando se autofactura, entonces se genera la factura de prueba; uno ya facturado, uno fuera de plazo y uno con código incorrecto se rechazan con mensajes claros y sin duplicar timbres.
   - Dado un cajero sin permiso, cuando intenta facturar, entonces no puede; con autorización, sí.
 
-### S4-32 · Aceptación E7 y E8 (reportes y permisos) · M · 4 h
+### S4-32 · Aceptación E7 y E8 (reportes y permisos) · M · 4 h · ✅ hecha
 - **Reglas:** E7, E8
 - **Criterios de aceptación:**
   - Dados datos armados a mano, cuando se piden los reportes, entonces coinciden al centavo, con día, semana y mes bien delimitados.
@@ -292,7 +292,7 @@ para ver cómo va el negocio al entrar.
 
 ## Cambios del 19 de noviembre
 
-### S4-35 · Interruptor `FACTURACION`, apagado por omisión · M · 4 h  · [ADR-0039]
+### S4-35 · Interruptor `FACTURACION`, apagado por omisión · M · 4 h  · [ADR-0039] · ✅ hecha
 Como administrador
 quiero que la facturación quede apagada hasta que ZAMMIR tenga en orden sus datos fiscales
 para que el sistema no muestre nada que todavía no puede hacer.
@@ -304,7 +304,7 @@ para que el sistema no muestre nada que todavía no puede hacer.
   - Dado el interruptor apagado, cuando se consultan los timbres, entonces no se muestran.
   - Dado el interruptor encendido en una prueba, cuando se abre cada pantalla, entonces todo lo anterior vuelve a funcionar igual que antes.
 
-### S4-36 · Comprobante en hoja tamaño carta con logo · L · 8 h  · `tablet` · PD-55 · [ADR-0040]
+### S4-36 · Comprobante en hoja tamaño carta con logo · L · 8 h  · `tablet` · PD-55 · [ADR-0040] · ✅ hecha
 Como cajero
 quiero un comprobante en hoja carta con el logo y el detalle de lo comprado
 para dárselo o enviárselo al cliente.
@@ -316,7 +316,7 @@ para dárselo o enviárselo al cliente.
   - Dado el comprobante, cuando se lee, entonces habla de usted y no usa palabras prohibidas del glosario.
   - *(manual)* Una hoja carta impresa en la impresora de Luis se ve completa, con logo y márgenes correctos.
 
-### S4-37 · "Enviar por WhatsApp" e "Imprimir" juntos · M · 4 h  · `tablet` · PD-54 · [ADR-0040]
+### S4-37 · "Enviar por WhatsApp" e "Imprimir" juntos · M · 4 h  · `tablet` · PD-54 · [ADR-0040] · ✅ hecha
 Como cajero
 quiero enviar el comprobante por WhatsApp e imprimirlo en cualquier venta
 para dárselo al cliente como él prefiera.
@@ -337,7 +337,7 @@ para no mantener lo que ya no se usa.
   - Dadas las pruebas que cubrían la impresora térmica, cuando se retiran, entonces la cobertura y los umbrales no bajan: se reemplazan por pruebas del comprobante carta.
   - Dada la compuerta común, cuando se corre, entonces está en verde.
 
-### S4-39 · Corte de caja en hoja tamaño carta · M · 4 h  · `tablet` · [ADR-0040]
+### S4-39 · Corte de caja en hoja tamaño carta · M · 4 h  · `tablet` · [ADR-0040] · ✅ hecha
 Como cajero
 quiero el resumen del corte de caja en una hoja carta
 para entregarlo o guardarlo, ahora que no hay ticket térmico.
