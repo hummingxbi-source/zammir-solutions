@@ -5,6 +5,7 @@ export * from './shared-kernel/result';
 export * from './modules/settings/application/feature-flags';
 export * from './modules/settings/application/in-memory-settings-repository';
 export * from './modules/settings/application/ports';
+export * from './modules/settings/application/aging-threshold';
 export * from './modules/settings/application/quote-conditions';
 export * from './modules/settings/domain/business-settings';
 export * from './modules/identity/application/in-memory-admin-auth';

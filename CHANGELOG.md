@@ -65,6 +65,9 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). L
 
 ## [Sin publicar]
 
+### Agregado
+- **Configuración: días para marcar una cuenta por cobrar como atrasada** (PD-33). Solo el administrador lo cambia (de 1 a 365; 10 por omisión). Lo usan Cuentas por cobrar, Reportes y el panel de inicio, y la tablet recuerda el último valor para funcionar sin internet.
+
 ### Cambiado
 - **Reportes: las ventas se comparan contra el mismo tramo del periodo anterior** (PP-13, aprobada): a mitad de mes se compara con los mismos días del mes pasado, no con el mes completo. El periodo completo sigue disponible en el dominio como opción.
 - **Se retira la impresora térmica** [ADR-0040]: ya no existen el ticket de 80 mm, la conexión Bluetooth (ESC/POS), el panel de impresora ni sus pruebas; todo lo que se imprime sale en hoja carta con la impresión de Android. En Mostrador desaparece el panel "Impresora de tickets" y la descripción del panel de inicio habla de enviar o imprimir el comprobante. La palabra "ticket" se conserva solo para la venta en curso. Pendiente para cuando se reactive la facturación: el portal aún dice "Folio de su ticket" y debería decir "comprobante".

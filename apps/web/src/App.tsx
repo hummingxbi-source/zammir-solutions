@@ -8,6 +8,7 @@ import type {
   ImportCatalogDeps,
   LegalDeps,
   ManageCustomersDeps,
+  AgingThresholdStore,
   QuoteConditionsStore,
   RegisterTabletDeps,
   SignInWithPinDeps,
@@ -31,6 +32,7 @@ import {
   type PrepararCuentas,
 } from './modules/receivables/ui/CuentasEnLaTablet';
 import { CondicionesDeCotizacion } from './modules/quotes/ui/CondicionesDeCotizacion';
+import { UmbralDeAtraso } from './modules/receivables/ui/UmbralDeAtraso';
 import { AvisoDePrivacidad, TerminosDelServicio } from './modules/legal/ui/AvisoDePrivacidad';
 import { Facturas } from './modules/billing/ui/Facturas';
 import { PortalDeFactura } from './modules/billing/ui/PortalDeFactura';
@@ -86,6 +88,10 @@ export interface AppProps {
   readonly contactoPublico?: (() => Promise<ContactoPublico | null>) | null;
   /** Condiciones que salen en cada cotización; aparecen en Configuración. */
   readonly condiciones?: QuoteConditionsStore | null;
+  /** Días para marcar una cuenta por cobrar como atrasada; aparece en Configuración [PD-33]. */
+  readonly umbralDeAtraso?: AgingThresholdStore | null;
+  /** Avisa el umbral guardado para que las pantallas lo usen de inmediato. */
+  readonly alCambiarElUmbral?: (dias: number) => void;
   /** Bitácora consultable; aparece en Usuarios. */
   readonly bitacora?: BitacoraProps | null;
   /** Conexión de esta tablet con un código de registro; abre en `/conectar`. */
@@ -131,6 +137,8 @@ export function App({
   exportacion = null,
   compartirFacturas = null,
   condiciones = null,
+  umbralDeAtraso = null,
+  alCambiarElUmbral,
   bitacora = null,
   conectarTablet = null,
   entradaConPin = null,
@@ -217,6 +225,14 @@ export function App({
                       <TerminosDelServicio deps={legal} />
                       {condiciones !== null ? (
                         <CondicionesDeCotizacion store={condiciones} />
+                      ) : null}
+                      {umbralDeAtraso !== null ? (
+                        <UmbralDeAtraso
+                          store={umbralDeAtraso}
+                          {...(alCambiarElUmbral === undefined
+                            ? {}
+                            : { alGuardar: alCambiarElUmbral })}
+                        />
                       ) : null}
                       {exportacion !== null ? <ExportarDatos {...exportacion} /> : null}
                     </section>

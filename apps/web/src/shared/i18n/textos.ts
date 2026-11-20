@@ -1580,6 +1580,34 @@ export const textos = {
       },
     },
   },
+  umbralDeAtraso: {
+    titulo: 'Cuentas por cobrar atrasadas',
+    descripcion:
+      'Días desde la fecha de la orden a partir de los cuales una cuenta se resalta como atrasada. Se usa en Cuentas por cobrar, en Reportes y en el panel de inicio.',
+    cargando: 'Cargando…',
+    campo: 'Días para marcar una cuenta como atrasada',
+    guardar: 'Guardar días',
+    guardando: 'Guardando…',
+    guardado: 'Listo. Las cuentas se resaltan con los días nuevos.',
+    errores: {
+      NOT_AUTHORIZED: {
+        mensaje: 'Tu cuenta no puede cambiar los días.',
+        queHacer: 'Entra con una cuenta de administrador.',
+      },
+      INVALID: {
+        mensaje: 'Los días no valen.',
+        queHacer: 'Escribe un número entero de 1 a 365.',
+      },
+      SETTINGS_INVALID: {
+        mensaje: 'Los días guardados no se pueden leer.',
+        queHacer: 'Avisa a soporte.',
+      },
+      SETTINGS_UNAVAILABLE: {
+        mensaje: 'No hay conexión con el servidor.',
+        queHacer: 'Conéctate a internet e intenta de nuevo.',
+      },
+    },
+  },
   clientes: {
     lista: 'Tus clientes',
     vacioTitulo: 'Aún no hay a quién mostrar',
