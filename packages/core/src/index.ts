@@ -90,6 +90,8 @@ export * from './modules/orders/application/reconcile-orders';
 export * from './modules/orders/application/replica-documents';
 export * from './modules/documents/domain/work-order-document';
 export * from './modules/documents/domain/sale-document';
+export * from './modules/documents/domain/summary-sheet';
+export * from './modules/documents/domain/shift-cut-sheet';
 export * from './modules/orders/application/order-photos';
 export * from './modules/orders/domain/order-board';
 export * from './modules/counter/domain/counter-sale';

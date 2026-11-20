@@ -347,3 +347,5 @@ para entregarlo o guardarlo, ahora que no hay ticket térmico.
   - Dados los importes, cuando se imprimen, entonces coinciden al centavo con los de la pantalla.
   - Dada la hoja, cuando se envía por WhatsApp o se imprime, entonces usa los mismos botones que el comprobante [S4-37].
   - Dado el turno sin cerrar, cuando se pide el resumen, entonces no se genera.
+  - Dado un turno ya cerrado en la tabla de turnos, cuando se toca "Ver corte", entonces se abre el mismo resumen con "Enviar por WhatsApp" e "Imprimir" *(acordado el 2026-11-19)*.
+  - Fuera de esta historia: el consolidado del día (nivel 2, administradores) no se imprime por ahora.

@@ -7,7 +7,7 @@ export interface OpcionesDeHtml {
   readonly rotuloDeCopia: string;
 }
 
-function esc(texto: string): string {
+export function esc(texto: string): string {
   return texto
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
@@ -15,7 +15,7 @@ function esc(texto: string): string {
     .replaceAll('"', '&quot;');
 }
 
-function aBase64(bytes: Uint8Array): string {
+export function aBase64(bytes: Uint8Array): string {
   let texto = '';
   const trozo = 0x8000;
   for (let i = 0; i < bytes.length; i += trozo) {
@@ -42,7 +42,7 @@ function qrSvg(matriz: readonly (readonly boolean[])[]): string {
   return `<svg class="qr" viewBox="0 0 ${String(lado)} ${String(lado)}" shape-rendering="crispEdges" aria-hidden="true"><rect width="${String(lado)}" height="${String(lado)}" fill="#fff"/><path d="${cuadros}" fill="#000"/></svg>`;
 }
 
-const ESTILOS = `
+export const ESTILOS = `
 @page { size: letter; margin: 14mm; }
 * { box-sizing: border-box; }
 body { margin: 0; color: #000; font: 10pt/1.35 Helvetica, Arial, sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
