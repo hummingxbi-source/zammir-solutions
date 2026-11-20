@@ -19,6 +19,7 @@ import {
   type Authorization,
   type BusinessIdentity,
   type Customer,
+  type DocumentPrinter,
   type DocumentRenderer,
   type IssueQuoteDeps,
   type LengthUnit,
@@ -36,10 +37,11 @@ import { Aviso } from '../../../shared/ui/Aviso';
 import { Boton } from '../../../shared/ui/Boton';
 import { EncabezadoDePagina } from '../../../shared/ui/EncabezadoDePagina';
 import { EtiquetaDeEstado, type TonoDeEstado } from '../../../shared/ui/EtiquetaDeEstado';
-import { Icono } from '../../../shared/ui/Icono';
 import { Pestanas } from '../../../shared/ui/Pestanas';
 import { Tarjeta } from '../../../shared/ui/Tarjeta';
 import { Campo, CampoNumerico } from '../../../shared/ui/Campo';
+import { AccionesDelDocumento } from '../../documents/ui/AccionesDelDocumento';
+import { imprimirDocumento } from '../../documents/ui/imprimir-documento';
 import { DialogoDeDescuento, type AutorizacionDeAdministrador } from './DialogoDeDescuento';
 import { VistaPreviaDeCotizacion } from './VistaPreviaDeCotizacion';
 
@@ -55,6 +57,8 @@ export interface EditorDeCotizacionProps {
   readonly catalogo: ProductReader;
   readonly renderer: DocumentRenderer;
   readonly share: ShareService;
+  /** Impresión del dispositivo [ADR-0040]; sin ella, "Imprimir" explica que no se pudo. */
+  readonly impresora?: DocumentPrinter;
   readonly negocio: BusinessIdentity;
   readonly condicionesPorDefecto: string;
   readonly legal?: DocumentLegal;
@@ -81,6 +85,7 @@ export function EditorDeCotizacion({
   catalogo,
   renderer,
   share,
+  impresora,
   negocio,
   condicionesPorDefecto,
   legal,
@@ -231,6 +236,17 @@ export function EditorDeCotizacion({
     }
     onCambio(r.value.quote);
     onAbrir(r.value.quote);
+  }
+
+  async function imprimir(): Promise<void> {
+    setAviso(null);
+    const falla = await imprimirDocumento(impresora, documento);
+    if (falla !== null) {
+      setError(falla);
+      return;
+    }
+    setError(null);
+    setAviso(textos.documento.acciones.impresionAbierta);
   }
 
   async function compartir(): Promise<void> {
@@ -502,10 +518,7 @@ export function EditorDeCotizacion({
               </div>
             ) : (
               <div className="formulario__acciones">
-                <Boton onClick={() => void compartir()}>
-                  <Icono nombre="whatsapp" />
-                  {t.acciones.compartir}
-                </Boton>
+                <AccionesDelDocumento onEnviar={compartir} onImprimir={imprimir} />
                 {quote.status === 'SENT' ? (
                   <>
                     <Boton

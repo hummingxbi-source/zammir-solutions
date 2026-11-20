@@ -2168,7 +2168,21 @@ export const textos = {
       atendio: 'Atendió: {name}',
       cambio: 'Cambio {amount}',
       mensajeWhatsApp: (nombre: string, folio: string, total: string): string =>
-        `Hola ${nombre}, le comparto el comprobante de su compra ${folio} por un total de ${total}. Gracias por su preferencia.`,
+        `Hola${nombre === '' ? '' : ` ${nombre}`}, le comparto el comprobante de su compra ${folio} por un total de ${total}. Gracias por su preferencia.`,
+    },
+    /** Enviar e imprimir un documento [S4-37, ADR-0040]: el envío por WhatsApp es la acción principal y imprimir
+     *  está siempre a su lado. */
+    acciones: {
+      grupo: 'Enviar o imprimir',
+      enviar: 'Enviar por WhatsApp',
+      imprimir: 'Imprimir',
+      preparando: 'Preparando el PDF…',
+      impresionAbierta: 'Se abrió la impresión. Elija su impresora.',
+      copia: 'COPIA',
+      errorDeImpresion: {
+        mensaje: 'No se pudo abrir la impresión.',
+        queHacer: 'Guarde el PDF o compártalo por WhatsApp, y vuelva a intentarlo después.',
+      },
     },
     folioProvisional: 'Folio provisional',
     /** Pie legal de cotizaciones y comprobantes [RF-M9-01, RF-M9-02, RF-M9-04]. */

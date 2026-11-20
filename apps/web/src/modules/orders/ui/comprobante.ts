@@ -4,8 +4,10 @@ import {
   shareQuote,
   type BusinessIdentity,
   type Customer,
+  type DocumentPrinter,
   type DocumentRenderer,
   type OrderDeps,
+  type QuoteDocument,
   type ReceiptLabels,
   type ShareService,
   type WorkOrder,
@@ -49,36 +51,61 @@ export interface ComprobanteDeps {
   readonly legal?: DocumentLegal;
 }
 
-/** Genera el comprobante de trabajo en la tablet y lo comparte por WhatsApp [RF-M3-06, ADR-0005].
+/** Arma el comprobante de trabajo y el mensaje de WhatsApp [RF-M3-06]. Lo usan por igual enviar e imprimir,
+ *  así lo que sale por WhatsApp y lo que sale en papel dicen lo mismo. */
+async function armarComprobante(
+  deps: ComprobanteDeps,
+  orden: WorkOrder,
+  cliente: Customer | null,
+): Promise<{ readonly documento: QuoteDocument; readonly mensaje: string }> {
+  const pagos = await deps.orderDeps.payments.listByTarget(orden.id);
+  const garantia = await outboxWarrantyReader(deps.orderDeps.outbox).get(orden.id);
+  const documento = buildWorkOrderDocument({
+    order: orden,
+    payments: pagos,
+    customer: { name: cliente?.name ?? '', phone: cliente?.phone ?? '0000000000' },
+    business: deps.negocio,
+    warranty: garantia,
+    conditions: deps.condiciones,
+    privacyNotice: deps.legal?.privacyNotice ?? textos.documento.avisoAbreviado,
+    terms: deps.legal?.terms ?? null,
+    selfInvoicingLegend: deps.leyendaDeAutofacturacion ?? c.leyendaPorOmision,
+    publicBaseUrl: deps.direccionBase,
+    qrMatrix: deps.qrMatrix,
+    autofacturacion: deps.autofacturacion,
+    labels: ETIQUETAS_DEL_COMPROBANTE,
+  });
+  const saldo = orden.totalCents - pagos.reduce((suma, p) => suma + p.amountCents, 0);
+  const mensaje = c.mensajeWhatsApp(
+    cliente?.name ?? '',
+    orden.folio ?? orden.tempFolio,
+    saldo === 0 ? (documento.receipt?.labels.settled.toLowerCase() ?? '') : formatearPesos(saldo),
+  );
+  return { documento, mensaje };
+}
+
+/** Genera el comprobante de trabajo en la tablet y lo comparte por WhatsApp [RF-M3-06, ADR-0040].
  *  Devuelve el código de error o `null` si salió bien. */
 export function compartirComprobante(
   deps: ComprobanteDeps,
 ): (orden: WorkOrder, cliente: Customer | null) => Promise<string | null> {
   return async (orden, cliente) => {
-    const pagos = await deps.orderDeps.payments.listByTarget(orden.id);
-    const garantia = await outboxWarrantyReader(deps.orderDeps.outbox).get(orden.id);
-    const documento = buildWorkOrderDocument({
-      order: orden,
-      payments: pagos,
-      customer: { name: cliente?.name ?? '', phone: cliente?.phone ?? '0000000000' },
-      business: deps.negocio,
-      warranty: garantia,
-      conditions: deps.condiciones,
-      privacyNotice: deps.legal?.privacyNotice ?? textos.documento.avisoAbreviado,
-      terms: deps.legal?.terms ?? null,
-      selfInvoicingLegend: deps.leyendaDeAutofacturacion ?? c.leyendaPorOmision,
-      publicBaseUrl: deps.direccionBase,
-      qrMatrix: deps.qrMatrix,
-      autofacturacion: deps.autofacturacion,
-      labels: ETIQUETAS_DEL_COMPROBANTE,
-    });
-    const saldo = orden.totalCents - pagos.reduce((suma, p) => suma + p.amountCents, 0);
-    const mensaje = c.mensajeWhatsApp(
-      cliente?.name ?? '',
-      orden.folio ?? orden.tempFolio,
-      saldo === 0 ? (documento.receipt?.labels.settled.toLowerCase() ?? '') : formatearPesos(saldo),
-    );
+    const { documento, mensaje } = await armarComprobante(deps, orden, cliente);
     const r = await shareQuote({ renderer: deps.renderer, share: deps.share }, documento, mensaje);
     return r.ok ? null : 'STORAGE_FAILED';
+  };
+}
+
+/** Abre la impresión del comprobante de trabajo [ADR-0040]. Devuelve el código de error o `null`. */
+export function imprimirComprobante(
+  deps: ComprobanteDeps & { readonly impresora: DocumentPrinter | undefined },
+): (orden: WorkOrder, cliente: Customer | null) => Promise<string | null> {
+  return async (orden, cliente) => {
+    const { documento } = await armarComprobante(deps, orden, cliente);
+    if (deps.impresora === undefined) {
+      return 'PRINT_UNAVAILABLE';
+    }
+    const r = await deps.impresora.print(documento);
+    return r.ok ? null : r.error.code;
   };
 }

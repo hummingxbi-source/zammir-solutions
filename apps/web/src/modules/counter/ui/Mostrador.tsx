@@ -13,8 +13,8 @@ import {
   parseLength,
   registerWorkOrderPayment,
   removeFromTicket,
-  saleTicket,
   searchProducts,
+  shareQuote,
   shiftCutTicket,
   setTicketQuantity,
   ticketTotals,
@@ -24,6 +24,8 @@ import {
   type CounterSale,
   type Customer,
   type CustomerId,
+  type DocumentPrinter,
+  type DocumentRenderer,
   type ManageCustomersDeps,
   type OrderDeps,
   type Payment,
@@ -31,7 +33,9 @@ import {
   type PriceRegistry,
   type ProductReader,
   type QuoteActor,
+  type QuoteDocument,
   type SellableProduct,
+  type ShareService,
   type Ticket,
   type WorkOrder,
 } from '@zammir/core';
@@ -39,10 +43,13 @@ import {
 import { textos } from '../../../shared/i18n/textos';
 import { Aviso } from '../../../shared/ui/Aviso';
 import { Boton } from '../../../shared/ui/Boton';
+import { AccionesDelDocumento } from '../../documents/ui/AccionesDelDocumento';
+import { imprimirDocumento } from '../../documents/ui/imprimir-documento';
+import { marcarComoImpresa, yaSeImprimio } from '../../documents/ui/registro-de-impresiones';
+import { comprobanteDeVenta, type ComprobanteDeVentaDeps } from './comprobante-de-venta';
 import { EncabezadoDePagina } from '../../../shared/ui/EncabezadoDePagina';
 import { EstadoVacio } from '../../../shared/ui/EstadoVacio';
 import { EtiquetaDeEstado } from '../../../shared/ui/EtiquetaDeEstado';
-import { Icono } from '../../../shared/ui/Icono';
 import { PanelDeIndicadores } from '../../../shared/ui/PanelDeIndicadores';
 import { Tarjeta } from '../../../shared/ui/Tarjeta';
 import { CampoNumerico } from '../../../shared/ui/Campo';
@@ -50,7 +57,7 @@ import { Campo } from '../../../shared/ui/Campo';
 import { formatearPesos } from '../../../shared/ui/formatos';
 import { DialogoDeAutorizacion } from '../../orders/ui/DialogoDeAutorizacion';
 import type { ImpresionDeTickets } from '../../printing/ui/impresion';
-import { mensajeDeImpresion, PanelDeImpresora } from '../../printing/ui/PanelDeImpresora';
+import { PanelDeImpresora } from '../../printing/ui/PanelDeImpresora';
 import { TurnoDeCaja, type Persona } from './TurnoDeCaja';
 import { DialogoDeCobro } from '../../orders/ui/DialogoDeCobro';
 import type { AutorizacionDeAdministrador } from '../../quotes/ui/DialogoDeDescuento';
@@ -59,6 +66,14 @@ const t = textos.mostrador;
 
 /** Medida máxima aceptada al capturar (10 m), igual que en el cotizador. */
 const MEDIDA_MAXIMA_MM = 10_000;
+
+/** Lo que el mostrador necesita para sacar el comprobante de una venta. */
+export interface ComprobanteDelMostrador {
+  readonly deps: ComprobanteDeVentaDeps;
+  readonly renderer: DocumentRenderer;
+  readonly share: ShareService;
+  readonly impresora?: DocumentPrinter;
+}
 
 export interface MostradorProps {
   readonly deps: CounterDeps;
@@ -76,6 +91,8 @@ export interface MostradorProps {
   readonly autorizacion: AutorizacionDeAdministrador;
   /** Impresora de tickets; sin ella no se ofrece imprimir [S3-20 a S3-24]. */
   readonly impresion?: ImpresionDeTickets;
+  /** Comprobante en hoja carta de una venta: enviarlo por WhatsApp o imprimirlo [S4-37, ADR-0040]. */
+  readonly comprobante?: ComprobanteDelMostrador;
   readonly onPorEnviar?: () => void;
   readonly alCambiarElEnvio?: (aviso: () => void) => () => void;
 }
@@ -289,35 +306,72 @@ export function Mostrador(props: MostradorProps): ReactElement {
     return null;
   }
 
-  /** Imprime el ticket de una venta; `copia` lo marca como reimpresión. La venta ya está guardada: si el
-   *  ticket no sale, se puede volver a imprimir desde Ventas de hoy. */
-  async function imprimirVenta(venta: CounterSale, copia: boolean): Promise<void> {
-    const impresion = props.impresion;
-    if (impresion === undefined) {
-      return;
+  /** Arma el comprobante en hoja carta de una venta con lo que hay en la tablet [RF-M4-04, ADR-0040]. */
+  function comprobanteDe(venta: CounterSale): QuoteDocument | null {
+    if (props.comprobante === undefined) {
+      return null;
     }
     const cliente = venta.customerId === null ? undefined : clientes.get(venta.customerId);
-    const documento = saleTicket({
-      business: impresion.business,
-      labels: textos.impresion.rotulos,
-      width: impresion.width,
-      reprint: copia,
-      sale: venta,
-      payments: pagos.filter((p) => p.targetType === 'COUNTER_SALE' && p.targetId === venta.id),
-      customerName: cliente?.name ?? null,
-      cashierName: props.personas.find((x) => x.id === venta.userId)?.name ?? persona.userId,
-      autofacturacion: impresion.autofacturacion,
-      selfInvoicingLegend: impresion.selfInvoicingLegend,
-      publicBaseUrl: impresion.publicBaseUrl,
+    return comprobanteDeVenta(props.comprobante.deps, {
+      venta,
+      pagos: pagos.filter((p) => p.targetType === 'COUNTER_SALE' && p.targetId === venta.id),
+      cliente: cliente ?? null,
+      cajero: props.personas.find((x) => x.id === venta.userId)?.name ?? '',
     });
-    const r = await impresion.imprimir(documento);
-    if ('error' in r) {
-      setAviso(null);
-      setError(mensajeDeImpresion(r.error));
-    } else {
-      setError(null);
-      setAviso(`${textos.impresion.impreso} · ${textos.impresion.impresoPor} ${r.via}`);
+  }
+
+  /** Manda el comprobante por WhatsApp: con el menú de compartir del dispositivo y, si no, con un enlace. */
+  async function enviarComprobante(idDeVenta: string): Promise<void> {
+    const venta = ventas.find((v) => v.id === idDeVenta);
+    const documento = venta === undefined ? null : comprobanteDe(venta);
+    if (venta === undefined || documento === null || props.comprobante === undefined) {
+      return;
     }
+    setAviso(textos.documento.acciones.preparando);
+    const cliente = venta.customerId === null ? undefined : clientes.get(venta.customerId);
+    const mensaje = textos.documento.venta.mensajeWhatsApp(
+      cliente?.name ?? '',
+      venta.folio ?? venta.tempFolio,
+      cobra(venta.totalCents),
+    );
+    const r = await shareQuote(
+      { renderer: props.comprobante.renderer, share: props.comprobante.share },
+      documento,
+      mensaje,
+    );
+    if (r.ok) {
+      setError(null);
+      setAviso(
+        r.value === 'SHARED'
+          ? textos.cotizador.acciones.compartida
+          : r.value === 'FALLBACK'
+            ? textos.cotizador.acciones.respaldo
+            : null,
+      );
+    } else {
+      setAviso(null);
+      setError(textos.documento.acciones.errorDeImpresion);
+    }
+  }
+
+  /** Abre la impresión del comprobante; la segunda vez que se imprime una venta sale marcada COPIA. */
+  async function imprimirComprobanteDeVenta(idDeVenta: string): Promise<void> {
+    const venta = ventas.find((v) => v.id === idDeVenta);
+    const documento = venta === undefined ? null : comprobanteDe(venta);
+    if (venta === undefined || documento === null) {
+      return;
+    }
+    setAviso(null);
+    const falla = await imprimirDocumento(props.comprobante?.impresora, documento, {
+      copia: yaSeImprimio(venta.id),
+    });
+    if (falla !== null) {
+      setError(falla);
+      return;
+    }
+    marcarComoImpresa(venta.id);
+    setError(null);
+    setAviso(textos.documento.acciones.impresionAbierta);
   }
 
   async function imprimirCorte(
@@ -391,19 +445,11 @@ export function Mostrador(props: MostradorProps): ReactElement {
             {t.cobrada.guardada}
             {ultima.cambio > 0 ? ` · ${t.cobrada.cambio} ${formatearPesos(ultima.cambio)}` : ''}
           </span>
-          {props.impresion !== undefined ? (
-            <Boton
-              variante="secundario"
-              onClick={() => {
-                const venta = ventas.find((v) => v.id === ultima.id);
-                if (venta !== undefined) {
-                  void imprimirVenta(venta, false);
-                }
-              }}
-            >
-              <Icono nombre="imprimir" />
-              {t.cobrada.imprimir}
-            </Boton>
+          {props.comprobante !== undefined ? (
+            <AccionesDelDocumento
+              onEnviar={() => enviarComprobante(ultima.id)}
+              onImprimir={() => imprimirComprobanteDeVenta(ultima.id)}
+            />
           ) : null}
         </div>
       ) : null}
@@ -727,15 +773,11 @@ export function Mostrador(props: MostradorProps): ReactElement {
                         />
                       </td>
                       <td className="tabla__acciones">
-                        {props.impresion !== undefined ? (
-                          <Boton
-                            variante="secundario"
-                            onClick={() => {
-                              void imprimirVenta(v, true);
-                            }}
-                          >
-                            {t.hoy.reimprimir}
-                          </Boton>
+                        {props.comprobante !== undefined ? (
+                          <AccionesDelDocumento
+                            onEnviar={() => enviarComprobante(v.id)}
+                            onImprimir={() => imprimirComprobanteDeVenta(v.id)}
+                          />
                         ) : null}
                         {v.status === 'COMPLETED' && dialogo === null ? (
                           <Boton

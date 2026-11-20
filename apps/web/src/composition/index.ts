@@ -114,7 +114,16 @@ import type { PrepararCotizador } from '../modules/quotes/ui/CotizadorEnLaTablet
 import { canvasImageCompressor } from '../modules/orders/infra/canvas-image-compressor';
 import { dexiePhotoStore } from '../modules/orders/infra/dexie-photo-store';
 import { supabasePhotoUploader } from '../modules/orders/infra/supabase-photo-uploader';
-import { compartirComprobante } from '../modules/orders/ui/comprobante';
+import {
+  compartirComprobante,
+  imprimirComprobante,
+  type ComprobanteDeps,
+} from '../modules/orders/ui/comprobante';
+import {
+  htmlDocumentPrinter,
+  imprimirHtmlDesdeElNavegador,
+} from '../modules/documents/infra/html-document-printer';
+import type { ComprobanteDeVentaDeps } from '../modules/counter/ui/comprobante-de-venta';
 import { qrMatrix } from '../modules/documents/infra/qr-matrix';
 import type { PrepararMostrador } from '../modules/counter/ui/MostradorEnLaTablet';
 import type { PrepararOrdenes } from '../modules/orders/ui/OrdenesEnLaTablet';
@@ -230,6 +239,11 @@ export interface EntornoSupabase {
   readonly turnstileSiteKey?: string | undefined;
   /** Si la facturación está activa (interruptor `FACTURACION`, apagado por omisión) [ADR-0039]. */
   readonly facturacion?: boolean | undefined;
+}
+
+/** La impresión de documentos del dispositivo: en Android, el servicio de impresión del sistema [ADR-0040]. */
+function impresoraDeDocumentos(): ReturnType<typeof htmlDocumentPrinter> {
+  return htmlDocumentPrinter(imprimirHtmlDesdeElNavegador(window), textos.documento.acciones.copia);
 }
 
 const registroDeReglas = createPriceRegistry(defaultRules);
@@ -493,6 +507,7 @@ function crearPreparadorDelCotizador(d: {
       },
       renderer: pdfLibRenderer(),
       share: webShareService(entornoDelNavegador()),
+      impresora: impresoraDeDocumentos(),
       negocio: await negocioConLogo({
         name: copia.business?.name ?? 'ZAMMIR (datos de prueba)',
         phone: copia.business?.phone ?? null,
@@ -565,6 +580,22 @@ function crearPreparadorDeOrdenes(d: {
         warrantyMonthsDefault: copia.orders.warrantyMonthsDefault,
       },
     };
+    const comprobanteDeps: ComprobanteDeps = {
+      orderDeps,
+      renderer: pdfLibRenderer(),
+      share: webShareService(entornoDelNavegador()),
+      negocio: await negocioConLogo({
+        name: copia.business?.name ?? 'ZAMMIR (datos de prueba)',
+        phone: copia.business?.phone ?? null,
+        address: copia.business?.address ?? null,
+      }),
+      condiciones: copia.quote?.conditionsText ?? '',
+      autofacturacion: d.autofacturacion,
+      leyendaDeAutofacturacion: copia.orders.selfInvoicingLegend,
+      direccionBase: copia.orders.publicBaseUrl,
+      qrMatrix,
+      legal: pieLegal(copia),
+    };
     return {
       deps: orderDeps,
       clientes: {
@@ -626,21 +657,10 @@ function crearPreparadorDeOrdenes(d: {
           return r.ok ? null : r.error.code;
         },
       },
-      onComprobante: compartirComprobante({
-        orderDeps,
-        renderer: pdfLibRenderer(),
-        share: webShareService(entornoDelNavegador()),
-        negocio: await negocioConLogo({
-          name: copia.business?.name ?? 'ZAMMIR (datos de prueba)',
-          phone: copia.business?.phone ?? null,
-          address: copia.business?.address ?? null,
-        }),
-        condiciones: copia.quote?.conditionsText ?? '',
-        autofacturacion: d.autofacturacion,
-        leyendaDeAutofacturacion: copia.orders.selfInvoicingLegend,
-        direccionBase: copia.orders.publicBaseUrl,
-        qrMatrix,
-        legal: pieLegal(copia),
+      onComprobante: compartirComprobante(comprobanteDeps),
+      onImprimirComprobante: imprimirComprobante({
+        ...comprobanteDeps,
+        impresora: impresoraDeDocumentos(),
       }),
       alCambiarElEnvio: (aviso: () => void) => d.envio.engine.subscribe(aviso),
       onPorEnviar: () => {
@@ -729,9 +749,29 @@ function crearPreparadorDelMostrador(d: {
         return r.ok ? { via: r.value.via } : { error: r.error.code };
       },
     };
+    const negocio = await negocioConLogo({
+      name: copia.business?.name ?? 'ZAMMIR (datos de prueba)',
+      phone: copia.business?.phone ?? null,
+      address: copia.business?.address ?? null,
+    });
+    const comprobanteDeVentaDeps: ComprobanteDeVentaDeps = {
+      negocio,
+      condiciones: copia.quote.conditionsText,
+      legal: pieLegal(copia),
+      autofacturacion: d.autofacturacion,
+      leyendaDeAutofacturacion: copia.orders.selfInvoicingLegend,
+      direccionBase: copia.orders.publicBaseUrl,
+      qrMatrix,
+    };
     return {
       cash,
       impresion,
+      comprobante: {
+        deps: comprobanteDeVentaDeps,
+        renderer: pdfLibRenderer(),
+        share: webShareService(entornoDelNavegador()),
+        impresora: impresoraDeDocumentos(),
+      },
       personas: personas
         .filter((u: AppUser) => u.isActive)
         .map((u: AppUser) => ({ id: u.id, name: u.name })),
