@@ -158,7 +158,6 @@ El aviso de privacidad vigente se edita en **Configuración** (cada edición cre
 |---|---|
 | Despliegue y variables de producción | Dominio y producción (PD-10, S4-26, S5-01) |
 | Aviso automático de caídas | Cuenta del monitoreo (PP-32) |
-| Volver a generar las capturas del manual de usuario con la interfaz nueva (hoja carta, Enviar por WhatsApp, Ver corte, Configuración); las de la venta registrada y el corte todavía muestran los botones anteriores | Supabase local con Docker (`pnpm manual:capturas`, ver `README.md`) |
 | Probar la impresión en la tablet con la impresora de Wi-Fi de Luis | Modelo de la impresora (PD-54) y la tablet (S5-05) |
 | Reintentos y purga programados | Mantenimiento programado (S4-26) |
 | Proveedor de timbrado y certificado | PD-04, PD-05, S4-15 |
