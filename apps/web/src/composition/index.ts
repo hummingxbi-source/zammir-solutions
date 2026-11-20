@@ -46,6 +46,7 @@ import {
   type CashDeps,
   type OrderDeps,
   type PhotoStore,
+  type AgingThresholdStore,
   type QuoteConditionsStore,
   type RegisterTabletDeps,
   type SignInWithPinDeps,
@@ -95,6 +96,7 @@ import {
 import type { ContactoPublico } from '../modules/legal/ui/PaginaLegalPublica';
 import { supabaseLegal } from '../modules/legal/infra/supabase-legal';
 import { supabaseQuoteConditions } from '../modules/settings/infra/supabase-quote-conditions';
+import { supabaseUmbralDeAtraso } from '../modules/settings/infra/supabase-umbral-de-atraso';
 import { pdfLibRenderer } from '../modules/documents/infra/pdf-lib-renderer';
 import { entornoDelNavegador, webShareService } from '../modules/documents/infra/web-share-service';
 import type { PrepararReportes } from '../modules/reports/ui/ReportesEnLaTablet';
@@ -170,6 +172,10 @@ export interface Composition {
   } | null;
   /** Condiciones de la cotización; `null` si no hay servidor configurado. */
   readonly condiciones: QuoteConditionsStore | null;
+  /** Días para marcar una cuenta por cobrar como atrasada; `null` si no hay servidor configurado [PD-33]. */
+  readonly umbralDeAtraso: AgingThresholdStore | null;
+  /** Guarda en la tablet el umbral vigente, para usarlo sin internet. */
+  readonly recordarUmbral: (dias: number) => void;
   /** Altas y correcciones de clientes; `null` si no hay servidor configurado. */
   readonly clientes: ManageCustomersDeps | null;
   /** Conexión de esta tablet con un código de registro; `null` si no hay servidor configurado. */
@@ -854,6 +860,37 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
             id,
           );
 
+  // PD-33: el umbral vive en el servidor y se recuerda en la tablet para que los reportes funcionen sin internet.
+  // Si nunca se ha leído, las pantallas usan el valor por omisión del dominio.
+  const umbralDeAtraso = cliente === null ? null : supabaseUmbralDeAtraso(cliente);
+  const claveDelUmbral = 'zammir.umbralDeAtraso';
+  const recordarUmbral = (dias: number): void => {
+    try {
+      window.localStorage.setItem(claveDelUmbral, String(dias));
+    } catch {
+      // Sin almacenamiento se vuelve a leer del servidor en la próxima pantalla.
+    }
+  };
+  const diasDeAtraso = async (): Promise<{ readonly diasDeAtraso?: number }> => {
+    if (umbralDeAtraso !== null) {
+      try {
+        const r = await umbralDeAtraso.read();
+        if (r.ok) {
+          recordarUmbral(r.value);
+          return { diasDeAtraso: r.value };
+        }
+      } catch {
+        // Sin conexión: se usa el que se recordó.
+      }
+    }
+    try {
+      const recordado = Number(window.localStorage.getItem(claveDelUmbral));
+      return Number.isInteger(recordado) && recordado > 0 ? { diasDeAtraso: recordado } : {};
+    } catch {
+      return {};
+    }
+  };
+
   const prepararCuentas: PrepararCuentas | null =
     prepararOrdenes === null
       ? null
@@ -867,6 +904,7 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
             deps: base.deps,
             clientes: base.clientes,
             negocio: copia?.business?.name ?? 'ZAMMIR (datos de prueba)',
+            ...(await diasDeAtraso()),
             abrirEnlace: (url: string) => {
               webShareService(entornoDelNavegador()).openLink(url);
             },
@@ -891,6 +929,7 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
             personas: base.personas,
             turnos: outboxCashShiftStore(envio.outbox),
             porEnviar: () => envio.outbox.pendingCount(),
+            ...(await diasDeAtraso()),
             ...(base.alCambiarElEnvio === undefined
               ? {}
               : { alCambiarElEnvio: base.alCambiarElEnvio }),
@@ -962,6 +1001,8 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
                 : entorno.turnstileSiteKey,
           },
     condiciones: cliente === null ? null : supabaseQuoteConditions(cliente),
+    umbralDeAtraso,
+    recordarUmbral,
     clientes:
       cliente === null
         ? null

@@ -87,6 +87,8 @@ createRoot(root).render(
             compartirFacturas={composition.compartirFacturas}
             portal={composition.portal}
             condiciones={composition.condiciones}
+            umbralDeAtraso={composition.umbralDeAtraso}
+            alCambiarElUmbral={composition.recordarUmbral}
             conectarTablet={composition.conectarTablet}
             entradaConPin={composition.entradaConPin}
             prepararCotizador={composition.prepararCotizador}
