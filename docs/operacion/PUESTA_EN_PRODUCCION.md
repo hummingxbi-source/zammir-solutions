@@ -2,6 +2,8 @@
 
 > Guía para crear los proyectos de **pruebas** y **producción** y dejarlos conectados: Supabase (base de datos y funciones), Vercel (la aplicación), Cloudflare (dominio) y GitHub (despliegue y respaldos). Parte de [`ENTORNOS.md`](../arquitectura/ENTORNOS.md) y de [ADR-0003]. Las cuentas son **empresariales** y el código es de la empresa [ADR-0010].
 >
+> El **orden de trabajo** (qué se hace primero, quién y cómo se sabe que quedó) está en [`PLAN_DE_PRODUCCION.md`](PLAN_DE_PRODUCCION.md); esta guía trae el detalle de cada panel.
+>
 > **Regla de oro:** las llaves y contraseñas se escriben **solo en los paneles** (Vercel, Supabase, GitHub). Nunca en el repositorio, en un chat ni en un documento.
 
 ## Resumen: qué se crea y cómo se conecta
