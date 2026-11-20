@@ -55,7 +55,7 @@ Se repitió la revisión sobre `main` después de los cambios de las últimas do
 | Página de impresión HTML (comprobante y corte) [ADR-0040] | Todo texto que viene de datos (cliente, conceptos, notas) pasa por escape antes de entrar a la página; la página se arma en un marco oculto del mismo origen. | Cumple. Hay pruebas con `<script>` en el nombre del cliente (`documento-html.test.ts`, `hoja-html.test.ts`). |
 | Interruptor `FACTURACION` apagado [ADR-0039] | Las funciones públicas del portal (`consultar-`, `solicitar-` y `descargar-factura`) responden 404 si el interruptor está apagado. | Mejora: con la facturación en pausa **no hay superficie pública** que atacar. |
 | Umbral de antigüedad en Configuración | Se guarda en `business_settings` con la política existente: solo administradores cambian el valor. La tablet recuerda el número en `localStorage` (no es un dato personal ni un secreto). | Cumple; la prueba de integración confirma que un cajero no lo cambia. |
-| Registro de impresiones (marca COPIA) | Solo guarda folios y fechas en `localStorage`, sin datos de clientes. | Cumple. |
+| Registro de impresiones (marca COPIA) | Solo guarda identificadores de documentos ya impresos en `localStorage`, sin datos de clientes. | Cumple. |
 
 **Sigue pendiente:** la `Content-Security-Policy` (`vercel.json` ya trae `X-Content-Type-Options`, `Referrer-Policy` y `X-Frame-Options`, pero no la política de contenido; definirla junto con el despliegue de producción y probarla en la tablet, PP-33), la verificación en dos pasos de las cuentas de administrador y el hallazgo de las huellas del PIN, sin cambios.
 
