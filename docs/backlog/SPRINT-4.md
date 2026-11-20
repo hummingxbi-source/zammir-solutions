@@ -37,7 +37,7 @@ para cobrar sin llamar por teléfono.
 
 ## Reportes
 
-### S4-04 · Base de reportes: periodos y permisos · M · 4 h
+### S4-04 · Base de reportes: periodos y permisos · M · 4 h · ✅ hecha
 Como administrador
 quiero que todos los reportes usen los mismos periodos en hora de México y sean legibles en celular
 para confiar en las cifras.
@@ -48,7 +48,7 @@ para confiar en las cifras.
   - Dada la pantalla de ventas, cuando se muestra, entonces explica que "ventas" es efectivo recibido.
   - Dado un celular, cuando se abren los reportes, entonces se leen sin desplazamiento horizontal.
 
-### S4-05 · Ventas del día, semana y mes con comparativo · M · 4 h
+### S4-05 · Ventas del día, semana y mes con comparativo · M · 4 h · ✅ hecha
 Como administrador
 quiero ver mis ventas contra el periodo anterior
 para saber si voy mejor o peor.
@@ -59,7 +59,7 @@ para saber si voy mejor o peor.
   - Dado un periodo anterior en cero, cuando se compara, entonces muestra un texto claro y no un porcentaje infinito (se documenta aquí el texto).
   - Dada la aprobación de PP-13, cuando se decida, entonces se compara el mismo tramo del periodo anterior; sin ella, contra el periodo completo.
 
-### S4-06 · Productos más vendidos · S · 2 h
+### S4-06 · Productos más vendidos · S · 2 h · ✅ hecha
 Como administrador
 quiero saber qué se vende más
 para surtirme y ofrecer mejor.
@@ -67,7 +67,7 @@ para surtirme y ofrecer mejor.
 - **Criterios de aceptación:**
   - Dados productos vendidos en la semana y el mes, cuando se pide el reporte, entonces los ordena por importe y por cantidad.
 
-### S4-07 · Trabajos pendientes por estatus · S · 2 h
+### S4-07 · Trabajos pendientes por estatus · S · 2 h · ✅ hecha
 Como administrador
 quiero ver cuántos trabajos hay en cada estatus y su valor
 para saber qué hay en producción.
@@ -75,12 +75,12 @@ para saber qué hay en producción.
 - **Criterios de aceptación:**
   - Dadas órdenes en cada estatus, cuando se pide el reporte, entonces da conteo y valor por estatus.
 
-### S4-08 · Cuentas por cobrar con antigüedad (reporte) · S · 2 h
+### S4-08 · Cuentas por cobrar con antigüedad (reporte) · S · 2 h · ✅ hecha
 - **Requerimientos:** RF-M7-04 · **Pendientes:** PD-33
 - **Criterios de aceptación:**
   - Dadas cuentas con distinta antigüedad, cuando se pide el reporte, entonces las agrupa y resalta según el umbral configurado.
 
-### S4-09 · Cobros por cajero · S · 2 h
+### S4-09 · Cobros por cajero · S · 2 h · ✅ hecha
 - **Requerimientos:** RF-M7-05 · **Reglas:** RN-11
 - **Criterios de aceptación:**
   - Dados pagos de varios cajeros, cuando se pide hoy, la semana y el mes, entonces suma por cajero al centavo.

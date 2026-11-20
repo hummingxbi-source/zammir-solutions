@@ -51,7 +51,8 @@ export interface SalesPeriodReport {
 }
 
 /** "Ventas" es el efectivo recibido: ventas de mostrador más pagos de órdenes, en el periodo (RN-20, PD-08).
- *  Cada periodo se compara contra el anterior [RF-M7-01]. */
+ *  Cada periodo en curso se compara contra el mismo tramo del anterior (PP-13): a mitad de mes, los primeros días
+ *  del mes pasado, no el mes completo [RF-M7-01]. */
 export function salesReport(entrada: {
   readonly payments: readonly PagoDeReporte[];
   readonly sales: readonly Pick<CounterSale, 'id' | 'status'>[];
@@ -62,7 +63,7 @@ export function salesReport(entrada: {
   const hoy = mexicoDate(entrada.now);
   const hacer = (kind: PeriodKind): SalesPeriodReport => {
     const period = periodOf(entrada.now, kind);
-    const previous = comparisonPeriod(period, hoy, entrada.mode ?? 'FULL_PERIOD');
+    const previous = comparisonPeriod(period, hoy, entrada.mode ?? 'SAME_SPAN');
     return {
       period,
       previous,
