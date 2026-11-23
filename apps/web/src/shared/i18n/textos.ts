@@ -171,6 +171,86 @@ export const textos = {
       configuracion: 'Condiciones, aviso de privacidad y más.',
     },
   },
+  /** Recorrido guiado por todo el sistema [RF-UX-04, ADR-0042]. */
+  recorrido: {
+    boton: 'Recorrido guiado',
+    dialogo: 'Recorrido guiado',
+    paso: (n: number, total: number): string => `Paso ${String(n)} de ${String(total)}`,
+    empezar: 'Empezar',
+    siguiente: 'Siguiente',
+    anterior: 'Anterior',
+    terminar: 'Terminar',
+    saltar: 'Saltar el recorrido',
+    salir: 'Salir del recorrido',
+    ayudaTeclado: 'Usa las flechas para avanzar o regresar, y Escape para salir.',
+    flujo: (n: number, total: number): string =>
+      `Flujo de trabajo · ${String(n)} de ${String(total)}`,
+    administracion: 'Administración',
+    bienvenida: {
+      titulo: 'Bienvenido a ZAMMIR',
+      texto:
+        'En un par de minutos te enseño cómo se entra, qué hace cada sección y dónde pedir ayuda. Puedes saltarlo y volver a verlo cuando quieras desde la barra.',
+    },
+    formas: {
+      titulo: 'Tres formas de entrar',
+      texto:
+        'La tablet se conecta una sola vez, con un código que genera un administrador. Cada persona entra todos los días con su nombre y su PIN, aunque no haya internet. El administrador configura desde la computadora con su correo y su contraseña.',
+    },
+    inicio: {
+      titulo: 'Panel de inicio',
+      texto:
+        'Tu punto de partida: cómo va el día, lo que te deben, lo que falta por enviar y los primeros pasos. Para volver aquí toca este botón o el logo.',
+    },
+    secciones: {
+      catalogo:
+        'Tus productos con sus precios, ya con IVA. El cotizador y el mostrador usan estos precios, por eso se revisa primero.',
+      cotizador:
+        'Arma la cotización con el cliente enfrente, aunque no haya internet. Al emitirla lleva folio y se envía en PDF por WhatsApp.',
+      ordenes:
+        'Cuando el cliente acepta, la cotización se vuelve orden de trabajo: anticipo, fabricación, instalación y entrega, con su saldo siempre a la vista.',
+      mostrador:
+        'Ventas al momento, como herrajes o piezas: cobras en efectivo o transferencia, envías el comprobante y al cerrar tu turno haces el corte de caja.',
+      reportes:
+        'Para administradores: ventas del día, la semana y el mes contra el periodo anterior, lo más vendido, la producción y los cobros por persona.',
+      clientes: 'Tus clientes y su historial: cotizaciones, trabajos, pagos y garantías.',
+      'cuentas-por-cobrar':
+        'Lo que te deben de cada orden y desde cuándo. Desde aquí registras el pago o mandas un recordatorio amable por WhatsApp.',
+      facturas: 'Factura las ventas y las órdenes que ya están liquidadas.',
+      usuarios:
+        'Aquí se dan de alta las personas con su rol y su PIN, y se generan los códigos para conectar cada tablet.',
+      configuracion:
+        'Las condiciones de la cotización, los días para marcar una cuenta como atrasada, el aviso de privacidad, los términos y la exportación de tus datos.',
+    },
+    conexion: {
+      titulo: 'Con o sin internet',
+      texto:
+        'Todo lo que capturas se guarda primero en la tablet y sale solo cuando hay conexión. Si falta internet o hay algo por enviar, aparece una franja arriba. No borres nada: se envía solo.',
+    },
+    persona: {
+      titulo: '¿Quién usa la tablet?',
+      texto:
+        'Aquí ves quién está trabajando. Al terminar, toca Cambiar de usuario para que la siguiente persona entre con su PIN. Lo que estabas haciendo no se pierde.',
+    },
+    cuenta: {
+      titulo: 'Entrada del administrador',
+      texto:
+        'Aquí entra el administrador con su correo y su contraseña para configurar, y aquí mismo sale al terminar.',
+    },
+    porDonde: {
+      titulo: '¿No sabes qué sigue?',
+      texto: 'Toca ¿Por dónde empiezo? y te dice cuál es el siguiente paso del trabajo.',
+    },
+    repetir: {
+      titulo: 'Vuelve cuando quieras',
+      texto:
+        'Este botón de la barra repite el recorrido completo. Úsalo cuando tengas una duda o para enseñarle el sistema a alguien nuevo.',
+    },
+    final: {
+      titulo: '¡Listo!',
+      texto:
+        'Ya conoces el sistema. Empieza por el Catálogo y, si te atoras, toca ¿Por dónde empiezo? o vuelve a este recorrido.',
+    },
+  },
   acceso: {
     lema: 'Cotiza, cobra y entrega, con o sin internet.',
     detalle: 'Todo lo que captures se guarda en la tablet y sale solo cuando hay conexión.',

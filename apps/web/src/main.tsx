@@ -24,6 +24,7 @@ import './shared/ui/graficas.css';
 import './shared/ui/acceso.css';
 import './shared/ui/premium.css';
 import './shared/ui/contenidos.css';
+import './shared/ui/recorrido.css';
 
 // Guarda la aplicación en la tablet para abrirla sin internet [RNF-01].
 registerSW({ immediate: true });
@@ -114,6 +115,7 @@ createRoot(root).render(
                   }
             }
             cargarVigenciaDeCodigo={composition.cargarVigenciaDeCodigo}
+            recorridoAutomatico
           />
         </BrowserRouter>
       </ProveedorSesionAdmin>

@@ -59,6 +59,7 @@ import { PanelDeInicio, SeccionVacia } from './shell/Paginas';
 import { seccionesVisibles, type Interruptor } from './shell/secciones';
 import { useNombreDeLaPersona, useTabletConectada } from './shell/estado-de-la-tablet';
 import { PaginaAdministrador } from './modules/identity/ui/PaginaAdministrador';
+import { ProveedorDelRecorrido } from './shell/recorrido/Recorrido';
 
 export interface AppProps {
   /** Interruptores encendidos. Por defecto P1 y P2 están apagados. */
@@ -121,6 +122,8 @@ export interface AppProps {
   readonly sincronizacion?: SincronizacionVisible | undefined;
   /** Vigencia sugerida del código de registro; sin ella la persona escribe los minutos. */
   readonly cargarVigenciaDeCodigo?: (() => Promise<number | null>) | undefined;
+  /** Ofrece el recorrido guiado solo la primera vez que se abre la aplicación en este equipo [RF-UX-04]. */
+  readonly recorridoAutomatico?: boolean;
 }
 
 const SIN_INTERRUPTORES: ReadonlySet<Interruptor> = new Set();
@@ -152,6 +155,7 @@ export function App({
   historialDeCliente = null,
   prepararMostrador = null,
   cargarVigenciaDeCodigo,
+  recorridoAutomatico = false,
 }: AppProps): ReactElement {
   const secciones = [
     ...seccionesVisibles('principal', interruptores),
@@ -330,45 +334,47 @@ export function App({
 
   const sinContacto = (): Promise<ContactoPublico | null> => Promise.resolve(null);
   return (
-    <Routes>
-      {portal !== null && interruptores.has('FACTURACION') ? (
-        <>
-          <Route
-            path="/factura"
-            element={<PortalDeFactura {...portal} siteKey={portal.siteKey ?? null} />}
-          />
-          <Route
-            path="/f/:folio/:codigo"
-            element={<PortalPorQr {...portal} siteKey={portal.siteKey ?? null} />}
-          />
-        </>
-      ) : null}
-      {legal !== null ? (
-        <>
-          <Route
-            path="/aviso"
-            element={
-              <PaginaLegalPublica
-                deps={legal}
-                tipo="PRIVACY_NOTICE"
-                cargarContacto={contactoPublico ?? sinContacto}
-              />
-            }
-          />
-          <Route
-            path="/terminos"
-            element={
-              <PaginaLegalPublica
-                deps={legal}
-                tipo="TERMS"
-                cargarContacto={contactoPublico ?? sinContacto}
-              />
-            }
-          />
-        </>
-      ) : null}
-      <Route path="*" element={marco} />
-    </Routes>
+    <ProveedorDelRecorrido interruptores={interruptores} automatico={recorridoAutomatico}>
+      <Routes>
+        {portal !== null && interruptores.has('FACTURACION') ? (
+          <>
+            <Route
+              path="/factura"
+              element={<PortalDeFactura {...portal} siteKey={portal.siteKey ?? null} />}
+            />
+            <Route
+              path="/f/:folio/:codigo"
+              element={<PortalPorQr {...portal} siteKey={portal.siteKey ?? null} />}
+            />
+          </>
+        ) : null}
+        {legal !== null ? (
+          <>
+            <Route
+              path="/aviso"
+              element={
+                <PaginaLegalPublica
+                  deps={legal}
+                  tipo="PRIVACY_NOTICE"
+                  cargarContacto={contactoPublico ?? sinContacto}
+                />
+              }
+            />
+            <Route
+              path="/terminos"
+              element={
+                <PaginaLegalPublica
+                  deps={legal}
+                  tipo="TERMS"
+                  cargarContacto={contactoPublico ?? sinContacto}
+                />
+              }
+            />
+          </>
+        ) : null}
+        <Route path="*" element={marco} />
+      </Routes>
+    </ProveedorDelRecorrido>
   );
 }
 
