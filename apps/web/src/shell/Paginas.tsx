@@ -9,6 +9,7 @@ import { saludoDeLaHora } from './saludo';
 import { EstadoVacio } from '../shared/ui/EstadoVacio';
 import { Icono, iconoDeSeccion } from '../shared/ui/Icono';
 import { Tarjeta } from '../shared/ui/Tarjeta';
+import { FormasDeEntrar } from './FormasDeEntrar';
 import { PrimerosPasos } from './PrimerosPasos';
 import { useSeccionesVisitadas } from './useSeccionesVisitadas';
 import { seccionesVisibles, type Interruptor, type Seccion } from './secciones';
@@ -38,6 +39,7 @@ export function PanelDeInicio({
   interruptores,
   conectar = false,
   entrar = false,
+  tabletConectada = false,
   resumen = null,
   nombre = null,
   ahora = () => new Date(),
@@ -51,6 +53,8 @@ export function PanelDeInicio({
   readonly conectar?: boolean;
   /** Muestra el acceso para entrar con PIN. */
   readonly entrar?: boolean;
+  /** La tablet ya tiene registro: el inicio lo muestra como paso cumplido. */
+  readonly tabletConectada?: boolean;
   /** Cifras del día según quien entró; sin ellas, el inicio solo muestra los accesos. */
   readonly resumen?: ReactNode;
 }): ReactElement {
@@ -96,23 +100,9 @@ export function PanelDeInicio({
           <h1 className="hero__titulo">{textos.inicio.titulo}</h1>
           <p className="hero__descripcion">{textos.inicio.descripcion}</p>
         </div>
-        {entrar || conectar ? (
-          <div className="hero__acciones">
-            {entrar ? (
-              <Link to="/entrar" className="boton">
-                <Icono nombre="usuarios" />
-                {textos.personas.acceso}
-              </Link>
-            ) : null}
-            {conectar ? (
-              <Link to="/conectar" className="boton boton--secundario">
-                <Icono nombre="nube" />
-                {textos.conectar.titulo}
-              </Link>
-            ) : null}
-          </div>
-        ) : null}
       </header>
+
+      <FormasDeEntrar conectar={conectar} entrar={entrar} tabletConectada={tabletConectada} />
 
       {!visitadas.has('catalogo') ? (
         <AvisoCerrable

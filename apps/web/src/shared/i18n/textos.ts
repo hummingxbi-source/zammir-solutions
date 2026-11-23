@@ -106,6 +106,58 @@ export const textos = {
         'Revisa primero tu catálogo: el cotizador y el mostrador usan sus productos y precios.',
       irAlCatalogo: 'Ir al Catálogo →',
     },
+    formasDeEntrar: {
+      titulo: '¿Cómo se entra?',
+      descripcion: 'Hay tres llaves distintas y cada una tiene su momento. Usa la que te toca.',
+      tablet: {
+        titulo: 'La tablet',
+        cuando: 'Una sola vez por tablet',
+        descripcion:
+          'Un administrador genera un código en Usuarios y aquí se escribe. Así la tablet recibe el catálogo, las personas y la configuración.',
+        lista: 'Esta tablet ya está conectada.',
+      },
+      personas: {
+        titulo: 'Las personas',
+        cuando: 'Todos los días',
+        descripcion:
+          'Cada quien toca su nombre y escribe su PIN para cotizar, vender y cobrar. Funciona aunque no haya internet.',
+      },
+      administrador: {
+        titulo: 'El administrador',
+        cuando: 'Para configurar',
+        descripcion:
+          'En la computadora, con correo y contraseña: catálogo, personas, tablets y configuración.',
+        dentro: 'Ya entraste como administrador.',
+      },
+      inicial: {
+        titulo: '¿Es la primera vez? Así se deja listo el sistema',
+        descripcion: 'Se hace una sola vez, en este orden:',
+        pasos: [
+          {
+            titulo: 'Entra como administrador',
+            detalle: 'en la computadora, con tu correo y tu contraseña.',
+          },
+          { titulo: 'Revisa el Catálogo:', detalle: 'tus productos y sus precios.' },
+          {
+            titulo: 'En Usuarios, da de alta a cada persona',
+            detalle:
+              'con su nombre, su rol y su PIN. Los administradores también llevan PIN para la tablet.',
+          },
+          {
+            titulo: 'En Usuarios, toca Generar código',
+            detalle: 'para cada tablet. El código sirve una sola vez y vence en pocos minutos.',
+          },
+          {
+            titulo: 'En la tablet, toca Conectar esta tablet',
+            detalle: 'y escribe ese código, con internet.',
+          },
+          {
+            titulo: 'Listo:',
+            detalle: 'desde ahí cada persona entra con su PIN, aunque no haya internet.',
+          },
+        ],
+      },
+    },
     descripciones: {
       catalogo: 'Tus productos y precios, siempre al día.',
       cotizador: 'Calcula con el cliente enfrente y mándale el PDF por WhatsApp.',
@@ -228,7 +280,8 @@ export const textos = {
       },
       NO_USERS_YET: {
         mensaje: 'Esta tablet todavía no tiene la lista de personas.',
-        queHacer: 'Conéctala a internet una vez para que la reciba.',
+        queHacer:
+          'Si es nueva, conéctala con el código que genera un administrador en Usuarios. Si ya está conectada, ábrela con internet una vez para que la reciba.',
       },
       AUTH_FAILED: {
         mensaje: 'El PIN no es correcto.',
@@ -1866,8 +1919,7 @@ export const textos = {
     borradores: 'Borradores',
     sinBorradores: 'No tienes borradores. Empieza una cotización nueva.',
     sinPersona: 'Elige quién usa la tablet para cotizar.',
-    noLista:
-      'Esta tablet todavía no puede cotizar: le falta conectarse una vez a internet para recibir el catálogo y la configuración.',
+    noLista: 'Esta tablet todavía no tiene el catálogo ni la lista de personas.',
     elegirPersona: 'Entrar con PIN',
     catalogoVacio: 'Revisa primero tu catálogo: todavía no hay productos para cotizar.',
     cerrarAviso: 'Cerrar aviso',
