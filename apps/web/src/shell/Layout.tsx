@@ -9,7 +9,14 @@ import { ContextoDeSeccion } from '../shared/ui/ContextoDeSeccion';
 import { textos } from '../shared/i18n/textos';
 import { Icono, iconoDeSeccion } from '../shared/ui/Icono';
 import { IndicadorDeConexion, type SincronizacionVisible } from './IndicadorDeConexion';
-import { seccionesVisibles, SECCIONES, type Interruptor, type Seccion } from './secciones';
+import {
+  RUTAS_DE_ACCESO,
+  seccionesVisibles,
+  SECCIONES,
+  type Interruptor,
+  type Seccion,
+} from './secciones';
+import { useRecorrido } from './recorrido/Recorrido';
 import { BotonPorDondeEmpiezo } from './PrimerosPasos';
 import { CuentaAdmin } from './CuentaAdmin';
 import { Boton } from '../shared/ui/Boton';
@@ -53,7 +60,7 @@ function EnlaceDeSeccion({
   readonly visitada?: boolean;
 }): ReactElement {
   return (
-    <NavLink to={seccion.ruta} className="nav__enlace">
+    <NavLink to={seccion.ruta} className="nav__enlace" data-recorrido={`nav-${seccion.id}`}>
       <Icono nombre={iconoDeSeccion(seccion.id)} />
       <span className="nav__texto">{seccion.texto}</span>
       {numero !== undefined ? (
@@ -73,9 +80,6 @@ function EnlaceDeSeccion({
 
 const NINGUNA_SESION = (): (() => void) => () => undefined;
 
-/** Pantallas que se muestran sin la barra de secciones. */
-const RUTAS_DE_ACCESO: readonly string[] = ['/entrar', '/conectar', '/administrador'];
-
 /** Marco de la aplicación: barra lateral con las secciones en el orden del trabajo (numeración discreta y
  *  marca de visitadas) y las demás aparte, encabezado con la fecha y el saludo, y la franja de estado
  *  [RF-UX-01, RF-UX-06, ADR-0028]. En pantallas angostas la barra pasa arriba y se desplaza sola, sin
@@ -90,6 +94,7 @@ export function Layout({
   const { pathname } = useLocation();
   const { visitadas, marcar } = useSeccionesVisitadas();
   const { oculta: barraOculta, alternar: alternarBarra } = useBarraOculta();
+  const { iniciar: iniciarRecorrido } = useRecorrido();
 
   useEffect(() => {
     const actual = SECCIONES.find((seccion) => pathname.startsWith(seccion.ruta));
@@ -152,7 +157,7 @@ export function Layout({
         </Link>
 
         <div className="barra__navs">
-          <NavLink to="/" end className="nav__enlace barra__inicio">
+          <NavLink to="/" end className="nav__enlace barra__inicio" data-recorrido="nav-inicio">
             <Icono nombre="inicio" />
             <span className="nav__texto">{textos.navegacion.inicio}</span>
           </NavLink>
@@ -186,6 +191,18 @@ export function Layout({
               ))}
             </ul>
           </nav>
+        </div>
+
+        <div className="barra__pie">
+          <button
+            type="button"
+            className="nav__enlace barra__recorrido"
+            data-recorrido="boton-recorrido"
+            onClick={iniciarRecorrido}
+          >
+            <Icono nombre="brujula" />
+            <span className="nav__texto">{textos.recorrido.boton}</span>
+          </button>
         </div>
       </aside>
 

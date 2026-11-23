@@ -18,7 +18,7 @@ export function CuentaAdmin(): ReactElement | null {
   }
   if (usuario === null) {
     return (
-      <div className="cuenta">
+      <div className="cuenta" data-recorrido="cuenta">
         <Link to="/administrador" className="boton boton--secundario">
           <Icono nombre="usuarios" />
           {t.entrar}
@@ -27,7 +27,7 @@ export function CuentaAdmin(): ReactElement | null {
     );
   }
   return (
-    <div className="cuenta">
+    <div className="cuenta" data-recorrido="cuenta">
       <span className="cuenta__texto">
         <span className="rotulo cuenta__rotulo">
           {usuario.role === 'ADMIN' ? t.rotulo : t.cuenta}

@@ -53,7 +53,7 @@ export function PersonaActiva({
     return null;
   }
   return (
-    <div className="persona-activa" role="status">
+    <div className="persona-activa" role="status" data-recorrido="persona-activa">
       <Inicial nombre={estado.user.name} />
       <span className="persona-activa__texto">
         <span className="persona-activa__etiqueta">{textos.personas.activa}</span>{' '}

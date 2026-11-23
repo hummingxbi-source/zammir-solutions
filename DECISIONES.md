@@ -46,5 +46,6 @@
 | [0038](docs/decisiones/0038-planes-gratuitos-de-supabase-y-vercel-en-produccion.md) | Producción en los planes gratuitos de Supabase y Vercel; dominio y proveedor de facturas contratados | Aceptada | 2026-11-14 |
 | [0039](docs/decisiones/0039-facturacion-en-pausa.md) | Facturación en pausa hasta que ZAMMIR tenga en orden sus datos fiscales | Aceptada | 2026-11-19 |
 | [0040](docs/decisiones/0040-comprobante-en-hoja-carta-sin-impresora-termica.md) | Comprobante en hoja tamaño carta; sin impresora térmica | Aceptada | 2026-11-19 |
+| [0042](docs/decisiones/0042-recorrido-guiado-en-la-entrega.md) | El recorrido guiado entra en la entrega | Aceptada | 2026-11-23 |
 
 Plantilla para una nueva decisión: [`docs/decisiones/0000-plantilla.md`](docs/decisiones/0000-plantilla.md).

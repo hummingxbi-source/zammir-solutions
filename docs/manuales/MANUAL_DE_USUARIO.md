@@ -16,6 +16,9 @@
 - **Cada quien usa su PIN.** Nunca compartas tu PIN: lo que hagas queda anotado con tu nombre.
 - **Los precios ya incluyen IVA.**
 
+- **Recorrido guiado:** la primera vez que abres el sistema aparece un recorrido que te enseña cada parte de la pantalla. Para verlo otra vez, toca **Recorrido guiado** al pie de la barra de secciones. Usa **Siguiente**, **Anterior** o **Saltar el recorrido**.
+- **¿Cómo se entra?** El panel de inicio explica las tres formas de entrar y el orden para dejar listo el sistema la primera vez.
+
 ---
 
 ## 1. Conectar la tablet y entrar con tu PIN

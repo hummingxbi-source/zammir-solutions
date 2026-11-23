@@ -92,6 +92,7 @@ export function BotonPorDondeEmpiezo({
       <button
         type="button"
         className="por-donde"
+        data-recorrido="por-donde-empiezo"
         onClick={() => {
           setAbierto(true);
         }}

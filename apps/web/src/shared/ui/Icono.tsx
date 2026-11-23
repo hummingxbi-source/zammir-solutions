@@ -32,6 +32,7 @@ const TRAZOS = {
   advertencia: 'M12 4l9.5 16.5h-19L12 4z M12 10v4.5 M12 17.2v.1',
   informacion: 'M12 21a9 9 0 100-18 9 9 0 000 18z M12 11v5 M12 7.8v.1',
   vacio: 'M4 8l8-4 8 4v9l-8 4-8-4V8z M4 8l8 4 8-4 M12 12v9',
+  brujula: 'M12 21a9 9 0 100-18 9 9 0 000 18z M15.5 8.5l-2 5-5 2 2-5 5-2z',
 } as const;
 
 export type NombreDeIcono = keyof typeof TRAZOS;

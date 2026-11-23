@@ -66,7 +66,7 @@ export function IndicadorDeConexion({
   }
 
   return (
-    <div role="status" className="aviso-conexion">
+    <div role="status" className="aviso-conexion" data-recorrido="conexion">
       {!hayInternet ? (
         <p>
           <strong>{textos.conexion.sinInternet}</strong> {textos.conexion.puedesSeguir}

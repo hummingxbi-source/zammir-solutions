@@ -71,7 +71,11 @@ export function FormasDeEntrar({
   ];
 
   return (
-    <section className="formas-de-entrar anima-entrada" aria-labelledby="titulo-formas-de-entrar">
+    <section
+      className="formas-de-entrar anima-entrada"
+      aria-labelledby="titulo-formas-de-entrar"
+      data-recorrido="formas-de-entrar"
+    >
       <div className="formas-de-entrar__encabezado">
         <h2 id="titulo-formas-de-entrar" className="formas-de-entrar__titulo">
           {t.titulo}

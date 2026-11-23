@@ -66,6 +66,8 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). L
 ## [Sin publicar]
 
 ### Agregado
+- **Recorrido guiado** [RF-UX-04, ADR-0042]: un recorrido por todo el sistema que oscurece la pantalla menos la parte que explica, con un globo paso a paso (bienvenida, formas de entrar, inicio, las secciones del trabajo y de administración, conexión, cuenta y ayuda). Aparece la primera vez en cada equipo y se repite con el botón **Recorrido guiado** de la barra.
+- **¿Cómo se entra?** en el inicio: las tres formas de entrar (tablet, persona con PIN y administrador) explicadas, con su botón, y el orden de la configuración inicial.
 - **Configuración: días para marcar una cuenta por cobrar como atrasada** (PD-33). Solo el administrador lo cambia (de 1 a 365; 10 por omisión). Lo usan Cuentas por cobrar, Reportes y el panel de inicio, y la tablet recuerda el último valor para funcionar sin internet.
 
 ### Cambiado

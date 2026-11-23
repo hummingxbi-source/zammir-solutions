@@ -67,6 +67,10 @@ export const SECCIONES: readonly Seccion[] = [
   },
 ];
 
+/** Pantallas de acceso (PIN, conectar la tablet, administrador): van sin la barra de secciones y sin el
+ *  recorrido guiado. */
+export const RUTAS_DE_ACCESO: readonly string[] = ['/entrar', '/conectar', '/administrador'];
+
 /** Secciones de un grupo que se deben mostrar con los interruptores actuales. */
 export function seccionesVisibles(
   grupo: GrupoSeccion,
