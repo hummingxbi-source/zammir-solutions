@@ -18,18 +18,17 @@
 
 | Quién | Qué |
 |---|---|
-| **Juanito** | Todo lo que pide una cuenta o un pago: comprar el dominio, crear proyectos, pegar llaves en los paneles, aprobar el despliegue a producción, activar la verificación en dos pasos. |
+| **Juanito** | Todo lo que pide una cuenta o un pago: comprar el dominio, crear proyectos, pegar llaves en los paneles, aprobar el despliegue a producción. |
 | **Claude** | Ajustar el código y la documentación, leer los resultados que Juanito le copie (sin llaves), corregir lo que salga en las pruebas y mantener la lista de hallazgos. |
 | **Luis** | Decidir lo pendiente (catálogo, garantía, texto legal, impresora), probar con su equipo y firmar la aceptación. |
 
 ## 2. Fase 0 · Antes de empezar (Juanito, ~1 hora)
 
 - [ ] **Gestor de contraseñas** listo y con una bóveda para ZAMMIR.
-- [ ] **Verificación en dos pasos** activada en GitHub, Supabase, Vercel y Cloudflare, con los códigos de recuperación guardados fuera de línea.
 - [ ] **Comprar `zammir-solutions.com`** (Cloudflare Registrar si lo ofrece; si no, otro registrador y después apuntar el DNS a Cloudflare). Activar renovación automática. Anotar a nombre de quién queda y, si es de Juanito, que **se transfiere a ZAMMIR en la entrega**.
 - [ ] **Organización en Supabase** (por ejemplo "HummingX BI") y **equipo en Vercel** con la cuenta empresarial.
 
-**Listo cuando:** puede entrar a los cuatro paneles con su segundo factor y el dominio aparece en Cloudflare.
+**Listo cuando:** puede entrar a los cuatro paneles y el dominio aparece en Cloudflare.
 
 ## 3. Fase 1 · Entorno de pruebas (Juanito, con Claude ayudando; ~2 horas)
 
@@ -117,6 +116,7 @@ Solo cuando las pruebas físicas pasaron y Luis aceptó lo probado:
 
 ## 10. Lo que no se hace
 
+- **Sin verificación en dos pasos:** Juanito decidió no usarla [ADR-0041]. Se compensa con contraseñas largas y distintas en un gestor, y con el cuidado de no compartir cuentas.
 - **No** usar datos reales de clientes ni de precios de ZAMMIR antes de la fase 7.
 - **No** correr `supabase config push` (empujaría el registro abierto de desarrollo al proyecto real).
 - **No** mezclar llaves de pruebas con producción.

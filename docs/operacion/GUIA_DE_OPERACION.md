@@ -82,16 +82,16 @@ Procedimiento paso a paso en el [manual de soporte](../manuales/MANUAL_DE_SOPORT
 
 | Acceso | Para qué | Quién lo tiene | Cómo se entrega |
 |---|---|---|---|
-| **GitHub** (repositorio y Actions) | Código e integración continua | Juanito | Invitación a su cuenta personal con verificación en dos pasos |
+| **GitHub** (repositorio y Actions) | Código e integración continua | Juanito | Invitación a su cuenta personal |
 | **Supabase** (producción) | Base de datos, cuentas y funciones | Juanito; ZAMMIR como titular del plan | Cuenta de ZAMMIR con Juanito como colaborador (**no** compartir una contraseña) |
-| **Vercel** (producción) | Despliegue de la aplicación | Juanito | Igual: colaborador, con dos pasos |
+| **Vercel** (producción) | Despliegue de la aplicación | Juanito | Igual: colaborador |
 | **Cloudflare** | Dominio y DNS (y Turnstile) | ZAMMIR (titular del dominio) y Juanito | Colaborador; el dominio queda a nombre de ZAMMIR |
 | **Proveedor de timbrado (PAC)** | Facturas | ZAMMIR (o Juanito, si él lo contrata, PD-05) | El que fije el contrato **(pendiente)** |
 | **Cuentas de administrador del sistema** (Luis, Ricardo) | Administrar el negocio | Cada quien la suya | Las crea Juanito con ellos presentes; la contraseña la elige cada persona |
 
 **Reglas:**
 1. Los accesos y las llaves **se entregan por un canal seguro** (un administrador de contraseñas compartido o una invitación nominal de la propia plataforma) y **nunca** por chat, correo en texto ni dentro del repositorio.
-2. **Una cuenta por persona**; nada de contraseñas compartidas. Verificación en dos pasos en todo lo que la ofrezca.
+2. **Una cuenta por persona**; nada de contraseñas compartidas. Contraseñas largas y distintas en un gestor; no se usa verificación en dos pasos [ADR-0041].
 3. **Registro de accesos:** una tabla con *quién, a qué, desde cuándo, quién lo concedió*. Al terminar la relación con alguien se revoca el mismo día y se anota. **(Pendiente: crear el registro al entregar los accesos.)**
 4. Ningún agente de IA recibe accesos de producción [RNF-19].
 
