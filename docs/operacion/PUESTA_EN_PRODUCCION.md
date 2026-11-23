@@ -115,7 +115,7 @@ El plan gratuito de Supabase **no incluye respaldos de la plataforma** y ZAMMIR 
 - [ ] Dominio de ZAMMIR en HTTPS, apuntando al proyecto de producción, y anotado en el acta.
 - [ ] Tablet instalada desde el dominio y registrada; ensayo en modo avión hecho.
 - [ ] Respaldo nocturno corrió en verde y se ensayó su restauración.
-- [ ] Verificación en dos pasos en las cuentas de administrador y en las de Supabase, Vercel, GitHub y Cloudflare (PP-33).
+- [ ] Contraseñas largas y distintas en un gestor para las cuentas de administrador y las de Supabase, Vercel, GitHub y Cloudflare. La verificación en dos pasos **no se usa** [ADR-0041].
 - [ ] Cabeceras de seguridad probadas con la tablet (PP-33: la política de contenido se agrega al final, porque una mal puesta rompe la conexión).
 - [ ] Anualidad: fechas de renovación de Supabase, Vercel, dominio y PAC anotadas en la guía de operación.
 

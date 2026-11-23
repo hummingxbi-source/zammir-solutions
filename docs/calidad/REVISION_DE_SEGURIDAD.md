@@ -42,7 +42,7 @@ La base y el código cumplen lo que se pidió. Se encontró **un permiso de sobr
 
 1. **Cabeceras de seguridad en el navegador** (`Content-Security-Policy`, `X-Content-Type-Options`, `Referrer-Policy`, protección contra que otra página meta la aplicación en un marco). No hay `vercel.json` todavía. Una política de contenido mal puesta rompe la conexión con Supabase o el portal, así que conviene definirla **al configurar el despliegue de producción** (S4-26 / S5-01) y probarla con la tablet. Propuesta PP-33.
 2. **Las huellas del PIN viajan a las tablets.** La vista `login_users` entrega a toda tablet activa el hash y la sal de los PIN, para poder entrar sin internet [ADR-0013]. Es una decisión de diseño conocida: un PIN de 4 a 6 dígitos se puede adivinar si alguien extrae esos datos de una tablet. Se mitiga con la revocación de tablets, el límite de intentos y PIN más largo para administradores; está en los riesgos de `AUTENTICACION.md` y sigue vigente.
-3. **Cuentas de administrador.** Hoy el rol se pone a mano en la cuenta de Supabase. Para producción conviene activar la verificación en dos pasos de esas cuentas y documentar quién tiene acceso (manual de soporte, S5-14).
+3. **Cuentas de administrador.** Hoy el rol se pone a mano en la cuenta de Supabase. Se decidió **no usar verificación en dos pasos** [ADR-0041]: la protección son contraseñas largas y distintas en un gestor. Falta documentar quién tiene acceso (manual de soporte, S5-14).
 
 ## Actualización del 20 de noviembre de 2026
 
@@ -57,7 +57,7 @@ Se repitió la revisión sobre `main` después de los cambios de las últimas do
 | Umbral de antigüedad en Configuración | Se guarda en `business_settings` con la política existente: solo administradores cambian el valor. La tablet recuerda el número en `localStorage` (no es un dato personal ni un secreto). | Cumple; la prueba de integración confirma que un cajero no lo cambia. |
 | Registro de impresiones (marca COPIA) | Solo guarda identificadores de documentos ya impresos en `localStorage`, sin datos de clientes. | Cumple. |
 
-**Sigue pendiente:** la `Content-Security-Policy` (`vercel.json` ya trae `X-Content-Type-Options`, `Referrer-Policy` y `X-Frame-Options`, pero no la política de contenido; definirla junto con el despliegue de producción y probarla en la tablet, PP-33), la verificación en dos pasos de las cuentas de administrador y el hallazgo de las huellas del PIN, sin cambios.
+**Sigue pendiente:** la `Content-Security-Policy` (`vercel.json` ya trae `X-Content-Type-Options`, `Referrer-Policy` y `X-Frame-Options`, pero no la política de contenido; definirla junto con el despliegue de producción y probarla en la tablet, PP-33), el hallazgo de las huellas del PIN, sin cambios.
 
 ## Cómo se repite esta revisión
 
