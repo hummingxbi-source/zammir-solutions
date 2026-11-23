@@ -179,6 +179,7 @@ export function App({
               interruptores={interruptores}
               nombre={nombreDeLaPersona}
               conectar={ofrecerConectar}
+              tabletConectada={tabletConectada}
               entrar={ofrecerEntrar}
               resumen={
                 prepararReportes !== null && entradaConPin !== null ? (
@@ -310,6 +311,7 @@ export function App({
               interruptores={interruptores}
               nombre={nombreDeLaPersona}
               conectar={ofrecerConectar}
+              tabletConectada={tabletConectada}
               entrar={ofrecerEntrar}
               resumen={
                 prepararReportes !== null && entradaConPin !== null ? (

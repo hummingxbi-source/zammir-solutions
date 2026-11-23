@@ -311,3 +311,122 @@ span.tabla__acciones > .boton {
 td.tabla__acciones .acciones-documento {
   justify-content: flex-end;
 }
+
+/* ¿Cómo se entra? — las tres llaves del sistema en el inicio [RF-UX-02, RF-UX-05]. */
+.formas-de-entrar {
+  margin-block-end: 1.75rem;
+}
+
+.formas-de-entrar__encabezado {
+  margin-block-end: 1rem;
+}
+
+.formas-de-entrar__titulo {
+  margin: 0 0 0.25rem;
+  font-family: var(--fuente-titulo);
+  font-size: clamp(1.35rem, 2vw, 1.6rem);
+  color: var(--tinta);
+}
+
+.formas-de-entrar__descripcion {
+  margin: 0;
+  color: var(--tinta-suave);
+}
+
+.formas-de-entrar__lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.llave {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 1.25rem;
+  border: 1px solid var(--borde-suave);
+  border-radius: var(--radio-grande);
+  background: linear-gradient(160deg, var(--superficie) 0%, var(--vidrio-claro) 100%);
+  box-shadow: var(--sombra-2);
+}
+
+.llave__icono {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 2.75rem;
+  block-size: 2.75rem;
+  border-radius: 50%;
+  background: linear-gradient(145deg, var(--acento-claro), var(--acento));
+  color: #ffffff;
+  box-shadow: var(--sombra-acento);
+}
+
+.llave__cuando {
+  color: var(--acento);
+}
+
+.llave__titulo {
+  margin: 0;
+  font-family: var(--fuente-titulo);
+  font-size: 1.2rem;
+  color: var(--tinta);
+}
+
+.llave__descripcion {
+  flex: 1;
+  margin: 0;
+  color: var(--tinta-suave);
+}
+
+.llave__boton {
+  align-self: flex-start;
+  margin-block-start: 0.5rem;
+}
+
+.llave__cumplido {
+  margin: 0.5rem 0 0;
+  font-weight: 600;
+  color: var(--exito);
+}
+
+.llave--cumplida {
+  background: var(--exito-fondo);
+}
+
+.llave--cumplida .llave__icono {
+  background: var(--exito);
+  box-shadow: none;
+}
+
+.configuracion-inicial {
+  margin-block-start: 1rem;
+  padding: 1rem 1.25rem;
+  border: 1px dashed var(--borde-fuerte);
+  border-radius: var(--radio-medio);
+  background: var(--superficie);
+}
+
+.configuracion-inicial__resumen {
+  min-block-size: var(--tactil-minimo);
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  color: var(--acento);
+  cursor: pointer;
+}
+
+.configuracion-inicial__descripcion {
+  margin: 0.5rem 0;
+  color: var(--tinta-suave);
+}
+
+.configuracion-inicial__pasos {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding-inline-start: 1.5rem;
+}
