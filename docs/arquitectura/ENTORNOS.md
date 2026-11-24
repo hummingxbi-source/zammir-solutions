@@ -8,14 +8,14 @@
 | | Desarrollo | Pruebas (staging) | Producción |
 |---|---|---|---|
 | Para qué | Programar y correr pruebas | Probar cada fusión en la tablet real [ADR-0008] | ZAMMIR trabajando con datos reales |
-| Aplicación | `vite` local | Vercel, despliegue automático de `main` | Vercel (plan de pago) |
-| Base de datos | Supabase local (Docker) | Proyecto de Supabase de pruebas | Proyecto de Supabase de pago, separado |
+| Aplicación | `vite` local | Vercel `zammir-pruebas`, despliegue automático de `main` | El mismo proyecto de Vercel [ADR-0043] |
+| Base de datos | Supabase local (Docker) | Supabase `zammir-pruebas` | Proyecto de Supabase **nuevo y vacío**, creado en la entrega al borrar el de pruebas [ADR-0043] |
 | PAC | Adaptador simulado | Entorno de pruebas del PAC | PAC en producción (al final) [ADR-0007] |
 | Datos | Inventados | Inventados | **Reales; ningún dato de prueba** |
-| Dirección | `localhost` | Dominio de prueba de Vercel | Dominio de ZAMMIR (PD-10) |
+| Dirección | `localhost` | `https://sistema.zammir-solutions.com` | La misma |
 | Quién entra | Juanito y agentes | Juanito, agentes, Luis en pruebas | Usuarios de ZAMMIR; **ningún agente de IA** [RNF-19] |
 
-Desarrollo y pruebas pueden usar los planes gratuitos; producción usa planes de pago [ADR-0003, PD-20].
+Todo usa los planes gratuitos [ADR-0038]. La cuenta de Supabase solo admite un proyecto para ZAMMIR, así que **pruebas y producción no conviven**: se prueba en el único proyecto con datos inventados y en la entrega se recrea vacío [ADR-0043].
 
 ## 2. Desarrollo local
 
@@ -78,8 +78,8 @@ El dominio de ZAMMIR (HTTPS, DNS en Cloudflare) **no puede cambiar después de i
 | GitHub (repositorio privado, Actions) | Código y CI | Juanito | Ya existe |
 | Supabase (proyecto de pruebas) | Base de datos de pruebas | Juanito | Antes de S0-05 y S0-06 |
 | Vercel (proyecto de pruebas) | Despliegue a pruebas | Juanito | Antes de S0-06 |
-| Cloudflare | Dominio y DNS de producción | Juanito / Luis | Antes del Sprint 5 (PD-10) |
-| Supabase y Vercel de producción (planes de pago) | Producción | Juanito, con ZAMMIR | Sprint 4 a 5 |
+| Cloudflare | Dominio `zammir-solutions.com` y su DNS | Juanito | ✅ 2026-11-23 |
+| Supabase de producción (proyecto nuevo y vacío, plan gratuito) | Producción | Juanito, con ZAMMIR | En la entrega [ADR-0043] |
 | PAC | Timbrado | Juanito o ZAMMIR (PD-05) | Antes del Sprint 4 |
 
 Los accesos de producción se entregan a Juanito por un canal seguro [DC §13].

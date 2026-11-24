@@ -234,13 +234,13 @@ para ver cómo va el negocio al entrar.
   - Dada cada acción destructiva, cuando se intenta, entonces pide confirmación y los errores dicen qué hacer.
   - Dada la prueba de vocabulario, cuando corre sobre todo el sistema, entonces pasa.
 
-### S4-26 · Producción vacía, dominio y variables · M · 4 h  · ⛔ PD-10
+### S4-26 · Producción vacía, dominio y variables · M · 4 h  · 🟡 dominio y variables hechos; producción vacía al recrear el proyecto en la entrega [ADR-0043]
 - **Requerimientos:** RNF-13, RNF-37 · **Decisión:** ADR-0003, ADR-0019 · **Pendientes:** PD-10 (el dominio no puede cambiar tras imprimir tickets reales)
 - **Criterios de aceptación:**
   - Dados los proyectos de producción en planes de pago, cuando se crean, entonces están separados de pruebas y con sus variables solo en los paneles.
   - Dadas las migraciones, cuando se aplican desde cero en producción, entonces terminan sin errores y sin datos de prueba.
 
-### S4-27 · Respaldos con 30 días de historial · M · 4 h  · ⛔ PD-32 · ✅ construida; falta activarla con los secretos de producción (PD-32)
+### S4-27 · Respaldos con 30 días de historial · M · 4 h  · ✅ activa desde el 2026-11-24; falta ensayar la restauración de una copia de la nube (PD-32)
 - **Requerimientos:** RNF-21 · **Pendientes:** PD-32 (retención del plan de Supabase)
 - **Criterios de aceptación:**
   - Dada la retención del plan, cuando se verifica, entonces cubre 30 días o hay exportación nocturna a almacenamiento externo.

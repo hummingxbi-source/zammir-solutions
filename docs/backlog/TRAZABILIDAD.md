@@ -207,9 +207,9 @@ Todos los recorridos se repiten completos con el equipo real en S5-09.
 | S4-21 · Tratamiento de anticipos y cancelación de CFDI | PD-27 | Ver la historia |
 | S4-22 · Timbres y factura en el historial | PD-26 | Ver la historia |
 | S4-24 · Panel de inicio con contenido por rol | PD-31 | Ver la historia |
-| S4-26 · Producción vacía, dominio y variables | PD-10 | Ver la historia |
+| S4-26 · Producción vacía, dominio y variables | ~~PD-10~~ resuelto; ADR-0043 | Ver la historia |
 | S4-27 · Respaldos con 30 días de historial | PD-32 | Ver la historia |
-| S5-01 · Producción en marcha y dominio | PD-10 | Ver la historia |
+| S5-01 · Producción en marcha y dominio | ~~PD-10~~ resuelto | ✅ hecha |
 | S5-02 · CSD y adaptador del PAC en producción | PD-04, PD-05 | Ver la historia |
 | S5-03 · Catálogo real y parámetros de precio reales | PD-02, PD-03 | Ver la historia |
 | S5-04 · Ajustes reales y usuarios reales | PD-06, PD-09, PD-11, PD-12 | Ver la historia |

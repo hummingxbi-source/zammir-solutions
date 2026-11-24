@@ -33,7 +33,7 @@
 | Bloqueo | Depende de | Historias |
 |---|---|---|
 | Proveedor de timbrado y certificado de ZAMMIR | Decidir quién contrata el PAC (PD-05) y que ZAMMIR tramite su CSD en el SAT (PD-04) | S4-14, S4-15, S5-02 |
-| Producción y dominio | Comprar el dominio y crear las cuentas de producción (PD-10) | S4-26, S5-01 |
+| Producción vacía | Dominio ✅ (2026-11-23). Falta recrear vacío el proyecto de Supabase en la entrega [ADR-0043] | S4-26 |
 | Respaldos de 30 días | Revisar el plan de Supabase (PD-32) | S4-27 |
 | Catálogo, precios, ajustes y usuarios reales | Las respuestas de Luis (cuestionario) | S5-03, S5-04 |
 | Tablets e impresora | El equipo físico | S4-33, S4-34, S5-05, S5-09 |

@@ -11,7 +11,7 @@
 | **Proveedor** | HummingX BI |
 | **Sistema** | Sistema de gestión de ZAMMIR (cotizador, órdenes, mostrador y caja, clientes, cuentas por cobrar, reportes, usuarios, legal y facturación) |
 | **Versión que se entrega** | `1.0.0` |
-| **Dirección de producción** | *(dominio de ZAMMIR, PD-10)* |
+| **Dirección de producción** | `https://sistema.zammir-solutions.com` |
 | **Fecha y lugar** | |
 
 ## Qué se entrega

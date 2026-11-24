@@ -34,9 +34,9 @@ Los accesos de producción se entregan a Juanito por un canal seguro. Ninguno se
 
 1. Todo cambio entra por una rama y un Pull Request; nadie sube a `main` directamente.
 2. La integración continua corre **toda** la compuerta de calidad (formato, lint, tipos, dependencias, pruebas, base de datos, integración, extremo a extremo, mutación y escaneo de secretos). Si algo está en rojo, no se fusiona.
-3. Al fusionar a `main`, Vercel despliega a **pruebas** y las migraciones se aplican a la base de pruebas.
-4. Al cerrar un sprint se prueba a mano en la tablet sobre pruebas.
-5. A **producción** se llega solo en el Sprint 5, con migraciones desde cero, variables y dominio **(pendiente: dominio y producción, PD-10)**.
+3. Al fusionar a `main`, Vercel despliega a `https://sistema.zammir-solutions.com`. Los cambios de la base se suben con el flujo *Desplegar a Supabase*.
+4. Al cerrar un sprint se prueba a mano en la tablet.
+5. Hasta la entrega hay **un solo proyecto**, con datos inventados. En la entrega se borra y se crea uno nuevo vacío, con migraciones desde cero y llaves nuevas [ADR-0043].
 
 **Migraciones.** Son archivos en `supabase/migrations/`, solo hacia adelante. Una migración que ya se aplicó en pruebas no se edita: se agrega otra. Las aplica la integración continua o Juanito con la CLI, nunca a mano en el panel.
 
