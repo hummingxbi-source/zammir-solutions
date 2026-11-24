@@ -56,9 +56,9 @@
 
 El plan gratuito no incluye respaldos de la plataforma, así que este es **el único respaldo** [PD-32]. Se activa ya, con datos de prueba, para ensayarlo antes de que haya un solo dato que importe.
 
-1. En el entorno `produccion` de GitHub: secretos `SUPABASE_DB_URL` (Session pooler del único proyecto) y `CLAVE_DE_RESPALDO` (guardada también en el gestor).
-2. **Actions → Respaldo nocturno → Run workflow**: debe dejar un archivo `respaldo-zammir-AAAA-MM-DD.tar.enc`.
-3. **Ensayar la restauración** de esa copia con Supabase local (ver `RESTAURACION.md`) y anotar el resultado en su registro de ensayos.
+1. [x] En el entorno `produccion` de GitHub: secretos `SUPABASE_DB_URL` (Session pooler del único proyecto) y `CLAVE_DE_RESPALDO` (guardada también en el gestor). Hecho el 2026-11-24.
+2. [x] **Actions → Respaldo nocturno → Run workflow**: la primera copia salió en verde el 2026-11-24 (`respaldo-zammir-2026-11-24`, unos 215 KB). Desde entonces corre sola cada noche.
+3. [ ] **Ensayar la restauración** de esa copia con Supabase local (ver `RESTAURACION.md`) y anotar el resultado en su registro de ensayos.
 
 ## 6. Fase 4 · Pruebas físicas (Juanito, Luis y el equipo; S4-33, S5-05, S5-09)
 

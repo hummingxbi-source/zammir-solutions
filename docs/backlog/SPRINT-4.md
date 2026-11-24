@@ -240,7 +240,7 @@ para ver cómo va el negocio al entrar.
   - Dados los proyectos de producción en planes de pago, cuando se crean, entonces están separados de pruebas y con sus variables solo en los paneles.
   - Dadas las migraciones, cuando se aplican desde cero en producción, entonces terminan sin errores y sin datos de prueba.
 
-### S4-27 · Respaldos con 30 días de historial · M · 4 h  · ⛔ PD-32 · ✅ construida; falta activarla con los secretos de producción (PD-32)
+### S4-27 · Respaldos con 30 días de historial · M · 4 h  · ✅ activa desde el 2026-11-24; falta ensayar la restauración de una copia de la nube (PD-32)
 - **Requerimientos:** RNF-21 · **Pendientes:** PD-32 (retención del plan de Supabase)
 - **Criterios de aceptación:**
   - Dada la retención del plan, cuando se verifica, entonces cubre 30 días o hay exportación nocturna a almacenamiento externo.
