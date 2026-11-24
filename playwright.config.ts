@@ -11,6 +11,17 @@ export default defineConfig({
   reporter: [['list']],
   use: {
     baseURL: `http://localhost:${String(PUERTO)}`,
+    // El recorrido guiado arranca solo la primera vez y oscurece la pantalla: si aparece a media prueba, las
+    // revisiones de contraste y de foco miden el velo. Se marca como visto; sus pruebas están en recorrido.test.tsx.
+    storageState: {
+      cookies: [],
+      origins: [
+        {
+          origin: `http://localhost:${String(PUERTO)}`,
+          localStorage: [{ name: 'zammir.recorrido-visto', value: '1' }],
+        },
+      ],
+    },
     locale: 'es-MX',
     timezoneId: 'America/Mexico_City',
   },
