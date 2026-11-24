@@ -84,6 +84,6 @@ Resultado del 8 de noviembre de 2026, con los datos que dejan las pruebas de int
 |---|---|
 | Plan de Supabase y retención de respaldos | PD-32 |
 | Exportación nocturna externa | S4-27 |
-| Proyecto de producción donde ensayar | PD-10, S4-26, S5-01 |
+| Ensayo con una copia del proyecto en la nube | Activar el respaldo nocturno (PD-32); se restaura en Supabase local [ADR-0043] |
 | Objetivo de tiempo de recuperación | Luis y Juanito |
 | Comprobar el paso de las tablets | Ensayo en producción |

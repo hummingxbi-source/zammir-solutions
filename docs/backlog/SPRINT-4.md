@@ -234,7 +234,7 @@ para ver cómo va el negocio al entrar.
   - Dada cada acción destructiva, cuando se intenta, entonces pide confirmación y los errores dicen qué hacer.
   - Dada la prueba de vocabulario, cuando corre sobre todo el sistema, entonces pasa.
 
-### S4-26 · Producción vacía, dominio y variables · M · 4 h  · ⛔ PD-10
+### S4-26 · Producción vacía, dominio y variables · M · 4 h  · 🟡 dominio y variables hechos; producción vacía al recrear el proyecto en la entrega [ADR-0043]
 - **Requerimientos:** RNF-13, RNF-37 · **Decisión:** ADR-0003, ADR-0019 · **Pendientes:** PD-10 (el dominio no puede cambiar tras imprimir tickets reales)
 - **Criterios de aceptación:**
   - Dados los proyectos de producción en planes de pago, cuando se crean, entonces están separados de pruebas y con sus variables solo en los paneles.

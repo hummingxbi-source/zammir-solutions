@@ -48,5 +48,6 @@
 | [0040](docs/decisiones/0040-comprobante-en-hoja-carta-sin-impresora-termica.md) | Comprobante en hoja tamaño carta; sin impresora térmica | Aceptada | 2026-11-19 |
 | [0041](docs/decisiones/0041-sin-verificacion-en-dos-pasos.md) | Sin verificación en dos pasos en las cuentas de administración | Aceptada | 2026-11-23 |
 | [0042](docs/decisiones/0042-recorrido-guiado-en-la-entrega.md) | El recorrido guiado entra en la entrega | Aceptada | 2026-11-23 |
+| [0043](docs/decisiones/0043-un-solo-proyecto-hasta-la-entrega.md) | Un solo proyecto de Supabase y de Vercel; se prueba en producción y se recrea vacío en la entrega | Aceptada | 2026-11-23 |
 
 Plantilla para una nueva decisión: [`docs/decisiones/0000-plantilla.md`](docs/decisiones/0000-plantilla.md).

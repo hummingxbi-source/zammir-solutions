@@ -5,7 +5,7 @@
 > **Entra si:** Sprint 4 cerrado en verde y los insumos del cliente entregados (catálogo, CSD, datos del negocio): su retraso es el riesgo principal de la fecha y se reporta de inmediato.
 > **Importante:** este sprint tiene **dos días** y mucho depende de terceros. Lo que se pueda adelantar se hizo en el Sprint 4 (S4-26 a S4-30) [ADR-0019].
 
-### S5-01 · Producción en marcha y dominio · S · 2 h  · ⛔ PD-10
+### S5-01 · Producción en marcha y dominio · S · 2 h  · ✅ hecha (2026-11-23): `https://sistema.zammir-solutions.com` por HTTPS con DNS en Cloudflare; sin QR mientras la facturación esté en pausa
 - **Requerimientos:** RNF-13, RNF-37 · **Pendientes:** PD-10 (el dominio se fija **antes** de imprimir el primer ticket real)
 - **Criterios de aceptación:**
   - Dado el dominio de ZAMMIR, cuando se publica, entonces responde por HTTPS con DNS en Cloudflare.
