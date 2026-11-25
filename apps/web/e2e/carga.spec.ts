@@ -34,6 +34,8 @@ test('una sección de administradores pide entrar y no muestra su contenido', as
 });
 
 test('no tiene violaciones graves de accesibilidad', async ({ page }) => {
+  // Sin animaciones: el contraste se mide con la pantalla quieta (ver identidad.spec.ts).
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
   const resultado = await new AxeBuilder({ page }).analyze();
   const graves = resultado.violations.filter(

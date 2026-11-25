@@ -21,6 +21,7 @@
 | 7 | [Sprint 3 — Órdenes de trabajo y mostrador](fase-07-sprint-3-ordenes-mostrador.md) | Código | 16 – 22 nov (16 nov feriado) | Pendiente |
 | 8 | [Sprint 4 — Cobranza, reportes, legal y facturación](fase-08-sprint-4-cobranza-reportes-legal-facturacion.md) | Código | 23 – 29 nov | Pendiente |
 | 9 | [Sprint 5 — Salida a producción](fase-09-sprint-5-salida-a-produccion.md) | Entrega | 30 nov – 1 dic | Pendiente |
+| 10 | [Ajustes de operación para la entrega](fase-10-ajustes-para-la-entrega.md) | Código | 25 nov | Construida: AJ-01 a AJ-09 en los PR #115 a #123 [ADR-0044] |
 
 **Antes de cualquier fase de código, lee [`00-principios-de-ingenieria.md`](00-principios-de-ingenieria.md).** Define la arquitectura objetivo, cómo se aplica SOLID, la estrategia de pruebas y la compuerta de calidad que toda fase debe pasar.
 
