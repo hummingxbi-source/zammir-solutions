@@ -1396,6 +1396,8 @@ export const textos = {
       transferencia: 'Transferencia',
       total: 'Total cobrado',
       canceladas: 'Ventas canceladas (no cuentan)',
+      devueltoEfectivo: 'Efectivo devuelto (ventas canceladas)',
+      devueltoTransferencia: 'Devuelto por transferencia',
       cerrado: 'Corte cerrado',
       enviado: 'Enviado',
       guardado: 'Guardado en la tablet',
@@ -1450,6 +1452,10 @@ export const textos = {
       completada: 'Completada',
       cancelada: 'Cancelada',
       motivoCancelar: 'Cancelar una venta necesita el PIN de un administrador y un motivo.',
+      devolucion: (monto: string, efectivo: boolean): string =>
+        `${monto} ${efectivo ? 'en efectivo' : 'por transferencia'}`,
+      seDevuelve: (que: string): string =>
+        `Al cliente se le devuelven ${que}. El efectivo sale del cajón de tu turno.`,
     },
     errores: {
       EMPTY_TICKET: {
@@ -2382,6 +2388,9 @@ export const textos = {
       cancelled: 'Ventas canceladas',
       cancelledSales: 'Ventas canceladas ({count})',
       cancelledNote: 'Los cobros de ventas canceladas no cuentan en el corte.',
+      refunds: 'Devoluciones ({count})',
+      refundedCash: 'Efectivo devuelto',
+      refundedTransfer: 'Devuelto por transferencia',
       differenceNote: 'Explicación',
       page: 'Página {n} de {total}',
       mensajeWhatsApp: (nombre: string, dia: string): string =>

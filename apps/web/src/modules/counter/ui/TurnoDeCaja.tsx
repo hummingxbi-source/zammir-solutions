@@ -470,6 +470,14 @@ export function TurnoDeCaja(props: TurnoDeCajaProps): ReactElement {
                   <dd>{corte.turno.differenceNote}</dd>
                 </>
               ) : null}
+              {corte.resumen.refundCount > 0 ? (
+                <>
+                  <dt>{t.corte.devueltoEfectivo}</dt>
+                  <dd>{formatearPesos(corte.resumen.refundedCashCents)}</dd>
+                  <dt>{t.corte.devueltoTransferencia}</dt>
+                  <dd>{formatearPesos(corte.resumen.refundedTransferCents)}</dd>
+                </>
+              ) : null}
               {corte.resumen.cancelledSalesCents > 0 ? (
                 <>
                   <dt>{t.corte.canceladas}</dt>

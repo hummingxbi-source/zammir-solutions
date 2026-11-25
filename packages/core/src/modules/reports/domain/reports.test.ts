@@ -436,6 +436,59 @@ describe('antigüedad de las cuentas por cobrar', () => {
   });
 });
 
+describe('devoluciones en los reportes [RF-M4-10, ADR-0044]', () => {
+  const ahora = new Date('2026-11-20T18:00:00.000Z');
+  // La venta v9 se cobró el 17 en efectivo y se canceló hoy, devolviendo el dinero.
+  const ventas = [{ id: 'v9', status: 'CANCELLED' as const }];
+  const pagos: Pago[] = [
+    pago(11_600, '2026-11-17T17:00:00.000Z', { userId: 'ana', method: 'CASH', targetId: 'v9' }),
+    pago(5_000, '2026-11-20T15:00:00.000Z', { userId: 'beto', method: 'CASH' }),
+  ];
+  const devoluciones = [
+    {
+      saleId: 'v9',
+      method: 'CASH' as const,
+      amountCents: 11_600,
+      refundedAt: '2026-11-20T16:00:00.000Z',
+      userId: 'beto',
+    },
+  ];
+
+  it('el cobro cuenta el día en que se cobró y la devolución resta el día en que se hizo', () => {
+    const tendencia = dailyIncomeTrend({
+      payments: pagos,
+      sales: ventas,
+      refunds: devoluciones,
+      now: ahora,
+      days: 4,
+    });
+    expect(tendencia.map((d) => [d.day, d.totalCents])).toEqual([
+      ['2026-11-17', 11_600],
+      ['2026-11-18', 0],
+      ['2026-11-19', 0],
+      ['2026-11-20', 5_000 - 11_600],
+    ]);
+  });
+
+  it('por cajero, la devolución resta a quien la hizo, y no cuenta como un cobro', () => {
+    const r = collectionsByCashier({
+      payments: pagos,
+      sales: ventas,
+      refunds: devoluciones,
+      now: ahora,
+    });
+    expect(r.DAY.rows).toEqual([
+      { userId: 'beto', cashCents: -6_600, transferCents: 0, totalCents: -6_600, count: 1 },
+    ]);
+    expect(r.WEEK.totals.totalCents).toBe(5_000);
+  });
+
+  it('sin devolución registrada (cancelación de antes), la venta cancelada no cuenta, como entonces', () => {
+    const r = salesReport({ payments: pagos, sales: ventas, now: ahora });
+    expect(r.WEEK.comparison.currentCents).toBe(5_000);
+  });
+});
+
 describe('cobros por cajero y por método', () => {
   const ahora = new Date('2026-11-20T18:00:00.000Z');
   const ventas = [
