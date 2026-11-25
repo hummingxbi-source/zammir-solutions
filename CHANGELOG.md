@@ -31,6 +31,7 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). L
 
 **Órdenes de trabajo y cuentas por cobrar**
 - Conversión de una cotización aceptada, anticipo, saldo, garantía y estatus, con autorizaciones de administrador para lo excepcional.
+- **Entregas por partes**: al convertir una cotización se eligen las líneas de cada parte; cada parte es su propia orden (anticipo, cobros, fecha y garantía) y sale como "Parte 1", "Parte 2"… en la lista, el detalle y el comprobante. Una línea entra en una sola parte (AJ-07, RF-M3-10).
 - Fecha estimada de entrega obligatoria al crear la orden; las órdenes vencidas salen como **Atrasadas**, con su filtro y su conteo en el panel de inicio (AJ-03, RF-M3-09).
 - Comprobante de trabajo en PDF con QR para pedir la factura.
 - Cuentas por cobrar, de la más atrasada a la más reciente.

@@ -122,6 +122,8 @@ Una **orden de trabajo** es un trabajo aceptado que se fabrica o instala. Lleva 
 
 1. En **Órdenes de trabajo** verás las *Cotizaciones aceptadas por convertir*. Toca **Crear orden de trabajo** en la que sigue. El sistema te pide la **fecha estimada de entrega** (el día en que queda lista para entregar o instalar); elígela en el calendario y toca **Crear la orden**. Sin fecha no se crea.
 
+   **Si el trabajo se entrega por partes** (por ejemplo, primero las ventanas y después el cancel), marca **¿Se entrega por partes?** y deja marcadas solo las líneas de esta parte. Se crea una orden con esas líneas, con su propio anticipo, cobros y fecha. Las demás líneas siguen en *Cotizaciones aceptadas por convertir* (dice "Faltan N líneas") para crear la siguiente parte cuando toque. Cada parte sale en la lista como **Parte 1**, **Parte 2**…, y en su detalle hay botones para ver las demás partes. Una línea solo puede ir en una parte.
+
    ![Cotizaciones aceptadas por convertir](capturas/09-ordenes-por-convertir.png)
 
 2. Se abre la orden, con su folio (por ejemplo `OT-2026-0001`), los conceptos y el recuadro **Cobro y saldo**: total, **anticipo exigido**, pagado y saldo.

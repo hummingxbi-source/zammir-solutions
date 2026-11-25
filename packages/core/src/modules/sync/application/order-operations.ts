@@ -62,6 +62,8 @@ export interface OrderStore {
   /** Pagos por transferencia ya confirmados [RF-M4-11]. */
   readonly confirmadas: Set<string>;
   readonly convertidas: Set<string>;
+  /** Líneas de cotización que ya pasaron a una orden (cada una entra en una sola) [RF-M3-10]. */
+  readonly lineasConvertidas: Set<string>;
   readonly codigosDeOrden: Set<string>;
   /** Ventas de mostrador del servidor. */
   readonly ventas: Map<string, ServerSale>;
@@ -138,9 +140,15 @@ export async function applyOrderOperation(ctx: {
         if (estado === undefined) {
           return invalida('QUOTE_NOT_FOUND');
         }
-        if (store.convertidas.has(p.quoteId)) {
+        // Por partes, la cotización se convierte otra vez mientras sus líneas no estén en otra orden.
+        if (p.inParts === true) {
+          if (p.lines.some((l) => store.lineasConvertidas.has(l.id))) {
+            motivo = 'QUOTE_LINE_ALREADY_CONVERTED';
+          }
+        } else if (store.convertidas.has(p.quoteId)) {
           motivo = 'QUOTE_ALREADY_CONVERTED';
-        } else if (estado !== 'ACCEPTED') {
+        }
+        if (motivo === undefined && estado !== 'ACCEPTED') {
           motivo = 'QUOTE_NOT_ACCEPTED';
         }
       }
@@ -171,6 +179,9 @@ export async function applyOrderOperation(ctx: {
         store.codigosDeOrden.add(p.publicCode);
         if (p.quoteId !== null && p.quoteId !== undefined && motivo === undefined) {
           store.convertidas.add(p.quoteId);
+          for (const l of p.lines) {
+            store.lineasConvertidas.add(l.id);
+          }
         }
         return fin(orden, p.id, motivo);
       });

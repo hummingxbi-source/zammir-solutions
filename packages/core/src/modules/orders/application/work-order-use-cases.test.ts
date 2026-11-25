@@ -6,7 +6,8 @@ import { seededRandom } from '../../../shared-kernel/random';
 import type { Authorization } from '../../identity/application/authorize-with-admin-pin';
 import { outboxQuoteStore } from '../../quotes/application/quote-store';
 import type { QuoteActor } from '../../quotes/application/quote-use-cases';
-import type { Quote, QuoteLine } from '../../quotes/domain/quote';
+import { pendingQuoteLines, type Quote, type QuoteLine } from '../../quotes/domain/quote';
+import { partNumber } from '../domain/order-board';
 import { inMemorySyncOutbox } from '../../sync/application/in-memory-sync-outbox';
 import { parseOperation } from '../../sync/domain/operation';
 import {
@@ -280,6 +281,99 @@ describe('fecha estimada de entrega al crear [RF-M3-09, ADR-0044]', () => {
     expect((await updateWorkOrder(e.deps, cajero, orden.id, { notes: 'Se entregó bien' })).ok).toBe(
       true,
     );
+  });
+});
+
+describe('entregas por partes [RF-M3-10, ADR-0044]', () => {
+  async function conDosLineas(e: ReturnType<typeof entorno>) {
+    const base = cotizacion('ACCEPTED', 11_600);
+    const q: Quote = { ...base, lines: [linea(11_600), linea(23_200)] };
+    await e.deps.quotes.save(q);
+    const [a, b] = q.lines;
+    if (a === undefined || b === undefined) {
+      throw new Error('líneas');
+    }
+    return { q, a, b };
+  }
+  const fecha = { estimatedDeliveryDate: '2026-11-15' };
+
+  it('cada parte lleva solo sus líneas, con sus totales y su anticipo; luego va la otra', async () => {
+    const e = entorno();
+    const { q, a, b } = await conDosLineas(e);
+    const p1 = await convertQuoteToWorkOrder(e.deps, cajero, q.id, {
+      ...fecha,
+      inParts: true,
+      lineIds: [a.id],
+    });
+    expect(p1.ok && p1.value).toMatchObject({
+      inParts: true,
+      totalCents: 11_600,
+      depositRequiredCents: 5_800,
+    });
+    expect(p1.ok && p1.value.lines.map((l) => l.id)).toEqual([a.id]);
+    // Lo que falta ya es otra parte, aunque no se diga.
+    const p2 = await convertQuoteToWorkOrder(e.deps, cajero, q.id, fecha);
+    expect(p2.ok && p2.value).toMatchObject({ inParts: true, totalCents: 23_200 });
+    expect(p2.ok && p2.value.lines.map((l) => l.id)).toEqual([b.id]);
+    // Ya no queda nada por convertir.
+    expect(await convertQuoteToWorkOrder(e.deps, cajero, q.id, fecha)).toEqual({
+      ok: false,
+      error: { code: 'ALREADY_CONVERTED' },
+    });
+    const guardada = await e.deps.quotes.get(q.id);
+    expect(guardada?.convertedLineIds).toEqual([a.id, b.id]);
+    expect(guardada?.convertedWorkOrderId).toBe(p1.ok ? p1.value.id : '');
+    const cargas = (await e.outbox.list()).map((o) => o.envelope.payload as { inParts?: boolean });
+    expect(cargas.map((c) => c.inParts)).toEqual([true, true]);
+  });
+
+  it('una línea que ya pasó a otra parte, o ninguna línea, no se convierte', async () => {
+    const e = entorno();
+    const { q, a } = await conDosLineas(e);
+    await convertQuoteToWorkOrder(e.deps, cajero, q.id, {
+      ...fecha,
+      inParts: true,
+      lineIds: [a.id],
+    });
+    expect(
+      await convertQuoteToWorkOrder(e.deps, cajero, q.id, {
+        ...fecha,
+        inParts: true,
+        lineIds: [a.id],
+      }),
+    ).toEqual({ ok: false, error: { code: 'LINE_NOT_PENDING' } });
+    expect(
+      await convertQuoteToWorkOrder(e.deps, cajero, q.id, { ...fecha, inParts: true, lineIds: [] }),
+    ).toEqual({ ok: false, error: { code: 'NO_LINES_SELECTED' } });
+  });
+
+  it('sin "por partes" se convierte completa, como siempre, y no es una parte', async () => {
+    const e = entorno();
+    const { q } = await conDosLineas(e);
+    const r = await convertQuoteToWorkOrder(e.deps, cajero, q.id, fecha);
+    expect(r.ok && r.value.inParts).toBeUndefined();
+    expect(r.ok && r.value.lines).toHaveLength(2);
+    expect((await e.outbox.list())[0]?.envelope.payload).not.toHaveProperty('inParts');
+  });
+
+  it('una cotización convertida antes del cambio (sin líneas anotadas) cuenta como convertida completa', () => {
+    const q = { ...cotizacion('ACCEPTED'), convertedWorkOrderId: 'vieja' };
+    expect(pendingQuoteLines(q)).toEqual([]);
+    expect(pendingQuoteLines({ ...q, convertedWorkOrderId: null })).toHaveLength(1);
+  });
+
+  it('las partes se numeran por orden de creación', () => {
+    const o = (id: string, issuedAt: string, extra: Record<string, unknown> = {}) =>
+      ({ id, quoteId: 'q', inParts: true, issuedAt, tempFolio: `T1-${id}`, ...extra }) as never;
+    const todas = [
+      o('b', '2026-11-02T10:00:00.000Z'),
+      o('a', '2026-11-01T10:00:00.000Z'),
+      o('otra', '2026-11-01T09:00:00.000Z', { quoteId: 'z' }),
+      o('suelta', '2026-11-01T08:00:00.000Z', { inParts: false }),
+    ];
+    expect(partNumber(todas[0] as never, todas)).toBe(2);
+    expect(partNumber(todas[1] as never, todas)).toBe(1);
+    expect(partNumber(todas[3] as never, todas)).toBeNull();
   });
 });
 
