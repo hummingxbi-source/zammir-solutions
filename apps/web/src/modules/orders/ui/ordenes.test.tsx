@@ -221,6 +221,8 @@ describe('Órdenes de trabajo', () => {
       '$58.00',
     );
     expect(screen.getByText(/Anticipo · Transferencia · \$58\.00/)).toBeTruthy();
+    // Hasta que un administrador revise su banco, la transferencia está por confirmar [RF-M4-11].
+    expect(await screen.findByText('Por confirmar')).toBeTruthy();
     expect(porEnviar).toHaveBeenCalled();
   });
 

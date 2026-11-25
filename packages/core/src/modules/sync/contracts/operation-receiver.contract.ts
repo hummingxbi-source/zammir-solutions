@@ -504,6 +504,56 @@ export function operationReceiverContract(
         return { ...e, admin, crear, enviar, pagar, cobro, siguiente };
       }
 
+      describe('confirmar transferencias [RF-M4-11, ADR-0044]', () => {
+        async function conTransferencia() {
+          const e = await conOrden({ admin: true });
+          const { id } = await e.crear(e.dispositivo);
+          const datos = e.cobro(id, 5_800);
+          await e.enviar(e.dispositivo, 'RegisterPayment', datos);
+          const pagoId = datos.rows[0]?.id ?? '';
+          const momento = `${String(e.year)}-06-17T18:00:00.000Z`;
+          const confirmar = (pago: string, extra: Record<string, unknown> = {}) =>
+            e.enviar(
+              e.dispositivo,
+              'ConfirmTransfer',
+              { paymentId: pago, confirmedAt: momento },
+              extra,
+            );
+          return { ...e, pagoId, confirmar };
+        }
+
+        it('con la autorización de un administrador se aplica; dos veces no se duplica', async () => {
+          const { pagoId, confirmar, admin } = await conTransferencia();
+          const r = await confirmar(pagoId, { authorizedBy: admin });
+          expect(r.ok && r.status).toBe('APPLIED');
+          const otra = await confirmar(pagoId, { authorizedBy: admin });
+          expect(otra.ok && otra.status).toBe('TO_REVIEW');
+          expect(otra.ok && otra.reason).toBe('ALREADY_CONFIRMED');
+        });
+
+        it('sin un administrador se guarda, pero queda por revisar', async () => {
+          const { pagoId, confirmar } = await conTransferencia();
+          const r = await confirmar(pagoId);
+          expect(r.ok && r.status).toBe('TO_REVIEW');
+          expect(r.ok && r.reason).toBe('CONFIRM_WITHOUT_AUTHORIZATION');
+        });
+
+        it('un pago que no existe queda por revisar, sin rechazar la operación', async () => {
+          const { confirmar, admin, h } = await conTransferencia();
+          const r = await confirmar(h.newUuid(), { authorizedBy: admin });
+          expect(r.ok && r.status).toBe('TO_REVIEW');
+          expect(r.ok && r.reason).toBe('PAYMENT_NOT_FOUND');
+        });
+
+        it('una carga sin pago no pasa la validación', async () => {
+          const { enviar, dispositivo } = await conTransferencia();
+          const r = await enviar(dispositivo, 'ConfirmTransfer', {
+            confirmedAt: '2026-06-17T18:00:00.000Z',
+          });
+          expect(r.ok).toBe(false);
+        });
+      });
+
       it('crea una orden sin cotización y le da su folio OT del año de emisión', async () => {
         const { dispositivo, crear, year, h } = await conOrden();
         const { id, r } = await crear(dispositivo);

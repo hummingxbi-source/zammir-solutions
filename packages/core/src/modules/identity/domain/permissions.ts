@@ -15,7 +15,8 @@ export type Permission =
   | 'REPORTS_AND_RECEIVABLES'
   | 'INVOICE_GENERATE'
   | 'USERS_AND_DEVICES'
-  | 'PRIVACY_NOTICE_EDIT';
+  | 'PRIVACY_NOTICE_EDIT'
+  | 'TRANSFER_CONFIRM';
 
 /** Qué pasa cuando alguien intenta una acción:
  *  - `ALLOW`: puede.
@@ -47,6 +48,8 @@ export const PERMISSION_MATRIX: PermissionMatrix = {
   INVOICE_GENERATE: { ADMIN: 'ALLOW', STAFF: 'NEEDS_ADMIN_AUTHORIZATION' },
   USERS_AND_DEVICES: { ADMIN: 'ALLOW', STAFF: 'DENY' },
   PRIVACY_NOTICE_EDIT: { ADMIN: 'ALLOW', STAFF: 'DENY' },
+  // Confirmar que llegó una transferencia lo hace quien revisa el banco [RF-M4-11, ADR-0044].
+  TRANSFER_CONFIRM: { ADMIN: 'ALLOW', STAFF: 'DENY' },
 };
 
 /** Cambios a la matriz para un negocio concreto (PD-17: si Luis y Ricardo resultaran tener permisos

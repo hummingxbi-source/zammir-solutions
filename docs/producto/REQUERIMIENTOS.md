@@ -28,6 +28,7 @@
 | Generar una factura desde el sistema | Sí | Solo con autorización de un administrador |
 | Usuarios y dispositivos | Sí | No |
 | Editar aviso de privacidad y términos | Sí | No |
+| Confirmar que llegó una transferencia [RF-M4-11] | Sí | Solo con PIN de un administrador |
 
 **Autenticación** [DC §4]:
 - Administradores: correo y contraseña, con cierre de sesión por inactividad prolongada.
