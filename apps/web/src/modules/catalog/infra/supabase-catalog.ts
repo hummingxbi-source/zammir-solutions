@@ -17,6 +17,7 @@ import {
   type Result,
   type SellableProduct,
 } from '@zammir/core';
+import { leerTodo } from '../../../shared/infra/leer-todo';
 
 const SIN_PERMISO = '42501';
 const VALOR_REPETIDO = '23505';
@@ -66,6 +67,9 @@ interface FilaDeCambio {
 }
 
 const NO_DISPONIBLE: CatalogError = { code: 'CATALOG_UNAVAILABLE' };
+
+/** Cuántos identificadores caben en un `in(...)` sin pasar el largo máximo de la dirección. */
+const GRUPO_DE_IDS = 150;
 
 function aError(error: { readonly code?: string }): CatalogError {
   switch (error.code) {
@@ -219,7 +223,25 @@ export function supabaseCatalog(cliente: SupabaseClient): SupabaseCatalog {
       if (respuesta.error !== null) {
         return err(aError(respuesta.error));
       }
-      return aLista(datos as FilaDeProducto[], aProducto);
+      const filas = datos as FilaDeProducto[];
+      if (filas.length === lote.length) {
+        return aLista(filas, aProducto);
+      }
+      // La respuesta pudo llegar recortada por el tope de filas: se vuelven a leer por sus identificadores,
+      // en grupos chicos para no pasar el largo máximo de la dirección [AJ-01].
+      const ids = lote.map((p) => p.id);
+      const leidas: FilaDeProducto[] = [];
+      for (let i = 0; i < ids.length; i += GRUPO_DE_IDS) {
+        const grupo = await cliente
+          .from('products')
+          .select('*')
+          .in('id', ids.slice(i, i + GRUPO_DE_IDS));
+        if (grupo.error !== null) {
+          return err(aError(grupo.error));
+        }
+        leidas.push(...(grupo.data as FilaDeProducto[]));
+      }
+      return leidas.length === lote.length ? aLista(leidas, aProducto) : err(NO_DISPONIBLE);
     },
 
     async update(producto) {
@@ -261,21 +283,27 @@ export function supabaseCatalog(cliente: SupabaseClient): SupabaseCatalog {
     },
 
     async list() {
-      const respuesta = await cliente.from('products').select('*').order('created_at');
-      const datos: unknown = respuesta.data;
-      if (respuesta.error !== null) {
-        return err(aError(respuesta.error));
-      }
-      return aLista(datos as FilaDeProducto[], aProducto);
+      // Por páginas: un catálogo de más de 1000 productos no se corta [AJ-01].
+      const r = await leerTodo<FilaDeProducto, CatalogError>(
+        (desde, hasta) =>
+          cliente.from('products').select('*').order('created_at').order('id').range(desde, hasta),
+        (e) => aError(e as { readonly code?: string }),
+      );
+      return r.ok ? aLista(r.filas, aProducto) : err(r.error);
     },
 
     async listSellable() {
-      const respuesta = await cliente.from('sellable_products').select('*').order('name');
-      const datos: unknown = respuesta.data;
-      if (respuesta.error !== null) {
-        return err(aError(respuesta.error));
-      }
-      return aLista(datos as FilaParaVender[], aParaVender);
+      const r = await leerTodo<FilaParaVender, CatalogError>(
+        (desde, hasta) =>
+          cliente
+            .from('sellable_products')
+            .select('*')
+            .order('name')
+            .order('id')
+            .range(desde, hasta),
+        (e) => aError(e as { readonly code?: string }),
+      );
+      return r.ok ? aLista(r.filas, aParaVender) : err(r.error);
     },
 
     async findSellable(id) {

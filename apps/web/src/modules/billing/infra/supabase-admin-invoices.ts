@@ -12,6 +12,7 @@ import {
   type IssuedInvoice,
   type PortalRecipientInput,
 } from '@zammir/core';
+import { leerTodo } from '../../../shared/infra/leer-todo';
 
 export interface SupabaseAdminInvoicesOptions {
   /** Dirección de Supabase, sin diagonal final. */
@@ -221,11 +222,20 @@ export function supabaseAdminInvoices(
 
   return {
     async candidates() {
-      const r = await cliente.rpc('admin_invoice_candidates');
-      if (r.error !== null) {
+      // Por páginas, con el mismo orden de la función más un desempate único [AJ-01].
+      const r = await leerTodo<FilaDeFacturable, null>(
+        (desde, hasta) =>
+          cliente
+            .rpc('admin_invoice_candidates')
+            .order('settled_at', { ascending: false, nullsFirst: false })
+            .order('source_id')
+            .range(desde, hasta),
+        () => null,
+      );
+      if (!r.ok) {
         return null;
       }
-      return (r.data as FilaDeFacturable[]).map((f): InvoiceCandidate => ({
+      return r.filas.map((f): InvoiceCandidate => ({
         sourceType: f.source_type,
         sourceId: f.source_id,
         folio: f.folio,
@@ -250,11 +260,19 @@ export function supabaseAdminInvoices(
     },
 
     async list() {
-      const r = await cliente.rpc('admin_invoice_list');
-      if (r.error !== null) {
+      const r = await leerTodo<FilaDeFactura, null>(
+        (desde, hasta) =>
+          cliente
+            .rpc('admin_invoice_list')
+            .order('created_at', { ascending: false })
+            .order('request_id')
+            .range(desde, hasta),
+        () => null,
+      );
+      if (!r.ok) {
         return null;
       }
-      return (r.data as FilaDeFactura[]).map((f): IssuedInvoice => ({
+      return r.filas.map((f): IssuedInvoice => ({
         requestId: f.request_id,
         status: f.status,
         folio: f.invoice_folio,

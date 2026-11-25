@@ -321,3 +321,41 @@ describe('réplica del catálogo en la tablet con Supabase', () => {
     ).toBe(true);
   });
 });
+
+describe('catálogo de más de 1000 productos (AJ-01)', () => {
+  it('se dan de alta 1200 de golpe y la lista del administrador los trae todos', async () => {
+    const comoAdmin = await catalogoComo(admin);
+    const r = await comoAdmin.listCategories();
+    const categoriaId = r.ok ? r.value[0]?.id : undefined;
+    if (categoriaId === undefined) {
+      throw new Error('sin categorías');
+    }
+    const lote = Array.from({ length: 1200 }, (_, i) =>
+      productoDePrueba(asId<'Product'>(crypto.randomUUID()), categoriaId, {
+        code: `M-${sufijo}-${String(i)}`,
+        name: `Producto masivo ${String(i)}`,
+      }),
+    );
+    const ids = lote.map((p) => p.id);
+    try {
+      const creados = await comoAdmin.createMany(lote);
+      expect(creados.ok && creados.value.length).toBe(1200);
+
+      const lista = await comoAdmin.list();
+      expect(lista.ok).toBe(true);
+      const presentes = new Set(lista.ok ? lista.value.map((p) => p.id) : []);
+      expect(ids.filter((id) => !presentes.has(id))).toEqual([]);
+      // Sin repetidos entre páginas.
+      expect(lista.ok && new Set(lista.value.map((p) => p.id)).size).toBe(
+        lista.ok ? lista.value.length : -1,
+      );
+    } finally {
+      for (let i = 0; i < ids.length; i += 150) {
+        await servicio
+          .from('products')
+          .delete()
+          .in('id', ids.slice(i, i + 150));
+      }
+    }
+  }, 60_000);
+});
