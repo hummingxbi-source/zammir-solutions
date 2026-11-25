@@ -4,7 +4,15 @@ import type { Result } from '../../../shared-kernel/result';
 import type { Category, ChargeUnit, PriceChange, Product, ProductKind } from '../domain/product';
 
 export type CatalogErrorCode =
-  'CODE_TAKEN' | 'NOT_FOUND' | 'CATEGORY_NOT_FOUND' | 'NOT_AUTHORIZED' | 'CATALOG_UNAVAILABLE';
+  | 'CODE_TAKEN'
+  | 'NOT_FOUND'
+  | 'CATEGORY_NOT_FOUND'
+  | 'NOT_AUTHORIZED'
+  | 'CATALOG_UNAVAILABLE'
+  /** Ya hay otra categoría con ese nombre (sin acentos ni mayúsculas) [RF-M1-08]. */
+  | 'CATEGORY_NAME_TAKEN'
+  /** No se desactiva una categoría con productos activos [RF-M1-08]. */
+  | 'CATEGORY_IN_USE';
 
 export interface CatalogError {
   readonly code: CatalogErrorCode;
@@ -50,4 +58,11 @@ export interface ProductAdmin {
 
 export interface CategoryReader {
   listCategories(): Promise<Result<readonly Category[], CatalogError>>;
+}
+
+/** Administración de categorías [RF-M1-08, ADR-0044]: alta, cambio de nombre, orden y claves, y desactivación.
+ *  No hay borrado. */
+export interface CategoryAdmin {
+  createCategory(categoria: Category): Promise<Result<Category, CatalogError>>;
+  updateCategory(categoria: Category): Promise<Result<Category, CatalogError>>;
 }

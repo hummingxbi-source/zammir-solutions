@@ -19,6 +19,7 @@ const categorias: Category[] = INITIAL_CATEGORIES.map((c, i) => ({
   name: c.name,
   sortOrder: i + 1,
   fiscalDefaults: c.fiscalDefaults,
+  isActive: true,
 }));
 
 const contexto: ImportContext = {

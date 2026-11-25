@@ -9,15 +9,14 @@ import {
   inMemoryCatalog,
   money,
   sequentialIdGenerator,
-  type ImportCatalogDeps,
   type ProductDraft,
 } from '@zammir/core';
 
 import { uuidIdGenerator } from '../shared/infra/uuid-id-generator';
-import { Catalogo } from '../modules/catalog/ui/Catalogo';
+import { Catalogo, type CatalogoDeps } from '../modules/catalog/ui/Catalogo';
 
 /** Muestra del Catálogo SOLO para desarrollo (`/muestras/catalogo`), con productos de ejemplo en memoria. */
-async function armar(): Promise<ImportCatalogDeps | null> {
+async function armar(): Promise<CatalogoDeps | null> {
   const catalogo = inMemoryCatalog({
     idGenerator: uuidIdGenerator,
     clock: fixedClock(new Date()),
@@ -27,7 +26,7 @@ async function armar(): Promise<ImportCatalogDeps | null> {
   if (!reglas.ok) {
     return null;
   }
-  const deps: ImportCatalogDeps = {
+  const deps: CatalogoDeps = {
     products: catalogo,
     categories: catalogo,
     idGenerator: sequentialIdGenerator('p'),
@@ -74,7 +73,7 @@ async function armar(): Promise<ImportCatalogDeps | null> {
 }
 
 export function MuestraDelCatalogo(): ReactElement {
-  const [deps, setDeps] = useState<ImportCatalogDeps | null>(null);
+  const [deps, setDeps] = useState<CatalogoDeps | null>(null);
   useEffect(() => {
     void armar().then(setDeps);
   }, []);
