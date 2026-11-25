@@ -144,7 +144,9 @@ async function recorrido(semilla = 8) {
     settings: { depositPercentBps: 5_000, requireDepositToStart: true, warrantyMonthsDefault: 12 },
   };
   await deps.quotes.save(cotizacion);
-  const creada = await convertQuoteToWorkOrder(deps, cajero, cotizacion.id);
+  const creada = await convertQuoteToWorkOrder(deps, cajero, cotizacion.id, {
+    estimatedDeliveryDate: '2099-12-31',
+  });
   if (!creada.ok) {
     throw new Error('no se creó la orden');
   }

@@ -171,8 +171,14 @@ async function montar(opciones: { actor?: QuoteActor | null } = {}) {
   return { deps, outbox, porEnviar, cotizacion, photos };
 }
 
-async function crearOrden(): Promise<void> {
+async function crearOrden(fecha = '2026-11-15'): Promise<void> {
   fireEvent.click(await screen.findByRole('button', { name: /Crear orden de trabajo/ }));
+  // Antes de crearla se pide la fecha estimada de entrega [RF-M3-09].
+  const ventana = await screen.findByRole('dialog', { name: 'Fecha estimada de entrega' });
+  fireEvent.change(within(ventana).getByLabelText(/Fecha estimada de entrega/), {
+    target: { value: fecha },
+  });
+  fireEvent.click(within(ventana).getByRole('button', { name: 'Crear la orden' }));
   await screen.findByRole('heading', { name: /T1-0001 · Ana López/ });
 }
 
@@ -321,6 +327,35 @@ describe('Órdenes de trabajo', () => {
     await waitFor(() => {
       expect(screen.getByText('Cancelado', { selector: '.etiqueta-estado' })).toBeTruthy();
     });
+  });
+
+  it('al crear la orden pide la fecha de entrega: sin ella no se puede, y una pasada se rechaza', async () => {
+    const { outbox } = await montar();
+    fireEvent.click(await screen.findByRole('button', { name: /Crear orden de trabajo/ }));
+    const ventana = await screen.findByRole('dialog', { name: 'Fecha estimada de entrega' });
+    const crear = within(ventana).getByRole('button', { name: 'Crear la orden' });
+    expect((crear as HTMLButtonElement).disabled).toBe(true);
+    const campo = within(ventana).getByLabelText(/Fecha estimada de entrega/);
+    expect(campo.getAttribute('min')).toBe('2026-10-31');
+    fireEvent.change(campo, { target: { value: '2026-10-01' } });
+    fireEvent.click(crear);
+    expect(await within(ventana).findByText('La fecha no es válida.')).toBeTruthy();
+    expect(await outbox.list()).toHaveLength(0);
+    // Volver no crea nada.
+    fireEvent.click(within(ventana).getByRole('button', { name: 'Volver' }));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(await outbox.list()).toHaveLength(0);
+  });
+
+  it('la orden nace con su fecha y, si ya pasó, sale como atrasada y en el filtro', async () => {
+    const { outbox } = await montar();
+    await crearOrden('2026-10-31');
+    expect((await outbox.list())[0]?.envelope.payload).toMatchObject({
+      estimatedDeliveryDate: '2026-10-31',
+    });
+    // Hoy es el 31 de octubre: todavía no va atrasada.
+    fireEvent.click(screen.getByRole('button', { name: /Volver|Órdenes/ }));
+    expect(await screen.findByRole('button', { name: 'Atrasadas (0)' })).toBeTruthy();
   });
 
   it('guarda responsables, fecha y notas', async () => {

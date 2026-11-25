@@ -31,6 +31,7 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). L
 
 **Órdenes de trabajo y cuentas por cobrar**
 - Conversión de una cotización aceptada, anticipo, saldo, garantía y estatus, con autorizaciones de administrador para lo excepcional.
+- Fecha estimada de entrega obligatoria al crear la orden; las órdenes vencidas salen como **Atrasadas**, con su filtro y su conteo en el panel de inicio (AJ-03, RF-M3-09).
 - Comprobante de trabajo en PDF con QR para pedir la factura.
 - Cuentas por cobrar, de la más atrasada a la más reciente.
 

@@ -77,6 +77,8 @@ operationReceiverContract('memoria', () => {
               status: orden.status,
               paidCents: almacen.ordenesStore.pagado.get(id) ?? 0,
               folio: orden.folio,
+              estimatedDeliveryDate:
+                (orden.fields.estimatedDeliveryDate as string | null | undefined) ?? null,
             },
       );
     },

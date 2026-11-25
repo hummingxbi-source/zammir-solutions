@@ -112,7 +112,9 @@ function entorno(ajustes: Partial<OrderDeps['settings']> = {}) {
 async function orden(e: ReturnType<typeof entorno>) {
   const q = cotizacion('ACCEPTED');
   await e.deps.quotes.save(q);
-  const r = await convertQuoteToWorkOrder(e.deps, cajero, q.id);
+  const r = await convertQuoteToWorkOrder(e.deps, cajero, q.id, {
+    estimatedDeliveryDate: '2099-12-31',
+  });
   if (!r.ok) {
     throw new Error('orden');
   }
@@ -127,6 +129,7 @@ describe('permisos', () => {
     const e = entorno();
     const o = await orden(e);
     const manual = await createManualWorkOrder(e.deps, sinPersona, {
+      estimatedDeliveryDate: '2099-12-31',
       customerId: CLIENTE,
       siteAddress: null,
       description: null,
@@ -135,7 +138,9 @@ describe('permisos', () => {
     expect(!manual.ok && manual.error.code).toBe('NOT_AUTHORIZED');
     const q = cotizacion('ACCEPTED');
     await e.deps.quotes.save(q);
-    const convertir = await convertQuoteToWorkOrder(e.deps, sinPersona, q.id);
+    const convertir = await convertQuoteToWorkOrder(e.deps, sinPersona, q.id, {
+      estimatedDeliveryDate: '2099-12-31',
+    });
     expect(!convertir.ok && convertir.error.code).toBe('NOT_AUTHORIZED');
     const editar = await updateWorkOrder(e.deps, sinPersona, o.id, { notes: 'x' });
     expect(!editar.ok && editar.error.code).toBe('NOT_AUTHORIZED');
@@ -165,10 +170,13 @@ describe('creación', () => {
     const e = entorno();
     const q = cotizacion('ACCEPTED', { convertedWorkOrderId: null });
     await e.deps.quotes.save(q);
-    expect((await convertQuoteToWorkOrder(e.deps, cajero, q.id)).ok).toBe(true);
+    expect(
+      (await convertQuoteToWorkOrder(e.deps, cajero, q.id, { estimatedDeliveryDate: '2099-12-31' }))
+        .ok,
+    ).toBe(true);
   });
 
-  it('una orden nueva nace sin datos de entrega, de cancelación ni de responsables', async () => {
+  it('una orden nueva nace con su fecha estimada y sin datos de entrega, de cancelación ni de responsables', async () => {
     const o = await orden(entorno());
     expect(o).toMatchObject({
       deliveredWithBalance: false,
@@ -182,7 +190,7 @@ describe('creación', () => {
       measuredBy: null,
       builtBy: null,
       installedBy: null,
-      estimatedDeliveryDate: null,
+      estimatedDeliveryDate: '2099-12-31',
       notes: null,
       folio: null,
       reviewReason: null,
@@ -204,6 +212,7 @@ describe('creación', () => {
     const e = entorno();
     const l = { ...linea(), displayUnit: null, ruleParams: undefined } as unknown as QuoteLine;
     const r = await createManualWorkOrder(e.deps, cajero, {
+      estimatedDeliveryDate: '2099-12-31',
       customerId: CLIENTE,
       siteAddress: null,
       description: null,
@@ -227,25 +236,33 @@ describe('datos de la orden', () => {
     expect(!r.ok && r.error.code).toBe('INVALID_TRANSITION');
   });
 
-  it.each(['2026-1-05', 'x2026-10-05', '2026-10-05x', '202-10-05', '2026-10-5', '20261005', ''])(
-    'la fecha estimada "%s" no es válida',
-    async (mala) => {
-      const e = entorno();
-      const o = await orden(e);
-      const r = await updateWorkOrder(e.deps, cajero, o.id, { estimatedDeliveryDate: mala });
-      expect(!r.ok && r.error.code).toBe('INVALID_DATE');
-    },
-  );
+  it.each([
+    '2026-1-05',
+    'x2026-10-05',
+    '2026-10-05x',
+    '202-10-05',
+    '2026-10-5',
+    '20261005',
+    '2026-02-30',
+  ])('la fecha estimada "%s" no es válida', async (mala) => {
+    const e = entorno();
+    const o = await orden(e);
+    const r = await updateWorkOrder(e.deps, cajero, o.id, { estimatedDeliveryDate: mala });
+    expect(!r.ok && r.error.code).toBe('INVALID_DATE');
+  });
 
-  it('una fecha bien escrita se guarda y se puede quitar', async () => {
+  it('una fecha bien escrita se guarda, pero ya no se puede quitar [RF-M3-09]', async () => {
     const e = entorno();
     const o = await orden(e);
     const puesta = await updateWorkOrder(e.deps, cajero, o.id, {
       estimatedDeliveryDate: '2026-11-20',
     });
     expect(puesta.ok && puesta.value.estimatedDeliveryDate).toBe('2026-11-20');
-    const quitada = await updateWorkOrder(e.deps, cajero, o.id, { estimatedDeliveryDate: null });
-    expect(quitada.ok && quitada.value.estimatedDeliveryDate).toBeNull();
+    for (const vacia of [null, '', '  ']) {
+      const quitada = await updateWorkOrder(e.deps, cajero, o.id, { estimatedDeliveryDate: vacia });
+      expect(!quitada.ok && quitada.error.code).toBe('DATE_REQUIRED');
+    }
+    expect((await e.deps.orders.get(o.id))?.estimatedDeliveryDate).toBe('2026-11-20');
   });
 
   it('cada dato se guarda solo, y solo viaja lo que cambió', async () => {

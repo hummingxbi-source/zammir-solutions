@@ -5,6 +5,8 @@ import {
   balanceCents,
   cancelWorkOrder,
   deliverWorkOrder,
+  isWorkOrderLate,
+  mexicoDate,
   registerWorkOrderPayment,
   updateWorkOrder,
   type Authorization,
@@ -202,12 +204,22 @@ export function DetalleDeOrden(props: DetalleDeOrdenProps): ReactElement {
         acciones={
           <>
             <EtiquetaDeEstado tono={tonoDeEstado[orden.status]} texto={t.estados[orden.status]} />
+            {isWorkOrderLate(orden, mexicoDate(deps.clock.now())) ? (
+              <EtiquetaDeEstado tono="peligro" texto={t.atrasada} />
+            ) : null}
             <Boton variante="secundario" onClick={props.onVolver}>
               {t.detalle.volver}
             </Boton>
           </>
         }
       />
+      {(orden.estimatedDeliveryDate ?? null) === null &&
+      orden.status !== 'DELIVERED' &&
+      orden.status !== 'CANCELLED' ? (
+        <Aviso tipo="error" queHacer={t.sinFecha.queHacer}>
+          {t.sinFecha.mensaje}
+        </Aviso>
+      ) : null}
       {orden.reviewReason !== null ? (
         <Aviso tipo="error">
           {t.detalle.revisar} {t.motivosDeRevision[orden.reviewReason] ?? orden.reviewReason}
@@ -297,6 +309,8 @@ export function DetalleDeOrden(props: DetalleDeOrdenProps): ReactElement {
                   <Campo
                     etiqueta={t.datos.fecha}
                     type="date"
+                    // Entregada, conserva la fecha que tenía [RF-M3-09].
+                    disabled={orden.status === 'DELIVERED'}
                     value={fecha}
                     onChange={(e) => {
                       setFecha(e.target.value);

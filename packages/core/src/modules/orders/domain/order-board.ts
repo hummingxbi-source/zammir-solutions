@@ -18,6 +18,22 @@ export interface OrderFilter {
   /** Fecha de creación, desde y hasta (`AAAA-MM-DD`, hora de México, ambos incluidos) [RN-17]. */
   readonly fromDate?: string | null;
   readonly toDate?: string | null;
+  /** Solo las atrasadas [RF-M3-09]; `today` es el día en México con que se juzga el atraso. */
+  readonly overdue?: { readonly today: string } | null;
+}
+
+/** ¿Va atrasada? Hoy (día en México) ya pasó su fecha estimada y no se ha entregado ni cancelado
+ *  [RF-M3-09, ADR-0044]. Se calcula, no se guarda [ADR-0015]. Sin fecha (orden vieja), no se juzga. */
+export function isWorkOrderLate(
+  orden: Pick<WorkOrder, 'status' | 'estimatedDeliveryDate'>,
+  today: string,
+): boolean {
+  if (orden.status === 'DELIVERED' || orden.status === 'CANCELLED') {
+    return false;
+  }
+  // Un documento guardado antes de RF-M3-09 puede no traer el campo.
+  const fecha = orden.estimatedDeliveryDate ?? null;
+  return fecha !== null && today > fecha;
 }
 
 const hay = (v: string | null | undefined): v is string =>
@@ -30,6 +46,13 @@ export function filterWorkOrders(
 ): readonly WorkOrder[] {
   return ordenes.filter((o) => {
     if (hay(filtro.status) && o.status !== filtro.status) {
+      return false;
+    }
+    if (
+      filtro.overdue !== null &&
+      filtro.overdue !== undefined &&
+      !isWorkOrderLate(o, filtro.overdue.today)
+    ) {
       return false;
     }
     if (hay(filtro.customerId) && o.customerId !== filtro.customerId) {
