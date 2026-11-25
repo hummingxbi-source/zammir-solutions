@@ -3,11 +3,19 @@ import type { IdGenerator, ProductId } from '../../../shared-kernel/id';
 import { err, ok } from '../../../shared-kernel/result';
 import type { InMemoryAuditLog } from '../../audit/application/in-memory-audit-log';
 import { recordAuditEntry } from '../../audit/application/record-audit-entry';
+import { categoryNameTaken } from '../domain/category';
 import { INITIAL_CATEGORIES } from '../domain/initial-categories';
 import type { Category, PriceChange, Product } from '../domain/product';
-import type { CategoryReader, ProductAdmin, ProductReader, SellableProduct } from './ports';
+import type {
+  CategoryAdmin,
+  CategoryReader,
+  ProductAdmin,
+  ProductReader,
+  SellableProduct,
+} from './ports';
 
-export interface InMemoryCatalog extends ProductAdmin, ProductReader, CategoryReader {}
+export interface InMemoryCatalog
+  extends ProductAdmin, ProductReader, CategoryReader, CategoryAdmin {}
 
 export interface InMemoryCatalogDeps {
   readonly idGenerator: IdGenerator;
@@ -31,6 +39,8 @@ function paraVender(p: Product): SellableProduct {
 }
 
 type AccionDeProducto = 'PRODUCT_PRICE_CHANGED' | 'PRODUCT_ACTIVATED' | 'PRODUCT_DEACTIVATED';
+type AccionDeCategoria =
+  'CATEGORY_CREATED' | 'CATEGORY_UPDATED' | 'CATEGORY_ACTIVATED' | 'CATEGORY_DEACTIVATED';
 
 /** Adaptador en memoria de los puertos del catálogo, para pruebas. Nace con las categorías iniciales. */
 export function inMemoryCatalog(deps: InMemoryCatalogDeps): InMemoryCatalog {
@@ -39,6 +49,7 @@ export function inMemoryCatalog(deps: InMemoryCatalogDeps): InMemoryCatalog {
     name: c.name,
     sortOrder: indice + 1,
     fiscalDefaults: c.fiscalDefaults,
+    isActive: true,
   }));
   const productos = new Map<ProductId, Product>();
   const historial = new Map<ProductId, PriceChange[]>();
@@ -70,8 +81,58 @@ export function inMemoryCatalog(deps: InMemoryCatalogDeps): InMemoryCatalog {
     });
   }
 
+  function bitacoraDeCategoria(c: Category, action: AccionDeCategoria, anterior: Category | null) {
+    return recordAuditEntry(auditoria, {
+      userId: null,
+      deviceId: null,
+      action,
+      entityType: 'product_category',
+      entityId: c.id,
+      oldValue: anterior === null ? null : { nombre: anterior.name, activa: anterior.isActive },
+      newValue: { nombre: c.name, activa: c.isActive },
+    });
+  }
+
   return {
     listCategories: () => Promise.resolve(ok([...categorias])),
+
+    async createCategory(categoria) {
+      if (categoryNameTaken(categoria.name, categorias)) {
+        return err({ code: 'CATEGORY_NAME_TAKEN' });
+      }
+      categorias.push(categoria);
+      await bitacoraDeCategoria(categoria, 'CATEGORY_CREATED', null);
+      return ok(categoria);
+    },
+
+    async updateCategory(categoria) {
+      const i = categorias.findIndex((c) => c.id === categoria.id);
+      const anterior = categorias[i];
+      if (anterior === undefined) {
+        return err({ code: 'NOT_FOUND' });
+      }
+      if (categoryNameTaken(categoria.name, categorias, categoria.id)) {
+        return err({ code: 'CATEGORY_NAME_TAKEN' });
+      }
+      if (
+        anterior.isActive &&
+        !categoria.isActive &&
+        [...productos.values()].some((p) => p.isActive && p.categoryId === categoria.id)
+      ) {
+        return err({ code: 'CATEGORY_IN_USE' });
+      }
+      categorias[i] = categoria;
+      await bitacoraDeCategoria(
+        categoria,
+        anterior.isActive === categoria.isActive
+          ? 'CATEGORY_UPDATED'
+          : categoria.isActive
+            ? 'CATEGORY_ACTIVATED'
+            : 'CATEGORY_DEACTIVATED',
+        anterior,
+      );
+      return ok(categoria);
+    },
 
     list: () => Promise.resolve(ok([...productos.values()])),
 
