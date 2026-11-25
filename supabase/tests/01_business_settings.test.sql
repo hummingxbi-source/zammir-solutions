@@ -13,7 +13,7 @@ select is((select value from public.business_settings where key = 'tax_rate_bps'
 select is((select value from public.business_settings where key = 'deposit_percent_bps'), '5000'::jsonb, 'anticipo 50 %');
 select is((select value from public.business_settings where key = 'quote_validity_days'), '15'::jsonb, 'vigencia de 15 días');
 select is((select value from public.business_settings where key = 'idle_lock_minutes'), '5'::jsonb, 'bloqueo a los 5 minutos');
-select is((select value from public.business_settings where key = 'receivable_aging_threshold_days'), '10'::jsonb, 'umbral de 10 días');
+select is((select value from public.business_settings where key = 'receivable_aging_threshold_days'), '1'::jsonb, 'umbral de 1 día desde la entrega (ADR-0044)');
 select is((select value from public.business_settings where key = 'deposit_tax_treatment'), '"a"'::jsonb, 'anticipos: opción a');
 select is(
   (select array_agg(value order by key) from public.business_settings where key in ('feature_p1', 'feature_p2')),

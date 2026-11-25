@@ -531,7 +531,8 @@ export async function deliverWorkOrder(
     nueva,
     {
       type: 'DeliverWorkOrder',
-      payload: { id, ...(saldo > 0 ? { reason: motivo } : {}) },
+      // La hora de la entrega es la de la tablet: si se entregó sin internet, cuenta el día real [ADR-0044].
+      payload: { id, deliveredAt: instante, ...(saldo > 0 ? { reason: motivo } : {}) },
       authorizedBy: autorizo,
     },
     async (tx) => {

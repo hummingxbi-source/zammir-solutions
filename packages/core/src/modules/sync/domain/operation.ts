@@ -214,6 +214,9 @@ export const advanceWorkOrderPayloadSchema = z.object({
 export const deliverWorkOrderPayloadSchema = z.object({
   id: uuid,
   reason: z.string().nullable().optional(),
+  /** Hora de la entrega en la tablet [ADR-0044]; opcional para entregas viejas en cola. El servidor la
+   *  limita a no ser anterior a la orden ni posterior a su propia hora. */
+  deliveredAt: z.iso.datetime().optional(),
 });
 
 /** Carga de `CancelWorkOrder`: cancelar con motivo [S3-08]. */

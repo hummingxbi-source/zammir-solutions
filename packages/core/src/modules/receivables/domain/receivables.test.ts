@@ -11,19 +11,21 @@ import {
 type Orden = Parameters<typeof buildReceivables>[0]['orders'][number];
 type Pago = Parameters<typeof buildReceivables>[0]['payments'][number];
 
+/** Una orden ENTREGADA en `deliveredAt`: los días de la cuenta se cuentan desde ahí [ADR-0044]. */
 const orden = (
   id: string,
   total: number,
-  issuedAt: string,
+  deliveredAt: string,
   cambios: Partial<Orden> = {},
 ): Orden => ({
   id: id as never,
-  status: 'IN_PROCESS',
+  status: 'DELIVERED',
   customerId: `c-${id}` as never,
   totalCents: total,
   folio: `OT-${id}`,
   tempFolio: `T1-${id}`,
-  issuedAt,
+  issuedAt: '2026-10-01T18:00:00.000Z',
+  deliveredAt,
   ...cambios,
 });
 const pago = (
@@ -39,8 +41,58 @@ const pago = (
 const HOY = '2026-11-20';
 
 describe('cuentas por cobrar', () => {
-  it('el umbral por omisión es de 10 días (PD-33)', () => {
-    expect(DEFAULT_OVERDUE_DAYS).toBe(10);
+  it('el umbral por omisión es de 1 día: atrasada desde el día siguiente a la entrega (ADR-0044)', () => {
+    expect(DEFAULT_OVERDUE_DAYS).toBe(1);
+    const filas = buildReceivables({
+      orders: [
+        orden('hoy', 100, '2026-11-20T18:00:00.000Z'),
+        orden('ayer', 100, '2026-11-19T18:00:00.000Z'),
+      ],
+      payments: [],
+      today: HOY,
+    });
+    expect(filas.find((f) => f.orderId === 'hoy')).toMatchObject({
+      daysOutstanding: 0,
+      overdue: false,
+    });
+    expect(filas.find((f) => f.orderId === 'ayer')).toMatchObject({
+      daysOutstanding: 1,
+      overdue: true,
+    });
+  });
+
+  it('lo que todavía no se entrega sale "por entregar": sin días ni atraso, aunque la orden sea vieja', () => {
+    const filas = buildReceivables({
+      orders: [
+        orden('1', 10_000, '2026-11-01T18:00:00.000Z', {
+          status: 'IN_PROCESS',
+          deliveredAt: null,
+          issuedAt: '2025-01-01T18:00:00.000Z',
+        }),
+        orden('2', 10_000, '2026-11-01T18:00:00.000Z', { status: 'READY', deliveredAt: null }),
+      ],
+      payments: [pago('1', 5_000)],
+      today: HOY,
+    });
+    expect(filas).toHaveLength(2);
+    for (const f of filas) {
+      expect(f).toMatchObject({
+        notDelivered: true,
+        deliveredOn: null,
+        daysOutstanding: null,
+        overdue: false,
+      });
+    }
+    expect(filas.find((f) => f.orderId === '1')?.balanceCents).toBe(5_000);
+  });
+
+  it('una orden entregada que no trae la hora de entrega (documento viejo) no inventa días', () => {
+    const [fila] = buildReceivables({
+      orders: [orden('1', 100, '2026-11-01T18:00:00.000Z', { deliveredAt: undefined as never })],
+      payments: [],
+      today: HOY,
+    });
+    expect(fila).toMatchObject({ notDelivered: false, daysOutstanding: null, overdue: false });
   });
 
   it('muestra folio, saldo y días calculados con el día de México', () => {
@@ -56,7 +108,9 @@ describe('cuentas por cobrar', () => {
       totalCents: 50_000,
       paidCents: 20_000,
       balanceCents: 30_000,
-      issuedOn: '2026-11-10',
+      issuedOn: '2026-10-01',
+      deliveredOn: '2026-11-10',
+      notDelivered: false,
       daysOutstanding: 10,
       overdue: true,
     });
@@ -68,12 +122,12 @@ describe('cuentas por cobrar', () => {
       payments: [],
       today: HOY,
     });
-    expect(fila?.issuedOn).toBe('2026-11-10');
+    expect(fila?.deliveredOn).toBe('2026-11-10');
     expect(fila?.daysOutstanding).toBe(10);
   });
 
   it('se resalta justo en el umbral y no un día antes; el umbral se puede cambiar', () => {
-    const base = { payments: [], today: HOY };
+    const base = { payments: [], today: HOY, overdueDays: 10 };
     const nueve = buildReceivables({
       ...base,
       orders: [orden('1', 100, '2026-11-11T18:00:00.000Z')],
@@ -133,7 +187,7 @@ describe('cuentas por cobrar', () => {
     const futura = filas.find((f) => f.orderId === '1');
     const mala = filas.find((f) => f.orderId === '2');
     expect(futura).toMatchObject({ daysOutstanding: 0, overdue: false });
-    expect(mala).toMatchObject({ daysOutstanding: null, issuedOn: null, overdue: false });
+    expect(mala).toMatchObject({ daysOutstanding: null, deliveredOn: null, overdue: false });
   });
 
   it('se ordena de la más atrasada a la más reciente, y a igual atraso, por saldo; sin fecha al final', () => {
@@ -163,7 +217,7 @@ describe('cuentas por cobrar', () => {
     const filas = buildReceivables({
       orders: [
         orden('1', 10_000, '2026-11-01T18:00:00.000Z'),
-        orden('2', 5_000, '2026-11-19T18:00:00.000Z'),
+        orden('2', 5_000, '2026-11-20T18:00:00.000Z'),
       ],
       payments: [],
       today: HOY,
