@@ -34,6 +34,7 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). L
 - Fecha estimada de entrega obligatoria al crear la orden; las órdenes vencidas salen como **Atrasadas**, con su filtro y su conteo en el panel de inicio (AJ-03, RF-M3-09).
 - Comprobante de trabajo en PDF con QR para pedir la factura.
 - Cuentas por cobrar, de la más atrasada a la más reciente.
+- **Transferencias por confirmar**: un administrador revisa su banco y marca "Ya llegó"; queda quién y cuándo, sale sin internet como cualquier operación y llega a las demás tablets. Cada pago por transferencia dice "Por confirmar" o "Confirmada" (AJ-05, RF-M4-11).
 - Las cuentas por cobrar cuentan los días **desde la entrega** y salen atrasadas desde el día siguiente (umbral de 1 día por omisión, configurable); lo que no se ha entregado aparece como "Por entregar". La hora de la entrega es la de la tablet, aunque se haya entregado sin internet (AJ-04, ADR-0044).
 
 **Mostrador y caja**

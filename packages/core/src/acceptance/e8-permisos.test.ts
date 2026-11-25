@@ -149,6 +149,7 @@ describe('E8 · el cajero queda limitado por el dominio', () => {
       'REPORTS_AND_RECEIVABLES',
       'USERS_AND_DEVICES',
       'PRIVACY_NOTICE_EDIT',
+      'TRANSFER_CONFIRM',
     ];
     for (const permiso of Object.keys(PERMISSION_MATRIX) as Permission[]) {
       expect(defaultPermissionPolicy.check('STAFF', permiso) === 'DENY').toBe(

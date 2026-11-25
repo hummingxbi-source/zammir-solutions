@@ -1274,6 +1274,40 @@ export const textos = {
       mensaje: 'Las cuentas por cobrar son solo para administradores.',
       queHacer: 'Entra con el PIN de un administrador.',
     },
+    transferencias: {
+      titulo: 'Transferencias por confirmar',
+      ayuda:
+        'Revisa en tu banco que llegó cada una y toca "Ya llegó". Queda quién la confirmó y cuándo; los totales no cambian.',
+      vacio: 'No hay transferencias por confirmar.',
+      yaLlego: 'Ya llegó',
+      confirmada: 'Transferencia confirmada. Se guardó en la tablet y se enviará sola.',
+      sinReferencia: 'Sin referencia',
+      porConfirmar: 'Por confirmar',
+      confirmadaEtiqueta: 'Confirmada',
+      columnas: { fecha: 'Fecha', folio: 'Folio', importe: 'Importe', referencia: 'Referencia' },
+      errores: {
+        NOT_AUTHORIZED: {
+          mensaje: 'Solo un administrador confirma transferencias.',
+          queHacer: 'Pide a un administrador que la confirme.',
+        },
+        NOT_FOUND: {
+          mensaje: 'Ese pago ya no está en la tablet.',
+          queHacer: 'Actualiza la lista e intenta de nuevo.',
+        },
+        NOT_A_TRANSFER: {
+          mensaje: 'Ese pago fue en efectivo.',
+          queHacer: 'Solo las transferencias se confirman.',
+        },
+        ALREADY_CONFIRMED: {
+          mensaje: 'Esa transferencia ya estaba confirmada.',
+          queHacer: 'No hace falta hacer nada.',
+        },
+        STORAGE_FAILED: {
+          mensaje: 'No se pudo guardar en la tablet.',
+          queHacer: 'Intenta de nuevo. Si sigue igual, avisa a soporte.',
+        },
+      },
+    },
     recordatorio: {
       boton: 'Recordatorio',
       abierto: 'Se abrió WhatsApp con el recordatorio. Revísalo y envíalo.',

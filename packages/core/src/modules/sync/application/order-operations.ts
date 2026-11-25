@@ -4,6 +4,7 @@ import {
   cancelCounterSalePayloadSchema,
   cancelWorkOrderPayloadSchema,
   closeCashShiftPayloadSchema,
+  confirmTransferPayloadSchema,
   openCashShiftPayloadSchema,
   reopenCashShiftPayloadSchema,
   createCounterSalePayloadSchema,
@@ -56,6 +57,10 @@ export interface OrderStore {
   readonly pagado: Map<string, number>;
   /** Ids de pago ya guardados. */
   readonly pagos: Set<string>;
+  /** Método de cada pago guardado (de órdenes y de ventas). */
+  readonly metodoDePago: Map<string, 'CASH' | 'TRANSFER'>;
+  /** Pagos por transferencia ya confirmados [RF-M4-11]. */
+  readonly confirmadas: Set<string>;
   readonly convertidas: Set<string>;
   readonly codigosDeOrden: Set<string>;
   /** Ventas de mostrador del servidor. */
@@ -82,6 +87,7 @@ export const ORDER_OPERATION_TYPES = [
   'OpenCashShift',
   'CloseCashShift',
   'ReopenCashShift',
+  'ConfirmTransfer',
 ] as const;
 
 const invalida = (detail?: string): OperationResult => ({
@@ -290,6 +296,7 @@ export async function applyOrderOperation(ctx: {
       }
       for (const r of c.data.rows) {
         store.pagos.add(r.id);
+        store.metodoDePago.set(r.id, r.method);
       }
       store.pagado.set(id, (store.pagado.get(id) ?? 0) + aplicado);
       return fin(orden, id, motivo);
@@ -339,6 +346,9 @@ export async function applyOrderOperation(ctx: {
           turno.cashCents += efectivo;
         }
         store.codigosDeVenta.add(p.publicCode);
+        for (const r of p.payment.rows) {
+          store.metodoDePago.set(r.id, r.method);
+        }
         const motivo =
           cobrado !== p.totalCents
             ? 'PAYMENT_NOT_EQUAL_TOTAL'
@@ -466,6 +476,35 @@ export async function applyOrderOperation(ctx: {
         ok: true,
         status: sinPermiso ? 'TO_REVIEW' : ctx.baseStatus,
         documentId: c.data.id,
+        ...(reason === undefined ? {} : { reason }),
+      };
+    }
+
+    case 'ConfirmTransfer': {
+      const c = confirmTransferPayloadSchema.safeParse(op.payload);
+      if (!c.success) {
+        return invalida();
+      }
+      const id = c.data.paymentId;
+      // Nada se rechaza: si no se puede confirmar, queda por revisar sin guardar nada [RF-M4-11].
+      const metodo = store.metodoDePago.get(id);
+      if (metodo === undefined) {
+        return revisar('PAYMENT_NOT_FOUND', { documentId: id });
+      }
+      if (metodo !== 'TRANSFER') {
+        return revisar('NOT_A_TRANSFER', { documentId: id });
+      }
+      if (store.confirmadas.has(id)) {
+        return revisar('ALREADY_CONFIRMED', { documentId: id });
+      }
+      store.confirmadas.add(id);
+      const quien = op.authorizedBy ?? op.userId;
+      const sinPermiso = !store.administradores.has(quien);
+      const reason = sinPermiso ? 'CONFIRM_WITHOUT_AUTHORIZATION' : ctx.baseReason;
+      return {
+        ok: true,
+        status: sinPermiso ? 'TO_REVIEW' : ctx.baseStatus,
+        documentId: id,
         ...(reason === undefined ? {} : { reason }),
       };
     }
