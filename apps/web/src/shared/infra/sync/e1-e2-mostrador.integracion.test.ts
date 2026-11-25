@@ -298,7 +298,18 @@ describe('E1 y E2 · de la cotización a la entrega y el corte, sin conexión (s
 
     // Esperado en el cajón: fondo 100.00 + anticipo 268.80 + venta 116.00 = 484.80 (la transferencia y la
     // venta cancelada no entran). Se cuentan $483.80: faltan $1.00.
-    const corte = await closeCashShift(cashDeps, cajera, turno.value.id, 48_380);
+    // Con diferencia el turno no se cierra sin explicación [RF-M4-09].
+    expect(await closeCashShift(cashDeps, cajera, turno.value.id, 48_380)).toEqual({
+      ok: false,
+      error: { code: 'REASON_REQUIRED' },
+    });
+    const corte = await closeCashShift(
+      cashDeps,
+      cajera,
+      turno.value.id,
+      48_380,
+      'Faltó un peso del cambio',
+    );
     expect(corte.ok).toBe(true);
     if (!corte.ok) {
       return;
@@ -348,6 +359,7 @@ describe('E1 y E2 · de la cotización a la entrega y el corte, sin conexión (s
       status: 'CLOSED',
       expectedCents: 48_480,
       differenceCents: -100,
+      differenceNote: 'Faltó un peso del cambio',
     });
 
     // La tablet quedó con los folios definitivos, consecutivos.

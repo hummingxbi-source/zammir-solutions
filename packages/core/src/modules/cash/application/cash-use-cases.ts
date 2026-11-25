@@ -27,7 +27,11 @@ export type CashErrorCode =
   | 'NOT_CLOSED'
   | 'AMOUNT_INVALID'
   | 'REASON_REQUIRED'
+  | 'NOTE_TOO_LONG'
   | 'STORAGE_FAILED';
+
+/** Largo máximo de la explicación de una diferencia en el corte. */
+export const MAX_DIFFERENCE_NOTE_LENGTH = 500;
 
 export interface CashError {
   readonly code: CashErrorCode;
@@ -109,6 +113,7 @@ export async function openCashShift(
     countedCashCents: null,
     expectedCashCents: null,
     differenceCents: null,
+    differenceNote: null,
     pendingAtClose: null,
     reopenings: [],
     syncStatus: 'SAVED_ON_TABLET',
@@ -144,25 +149,30 @@ export function pendingBeforeClose(deps: Pick<CashDeps, 'outbox'>): Promise<numb
   return deps.outbox.pendingCount();
 }
 
-/** Cierra el turno con el efectivo contado: calcula cobros por método, efectivo esperado y diferencia
- *  [S3-17]. Cada quien cierra el suyo; un administrador puede cerrar el de otra persona. Un corte cerrado
- *  no se edita. */
-export async function closeCashShift(
+/** Revisa si se puede cerrar el turno con lo contado. Lo usa la pantalla DESPUÉS de que la persona contó
+ *  para mostrar la diferencia y, si no es cero, pedir la explicación antes de cerrar [RF-M4-09]. */
+export async function closingDifference(
   deps: CashDeps,
   actor: QuoteActor,
   shiftId: string,
   countedCashCents: number,
-): Promise<
-  Result<
-    {
-      readonly shift: CashShift;
-      readonly summary: CashShiftSummary;
-      /** Operaciones sin enviar al cerrar (la del propio corte no cuenta). */
-      readonly pendingOperations: number;
-    },
-    CashError
-  >
-> {
+): Promise<Result<{ readonly differenceCents: number }, CashError>> {
+  const turno = await turnoPorCerrar(deps, actor, shiftId, countedCashCents);
+  if (!turno.ok) {
+    return turno;
+  }
+  const resumen = await shiftSummary(deps, { ...turno.value, countedCashCents });
+  return ok({ differenceCents: resumen.differenceCents ?? 0 });
+}
+
+/** Las revisiones comunes antes de cerrar: existe, es suyo (o es administrador), sigue abierto y lo contado
+ *  es un monto válido. */
+async function turnoPorCerrar(
+  deps: CashDeps,
+  actor: QuoteActor,
+  shiftId: string,
+  countedCashCents: number,
+): Promise<Result<CashShift, CashError>> {
   const turno = await deps.shifts.get(shiftId);
   if (turno === null) {
     return err({ code: 'NOT_FOUND' });
@@ -178,8 +188,43 @@ export async function closeCashShift(
   if (!esEntero(countedCashCents)) {
     return err({ code: 'AMOUNT_INVALID' });
   }
-  const pendientes = await deps.outbox.pendingCount();
+  return ok(turno);
+}
+
+/** Cierra el turno con el efectivo contado: calcula cobros por método, efectivo esperado y diferencia
+ *  [S3-17]. Cada quien cierra el suyo; un administrador puede cerrar el de otra persona. Un corte cerrado
+ *  no se edita. Si sobra o falta dinero, aunque sea un centavo, exige una explicación [RF-M4-09, ADR-0044]. */
+export async function closeCashShift(
+  deps: CashDeps,
+  actor: QuoteActor,
+  shiftId: string,
+  countedCashCents: number,
+  explicacion?: string,
+): Promise<
+  Result<
+    {
+      readonly shift: CashShift;
+      readonly summary: CashShiftSummary;
+      /** Operaciones sin enviar al cerrar (la del propio corte no cuenta). */
+      readonly pendingOperations: number;
+    },
+    CashError
+  >
+> {
+  const porCerrar = await turnoPorCerrar(deps, actor, shiftId, countedCashCents);
+  if (!porCerrar.ok) {
+    return porCerrar;
+  }
+  const turno = porCerrar.value;
   const resumen = await shiftSummary(deps, { ...turno, countedCashCents });
+  const nota = explicacion?.trim() ?? '';
+  if (nota.length > MAX_DIFFERENCE_NOTE_LENGTH) {
+    return err({ code: 'NOTE_TOO_LONG' });
+  }
+  if (resumen.differenceCents !== 0 && nota === '') {
+    return err({ code: 'REASON_REQUIRED' });
+  }
+  const pendientes = await deps.outbox.pendingCount();
   const instante = deps.clock.now().toISOString();
   const cerrado: CashShift = {
     ...turno,
@@ -188,6 +233,7 @@ export async function closeCashShift(
     countedCashCents,
     expectedCashCents: resumen.expectedCashCents,
     differenceCents: resumen.differenceCents,
+    differenceNote: nota === '' ? null : nota,
     pendingAtClose: pendientes,
     syncStatus: 'SAVED_ON_TABLET',
     updatedAt: instante,
@@ -200,6 +246,7 @@ export async function closeCashShift(
       countedCashCents,
       expectedCashCents: resumen.expectedCashCents,
       pendingAtClose: pendientes,
+      ...(nota === '' ? {} : { differenceNote: nota }),
     },
   });
   return r.ok ? ok({ shift: r.value, summary: resumen, pendingOperations: pendientes }) : r;

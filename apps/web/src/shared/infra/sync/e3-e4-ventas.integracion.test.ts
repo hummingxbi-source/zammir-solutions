@@ -189,6 +189,7 @@ describe('E3 · diez ventas sin conexión (servidor real)', () => {
       status: 'CLOSED',
       expectedCents: 5 * 11_600,
       differenceCents: 0,
+      differenceNote: null,
     });
   }, 120_000);
 });
@@ -248,6 +249,7 @@ describe('E4 · tres personas cobrando a la vez (servidor real)', () => {
         status: 'CLOSED',
         expectedCents: 1_000 + 11_600 * 10,
         differenceCents: 0,
+        differenceNote: null,
       });
     }
   }, 120_000);

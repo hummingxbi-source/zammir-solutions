@@ -94,8 +94,35 @@ describe('Turno de caja', () => {
       target: { value: '10' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Cerrar y calcular el corte' }));
+    // La diferencia se calcula con lo contado y, si no es cero, pide la explicación antes de cerrar [RF-M4-09].
+    const paso = await screen.findByRole('group', { name: 'Explicar la diferencia' });
+    expect(paso.textContent).toMatch(/Sobrante \$10\.00/);
+    expect(screen.queryByText(/Corte cerrado/)).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Cerrar y calcular el corte' })).toBeNull();
+    fireEvent.change(screen.getByLabelText(/¿Por qué hay diferencia\?/), {
+      target: { value: 'Un cliente dejó propina' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar el turno con esta explicación' }));
     expect(await screen.findByText(/Corte cerrado/)).toBeTruthy();
     expect(screen.getAllByText(/Sobrante \$10\.00/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Un cliente dejó propina').length).toBeGreaterThan(0);
+  });
+
+  it('si se corrige lo contado mientras se explica, vuelve a revisar la diferencia', async () => {
+    montar();
+    fireEvent.click(await screen.findByRole('button', { name: 'Abrir turno' }));
+    await screen.findByText(/Turno abierto desde las/);
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar turno' }));
+    const contado = await screen.findByLabelText('Efectivo contado');
+    fireEvent.change(contado, { target: { value: '10' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar y calcular el corte' }));
+    await screen.findByRole('group', { name: 'Explicar la diferencia' });
+    // Se equivocó al contar: corrige a cero y ya cuadra, sin explicación.
+    fireEvent.change(contado, { target: { value: '0' } });
+    expect(screen.queryByRole('group', { name: 'Explicar la diferencia' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar y calcular el corte' }));
+    expect(await screen.findByText(/Corte cerrado/)).toBeTruthy();
+    expect(screen.getAllByText('Exacto').length).toBeGreaterThan(0);
   });
 
   it('un corte exacto se dice exacto y un administrador puede reabrirlo con su PIN y motivo', async () => {

@@ -78,6 +78,7 @@ interface FilaDeTurno {
   readonly counted_cash_cents: number | null;
   readonly expected_cash_cents: number | null;
   readonly difference_cents: number | null;
+  readonly difference_note?: string | null;
   readonly pending_at_close: number | null;
   readonly review_reason: string | null;
   readonly change_seq: number;
@@ -177,6 +178,8 @@ export function supabaseDocumentReplica(cliente: SupabaseClient): DocumentReplic
           countedCashCents: f.counted_cash_cents,
           expectedCashCents: f.expected_cash_cents,
           differenceCents: f.difference_cents,
+          // Antes de RF-M4-09 la vista no traía la explicación.
+          differenceNote: f.difference_note ?? null,
           pendingAtClose: f.pending_at_close,
           reopenings: [],
           syncStatus: 'SENT',

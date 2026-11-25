@@ -20,6 +20,7 @@ export interface ReceptorDelContrato {
         readonly status: string;
         readonly expectedCents: number | null;
         readonly differenceCents: number | null;
+        readonly differenceNote: string | null;
       }
     | undefined
   >;
@@ -1200,9 +1201,31 @@ export function operationReceiverContract(
         const { h, dispositivo, abrir, cerrar, orden, cobrarEfectivo } = await conTurnos();
         const a = await abrir(dispositivo, 0);
         await cobrarEfectivo(dispositivo, await orden(dispositivo), 5_800, a.id);
-        const r = await cerrar(dispositivo, a.id, 5_900, 5_800);
+        const r = await cerrar(dispositivo, a.id, 5_900, 5_800, {
+          differenceNote: 'Me dieron un peso de más',
+        });
         expect(r.ok && r.status).toBe('APPLIED');
-        expect(await h.shiftState(a.id)).toMatchObject({ differenceCents: 100 });
+        expect(await h.shiftState(a.id)).toMatchObject({
+          differenceCents: 100,
+          differenceNote: 'Me dieron un peso de más',
+        });
+      });
+
+      it('una diferencia sin explicación (cierre viejo en cola) se aplica, pero queda por revisar [RF-M4-09]', async () => {
+        const { h, dispositivo, abrir, cerrar, orden, cobrarEfectivo } = await conTurnos();
+        const a = await abrir(dispositivo, 0);
+        await cobrarEfectivo(dispositivo, await orden(dispositivo), 5_800, a.id);
+        const r = await cerrar(dispositivo, a.id, 5_799, 5_800);
+        expect(r.ok && r.status).toBe('TO_REVIEW');
+        expect(r.ok && r.reason).toBe('DIFFERENCE_WITHOUT_NOTE');
+        expect(await h.shiftState(a.id)).toMatchObject({ status: 'CLOSED', differenceCents: -1 });
+      });
+
+      it('una explicación vacía no pasa la validación de la carga', async () => {
+        const { dispositivo, abrir, cerrar } = await conTurnos();
+        const a = await abrir(dispositivo, 0);
+        const r = await cerrar(dispositivo, a.id, 100, 0, { differenceNote: '   ' });
+        expect(r.ok).toBe(false);
       });
 
       it('si lo que esperaba la tablet no coincide con el recálculo del servidor, queda por revisar', async () => {

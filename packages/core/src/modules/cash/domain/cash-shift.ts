@@ -28,8 +28,10 @@ export interface CashShift {
   readonly countedCashCents: number | null;
   /** Lo que debía haber: fondo + efectivo cobrado. Calculado al cerrar. */
   readonly expectedCashCents: number | null;
-  /** Contado − esperado (positivo = sobrante, negativo = faltante). Solo se registra (PD-44). */
+  /** Contado − esperado (positivo = sobrante, negativo = faltante). */
   readonly differenceCents: number | null;
+  /** Explicación de la diferencia: obligatoria si no es cero, aunque sea un centavo [RF-M4-09, ADR-0044]. */
+  readonly differenceNote: string | null;
   /** Operaciones que quedaban sin enviar al cerrar [SINCRONIZACION §6.1]. */
   readonly pendingAtClose: number | null;
   readonly reopenings: readonly CashShiftReopening[];

@@ -145,7 +145,7 @@ export const harness: ReceptorDelContrato & {
   async shiftState(id) {
     const { data } = await servicio
       .from('cash_shifts')
-      .select('status, server_expected_cash_cents, difference_cents')
+      .select('status, server_expected_cash_cents, difference_cents, difference_note')
       .eq('id', id)
       .limit(1);
     const fila = data?.[0] as
@@ -153,6 +153,7 @@ export const harness: ReceptorDelContrato & {
           readonly status: string;
           readonly server_expected_cash_cents: number | null;
           readonly difference_cents: number | null;
+          readonly difference_note: string | null;
         }
       | undefined;
     return fila === undefined
@@ -161,6 +162,7 @@ export const harness: ReceptorDelContrato & {
           status: fila.status,
           expectedCents: fila.server_expected_cash_cents,
           differenceCents: fila.difference_cents,
+          differenceNote: fila.difference_note,
         };
   },
   async saleState(id) {
