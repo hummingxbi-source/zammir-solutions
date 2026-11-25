@@ -191,7 +191,11 @@ export function CuentasPorCobrar(props: CuentasPorCobrarProps): ReactElement {
                 rotulo: t.columnas.dias,
                 celda: (f) => (
                   <>
-                    {f.daysOutstanding === null ? t.sinFecha : String(f.daysOutstanding)}
+                    {f.daysOutstanding === null
+                      ? f.notDelivered
+                        ? t.porEntregar
+                        : t.sinFecha
+                      : String(f.daysOutstanding)}
                     {f.overdue ? (
                       <>
                         {' '}

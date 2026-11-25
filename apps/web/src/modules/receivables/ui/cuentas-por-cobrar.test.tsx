@@ -41,10 +41,12 @@ const ids = {
   },
 };
 
+/** Una orden ENTREGADA en `issuedAt`: los días de la cuenta se cuentan desde la entrega [ADR-0044]. */
 const orden = (id: string, cliente: typeof CLIENTE, total: number, issuedAt: string): WorkOrder =>
   ({
     id,
-    status: 'IN_PROCESS',
+    status: 'DELIVERED',
+    deliveredAt: issuedAt,
     customerId: cliente,
     lines: [],
     subtotalCents: total,
@@ -86,7 +88,7 @@ async function montar(actor: QuoteActor | null = admin, soloSaldadas = false) {
       orden('00000000-0000-4000-8000-000000000a01', CLIENTE, 50_000, '2026-11-05T18:00:00.000Z'),
     );
     await deps.orders.save(
-      orden('00000000-0000-4000-8000-000000000a02', SIN_TEL, 20_000, '2026-11-19T18:00:00.000Z'),
+      orden('00000000-0000-4000-8000-000000000a02', SIN_TEL, 20_000, '2026-11-20T15:00:00.000Z'),
     );
   }
   await deps.orders.save(
@@ -155,8 +157,16 @@ describe('Cuentas por cobrar', () => {
     expect(filas[0]?.textContent).toContain('$500.00');
     expect(filas[0]?.textContent).toContain('15');
     expect(filas[1]?.textContent).toContain('Beto Ruiz');
-    expect(filas[1]?.textContent).toContain('1');
+    // Entregada hoy: 0 días y al corriente (umbral de 1 día por omisión).
+    expect(filas[1]?.textContent).toContain('0');
     expect(within(tabla).queryByText('OT-2026-0003')).toBeNull();
+  });
+
+  it('dice que los días se cuentan desde la entrega', async () => {
+    await montar();
+    await screen.findByRole('table');
+    expect(screen.getByText(/Los días se cuentan desde la entrega/)).toBeTruthy();
+    expect(screen.getByRole('columnheader', { name: 'Días desde la entrega' })).toBeTruthy();
   });
 
   it('resalta con texto la cuenta que llegó al umbral y resume lo atrasado', async () => {

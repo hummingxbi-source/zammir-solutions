@@ -52,6 +52,8 @@ const orden = (
     folio: `OT-${id}`,
     tempFolio: `T1-${id}`,
     issuedAt,
+    // Las entregadas, entregadas el mismo día: la cobranza cuenta desde la entrega [ADR-0044].
+    deliveredAt: estado === 'DELIVERED' ? issuedAt : null,
     updatedAt: issuedAt,
   }) as unknown as WorkOrder;
 
@@ -201,9 +203,11 @@ describe('Reportes', () => {
   it('las cuentas por cobrar se agrupan por antigüedad y se resalta lo atrasado', async () => {
     await montar();
     expect(await screen.findByText('Cuentas por cobrar por antigüedad')).toBeTruthy();
-    expect(screen.getByText('De 0 a 9 días')).toBeTruthy();
-    expect(screen.getByText('De 10 a 19 días')).toBeTruthy();
-    expect(screen.getByText('20 días o más')).toBeTruthy();
+    // Con el umbral de 1 día por omisión: hoy, 1 día, 2 o más, y lo que todavía no se entrega aparte.
+    expect(screen.getByText('Entregadas hoy')).toBeTruthy();
+    expect(screen.getByText('1 día')).toBeTruthy();
+    expect(screen.getByText('2 días o más')).toBeTruthy();
+    expect(screen.getByText('Por entregar (aún no se cobra)')).toBeTruthy();
     expect(screen.getAllByText(/Atrasadas/).length).toBeGreaterThan(0);
   });
 
