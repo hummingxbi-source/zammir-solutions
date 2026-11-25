@@ -34,6 +34,7 @@ function crearCliente(llave: string) {
 
 const cuentas: string[] = [];
 const productosCreados: string[] = [];
+const categoriasCreadas: string[] = [];
 let servicio: ReturnType<typeof crearCliente>;
 let tabletId = '';
 
@@ -80,6 +81,10 @@ afterAll(async () => {
   for (const id of productosCreados) {
     await servicio.from('products').delete().eq('id', id);
   }
+  // Las categorías de prueba tampoco se borran por la API; solo con la llave de servicio, en pruebas.
+  for (const id of categoriasCreadas) {
+    await servicio.from('product_categories').delete().eq('id', id);
+  }
   await servicio.from('devices').delete().eq('id', tabletId);
   for (const id of cuentas) {
     await servicio.auth.admin.deleteUser(id);
@@ -111,6 +116,15 @@ catalogContract('Supabase', async () => {
     categorias: catalogo,
     nuevoIdDeProducto: () => asId<'Product'>(crypto.randomUUID()),
     idDeCategoriaInexistente: asId<'Category'>(crypto.randomUUID()),
+    idDeCategoriaNueva: () => {
+      const id = asId<'Category'>(crypto.randomUUID());
+      categoriasCreadas.push(id);
+      return id;
+    },
+    nombreDeCategoriaNuevo: () => {
+      contador += 1;
+      return `Categoría ${sufijo} ${String(contador)}`;
+    },
     codigoNuevo: () => {
       contador += 1;
       return `T-${sufijo}-${String(contador)}`;

@@ -2,17 +2,26 @@ import { describe, expect, it } from 'vitest';
 
 import type { CategoryId, ProductId } from '../../../shared-kernel/id';
 import { money } from '../../../shared-kernel/money/money';
-import type { CategoryReader, ProductAdmin, ProductReader } from '../application/ports';
+import type {
+  CategoryAdmin,
+  CategoryReader,
+  ProductAdmin,
+  ProductReader,
+} from '../application/ports';
 import { INITIAL_CATEGORIES } from '../domain/initial-categories';
 import type { Product, ProductDraft } from '../domain/product';
 
 export interface CatalogDelContrato {
   readonly admin: ProductAdmin;
   readonly reader: ProductReader;
-  readonly categorias: CategoryReader;
+  readonly categorias: CategoryReader & CategoryAdmin;
+  /** Un nombre de categoría que no se ha usado en esta ejecución. */
+  readonly nombreDeCategoriaNuevo: () => string;
   /** Un identificador de producto nuevo, válido para el almacén (UUID en Supabase). */
   readonly nuevoIdDeProducto: () => ProductId;
   readonly idDeCategoriaInexistente: CategoryId;
+  /** Un identificador de categoría nuevo, válido para el almacén. */
+  readonly idDeCategoriaNueva: () => CategoryId;
   /** Un código que no se ha usado en esta ejecución. */
   readonly codigoNuevo: () => string;
   /** Entradas de bitácora de un producto, leídas por un camino independiente del puerto. */
@@ -87,11 +96,15 @@ export function catalogContract(
       if (!r.ok) {
         return;
       }
-      const ordenadas = [...r.value].sort((a, b) => a.sortOrder - b.sortOrder);
+      // Las iniciales van primero; después pueden venir las que el administrador agregó [RF-M1-08].
+      const ordenadas = [...r.value]
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .slice(0, INITIAL_CATEGORIES.length);
       expect(ordenadas.map((c) => c.name)).toEqual(INITIAL_CATEGORIES.map((c) => c.name));
       expect(ordenadas.map((c) => c.fiscalDefaults)).toEqual(
         INITIAL_CATEGORIES.map((c) => c.fiscalDefaults),
       );
+      expect(ordenadas.every((c) => c.isActive)).toBe(true);
     });
 
     it('guarda un producto con todos sus datos y lo devuelve igual', async () => {
@@ -376,6 +389,81 @@ export function catalogContract(
         const h = await crear();
         for (const operacion of ['delete', 'remove', 'destroy']) {
           expect(operacion in h.admin).toBe(false);
+        }
+      });
+    });
+
+    describe('categorías que administra el administrador [RF-M1-08, ADR-0044]', () => {
+      async function nueva(h: CatalogDelContrato, sortOrder = 900) {
+        const c = {
+          id: h.idDeCategoriaNueva(),
+          name: h.nombreDeCategoriaNuevo(),
+          sortOrder,
+          fiscalDefaults: { productServiceKey: '01010101', unitKey: 'H87', taxObject: '02' },
+          isActive: true,
+        };
+        const r = await h.categorias.createCategory(c);
+        expect(r.ok).toBe(true);
+        return c;
+      }
+
+      it('da de alta una categoría activa y queda en la lista, con su entrada de bitácora', async () => {
+        const h = await crear();
+        const c = await nueva(h);
+        const r = await h.categorias.listCategories();
+        expect(r.ok && r.value.find((x) => x.id === c.id)).toMatchObject({
+          name: c.name,
+          isActive: true,
+          sortOrder: 900,
+        });
+        expect((await h.bitacoraDeProducto(c.id as never)).map((e) => e.action)).toEqual([
+          'CATEGORY_CREATED',
+        ]);
+      });
+
+      it('no repite un nombre aunque cambien las mayúsculas', async () => {
+        const h = await crear();
+        const c = await nueva(h);
+        const r = await h.categorias.createCategory({
+          ...c,
+          id: h.idDeCategoriaNueva(),
+          name: c.name.toUpperCase(),
+        });
+        expect(!r.ok && r.error.code).toBe('CATEGORY_NAME_TAKEN');
+      });
+
+      it('se renombra y se desactiva; no se desactiva si tiene productos activos', async () => {
+        const h = await crear();
+        const c = await nueva(h);
+        const otroNombre = h.nombreDeCategoriaNuevo();
+        const renombrada = await h.categorias.updateCategory({ ...c, name: otroNombre });
+        expect(renombrada.ok && renombrada.value.name).toBe(otroNombre);
+        const producto = productoDePrueba(h.nuevoIdDeProducto(), c.id, { code: h.codigoNuevo() });
+        expect((await h.admin.create(producto)).ok).toBe(true);
+        const ocupada = await h.categorias.updateCategory({
+          ...c,
+          name: otroNombre,
+          isActive: false,
+        });
+        expect(!ocupada.ok && ocupada.error.code).toBe('CATEGORY_IN_USE');
+        expect((await h.admin.update({ ...producto, isActive: false })).ok).toBe(true);
+        const libre = await h.categorias.updateCategory({
+          ...c,
+          name: otroNombre,
+          isActive: false,
+        });
+        expect(libre.ok && libre.value.isActive).toBe(false);
+        expect((await h.bitacoraDeProducto(c.id as never)).map((e) => e.action)).toEqual([
+          'CATEGORY_CREATED',
+          'CATEGORY_UPDATED',
+          'CATEGORY_DEACTIVATED',
+        ]);
+      });
+
+      it('el puerto de categorías no tiene operación de borrado', async () => {
+        const h = await crear();
+        for (const operacion of ['deleteCategory', 'removeCategory']) {
+          expect(operacion in h.categorias).toBe(false);
         }
       });
     });

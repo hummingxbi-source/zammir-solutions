@@ -19,6 +19,11 @@ catalogContract('memoria', () => {
     categorias: catalogo,
     nuevoIdDeProducto: () => ids.newId<'Product'>(),
     idDeCategoriaInexistente: asId<'Category'>('no-existe'),
+    idDeCategoriaNueva: () => ids.newId<'Category'>(),
+    nombreDeCategoriaNuevo: () => {
+      codigos += 1;
+      return `Categoría nueva ${String(codigos)}`;
+    },
     codigoNuevo: () => {
       codigos += 1;
       return `COD-${String(codigos)}`;
