@@ -17,6 +17,8 @@ import {
   type DaySummary,
 } from '../domain/cash-shift';
 import { CASH_SHIFTS_COLLECTION, type CashShiftStore } from './cash-shift-store';
+import { outboxRefundStore } from '../../counter/application/refund-store';
+import { refundedSaleIds } from '../../counter/domain/refund';
 
 export type CashErrorCode =
   | 'NOT_AUTHORIZED'
@@ -126,7 +128,7 @@ export async function openCashShift(
   });
 }
 
-/** El corte del turno con los cobros que tiene hoy en la tablet. */
+/** El corte del turno con los cobros y las devoluciones que tiene hoy en la tablet [RF-M4-10]. */
 export async function shiftSummary(
   deps: CashDeps,
   turno: Pick<CashShift, 'id' | 'openingFloatCents' | 'countedCashCents'>,
@@ -135,10 +137,13 @@ export async function shiftSummary(
   const canceladas = new Set(
     (await deps.sales.list()).filter((v) => v.status === 'CANCELLED').map((v) => v.id),
   );
+  const devoluciones = await outboxRefundStore(deps.outbox).list();
   return summarizeShift({
     openingFloatCents: turno.openingFloatCents,
     payments: pagos,
     cancelledSaleIds: canceladas,
+    refundedSaleIds: refundedSaleIds(devoluciones),
+    refunds: devoluciones.filter((d) => d.cashShiftId === turno.id),
     countedCashCents: turno.countedCashCents,
   });
 }

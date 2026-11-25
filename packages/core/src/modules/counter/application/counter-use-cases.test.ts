@@ -230,7 +230,7 @@ describe('cancelar una venta', () => {
     const sinMotivo = await cancelCounterSale(deps, admin, id, '   ');
     expect(!sinMotivo.ok && sinMotivo.error.code).toBe('REASON_REQUIRED');
     const r = await cancelCounterSale(deps, admin, id, 'Producto equivocado');
-    expect(r.ok && r.value).toMatchObject({
+    expect(r.ok && r.value.sale).toMatchObject({
       status: 'CANCELLED',
       cancelReason: 'Producto equivocado',
       cancelledBy: ADMIN_ID,
@@ -241,7 +241,7 @@ describe('cancelar una venta', () => {
   it('un cajero con el PIN de un administrador puede cancelar y viaja quién autorizó', async () => {
     const { deps, outbox, id } = await conVenta();
     const r = await cancelCounterSale(deps, cajero, id, 'Cliente se arrepintió', conPin);
-    expect(r.ok && r.value.status).toBe('CANCELLED');
+    expect(r.ok && r.value.sale.status).toBe('CANCELLED');
     const op = (await outbox.list()).at(-1);
     expect(op?.envelope.type).toBe('CancelCounterSale');
     expect(op?.envelope.authorizedBy).toBe(ADMIN_ID);
