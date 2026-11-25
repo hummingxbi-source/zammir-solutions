@@ -115,6 +115,7 @@ function lineaAPayload(l: WorkOrderLine) {
     taxCents: l.taxCents,
     isTaxExempt: l.isTaxExempt,
     detail: l.detail,
+    ...(l.extras === undefined || l.extras.length === 0 ? {} : { extras: l.extras }),
     ...(l.displayUnit === undefined || l.displayUnit === null
       ? {}
       : { displayUnit: l.displayUnit }),

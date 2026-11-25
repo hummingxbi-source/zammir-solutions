@@ -5,7 +5,9 @@ import { err, ok, type Result } from '../../../shared-kernel/result';
 import type { PriceRegistry } from './pricing/registry';
 
 /** Tipo de producto [RN-01]: a medida, pieza estándar o servicio. */
-export type ProductKind = 'CUSTOM' | 'STANDARD' | 'SERVICE';
+/** `EXTRA`: cargo extra que se agrega a una línea de vidrio (cantos, perforaciones, biselados) y se cobra con
+ *  su medida; no se vende solo [RF-M1-09]. */
+export type ProductKind = 'CUSTOM' | 'STANDARD' | 'SERVICE' | 'EXTRA';
 
 /** Unidad de cobro [RN-01]. */
 export type ChargeUnit = 'SQUARE_METER' | 'LINEAR_METER' | 'PIECE' | 'SERVICE';
@@ -77,6 +79,8 @@ const UNIDADES_POR_TIPO: Record<ProductKind, readonly ChargeUnit[]> = {
   CUSTOM: ['SQUARE_METER', 'LINEAR_METER', 'PIECE'],
   STANDARD: ['PIECE'],
   SERVICE: ['SERVICE'],
+  // m² por omisión (lo que dijo Luis); metro lineal y pieza para no tocar código si alguno se cobra distinto.
+  EXTRA: ['SQUARE_METER', 'LINEAR_METER', 'PIECE'],
 };
 
 /** Unidad que cobra cada regla de hoy. Una regla nueva no declarada aquí no restringe la unidad. */
