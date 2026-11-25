@@ -18,6 +18,8 @@ import type { SyncOutbox } from '../../sync/application/ports';
 import { CURRENT_SCHEMA_VERSION } from '../../sync/domain/operation';
 import { generatePublicCode } from '../../sync/domain/public-code';
 import type { CounterSale } from '../domain/counter-sale';
+import { planRefunds, type Refund } from '../domain/refund';
+import { REFUNDS_COLLECTION } from './refund-store';
 import { ticketTotals, type Ticket } from '../domain/ticket';
 import { COUNTER_SALES_COLLECTION, type CounterSaleStore } from './counter-sale-store';
 
@@ -27,6 +29,8 @@ export type CounterErrorCode =
   | 'EMPTY_TICKET'
   | 'REASON_REQUIRED'
   | 'INVALID_TRANSITION'
+  /** Hay efectivo que devolver y quien cancela no tiene su turno abierto: el dinero sale de su cajón. */
+  | 'NO_OPEN_SHIFT'
   | 'STORAGE_FAILED';
 
 export interface CounterError {
@@ -203,14 +207,16 @@ export async function chargeCounterSale(
 }
 
 /** Cancela una venta con motivo; nada se borra [RF-M4-07, RN-18]. Solo un administrador (o un cajero con el
- *  PIN de uno). PD-24 sin respuesta: se registra la cancelación y no se toca la caja. */
+ *  PIN de uno). Lo cobrado se le devuelve al cliente por el mismo medio y la devolución queda en el turno
+ *  abierto de quien cancela: el efectivo sale de su cajón [RF-M4-10, ADR-0044]. El cobro original no se
+ *  mueve de su turno. */
 export async function cancelCounterSale(
   deps: CounterDeps,
   actor: QuoteActor,
   id: string,
   reason: string,
   authorization?: Authorization,
-): Promise<Result<CounterSale, CounterError>> {
+): Promise<Result<{ readonly sale: CounterSale; readonly refunds: readonly Refund[] }, CounterError>> {
   const decision = permisos(deps).check(actor.role, 'CANCEL_SALE_OR_ORDER');
   let autorizo: string;
   if (decision === 'DENY') {
@@ -232,7 +238,24 @@ export async function cancelCounterSale(
   if (venta.status === 'CANCELLED') {
     return err({ code: 'INVALID_TRANSITION' });
   }
+  const aDevolver = planRefunds(await deps.payments.listByTarget(id));
+  // El turno se pide solo si se llevan turnos (como al cobrar) [S3-16].
+  const turno = deps.shifts === undefined ? null : await deps.shifts.openFor(actor.userId);
+  if (deps.shifts !== undefined && turno === null && aDevolver.some((d) => d.method === 'CASH')) {
+    return err({ code: 'NO_OPEN_SHIFT' });
+  }
   const instante = deps.clock.now().toISOString();
+  const devoluciones: readonly Refund[] = aDevolver.map((d) => ({
+    id: deps.idGenerator.newId<'Refund'>(),
+    saleId: id,
+    method: d.method,
+    amountCents: d.amountCents,
+    cashShiftId: turno?.id ?? null,
+    userId: actor.userId,
+    authorizedBy: autorizo,
+    refundedAt: instante,
+    syncStatus: 'SAVED_ON_TABLET',
+  }));
   const nueva: CounterSale = {
     ...venta,
     status: 'CANCELLED',
@@ -252,14 +275,26 @@ export async function cancelCounterSale(
         userId: actor.userId,
         authorizedBy: autorizo,
         clientCreatedAt: instante,
-        payload: { id, reason: motivo },
+        payload: {
+          id,
+          reason: motivo,
+          refunds: devoluciones.map((d) => ({
+            id: d.id,
+            method: d.method,
+            amountCents: d.amountCents,
+            cashShiftId: d.cashShiftId,
+          })),
+        },
       });
       if (!operacion.ok) {
         throw new Error('INVALID_OPERATION');
       }
       await tx.putDocument(COUNTER_SALES_COLLECTION, id, nueva);
+      for (const d of devoluciones) {
+        await tx.putDocument(REFUNDS_COLLECTION, d.id, d);
+      }
     });
-    return ok(nueva);
+    return ok({ sale: nueva, refunds: devoluciones });
   } catch {
     return err({ code: 'STORAGE_FAILED' });
   }
