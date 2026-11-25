@@ -35,6 +35,7 @@ import { Tarjeta } from '../../../shared/ui/Tarjeta';
 import { pesosCompactos } from '../../../shared/ui/graficas-util';
 import { formatearPesos } from '../../../shared/ui/formatos';
 import { formatearPorcentaje, type ReportesProps } from './Reportes';
+import { etiquetaDeTramo } from './etiqueta-de-tramo';
 
 const t = textos.inicio.resumen;
 
@@ -329,11 +330,7 @@ export function ResumenDelInicio(props: ResumenDelInicioProps): ReactElement | n
             descripcion={t.antiguedad}
             formatear={formatearPesos}
             datos={cuentas.map((b) => ({
-              etiqueta: b.undated
-                ? r.cuentas.sinFecha
-                : b.toDays === null
-                  ? r.cuentas.desde(b.fromDays ?? 0)
-                  : r.cuentas.entre(b.fromDays ?? 0, b.toDays),
+              etiqueta: etiquetaDeTramo(b),
               valor: b.balanceCents,
               tono: b.overdue ? 'peligro' : 'acento',
               nota: r.cuentas.cuantas(b.count),
