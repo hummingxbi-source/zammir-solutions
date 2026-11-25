@@ -460,7 +460,7 @@ La réplica a las tablets ya pagina por `change_seq` y no tiene el problema.
 
 ## Compuerta de salida
 
-- [ ] Las nueve historias fusionadas con la compuerta de CI en verde, sin pruebas desactivadas ni umbrales bajados.
+- [x] Las nueve historias fusionadas con la compuerta de CI en verde, sin pruebas desactivadas ni umbrales bajados (PR #115 a #123).
 - [ ] Migraciones desplegadas a la base (*Desplegar a Supabase* en verde y `salud` en 200).
 - [ ] Prueba manual en `https://sistema.zammir-solutions.com` de cada historia, con datos inventados.
 - [ ] Recorridos E1 a E10 en verde.
