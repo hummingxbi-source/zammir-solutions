@@ -10,6 +10,7 @@ import {
   type FiscalProfile,
   type Result,
 } from '@zammir/core';
+import { leerTodo } from '../../../shared/infra/leer-todo';
 
 const SIN_PERMISO = '42501';
 
@@ -144,12 +145,13 @@ export function supabaseCustomers(
     },
 
     async list() {
-      const respuesta = await cliente.from(fuente).select('*').order('name');
-      const datos: unknown = respuesta.data;
-      if (respuesta.error !== null) {
-        return err(aError(respuesta.error));
-      }
-      return ok(aLista(datos));
+      // Por páginas: más de 1000 clientes no se cortan [AJ-01].
+      const r = await leerTodo<unknown, CustomerError>(
+        (desde, hasta) =>
+          cliente.from(fuente).select('*').order('name').order('id').range(desde, hasta),
+        (e) => aError(e as { readonly code?: string; readonly message?: string }),
+      );
+      return r.ok ? ok(aLista(r.filas)) : err(r.error);
     },
 
     async findByPhone(telefono) {

@@ -30,9 +30,17 @@ function clienteFalso(
     maybeSingle: () => Promise.resolve(opciones.fila ?? { data: null, error: null }),
   };
   const cliente = {
+    // Como el constructor de Supabase: se puede esperar directo o encadenar `order` y `range` (las listas se
+    // leen por páginas [AJ-01]).
     rpc: (nombre: string) => {
       llamadas.rpc.push(nombre);
-      return Promise.resolve(opciones.rpc ?? { data: [], error: null });
+      const respuesta = Promise.resolve(opciones.rpc ?? { data: [], error: null });
+      const constructor = {
+        order: () => constructor,
+        range: () => respuesta,
+        then: respuesta.then.bind(respuesta),
+      };
+      return constructor;
     },
     from: (tabla: string) => {
       llamadas.tabla.push(tabla);
