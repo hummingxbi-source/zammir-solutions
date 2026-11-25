@@ -217,6 +217,38 @@ describe('Cotizador', () => {
     expect(within(vista).getByText('Vidrio claro 6 mm')).toBeTruthy();
   });
 
+  it('agrega un canto a la línea de vidrio, suma al total, y el canto no sale en el buscador [RF-M1-09]', async () => {
+    const canto: SellableProduct = {
+      ...vidrio,
+      id: asId<'Product'>('00000000-0000-4000-8000-00000000f0e1'),
+      code: 'CANTO',
+      name: 'Canto pulido',
+      kind: 'EXTRA',
+      listPrice: precio(12_000),
+    };
+    montar({ productos: [vidrio, instalacion, canto] });
+    await empezarConClienteNuevo();
+    fireEvent.change(await screen.findByLabelText('Buscar producto o servicio'), {
+      target: { value: 'canto' },
+    });
+    expect(screen.queryByRole('button', { name: /Canto pulido/ })).toBeNull();
+    await agregarVidrio();
+    fireEvent.click(screen.getByRole('button', { name: 'Cargo extra · Vidrio claro 6 mm' }));
+    const grupo = screen.getByRole('group', { name: 'Cargo extra para Vidrio claro 6 mm' });
+    fireEvent.click(within(grupo).getByRole('button', { name: 'Agregar a la línea' }));
+    // 1.92 m² × $120.00 = $230.40; la línea: $537.60 + $230.40 = $768.00.
+    await waitFor(() => {
+      expect(screen.getAllByText('$768.00').length).toBeGreaterThan(0);
+    });
+    expect(screen.getAllByText(/\+ Canto pulido: .*\$230\.40/).length).toBeGreaterThan(0);
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Quitar Canto pulido · Vidrio claro 6 mm' }),
+    );
+    await waitFor(() => {
+      expect(screen.queryAllByText('$768.00')).toHaveLength(0);
+    });
+  });
+
   it('una medida mal escrita no agrega el concepto y dice qué hacer', async () => {
     montar();
     await empezarConClienteNuevo();

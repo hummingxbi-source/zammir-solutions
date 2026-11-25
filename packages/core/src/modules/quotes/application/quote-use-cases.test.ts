@@ -7,10 +7,13 @@ import { seededRandom } from '../../../shared-kernel/random';
 import { createPriceRegistry, defaultRules } from '../../catalog/domain/pricing/registry';
 import type { SellableProduct } from '../../catalog/application/ports';
 import { inMemorySyncOutbox } from '../../sync/application/in-memory-sync-outbox';
+import { parseOperation } from '../../sync/domain/operation';
 import type { Authorization } from '../../identity/application/authorize-with-admin-pin';
 import {
   applyQuoteDiscount,
   addQuoteLine,
+  addQuoteLineExtra,
+  removeQuoteLineExtra,
   createQuoteDraft,
   duplicateQuote,
   issueQuote,
@@ -283,6 +286,42 @@ describe('descuentos con autorización [PD-45, RN-19]', () => {
       autorizacion(),
     );
     expect(!r.ok && r.error.code).toBe('NOT_AUTHORIZED');
+  });
+});
+
+describe('cargos extra en el borrador [RF-M1-09, ADR-0044]', () => {
+  const canto: SellableProduct = {
+    ...vidrio,
+    id: asId<'Product'>('00000000-0000-4000-8000-00000000f0e1'),
+    code: 'CANTO',
+    name: 'Canto pulido',
+    kind: 'EXTRA',
+    listPrice: precio(12_000),
+  };
+
+  it('se agrega a una línea, suma al total, viaja al emitir y se puede quitar', async () => {
+    const e = entorno();
+    const q = await borradorConVidrio(e);
+    const linea = q.lines[0];
+    if (linea === undefined) throw new Error('línea');
+    const con = await addQuoteLineExtra(e.deps, ana, q.id, linea.id, canto);
+    // 1.20 × 0.80 × 2 = 1.92 m²: vidrio $537.60 + canto $230.40.
+    expect(con.ok && con.value.lines[0]?.lineTotalCents).toBe(53_760 + 23_040);
+    const sin = await removeQuoteLineExtra(e.deps, ana, q.id, linea.id, canto.id);
+    expect(sin.ok && sin.value.lines[0]?.lineTotalCents).toBe(53_760);
+    await addQuoteLineExtra(e.deps, ana, q.id, linea.id, canto);
+    await issueQuote(e.deps, ana, q.id);
+    const op = (await e.outbox.list()).at(-1);
+    const carga = op?.envelope.payload as { lines: { extras?: { name: string }[] }[] };
+    expect(carga.lines[0]?.extras?.map((x) => x.name)).toEqual(['Canto pulido']);
+    expect(parseOperation(op?.envelope).ok).toBe(true);
+  });
+
+  it('un producto que no es cargo extra no se agrega como extra', async () => {
+    const e = entorno();
+    const q = await borradorConVidrio(e);
+    const r = await addQuoteLineExtra(e.deps, ana, q.id, q.lines[0]?.id ?? '', vidrio);
+    expect(!r.ok && r.error.code).toBe('EXTRA_INVALID');
   });
 });
 

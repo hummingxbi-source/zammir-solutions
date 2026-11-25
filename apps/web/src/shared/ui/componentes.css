@@ -1773,3 +1773,14 @@ h3.reportes__subtitulo:not(.rotulo) {
   flex-wrap: wrap;
   align-items: center;
 }
+
+/* Cargos extra de una línea del cotizador [RF-M1-09]. */
+.ticket__extras,
+.ticket__extra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.5rem;
+  grid-column: 1 / -1;
+  margin-top: 0.5rem;
+}
