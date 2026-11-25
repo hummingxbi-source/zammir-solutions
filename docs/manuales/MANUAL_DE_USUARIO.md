@@ -180,11 +180,13 @@ Al terminar tu turno:
 
    ![Cerrar el turno](capturas/14-cerrar-turno.png)
 
-3. Toca **Cerrar y calcular el corte**. El sistema muestra el **efectivo esperado**, el **contado** y la **diferencia**: **Exacto**, **Sobrante** o **Faltante**. Aparece la hoja del corte en tamaño carta: toca **Enviar por WhatsApp** (por ejemplo, para mandársela a Luis) o **Imprimir**. Si ya cerraste el turno y quieres verla otra vez, en *Mi turno de caja* toca **Ver corte**.
+3. Toca **Cerrar y calcular el corte**. Si sobra o falta dinero, **aunque sea un centavo**, el sistema te muestra la diferencia y te pide **explicar por qué** antes de cerrar (por ejemplo, "di mal un cambio"). Escribe la explicación y toca **Cerrar el turno con esta explicación**. Si te equivocaste al contar, corrige el efectivo contado y vuelve a tocar **Cerrar y calcular el corte**.
+4. El sistema muestra el **efectivo esperado**, el **contado** y la **diferencia**: **Exacto**, **Sobrante** o **Faltante**. Aparece la hoja del corte en tamaño carta: toca **Enviar por WhatsApp** (por ejemplo, para mandársela a Luis) o **Imprimir**. Si ya cerraste el turno y quieres verla otra vez, en *Mi turno de caja* toca **Ver corte**.
 
    ![El corte de caja](capturas/15-corte-de-caja.png)
 
 - Las **ventas canceladas no cuentan**.
+- La explicación de la diferencia sale en la hoja del corte y en la tabla de turnos.
 - Cada cajero ve **solo su corte**; los administradores ven los de todos.
 - Si hay operaciones **sin enviar**, el corte puede cambiar cuando lleguen al servidor; un administrador debe revisarlo.
 

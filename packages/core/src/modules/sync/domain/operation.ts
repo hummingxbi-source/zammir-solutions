@@ -296,6 +296,9 @@ export const closeCashShiftPayloadSchema = z.object({
   expectedCashCents: entero,
   /** Operaciones que quedaban sin enviar al cerrar. */
   pendingAtClose: entero.min(0).optional(),
+  /** Explicación de la diferencia [RF-M4-09]. Opcional en el esquema para no rechazar cierres viejos en
+   *  cola: si falta y hay diferencia, el servidor lo deja por revisar (DIFFERENCE_WITHOUT_NOTE). */
+  differenceNote: z.string().trim().min(1).max(500).optional(),
 });
 
 /** Carga de `ReopenCashShift`: solo un administrador, con motivo [S3-17, RN-19]. */
