@@ -9,13 +9,12 @@ import {
   inMemoryCatalog,
   money,
   sequentialIdGenerator,
-  type ImportCatalogDeps,
   type ProductDraft,
   type UserRole,
 } from '@zammir/core';
 import { describe, expect, it, vi } from 'vitest';
 
-import { Catalogo } from './Catalogo';
+import { Catalogo, type CatalogoDeps } from './Catalogo';
 
 vi.setConfig({ testTimeout: 30_000 });
 configure({ asyncUtilTimeout: 5_000 });
@@ -36,7 +35,7 @@ async function botonAgregar(): Promise<HTMLElement> {
   return primero;
 }
 
-function entorno(): ImportCatalogDeps {
+function entorno(): CatalogoDeps {
   const catalogo = inMemoryCatalog({
     idGenerator: sequentialIdGenerator('c'),
     clock: fixedClock(new Date('2026-11-03T18:00:00.000Z')),
@@ -54,7 +53,7 @@ function entorno(): ImportCatalogDeps {
   };
 }
 
-async function categoria(deps: ImportCatalogDeps, parte: string) {
+async function categoria(deps: CatalogoDeps, parte: string) {
   const r = await deps.categories.listCategories();
   const c = r.ok
     ? r.value.find((x) => x.name.toLowerCase().includes(parte.toLowerCase()))
@@ -65,7 +64,7 @@ async function categoria(deps: ImportCatalogDeps, parte: string) {
   return c;
 }
 
-async function sembrar(deps: ImportCatalogDeps): Promise<void> {
+async function sembrar(deps: CatalogoDeps): Promise<void> {
   const vidrio = await categoria(deps, 'claro');
   const espejo = await categoria(deps, 'espejo');
   const base = {
@@ -340,5 +339,44 @@ describe('Catálogo', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
     const lista = await deps.products.list();
     expect(lista.ok && lista.value).toHaveLength(3);
+  });
+
+  it('el administrador agrega, renombra y desactiva categorías; con productos activos no la desactiva [RF-M1-08]', async () => {
+    await montar();
+    await screen.findByRole('form', { name: 'Agregar categoría' });
+    fireEvent.change(screen.getByLabelText('Nombre de la categoría'), {
+      target: { value: 'Vitrales' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar categoría' }));
+    expect(await screen.findByText('Categoría agregada.')).toBeTruthy();
+    const tabla = screen.getByRole('table', { name: 'Categorías' });
+    expect(within(tabla).getByText('Vitrales')).toBeTruthy();
+    // Repetida, sin acentos ni mayúsculas.
+    fireEvent.change(screen.getByLabelText('Nombre de la categoría'), {
+      target: { value: 'ESPEJO' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar categoría' }));
+    expect(await screen.findByText('Ya hay una categoría con ese nombre.')).toBeTruthy();
+    // Espejo tiene productos activos: no se desactiva.
+    fireEvent.click(within(tabla).getByRole('button', { name: 'Desactivar Espejo' }));
+    expect(await screen.findByText('La categoría tiene productos activos.')).toBeTruthy();
+    // Renombrar.
+    fireEvent.click(within(tabla).getByRole('button', { name: 'Renombrar Vitrales' }));
+    fireEvent.change(screen.getByLabelText('Nuevo nombre para Vitrales'), {
+      target: { value: 'Vitrales y emplomados' },
+    });
+    fireEvent.click(within(tabla).getByRole('button', { name: 'Guardar' }));
+    expect(await screen.findByText('Nombre guardado.')).toBeTruthy();
+    // Sin productos, sí se desactiva, y ya no se ofrece al dar de alta un producto.
+    fireEvent.click(
+      await within(tabla).findByRole('button', { name: 'Desactivar Vitrales y emplomados' }),
+    );
+    expect(await screen.findByText(/Categoría desactivada/)).toBeTruthy();
+  });
+
+  it('un cajero no ve la administración de categorías', async () => {
+    await montar({ rol: 'STAFF' });
+    await screen.findAllByText(/Catálogo/);
+    expect(screen.queryByRole('form', { name: 'Agregar categoría' })).toBeNull();
   });
 });
