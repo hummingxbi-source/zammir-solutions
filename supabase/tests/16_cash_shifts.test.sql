@@ -1,7 +1,7 @@
 -- Turnos de caja y corte [S3-16 a S3-19]: el servidor recalcula el efectivo esperado, un corte cerrado no
 -- se edita sin un administrador y las reaperturas dejan rastro.
 begin;
-select plan(14);
+select plan(19);
 
 select has_table('public', 'cash_shifts', 'existen los turnos de caja');
 select has_table('public', 'cash_shift_reopenings', 'existen las reaperturas');
@@ -45,7 +45,8 @@ create temp table r_venta as
 create temp table r_cierra as
   select public.receive_operation(pg_temp.op('10000000-0000-0000-0000-000000000003', 3, 'CloseCashShift', jsonb_build_object(
     'id', 'c1000000-0000-0000-0000-000000000001', 'closedAt', '2090-06-16T00:10:00Z',
-    'countedCashCents', 21500, 'expectedCashCents', 21600, 'pendingAtClose', 2))) as r;
+    'countedCashCents', 21500, 'expectedCashCents', 21600, 'pendingAtClose', 2,
+    'differenceNote', '  Di un peso de más de cambio  '))) as r;
 reset role;
 
 select is((select r->>'status' from r_abre), 'APPLIED', 'abrir el turno se aplica');
@@ -58,6 +59,13 @@ select is((select difference_cents from public.cash_shifts where id = 'c1000000-
   -100::bigint, 'la diferencia es contado − esperado (faltante)');
 select is((select pending_at_close from public.cash_shifts where id = 'c1000000-0000-0000-0000-000000000001'),
   2, 'queda anotado cuántas operaciones faltaban por enviar');
+select is((select difference_note from public.cash_shifts where id = 'c1000000-0000-0000-0000-000000000001'),
+  'Di un peso de más de cambio', 'la explicación de la diferencia se guarda sin espacios sobrantes [RF-M4-09]');
+select is((select new_value->>'explicacion' from public.audit_log
+            where action = 'CASH_SHIFT_CLOSED' and entity_id = 'c1000000-0000-0000-0000-000000000001'),
+  'Di un peso de más de cambio', 'la explicación queda en la bitácora');
+select is((select difference_note from public.cash_shifts_for_device where id = 'c1000000-0000-0000-0000-000000000001'),
+  'Di un peso de más de cambio', 'la tablet recibe la explicación');
 select is((select cash_shift_id::text from public.payments where id = 'b3000000-0000-0000-0000-000000000001'),
   'c1000000-0000-0000-0000-000000000001', 'el cobro quedó ligado al turno');
 
@@ -73,13 +81,25 @@ create temp table r_cierra2 as
   select public.receive_operation(pg_temp.op('10000000-0000-0000-0000-000000000005', 5, 'CloseCashShift', jsonb_build_object(
     'id', 'c1000000-0000-0000-0000-000000000002', 'closedAt', '2090-06-16T16:00:00Z',
     'countedCashCents', 500, 'expectedCashCents', 999), 'a0000000-0000-0000-0000-000000000002')) as r;
+-- Un cierre viejo en cola, con diferencia y sin explicación: se aplica, pero queda por revisar [RF-M4-09].
+create temp table r_abre3 as
+  select public.receive_operation(pg_temp.op('10000000-0000-0000-0000-000000000007', 6, 'OpenCashShift', jsonb_build_object(
+    'id', 'c1000000-0000-0000-0000-000000000003', 'openedAt', '2090-06-17T15:00:00Z', 'openingFloatCents', 1000))) as r;
+create temp table r_cierra3 as
+  select public.receive_operation(pg_temp.op('10000000-0000-0000-0000-000000000008', 7, 'CloseCashShift', jsonb_build_object(
+    'id', 'c1000000-0000-0000-0000-000000000003', 'closedAt', '2090-06-17T16:00:00Z',
+    'countedCashCents', 999, 'expectedCashCents', 1000))) as r;
 -- Reabrir sin administrador: se aplica pero queda por revisar.
 create temp table r_reabre as
-  select public.receive_operation(pg_temp.op('10000000-0000-0000-0000-000000000006', 6, 'ReopenCashShift', jsonb_build_object(
+  select public.receive_operation(pg_temp.op('10000000-0000-0000-0000-000000000006', 8, 'ReopenCashShift', jsonb_build_object(
     'id', 'c1000000-0000-0000-0000-000000000001', 'reason', 'Faltó un cobro'))) as r;
 reset role;
 
 select is((select r->>'reason' from r_cierra2), 'CASH_SUMMARY_MISMATCH', 'si la tablet y el servidor no coinciden, el corte queda por revisar');
+select is((select r->>'reason' from r_cierra3), 'DIFFERENCE_WITHOUT_NOTE',
+  'una diferencia de un centavo sin explicación queda por revisar');
+select is((select status from public.cash_shifts where id = 'c1000000-0000-0000-0000-000000000003'), 'CLOSED',
+  'pero el corte sí se cierra: la operación no se rechaza');
 select is((select r->>'reason' from r_reabre), 'REOPEN_WITHOUT_AUTHORIZATION', 'reabrir sin un administrador queda por revisar');
 select is((select count(*)::int from public.cash_shift_reopenings), 1, 'la reapertura deja rastro');
 select throws_ok($$ delete from public.cash_shift_reopenings $$, '42501', null, 'las reaperturas no se borran');

@@ -25,6 +25,7 @@ const etiquetas: ShiftCutLabels = {
   cancelled: 'Canceladas',
   cancelledSales: 'Ventas canceladas ({count})',
   cancelledNote: 'Los cobros de ventas canceladas no cuentan en el corte.',
+  differenceNote: 'Explicación',
   page: 'Página {n} de {total}',
 };
 
@@ -39,6 +40,7 @@ const turno = (cambios: Partial<CashShift> = {}): CashShift => ({
   countedCashCents: 170_000,
   expectedCashCents: 170_000,
   differenceCents: 0,
+  differenceNote: null,
   pendingAtClose: 0,
   reopenings: [],
   syncStatus: 'SENT',
@@ -116,6 +118,27 @@ describe('hoja del corte de caja', () => {
         resumen({ differenceCents: -1_000 }),
       ),
     ).toContain('Diferencia: Faltante $10.00');
+  });
+
+  it('muestra la explicación de la diferencia justo después de ella [RF-M4-09]', () => {
+    const conNota = filas(
+      turno({
+        countedCashCents: 169_000,
+        differenceCents: -1_000,
+        differenceNote: 'Di mal un cambio',
+      }),
+      resumen({ differenceCents: -1_000 }),
+    );
+    expect(conNota.slice(-2)).toEqual([
+      'Diferencia: Faltante $10.00',
+      'Explicación: Di mal un cambio',
+    ]);
+    expect(filas(turno(), resumen()).some((f) => f.startsWith('Explicación'))).toBe(false);
+    // Un turno guardado antes del cambio no trae el campo.
+    const viejo = Object.fromEntries(
+      Object.entries(turno()).filter(([campo]) => campo !== 'differenceNote'),
+    ) as unknown as CashShift;
+    expect(filas(viejo, resumen()).some((f) => f.startsWith('Explicación'))).toBe(false);
   });
 
   it('resalta el total, lo esperado y la diferencia', () => {

@@ -56,6 +56,7 @@ operationReceiverContract('memoria', () => {
               status: turno.status,
               expectedCents: turno.expectedCents,
               differenceCents: turno.differenceCents,
+              differenceNote: turno.differenceNote ?? null,
             },
       );
     },

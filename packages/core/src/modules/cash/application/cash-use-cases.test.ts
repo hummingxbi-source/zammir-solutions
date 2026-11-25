@@ -31,6 +31,7 @@ import { parseOperation } from '../../sync/domain/operation';
 import { outboxCashShiftStore } from './cash-shift-store';
 import {
   closeCashShift,
+  closingDifference,
   dayReport,
   openCashShift,
   pendingBeforeClose,
@@ -300,7 +301,7 @@ describe('cerrar el turno y el corte', () => {
   it('calcula cobros por método, efectivo esperado y diferencia, y encola CloseCashShift', async () => {
     const e = entorno();
     const { turno } = await conVenta(e);
-    const r = await closeCashShift(e.cash, ana, turno.id, 21_500);
+    const r = await closeCashShift(e.cash, ana, turno.id, 21_500, 'Faltó un peso del cambio');
     expect(r.ok && r.value.summary).toMatchObject({
       cashCents: 11_600,
       expectedCashCents: 21_600,
@@ -320,6 +321,87 @@ describe('cerrar el turno y el corte', () => {
       expectedCashCents: 21_600,
     });
     expect(parseOperation(op?.envelope).ok).toBe(true);
+  });
+
+  describe('explicación de la diferencia [RF-M4-09, ADR-0044]', () => {
+    it('sin diferencia cierra sin explicación y la carga no la lleva', async () => {
+      const e = entorno();
+      const { turno } = await conVenta(e);
+      const r = await closeCashShift(e.cash, ana, turno.id, 21_600);
+      expect(r.ok && r.value.shift.differenceNote).toBeNull();
+      expect((await e.outbox.list()).at(-1)?.envelope.payload).not.toHaveProperty('differenceNote');
+    });
+
+    it.each([1, -1, 500, -10_000])(
+      'con %i centavos de diferencia y sin explicación no cierra ni encola nada',
+      async (delta) => {
+        const e = entorno();
+        const { turno } = await conVenta(e);
+        const antes = (await e.outbox.list()).length;
+        for (const explicacion of [undefined, '', '   ']) {
+          const r = await closeCashShift(e.cash, ana, turno.id, 21_600 + delta, explicacion);
+          expect(!r.ok && r.error.code).toBe('REASON_REQUIRED');
+        }
+        expect((await e.outbox.list()).length).toBe(antes);
+        expect((await e.cash.shifts.get(turno.id))?.status).toBe('OPEN');
+      },
+    );
+
+    it('con explicación cierra, la guarda recortada y viaja en la carga', async () => {
+      const e = entorno();
+      const { turno } = await conVenta(e);
+      const r = await closeCashShift(e.cash, ana, turno.id, 21_601, '  Sobró un centavo  ');
+      expect(r.ok && r.value.shift).toMatchObject({
+        differenceCents: 1,
+        differenceNote: 'Sobró un centavo',
+      });
+      const op = (await e.outbox.list()).at(-1);
+      expect(op?.envelope.payload).toMatchObject({ differenceNote: 'Sobró un centavo' });
+      expect(parseOperation(op?.envelope).ok).toBe(true);
+    });
+
+    it('una explicación de más de 500 caracteres no se acepta', async () => {
+      const e = entorno();
+      const { turno } = await conVenta(e);
+      const larga = closeCashShift(e.cash, ana, turno.id, 21_500, 'x'.repeat(501));
+      expect(await larga).toEqual({ ok: false, error: { code: 'NOTE_TOO_LONG' } });
+      const justa = await closeCashShift(e.cash, ana, turno.id, 21_500, 'x'.repeat(500));
+      expect(justa.ok).toBe(true);
+    });
+
+    it('se puede revisar la diferencia después de contar, sin cerrar todavía', async () => {
+      const e = entorno();
+      const { turno } = await conVenta(e);
+      const antes = (await e.outbox.list()).length;
+      expect(await closingDifference(e.cash, ana, turno.id, 21_500)).toEqual({
+        ok: true,
+        value: { differenceCents: -100 },
+      });
+      expect(await closingDifference(e.cash, ana, turno.id, 21_600)).toEqual({
+        ok: true,
+        value: { differenceCents: 0 },
+      });
+      expect((await e.outbox.list()).length).toBe(antes);
+      expect((await e.cash.shifts.get(turno.id))?.status).toBe('OPEN');
+    });
+
+    it('revisar la diferencia pide lo mismo que cerrar: permiso, turno abierto y monto válido', async () => {
+      const e = entorno();
+      const { turno } = await conVenta(e);
+      expect(await closingDifference(e.cash, ana, 'no-existe', 0)).toEqual({
+        ok: false,
+        error: { code: 'NOT_FOUND' },
+      });
+      expect(await closingDifference(e.cash, ana, turno.id, -5)).toEqual({
+        ok: false,
+        error: { code: 'AMOUNT_INVALID' },
+      });
+      await closeCashShift(e.cash, ana, turno.id, 21_600);
+      expect(await closingDifference(e.cash, ana, turno.id, 21_600)).toEqual({
+        ok: false,
+        error: { code: 'ALREADY_CLOSED' },
+      });
+    });
   });
 
   it('avisa cuántas operaciones quedaban sin enviar y las guarda en el corte', async () => {

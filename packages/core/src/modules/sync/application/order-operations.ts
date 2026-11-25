@@ -38,6 +38,7 @@ export interface ServerShift {
   cashCents: number;
   expectedCents: number | null;
   differenceCents: number | null;
+  differenceNote?: string | null;
 }
 
 export interface ServerSale {
@@ -425,11 +426,18 @@ export async function applyOrderOperation(ctx: {
       turno.status = 'CLOSED';
       turno.expectedCents = esperado;
       turno.differenceCents = c.data.countedCashCents - esperado;
+      turno.differenceNote = c.data.differenceNote ?? null;
       const difiere = esperado !== c.data.expectedCashCents;
-      const reason = difiere ? 'CASH_SUMMARY_MISMATCH' : ctx.baseReason;
+      // Con diferencia y sin explicación (un cierre viejo en cola) se aplica, pero por revisar [RF-M4-09].
+      const sinNota = turno.differenceCents !== 0 && turno.differenceNote === null;
+      const reason = difiere
+        ? 'CASH_SUMMARY_MISMATCH'
+        : sinNota
+          ? 'DIFFERENCE_WITHOUT_NOTE'
+          : ctx.baseReason;
       return {
         ok: true,
-        status: difiere ? 'TO_REVIEW' : ctx.baseStatus,
+        status: difiere || sinNota ? 'TO_REVIEW' : ctx.baseStatus,
         documentId: c.data.id,
         ...(reason === undefined ? {} : { reason }),
       };

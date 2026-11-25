@@ -640,6 +640,11 @@ export const textos = {
       PAYMENT_REGISTERED: 'Registró un cobro',
       QUOTE_REJECTED: 'Marcó una cotización como rechazada',
       QUOTE_LINE_PRICE_CHANGED: 'Cambió el precio de una línea de cotización',
+      COUNTER_SALE_CREATED: 'Registró una venta de mostrador',
+      COUNTER_SALE_CANCELLED: 'Canceló una venta de mostrador',
+      CASH_SHIFT_OPENED: 'Abrió un turno de caja',
+      CASH_SHIFT_CLOSED: 'Cerró un turno de caja',
+      CASH_SHIFT_REOPENED: 'Reabrió un corte de caja',
     },
     campos: {
       nombre: 'Nombre',
@@ -1332,6 +1337,12 @@ export const textos = {
           ? 'Hay 1 operación sin enviar. El corte puede cambiar cuando llegue al servidor.'
           : `Hay ${String(n)} operaciones sin enviar. El corte puede cambiar cuando lleguen al servidor.`,
       cancelar: 'Volver',
+      explicar: {
+        titulo: 'Explicar la diferencia',
+        hay: 'El efectivo no cuadra:',
+        etiqueta: '¿Por qué hay diferencia? (obligatorio)',
+        cerrar: 'Cerrar el turno con esta explicación',
+      },
     },
     corte: {
       titulo: 'Corte del turno',
@@ -1349,6 +1360,7 @@ export const textos = {
       enviado: 'Enviado',
       guardado: 'Guardado en la tablet',
       revisar: 'Un administrador debe revisar este corte:',
+      explicacion: 'Explicación',
     },
     turnos: {
       titulo: 'Turnos',
@@ -1587,6 +1599,14 @@ export const textos = {
         mensaje: 'Falta el motivo.',
         queHacer: 'Escribe por qué antes de continuar.',
       },
+      DIFFERENCE_NOTE_REQUIRED: {
+        mensaje: 'Falta explicar la diferencia.',
+        queHacer: 'Escribe por qué sobra o falta dinero; aunque sea un centavo, se explica.',
+      },
+      NOTE_TOO_LONG: {
+        mensaje: 'La explicación es muy larga.',
+        queHacer: 'Resúmela en 500 caracteres o menos.',
+      },
       INVALID_DATE: {
         mensaje: 'La fecha no es válida.',
         queHacer: 'Elige la fecha en el calendario.',
@@ -1675,6 +1695,12 @@ export const textos = {
       QUOTE_ALREADY_CONVERTED: 'La cotización ya tenía una orden.',
       PUBLIC_CODE_CONFLICT: 'El código público se repitió.',
       USER_INACTIVE: 'La persona ya estaba desactivada.',
+      CASH_SUMMARY_MISMATCH:
+        'Lo que esperaba la tablet no coincide con lo que calculó el servidor.',
+      DIFFERENCE_WITHOUT_NOTE: 'Se cerró con diferencia y sin explicación.',
+      REOPEN_WITHOUT_AUTHORIZATION: 'Se reabrió sin la autorización de un administrador.',
+      SHIFT_ALREADY_OPEN: 'La persona ya tenía otro turno abierto.',
+      SHIFT_CLOSED: 'Se cobró en un turno ya cerrado.',
     } as Record<string, string>,
   },
   condiciones: {
@@ -2298,6 +2324,7 @@ export const textos = {
       cancelled: 'Ventas canceladas',
       cancelledSales: 'Ventas canceladas ({count})',
       cancelledNote: 'Los cobros de ventas canceladas no cuentan en el corte.',
+      differenceNote: 'Explicación',
       page: 'Página {n} de {total}',
       mensajeWhatsApp: (nombre: string, dia: string): string =>
         `Corte de caja de ${nombre} del ${dia}.`,

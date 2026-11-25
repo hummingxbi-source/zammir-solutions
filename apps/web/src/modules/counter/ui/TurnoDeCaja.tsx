@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { ReactElement, ReactNode, SyntheticEvent } from 'react';
 import {
   closeCashShift,
+  closingDifference,
   dayReport,
   mexicoDate,
   openCashShift,
@@ -28,6 +29,7 @@ import {
 import { textos } from '../../../shared/i18n/textos';
 import { Aviso } from '../../../shared/ui/Aviso';
 import { Boton } from '../../../shared/ui/Boton';
+import { AreaDeTexto } from '../../../shared/ui/AreaDeTexto';
 import { Campo, CampoNumerico } from '../../../shared/ui/Campo';
 import { AccionesDelDocumento } from '../../documents/ui/AccionesDelDocumento';
 import { EtiquetaDeEstado } from '../../../shared/ui/EtiquetaDeEstado';
@@ -112,6 +114,10 @@ export function TurnoDeCaja(props: TurnoDeCajaProps): ReactElement {
   const [contado, setContado] = useState('');
   const [cerrando, setCerrando] = useState(false);
   const [pendientes, setPendientes] = useState(0);
+  // La diferencia se calcula con lo contado; si no es cero, se pide la explicación
+  // antes de cerrar [RF-M4-09].
+  const [porExplicar, setPorExplicar] = useState<number | null>(null);
+  const [explicacion, setExplicacion] = useState('');
   const [corte, setCorte] = useState<{ turno: CashShift; resumen: CashShiftSummary } | null>(null);
   const [reabrir, setReabrir] = useState<CashShift | null>(null);
   const [fecha, setFecha] = useState(() => mexicoDate(cash.clock.now()));
@@ -166,6 +172,8 @@ export function TurnoDeCaja(props: TurnoDeCajaProps): ReactElement {
     setError(null);
     setPendientes(await pendingBeforeClose(cash));
     setContado('');
+    setPorExplicar(null);
+    setExplicacion('');
     setCerrando(true);
   }
 
@@ -180,12 +188,30 @@ export function TurnoDeCaja(props: TurnoDeCajaProps): ReactElement {
       mostrarError('AMOUNT_INVALID');
       return;
     }
-    const r = await closeCashShift(cash, actor, turno.id, monto);
+    if (porExplicar === null) {
+      const revision = await closingDifference(cash, actor, turno.id, monto);
+      if (!revision.ok) {
+        mostrarError(revision.error.code);
+        return;
+      }
+      if (revision.value.differenceCents !== 0) {
+        setPorExplicar(revision.value.differenceCents);
+        return;
+      }
+    }
+    const r = await closeCashShift(
+      cash,
+      actor,
+      turno.id,
+      monto,
+      porExplicar === null ? undefined : explicacion,
+    );
     if (!r.ok) {
-      mostrarError(r.error.code);
+      mostrarError(r.error.code === 'REASON_REQUIRED' ? 'DIFFERENCE_NOTE_REQUIRED' : r.error.code);
       return;
     }
     setCerrando(false);
+    setPorExplicar(null);
     setCorte({ turno: r.value.shift, resumen: r.value.summary });
     props.onPorEnviar?.();
     props.onCambio?.();
@@ -374,9 +400,13 @@ export function TurnoDeCaja(props: TurnoDeCajaProps): ReactElement {
                     value={contado}
                     onChange={(e) => {
                       setContado(e.target.value);
+                      // Si cambia lo contado, se vuelve a revisar la diferencia.
+                      setPorExplicar(null);
                     }}
                   />
-                  <Boton type="submit">{t.turno.confirmarCierre}</Boton>
+                  {porExplicar === null ? (
+                    <Boton type="submit">{t.turno.confirmarCierre}</Boton>
+                  ) : null}
                   <Boton
                     variante="secundario"
                     onClick={() => {
@@ -386,6 +416,28 @@ export function TurnoDeCaja(props: TurnoDeCajaProps): ReactElement {
                     {t.turno.cancelar}
                   </Boton>
                 </div>
+                {porExplicar !== null ? (
+                  <div
+                    className="turno__explicar"
+                    role="group"
+                    aria-label={t.turno.explicar.titulo}
+                  >
+                    <p className="turno__explicar-diferencia">
+                      {t.turno.explicar.hay} <Diferencia centavos={porExplicar} />
+                    </p>
+                    <AreaDeTexto
+                      etiqueta={t.turno.explicar.etiqueta}
+                      rows={3}
+                      maxLength={500}
+                      required
+                      value={explicacion}
+                      onChange={(e) => {
+                        setExplicacion(e.target.value);
+                      }}
+                    />
+                    <Boton type="submit">{t.turno.explicar.cerrar}</Boton>
+                  </div>
+                ) : null}
               </form>
             ) : null}
           </>
@@ -412,6 +464,12 @@ export function TurnoDeCaja(props: TurnoDeCajaProps): ReactElement {
               <dd>
                 <Diferencia centavos={corte.resumen.differenceCents ?? 0} />
               </dd>
+              {corte.turno.differenceNote !== null ? (
+                <>
+                  <dt>{t.corte.explicacion}</dt>
+                  <dd>{corte.turno.differenceNote}</dd>
+                </>
+              ) : null}
               {corte.resumen.cancelledSalesCents > 0 ? (
                 <>
                   <dt>{t.corte.canceladas}</dt>
@@ -463,7 +521,8 @@ export function TurnoDeCaja(props: TurnoDeCajaProps): ReactElement {
                       {x.reviewReason !== null ? (
                         <span className="turno__revisar">
                           {' '}
-                          {t.corte.revisar} {x.reviewReason}
+                          {t.corte.revisar}{' '}
+                          {textos.ordenes.motivosDeRevision[x.reviewReason] ?? x.reviewReason}
                         </span>
                       ) : null}
                     </td>
@@ -473,6 +532,9 @@ export function TurnoDeCaja(props: TurnoDeCajaProps): ReactElement {
                       ) : (
                         <Diferencia centavos={x.differenceCents} />
                       )}
+                      {(x.differenceNote ?? null) !== null ? (
+                        <span className="turno__nota">{x.differenceNote}</span>
+                      ) : null}
                     </td>
                     <td className="tabla__acciones">
                       {x.status === 'CLOSED' && props.hoja !== undefined ? (

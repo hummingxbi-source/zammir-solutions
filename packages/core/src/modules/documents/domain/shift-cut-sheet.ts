@@ -39,6 +39,8 @@ export interface ShiftCutLabels {
   readonly expectedCash: string;
   readonly countedCash: string;
   readonly difference: string;
+  /** Rótulo de la explicación de la diferencia [RF-M4-09]. */
+  readonly differenceNote: string;
   readonly exact: string;
   readonly over: string;
   readonly short: string;
@@ -92,6 +94,11 @@ export function buildShiftCutSheet(
       value: d === 0 ? l.exact : `${d > 0 ? l.over : l.short} ${dinero(Math.abs(d))}`,
       strong: true,
     });
+    // Un turno guardado antes de RF-M4-09 no trae el campo.
+    const nota = shift.differenceNote ?? null;
+    if (nota !== null) {
+      efectivo.push({ label: l.differenceNote, value: nota });
+    }
   }
 
   const secciones = [

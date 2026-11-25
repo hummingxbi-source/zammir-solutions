@@ -100,6 +100,18 @@ async function cerrarUnTurno(fondo: string, contado: string): Promise<void> {
   fireEvent.click(screen.getByRole('button', { name: 'Cerrar turno' }));
   escribir(await screen.findByLabelText('Efectivo contado'), contado);
   fireEvent.click(screen.getByRole('button', { name: 'Cerrar y calcular el corte' }));
+  // Si no cuadra, primero se explica la diferencia [RF-M4-09].
+  const paso = await waitFor(() => {
+    const grupo = screen.queryByRole('group', { name: 'Explicar la diferencia' });
+    if (grupo === null && screen.queryByText(/Corte cerrado/) === null) {
+      throw new Error('todavía no');
+    }
+    return grupo;
+  });
+  if (paso !== null) {
+    escribir(screen.getByLabelText(/¿Por qué hay diferencia/), 'Cambio mal dado');
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar el turno con esta explicación' }));
+  }
   await screen.findByText(/Corte cerrado/);
 }
 
