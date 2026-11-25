@@ -9,6 +9,7 @@ import {
   type ReplicatedProduct,
   type Category,
   type PriceChange,
+  type CategoryAdmin,
   type CategoryReader,
   type FiscalData,
   type Product,
@@ -21,6 +22,8 @@ import { leerTodo } from '../../../shared/infra/leer-todo';
 
 const SIN_PERMISO = '42501';
 const VALOR_REPETIDO = '23505';
+/** El disparador que impide desactivar una categoría con productos activos [RF-M1-08]. */
+const CATEGORIA_EN_USO = '23514';
 const LLAVE_FORANEA = '23503';
 
 interface FilaDeCategoria {
@@ -30,6 +33,8 @@ interface FilaDeCategoria {
   readonly fiscal_product_service_key: string | null;
   readonly fiscal_unit_key: string | null;
   readonly fiscal_tax_object: string | null;
+  /** Antes de RF-M1-08 la tabla no la tenía. */
+  readonly is_active?: boolean;
 }
 
 interface FilaParaVender {
@@ -102,7 +107,31 @@ function aCategoria(fila: FilaDeCategoria): Category {
     name: fila.name,
     sortOrder: fila.sort_order,
     fiscalDefaults: fiscal(fila),
+    isActive: fila.is_active ?? true,
   };
+}
+
+function aFilaDeCategoria(c: Category): FilaDeCategoria {
+  return {
+    id: c.id,
+    name: c.name,
+    sort_order: c.sortOrder,
+    fiscal_product_service_key: c.fiscalDefaults.productServiceKey,
+    fiscal_unit_key: c.fiscalDefaults.unitKey,
+    fiscal_tax_object: c.fiscalDefaults.taxObject,
+    is_active: c.isActive,
+  };
+}
+
+/** Errores al guardar una categoría [RF-M1-08]: nombre repetido o desactivar con productos activos. */
+function aErrorDeCategoria(error: { readonly code?: string }): CatalogError {
+  if (error.code === VALOR_REPETIDO) {
+    return { code: 'CATEGORY_NAME_TAKEN' };
+  }
+  if (error.code === CATEGORIA_EN_USO) {
+    return { code: 'CATEGORY_IN_USE' };
+  }
+  return aError(error);
 }
 
 function aParaVender(fila: FilaParaVender): Result<SellableProduct, CatalogError> {
@@ -189,7 +218,7 @@ function aLista<F, T>(
   return ok(resultado);
 }
 
-export type SupabaseCatalog = ProductAdmin & ProductReader & CategoryReader;
+export type SupabaseCatalog = ProductAdmin & ProductReader & CategoryReader & CategoryAdmin;
 
 /** Adaptador de los puertos del catálogo sobre las tablas `products`, `product_categories`
  *  y la vista `sellable_products`. Los permisos los decide la base (RLS), no este código. */
@@ -202,6 +231,33 @@ export function supabaseCatalog(cliente: SupabaseClient): SupabaseCatalog {
         return err(aError(respuesta.error));
       }
       return ok((datos as FilaDeCategoria[]).map(aCategoria));
+    },
+
+    async createCategory(categoria) {
+      const r = await cliente
+        .from('product_categories')
+        .insert(aFilaDeCategoria(categoria))
+        .select()
+        .single();
+      return r.error !== null
+        ? err(aErrorDeCategoria(r.error))
+        : ok(aCategoria(r.data as FilaDeCategoria));
+    },
+
+    async updateCategory(categoria) {
+      const { id, ...cambios } = aFilaDeCategoria(categoria);
+      const r = await cliente
+        .from('product_categories')
+        .update(cambios)
+        .eq('id', id)
+        .select()
+        .maybeSingle();
+      if (r.error !== null) {
+        return err(aErrorDeCategoria(r.error));
+      }
+      return r.data === null
+        ? err({ code: 'NOT_FOUND' })
+        : ok(aCategoria(r.data as FilaDeCategoria));
     },
 
     async create(producto) {

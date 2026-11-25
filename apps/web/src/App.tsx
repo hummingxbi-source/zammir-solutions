@@ -5,7 +5,6 @@ import type {
   CustomerHistory,
   CustomerId,
   DeviceRepository,
-  ImportCatalogDeps,
   LegalDeps,
   ManageCustomersDeps,
   AgingThresholdStore,
@@ -23,7 +22,7 @@ import { textos } from './shared/i18n/textos';
 import { EncabezadoDePagina } from './shared/ui/EncabezadoDePagina';
 import { Bitacora, type BitacoraProps } from './modules/audit/ui/Bitacora';
 import { ExportarDatos, type ExportarDatosProps } from './modules/export/ui/ExportarDatos';
-import { CatalogoDelAdministrador } from './modules/catalog/ui/Catalogo';
+import { CatalogoDelAdministrador, type CatalogoDeps } from './modules/catalog/ui/Catalogo';
 import { Clientes } from './modules/customers/ui/Clientes';
 import { ResumenDelInicioEnLaTablet } from './modules/reports/ui/ResumenDelInicioEnLaTablet';
 import { ReportesEnLaTablet, type PrepararReportes } from './modules/reports/ui/ReportesEnLaTablet';
@@ -103,7 +102,7 @@ export interface AppProps {
     readonly session: ActiveUserSession;
   } | null;
   /** Importación del catálogo desde archivo; aparece en Catálogo (solo administradores). */
-  readonly catalogo?: ImportCatalogDeps | null;
+  readonly catalogo?: CatalogoDeps | null;
   /** Cotizador de la tablet: cómo reunir lo que necesita; sin esto la sección queda vacía. */
   readonly prepararCotizador?: PrepararCotizador | null;
   /** Mostrador de la tablet: cómo reunir lo que necesita; sin esto la sección queda vacía. */

@@ -8,11 +8,11 @@ import {
   inMemoryAuditLog,
   inMemoryCatalog,
   sequentialIdGenerator,
-  type ImportCatalogDeps,
 } from '@zammir/core';
 import { describe, expect, it, vi } from 'vitest';
 
 import { App } from '../../../App';
+import type { CatalogoDeps } from './Catalogo';
 import { ProveedorSesionAdmin } from '../../identity/ui/SesionAdmin';
 
 // La primera pantalla de cada archivo arma toda la aplicación y, con cientos de pruebas en paralelo, puede
@@ -24,7 +24,7 @@ const instante = new Date('2026-10-30T18:00:00.000Z');
 const ENCABEZADO =
   'codigo,nombre,categoria,tipo,unidad,precio,exento,regla,base_metro_lineal,garantia_meses';
 
-function entorno(): ImportCatalogDeps {
+function entorno(): CatalogoDeps {
   const catalogo = inMemoryCatalog({
     idGenerator: sequentialIdGenerator('c'),
     clock: fixedClock(instante),
@@ -40,7 +40,7 @@ function entorno(): ImportCatalogDeps {
   };
 }
 
-function mostrar(deps: ImportCatalogDeps, rol: 'ADMIN' | 'STAFF' = 'ADMIN'): void {
+function mostrar(deps: CatalogoDeps, rol: 'ADMIN' | 'STAFF' = 'ADMIN'): void {
   const auth = inMemoryAdminAuth([
     { userId: 'a-1', email: 'a@ejemplo.invalid', password: 'clave-de-prueba-1', role: rol },
   ]);
@@ -119,7 +119,7 @@ describe('pantalla de importación del catálogo', () => {
       `${ENCABEZADO}\nA-1,Bien,Espejo,a medida,m2,100,no,,,\nA-2,,Telas,a medida,m2,-5,no,,,\nA-3,Repetido,Espejo,a medida,m2,100,no,,,\nA-3,Repetido,Espejo,a medida,m2,100,no,,,`,
     );
     expect(await screen.findByText(/4 filas, 2 con errores/)).toBeTruthy();
-    const tabla = within(screen.getByRole('table'));
+    const tabla = within(within(screen.getByRole('dialog')).getByRole('table'));
     const fila3 = tabla.getByRole('rowheader', { name: '3' }).closest('tr');
     if (fila3 === null) throw new Error('fila 3');
     expect(within(fila3).getByText('Falta el nombre.')).toBeTruthy();
