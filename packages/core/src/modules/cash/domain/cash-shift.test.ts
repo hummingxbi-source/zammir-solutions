@@ -227,3 +227,96 @@ describe('corte consolidado del día', () => {
     );
   });
 });
+
+describe('devoluciones en el corte [RF-M4-10, ADR-0044]', () => {
+  const base = { openingFloatCents: 10_000, countedCashCents: null };
+
+  it('lo devuelto en el turno sale del efectivo esperado; lo cobrado se queda', () => {
+    const r = summarizeShift({
+      ...base,
+      payments: [pago('CASH', 11_600, 'COUNTER_SALE', 'v1'), pago('TRANSFER', 5_000)],
+      cancelledSaleIds: new Set(['v1']),
+      refundedSaleIds: new Set(['v1']),
+      refunds: [
+        { method: 'CASH', amountCents: 11_600 },
+        { method: 'TRANSFER', amountCents: 2_000 },
+      ],
+    });
+    expect(r).toMatchObject({
+      cashCents: 11_600,
+      transferCents: 5_000,
+      refundedCashCents: 11_600,
+      refundedTransferCents: 2_000,
+      refundCount: 2,
+      cancelledSalesCents: 0,
+      expectedCashCents: 10_000,
+    });
+  });
+
+  it('una devolución hecha hoy de una venta de otro turno resta aquí, aunque aquí no haya cobros', () => {
+    const r = summarizeShift({
+      ...base,
+      payments: [],
+      cancelledSaleIds: new Set(['vieja']),
+      refundedSaleIds: new Set(['vieja']),
+      refunds: [{ method: 'CASH', amountCents: 3_000 }],
+    });
+    expect(r.expectedCashCents).toBe(7_000);
+  });
+
+  it('el turno donde se cobró una venta que se canceló después (con devolución) no cambia', () => {
+    const entrada = {
+      ...base,
+      payments: [pago('CASH', 11_600, 'COUNTER_SALE', 'v1')],
+      refunds: [],
+    };
+    const antes = summarizeShift({ ...entrada, cancelledSaleIds: new Set() });
+    const despues = summarizeShift({
+      ...entrada,
+      cancelledSaleIds: new Set(['v1']),
+      refundedSaleIds: new Set(['v1']),
+    });
+    expect(despues).toEqual(antes);
+  });
+
+  it('propiedad: esperado = fondo + efectivo cobrado − efectivo devuelto', () => {
+    fc.assert(
+      fc.property(
+        fc.array(fc.integer({ min: 1, max: 100_000 }), { maxLength: 8 }),
+        fc.array(fc.integer({ min: 1, max: 100_000 }), { maxLength: 8 }),
+        fc.integer({ min: 0, max: 100_000 }),
+        (cobros, devueltos, fondo) => {
+          const r = summarizeShift({
+            openingFloatCents: fondo,
+            countedCashCents: null,
+            payments: cobros.map((c, i) => pago('CASH', c, 'COUNTER_SALE', `v${String(i)}`)),
+            cancelledSaleIds: new Set(),
+            refunds: devueltos.map((d) => ({ method: 'CASH' as const, amountCents: d })),
+          });
+          const suma = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
+          expect(r.expectedCashCents).toBe(fondo + suma(cobros) - suma(devueltos));
+        },
+      ),
+    );
+  });
+
+  it('el consolidado del día suma lo que quedó: cobrado menos devuelto', () => {
+    const resumen = summarizeShift({
+      ...base,
+      payments: [pago('CASH', 8_000), pago('TRANSFER', 4_000)],
+      cancelledSaleIds: new Set(),
+      refunds: [
+        { method: 'CASH', amountCents: 3_000 },
+        { method: 'TRANSFER', amountCents: 1_000 },
+      ],
+    });
+    const r = summarizeDay('2026-10-31', [
+      {
+        shift: { id: 't', cashierId: 'ana' as never, openedAt: '2026-10-31T15:00:00.000Z' },
+        summary: resumen,
+      },
+    ]);
+    expect(r).toMatchObject({ cashCents: 5_000, transferCents: 3_000, totalCents: 8_000 });
+    expect(r.byCashier[0]).toMatchObject({ cashCents: 5_000, transferCents: 3_000 });
+  });
+});

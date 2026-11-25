@@ -299,8 +299,9 @@ describe('E1 y E2 · de la cotización a la entrega y el corte, sin conexión (s
       (await cancelCounterSale(counterDeps, admin, ventaCancelada.value.sale.id, 'Se equivocó')).ok,
     ).toBe(true);
 
-    // Esperado en el cajón: fondo 100.00 + anticipo 268.80 + venta 116.00 = 484.80 (la transferencia y la
-    // venta cancelada no entran). Se cuentan $483.80: faltan $1.00.
+    // Esperado en el cajón: fondo 100.00 + anticipo 268.80 + venta 116.00 = 484.80. La venta cancelada fue por
+    // transferencia: su cobro se queda en el turno y su devolución (por transferencia, de quien canceló) no toca
+    // el cajón [RF-M4-10]. Se cuentan $483.80: faltan $1.00.
     // Con diferencia el turno no se cierra sin explicación [RF-M4-09].
     expect(await closeCashShift(cashDeps, cajera, turno.value.id, 48_380)).toEqual({
       ok: false,
@@ -319,7 +320,9 @@ describe('E1 y E2 · de la cotización a la entrega y el corte, sin conexión (s
     }
     expect(corte.value.summary.expectedCashCents).toBe(48_480);
     expect(corte.value.summary.differenceCents).toBe(-100);
-    expect(corte.value.summary.cancelledSalesCents).toBe(11_600);
+    expect(corte.value.summary.cancelledSalesCents).toBe(0);
+    // Las transferencias del turno incluyen la de la venta cancelada (11 600): su cobro se queda aquí.
+    expect(corte.value.summary.transferCents).toBe(38_480);
 
     // ---- Sin red no sale nada ----
     await engine.trigger();
