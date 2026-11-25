@@ -11,6 +11,7 @@ import {
   mexicoDate,
   money,
   parseLength,
+  planRefunds,
   registerWorkOrderPayment,
   removeFromTicket,
   searchProducts,
@@ -97,7 +98,12 @@ export interface MostradorProps {
 type Dialogo =
   | { readonly tipo: 'cobrar-ticket' }
   | { readonly tipo: 'cobrar-saldo'; readonly orden: WorkOrder }
-  | { readonly tipo: 'cancelar'; readonly venta: CounterSale }
+  | {
+      readonly tipo: 'cancelar';
+      readonly venta: CounterSale;
+      /** Lo que se le devuelve al cliente, por medio de pago [RF-M4-10]. */
+      readonly devolucion: string;
+    }
   | null;
 
 function cobra(centavos: number): string {
@@ -674,7 +680,11 @@ export function Mostrador(props: MostradorProps): ReactElement {
         {dialogo?.tipo === 'cancelar' ? (
           <DialogoDeAutorizacion
             titulo={t.hoy.cancelar}
-            explicacion={t.hoy.motivoCancelar}
+            explicacion={
+              dialogo.devolucion === ''
+                ? t.hoy.motivoCancelar
+                : `${t.hoy.motivoCancelar} ${t.hoy.seDevuelve(dialogo.devolucion)}`
+            }
             pedirMotivo
             pedirPin={persona.role !== 'ADMIN'}
             autorizacion={props.autorizacion}
@@ -754,7 +764,20 @@ export function Mostrador(props: MostradorProps): ReactElement {
                             variante="peligro-suave"
                             onClick={() => {
                               setError(null);
-                              setDialogo({ tipo: 'cancelar', venta: v });
+                              void deps.payments.listByTarget(v.id).then((pagos) => {
+                                setDialogo({
+                                  tipo: 'cancelar',
+                                  venta: v,
+                                  devolucion: planRefunds(pagos)
+                                    .map((d) =>
+                                      t.hoy.devolucion(
+                                        formatearPesos(d.amountCents),
+                                        d.method === 'CASH',
+                                      ),
+                                    )
+                                    .join(' y '),
+                                });
+                              });
                             }}
                           >
                             {t.hoy.cancelar}

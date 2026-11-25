@@ -48,6 +48,10 @@ export interface ShiftCutLabels {
   /** Con `{count}`: `Ventas canceladas ({count})`. */
   readonly cancelledSales: string;
   readonly cancelledNote: string;
+  /** Sección de devoluciones hechas en el turno [RF-M4-10]. Con `{count}`: `Devoluciones (2)`. */
+  readonly refunds: string;
+  readonly refundedCash: string;
+  readonly refundedTransfer: string;
   readonly page: string;
 }
 
@@ -83,9 +87,12 @@ export function buildShiftCutSheet(
     { label: l.totalCollected, value: dinero(s.cashCents + s.transferCents), strong: true },
   ];
 
-  const efectivo: SheetRow[] = [
-    { label: l.expectedCash, value: dinero(s.expectedCashCents), strong: true },
-  ];
+  const efectivo: SheetRow[] = [];
+  // El efectivo devuelto en el turno sale del cajón antes de lo esperado [RF-M4-10].
+  if (s.refundedCashCents > 0) {
+    efectivo.push({ label: l.refundedCash, value: `−${dinero(s.refundedCashCents)}` });
+  }
+  efectivo.push({ label: l.expectedCash, value: dinero(s.expectedCashCents), strong: true });
   if (shift.countedCashCents !== null) {
     efectivo.push({ label: l.countedCash, value: dinero(shift.countedCashCents) });
     const d = s.differenceCents ?? 0;
@@ -105,6 +112,19 @@ export function buildShiftCutSheet(
     { title: l.collections, rows: cobros },
     { title: l.cash, rows: efectivo },
   ];
+  if (s.refundCount > 0) {
+    const devoluciones: SheetRow[] = [];
+    if (s.refundedCashCents > 0) {
+      devoluciones.push({ label: l.refundedCash, value: dinero(s.refundedCashCents) });
+    }
+    if (s.refundedTransferCents > 0) {
+      devoluciones.push({ label: l.refundedTransfer, value: dinero(s.refundedTransferCents) });
+    }
+    secciones.push({
+      title: l.refunds.replace('{count}', String(s.refundCount)),
+      rows: devoluciones,
+    });
+  }
   if (s.cancelledSalesCents > 0) {
     secciones.push({
       title: l.cancelled,

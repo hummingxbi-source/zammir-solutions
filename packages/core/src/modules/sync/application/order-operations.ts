@@ -35,7 +35,7 @@ export interface ServerShift {
   userId: string;
   floatCents: number;
   status: 'OPEN' | 'CLOSED';
-  /** Efectivo APLICADO cobrado en el turno, sin las ventas canceladas. */
+  /** Efectivo del turno: lo cobrado menos lo devuelto en él (las cancelaciones viejas restan su cobro). */
   cashCents: number;
   expectedCents: number | null;
   differenceCents: number | null;
@@ -380,17 +380,41 @@ export async function applyOrderOperation(ctx: {
       }
       const quien = op.authorizedBy ?? op.userId;
       venta.status = 'CANCELLED';
-      // La venta cancelada sale del cobro del turno [PD-24].
-      const turnoDeVenta = venta.shiftId === null ? undefined : store.turnos.get(venta.shiftId);
-      if (turnoDeVenta !== undefined) {
-        turnoDeVenta.cashCents -= venta.cashCents;
+      let motivo: string | undefined;
+      const devoluciones = c.data.refunds;
+      if (devoluciones === undefined) {
+        // Cancelación de antes de RF-M4-10: como entonces, su cobro sale del turno de la venta.
+        const turnoDeVenta = venta.shiftId === null ? undefined : store.turnos.get(venta.shiftId);
+        if (turnoDeVenta !== undefined) {
+          turnoDeVenta.cashCents -= venta.cashCents;
+        }
+        motivo = 'REFUND_MISSING';
+      } else {
+        // El cobro se queda en su turno; el efectivo devuelto sale del turno de quien cancela [RF-M4-10].
+        const devuelto = (m: 'CASH' | 'TRANSFER') =>
+          devoluciones.filter((d) => d.method === m).reduce((t, d) => t + d.amountCents, 0);
+        if (
+          devuelto('CASH') !== venta.cashCents ||
+          devuelto('TRANSFER') !== venta.paidCents - venta.cashCents
+        ) {
+          motivo = 'REFUND_MISMATCH';
+        }
+        for (const d of devoluciones.filter((x) => x.method === 'CASH')) {
+          // Sin turno (no se llevan turnos), como un cobro sin turno; con uno, debe estar abierto.
+          const turno = d.cashShiftId === null ? undefined : store.turnos.get(d.cashShiftId);
+          if (d.cashShiftId !== null && (turno === undefined || turno.status === 'CLOSED')) {
+            motivo ??= 'SHIFT_CLOSED';
+          }
+          if (turno !== undefined) {
+            turno.cashCents -= d.amountCents;
+          }
+        }
       }
-      const reason = store.administradores.has(quien)
-        ? ctx.baseReason
-        : 'CANCEL_WITHOUT_AUTHORIZATION';
+      const autorizada = store.administradores.has(quien);
+      const reason = autorizada ? (motivo ?? ctx.baseReason) : 'CANCEL_WITHOUT_AUTHORIZATION';
       return {
         ok: true,
-        status: store.administradores.has(quien) ? ctx.baseStatus : 'TO_REVIEW',
+        status: autorizada && motivo === undefined ? ctx.baseStatus : 'TO_REVIEW',
         folio: venta.folio,
         documentId: c.data.id,
         ...(reason === undefined ? {} : { reason }),

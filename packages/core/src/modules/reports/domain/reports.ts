@@ -1,4 +1,5 @@
 import { addDays, mexicoDate } from '../../../shared-kernel/date/mx-date';
+import type { Refund } from '../../counter/domain/refund';
 import type { CounterSale } from '../../counter/domain/counter-sale';
 import type { WorkOrder, WorkOrderStatus } from '../../orders/domain/work-order';
 import type { Payment } from '../../payments/domain/payment';
@@ -20,15 +21,51 @@ type PagoDeReporte = Pick<
   'targetType' | 'targetId' | 'amountCents' | 'paidAt' | 'userId' | 'method'
 >;
 
-/** Pagos que cuentan en los reportes: todos los recibidos, salvo los de una venta cancelada, igual que en el
- *  corte de caja (PD-24 sin respuesta: la cancelación se muestra aparte y no suma). */
+/** Una devolución tal como la necesitan los reportes [RF-M4-10]. */
+export type DevolucionDeReporte = Pick<
+  Refund,
+  'saleId' | 'method' | 'amountCents' | 'refundedAt' | 'userId'
+>;
+
+/** Pagos que cuentan en los reportes, igual que en el corte de caja: todos los recibidos. El de una venta
+ *  cancelada con su devolución registrada cuenta el día en que se cobró, y la devolución resta el día en que se
+ *  hizo (base de efectivo recibido [RN-20, RF-M4-10]). Una venta cancelada antes de RF-M4-10, sin devolución, no
+ *  cuenta, como entonces. */
 export function countedPayments<P extends Pick<Payment, 'targetType' | 'targetId'>>(
   pagos: readonly P[],
   ventasCanceladas: ReadonlySet<string>,
+  ventasConDevolucion: ReadonlySet<string> = new Set(),
 ): readonly P[] {
   return pagos.filter(
-    (p) => !(p.targetType === 'COUNTER_SALE' && ventasCanceladas.has(p.targetId)),
+    (p) =>
+      !(
+        p.targetType === 'COUNTER_SALE' &&
+        ventasCanceladas.has(p.targetId) &&
+        !ventasConDevolucion.has(p.targetId)
+      ),
   );
+}
+
+/** Los pagos que cuentan más las devoluciones como cobros negativos, en su fecha y de quien las hizo. */
+function pagosNetos(entrada: {
+  readonly payments: readonly PagoDeReporte[];
+  readonly sales: readonly Pick<CounterSale, 'id' | 'status'>[];
+  /** Devoluciones al cancelar ventas [RF-M4-10]: restan el día en que se hicieron. */
+  readonly refunds?: readonly DevolucionDeReporte[];
+}): readonly PagoDeReporte[] {
+  const devoluciones = entrada.refunds ?? [];
+  const conDevolucion = new Set(devoluciones.map((d) => d.saleId));
+  return [
+    ...countedPayments(entrada.payments, cancelledSaleIds(entrada.sales), conDevolucion),
+    ...devoluciones.map((d): PagoDeReporte => ({
+      targetType: 'COUNTER_SALE',
+      targetId: d.saleId,
+      amountCents: -d.amountCents,
+      paidAt: d.refundedAt,
+      userId: d.userId,
+      method: d.method,
+    })),
+  ];
 }
 
 export function cancelledSaleIds(
@@ -56,10 +93,12 @@ export interface SalesPeriodReport {
 export function salesReport(entrada: {
   readonly payments: readonly PagoDeReporte[];
   readonly sales: readonly Pick<CounterSale, 'id' | 'status'>[];
+  /** Devoluciones al cancelar ventas [RF-M4-10]: restan el día en que se hicieron. */
+  readonly refunds?: readonly DevolucionDeReporte[];
   readonly now: Date;
   readonly mode?: ComparisonMode;
 }): Readonly<Record<PeriodKind, SalesPeriodReport>> {
-  const validos = countedPayments(entrada.payments, cancelledSaleIds(entrada.sales));
+  const validos = pagosNetos(entrada);
   const hoy = mexicoDate(entrada.now);
   const hacer = (kind: PeriodKind): SalesPeriodReport => {
     const period = periodOf(entrada.now, kind);
@@ -95,13 +134,15 @@ export interface DailyIncome {
 export function dailyIncomeTrend(entrada: {
   readonly payments: readonly PagoDeReporte[];
   readonly sales: readonly Pick<CounterSale, 'id' | 'status'>[];
+  /** Devoluciones al cancelar ventas [RF-M4-10]: restan el día en que se hicieron. */
+  readonly refunds?: readonly DevolucionDeReporte[];
   readonly now: Date;
   readonly days?: number;
 }): readonly DailyIncome[] {
   const dias = Math.max(1, Math.trunc(entrada.days ?? TREND_DAYS));
   const hoy = mexicoDate(entrada.now);
   const porDia = new Map<string, number>();
-  for (const p of countedPayments(entrada.payments, cancelledSaleIds(entrada.sales))) {
+  for (const p of pagosNetos(entrada)) {
     const instante = new Date(p.paidAt);
     if (Number.isNaN(instante.getTime())) {
       continue;
@@ -311,7 +352,8 @@ function porMetodo(pagos: readonly Pick<Payment, 'method' | 'amountCents'>[]): M
     cashCents: efectivo,
     transferCents: transferencia,
     totalCents: efectivo + transferencia,
-    count: pagos.length,
+    // Cuántos cobros: una devolución resta dinero, pero no es un cobro.
+    count: pagos.filter((p) => p.amountCents > 0).length,
   };
 }
 
@@ -319,22 +361,22 @@ function porMetodo(pagos: readonly Pick<Payment, 'method' | 'amountCents'>[]): M
 export function collectionsByMethod(entrada: {
   readonly payments: readonly PagoDeReporte[];
   readonly sales: readonly Pick<CounterSale, 'id' | 'status'>[];
+  /** Devoluciones al cancelar ventas [RF-M4-10]: restan el día en que se hicieron. */
+  readonly refunds?: readonly DevolucionDeReporte[];
   readonly period: Period;
 }): MethodTotals {
-  return porMetodo(
-    countedPayments(entrada.payments, cancelledSaleIds(entrada.sales)).filter((p) =>
-      inPeriod(p.paidAt, entrada.period),
-    ),
-  );
+  return porMetodo(pagosNetos(entrada).filter((p) => inPeriod(p.paidAt, entrada.period)));
 }
 
 /** Cobros de hoy, la semana y el mes, sumados por quien cobró [RF-M7-05, RN-11]. */
 export function collectionsByCashier(entrada: {
   readonly payments: readonly PagoDeReporte[];
   readonly sales: readonly Pick<CounterSale, 'id' | 'status'>[];
+  /** Devoluciones al cancelar ventas [RF-M4-10]: restan el día en que se hicieron. */
+  readonly refunds?: readonly DevolucionDeReporte[];
   readonly now: Date;
 }): Readonly<Record<PeriodKind, CashierCollections>> {
-  const validos = countedPayments(entrada.payments, cancelledSaleIds(entrada.sales));
+  const validos = pagosNetos(entrada);
   const hacer = (kind: PeriodKind): CashierCollections => {
     const period = periodOf(entrada.now, kind);
     const delPeriodo = validos.filter((p) => inPeriod(p.paidAt, period));

@@ -216,7 +216,9 @@ export async function cancelCounterSale(
   id: string,
   reason: string,
   authorization?: Authorization,
-): Promise<Result<{ readonly sale: CounterSale; readonly refunds: readonly Refund[] }, CounterError>> {
+): Promise<
+  Result<{ readonly sale: CounterSale; readonly refunds: readonly Refund[] }, CounterError>
+> {
   const decision = permisos(deps).check(actor.role, 'CANCEL_SALE_OR_ORDER');
   let autorizo: string;
   if (decision === 'DENY') {
