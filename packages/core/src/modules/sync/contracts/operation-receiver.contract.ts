@@ -449,7 +449,12 @@ export function operationReceiverContract(
         const instante = `${String(e.year)}-06-16T18:00:00.000Z`;
         const crear = async (
           d: DispositivoDelContrato,
-          opciones: { quoteId?: string; estimatedDeliveryDate?: string } = {},
+          opciones: {
+            quoteId?: string;
+            estimatedDeliveryDate?: string;
+            inParts?: boolean;
+            lineIds?: readonly string[];
+          } = {},
         ) => {
           const id = e.h.newUuid();
           const r = await d.receiver.receive(
@@ -574,6 +579,44 @@ export function operationReceiverContract(
         const { id, r } = await crear(dispositivo);
         expect(r.ok && r.status).toBe('APPLIED');
         expect(await h.orderState(id)).toMatchObject({ estimatedDeliveryDate: null });
+      });
+
+      it('por partes, la cotización se convierte otra vez con otras líneas; una línea repetida queda por revisar [RF-M3-10]', async () => {
+        const { h, dispositivo, usuario, cliente, year, siguiente, crear } = await conOrden();
+        const emitida = issueQuoteOperation({
+          opId: h.newUuid(),
+          deviceId: dispositivo.id,
+          seq: siguiente(),
+          userId: usuario,
+          customerId: cliente,
+          year,
+          newUuid: () => h.newUuid(),
+          publicCode: h.newPublicCode(),
+        });
+        expect((await dispositivo.receiver.receive(emitida)).ok).toBe(true);
+        const quoteId = (emitida.payload as { id: string }).id;
+        await dispositivo.receiver.receive(
+          markQuoteOperation({
+            opId: h.newUuid(),
+            deviceId: dispositivo.id,
+            seq: siguiente(),
+            userId: usuario,
+            quoteId,
+            accepted: true,
+          }),
+        );
+        const lineaA = h.newUuid();
+        const lineaB = h.newUuid();
+        const parte1 = await crear(dispositivo, { quoteId, inParts: true, lineIds: [lineaA] });
+        const parte2 = await crear(dispositivo, { quoteId, inParts: true, lineIds: [lineaB] });
+        expect(parte1.r.ok && parte1.r.status).toBe('APPLIED');
+        expect(parte2.r.ok && parte2.r.status).toBe('APPLIED');
+        const repetida = await crear(dispositivo, { quoteId, inParts: true, lineIds: [lineaA] });
+        expect(repetida.r.ok && repetida.r.status).toBe('TO_REVIEW');
+        expect(repetida.r.ok && repetida.r.reason).toBe('QUOTE_LINE_ALREADY_CONVERTED');
+        // Sin "por partes", una cotización ya convertida sigue sin convertirse otra vez.
+        const completa = await crear(dispositivo, { quoteId });
+        expect(completa.r.ok && completa.r.reason).toBe('QUOTE_ALREADY_CONVERTED');
       });
 
       it('una cotización aceptada se convierte una sola vez; la segunda queda por revisar', async () => {
@@ -1622,6 +1665,9 @@ export function createWorkOrderOperation(o: {
   readonly quoteId?: string;
   /** Sin fecha, la carga es la de antes de RF-M3-09 (una orden vieja en cola). */
   readonly estimatedDeliveryDate?: string;
+  /** Parte de un trabajo por partes, con estas líneas (sus ids) [RF-M3-10]. */
+  readonly inParts?: boolean;
+  readonly lineIds?: readonly string[];
 }): Record<string, unknown> {
   const issuedAt = `${String(o.year)}-06-15T18:00:00.000Z`;
   return {
@@ -1641,6 +1687,7 @@ export function createWorkOrderOperation(o: {
       ...(o.estimatedDeliveryDate === undefined
         ? {}
         : { estimatedDeliveryDate: o.estimatedDeliveryDate }),
+      ...(o.inParts === true ? { inParts: true } : {}),
       issuedAt,
       depositPercentBps: 5_000,
       depositRequiredCents: 5_800,
@@ -1649,7 +1696,8 @@ export function createWorkOrderOperation(o: {
       totalCents: 11_600,
       lines: [
         {
-          id: o.newUuid(),
+          // Por partes, la línea lleva el id de la línea de la cotización [RF-M3-10].
+          id: o.lineIds?.[0] ?? o.newUuid(),
           name: 'Vidrio claro 6 mm',
           chargeUnit: 'SQUARE_METER',
           unitPriceCents: 11_600,

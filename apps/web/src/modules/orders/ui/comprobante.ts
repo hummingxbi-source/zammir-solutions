@@ -1,6 +1,7 @@
 import {
   buildWorkOrderDocument,
   outboxWarrantyReader,
+  partNumber,
   shareQuote,
   type BusinessIdentity,
   type Customer,
@@ -60,6 +61,7 @@ async function armarComprobante(
 ): Promise<{ readonly documento: QuoteDocument; readonly mensaje: string }> {
   const pagos = await deps.orderDeps.payments.listByTarget(orden.id);
   const garantia = await outboxWarrantyReader(deps.orderDeps.outbox).get(orden.id);
+  const parte = partNumber(orden, await deps.orderDeps.orders.list());
   const documento = buildWorkOrderDocument({
     order: orden,
     payments: pagos,
@@ -74,6 +76,7 @@ async function armarComprobante(
     qrMatrix: deps.qrMatrix,
     autofacturacion: deps.autofacturacion,
     labels: ETIQUETAS_DEL_COMPROBANTE,
+    partLabel: parte === null ? null : textos.ordenes.partes.parte(parte),
   });
   const saldo = orden.totalCents - pagos.reduce((suma, p) => suma + p.amountCents, 0);
   const mensaje = c.mensajeWhatsApp(
