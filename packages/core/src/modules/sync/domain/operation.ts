@@ -159,6 +159,12 @@ export const createWorkOrderPayloadSchema = z
     subtotalCents: centavos,
     taxCents: centavos,
     totalCents: centavos,
+    /** Fecha estimada de entrega [RF-M3-09]. Opcional en el esquema: una orden creada antes del cambio y que
+     *  sigue en cola no se rechaza. */
+    estimatedDeliveryDate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .optional(),
     lines: z.array(quoteLineSchema).min(1),
   })
   .superRefine((o, ctx) => {

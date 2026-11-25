@@ -11,7 +11,7 @@ import { err, ok, type Result } from '../../../shared-kernel/result';
 import type { Random } from '../../../shared-kernel/random';
 import { computeDeposit } from '../../../shared-kernel/tax/tax';
 import { formatTempFolio } from '../../../shared-kernel/folio/folio';
-import { mexicoDate } from '../../../shared-kernel/date/mx-date';
+import { isCalendarDate, mexicoDate } from '../../../shared-kernel/date/mx-date';
 import type { Authorization } from '../../identity/application/authorize-with-admin-pin';
 import { defaultPermissionPolicy, type PermissionPolicy } from '../../identity/domain/permissions';
 import {
@@ -55,6 +55,7 @@ export type OrderErrorCode =
   | 'NEEDS_AUTHORIZATION'
   | 'REASON_REQUIRED'
   | 'INVALID_DATE'
+  | 'DATE_REQUIRED'
   | 'NOTHING_TO_UPDATE'
   | 'STORAGE_FAILED';
 
@@ -132,6 +133,24 @@ interface NuevaOrden {
   readonly siteAddress: string | null;
   readonly description: string | null;
   readonly lines: readonly WorkOrderLine[];
+  /** Fecha estimada de entrega (`AAAA-MM-DD`), obligatoria al crear la orden [RF-M3-09, ADR-0044]. */
+  readonly estimatedDeliveryDate: string;
+}
+
+/** Lo que se pide al convertir una cotización en orden. */
+export interface OpcionesDeConversion {
+  readonly estimatedDeliveryDate: string;
+}
+
+/** La fecha de entrega de una orden nueva: obligatoria, real y no anterior a hoy (hora de México). */
+function revisarFechaDeEntrega(fecha: string, hoy: string): OrderError | null {
+  if (fecha.trim() === '') {
+    return { code: 'DATE_REQUIRED' };
+  }
+  if (!isCalendarDate(fecha) || fecha < hoy) {
+    return { code: 'INVALID_DATE' };
+  }
+  return null;
 }
 
 /** Crea la orden con su folio provisional y su operación `CreateWorkOrder` en una sola transacción local
@@ -143,6 +162,13 @@ async function crearOrden(
 ): Promise<Result<WorkOrder, OrderError>> {
   if (entrada.lines.length === 0) {
     return err({ code: 'EMPTY_ORDER' });
+  }
+  const fechaInvalida = revisarFechaDeEntrega(
+    entrada.estimatedDeliveryDate,
+    mexicoDate(deps.clock.now()),
+  );
+  if (fechaInvalida !== null) {
+    return err(fechaInvalida);
   }
   const totales = quoteTotals(entrada.lines);
   const anticipo = anticipoExigido(totales.totalCents, deps.settings.depositPercentBps);
@@ -173,7 +199,7 @@ async function crearOrden(
         measuredBy: null,
         builtBy: null,
         installedBy: null,
-        estimatedDeliveryDate: null,
+        estimatedDeliveryDate: entrada.estimatedDeliveryDate,
         notes: null,
         tempFolio: folio.value,
         folio: null,
@@ -213,6 +239,7 @@ async function crearOrden(
           subtotalCents: nueva.subtotalCents,
           taxCents: nueva.taxCents,
           totalCents: nueva.totalCents,
+          estimatedDeliveryDate: entrada.estimatedDeliveryDate,
           lines: nueva.lines.map(lineaAPayload),
         },
       });
@@ -236,11 +263,13 @@ async function crearOrden(
   }
 }
 
-/** Convierte una cotización aceptada en orden de trabajo en un solo paso [RF-M2-08, RF-M3-01]. */
+/** Convierte una cotización aceptada en orden de trabajo en un solo paso [RF-M2-08, RF-M3-01], con su
+ *  fecha estimada de entrega [RF-M3-09]. */
 export async function convertQuoteToWorkOrder(
   deps: OrderDeps,
   actor: QuoteActor,
   quoteId: string,
+  opciones: OpcionesDeConversion,
 ): Promise<Result<WorkOrder, OrderError>> {
   if (!puedeTrabajarOrdenes(deps, actor)) {
     return err({ code: 'NOT_AUTHORIZED' });
@@ -261,6 +290,7 @@ export async function convertQuoteToWorkOrder(
     siteAddress: q.siteAddress,
     description: null,
     lines: q.lines,
+    estimatedDeliveryDate: opciones.estimatedDeliveryDate,
   });
 }
 
@@ -348,12 +378,17 @@ export async function updateWorkOrder(
   if (Object.keys(parche).length === 0) {
     return err({ code: 'NOTHING_TO_UPDATE' });
   }
-  if (
-    parche.estimatedDeliveryDate !== undefined &&
-    parche.estimatedDeliveryDate !== null &&
-    !/^\d{4}-\d{2}-\d{2}$/.test(parche.estimatedDeliveryDate)
-  ) {
-    return err({ code: 'INVALID_DATE' });
+  if (parche.estimatedDeliveryDate !== undefined) {
+    // La fecha ya no se quita [RF-M3-09]; y una orden entregada conserva la que tenía.
+    if (parche.estimatedDeliveryDate === null || parche.estimatedDeliveryDate.trim() === '') {
+      return err({ code: 'DATE_REQUIRED' });
+    }
+    if (!isCalendarDate(parche.estimatedDeliveryDate)) {
+      return err({ code: 'INVALID_DATE' });
+    }
+    if (o.value.status === 'DELIVERED') {
+      return err({ code: 'INVALID_TRANSITION' });
+    }
   }
   const notas =
     parche.notes === undefined

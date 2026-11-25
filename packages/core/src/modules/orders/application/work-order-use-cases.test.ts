@@ -113,7 +113,9 @@ function entorno(ajustes: Partial<OrderDeps['settings']> = {}, ahora = '2026-10-
 async function ordenDesdeCotizacion(e: ReturnType<typeof entorno>, total = 11_600) {
   const q = cotizacion('ACCEPTED', total);
   await e.deps.quotes.save(q);
-  const r = await convertQuoteToWorkOrder(e.deps, cajero, q.id);
+  const r = await convertQuoteToWorkOrder(e.deps, cajero, q.id, {
+    estimatedDeliveryDate: '2099-12-31',
+  });
   if (!r.ok) {
     throw new Error('no se pudo crear la orden de prueba');
   }
@@ -162,7 +164,9 @@ describe('crear la orden desde una cotización aceptada', () => {
     const e = entorno();
     const q = cotizacion('SENT');
     await e.deps.quotes.save(q);
-    expect(await convertQuoteToWorkOrder(e.deps, cajero, q.id)).toEqual({
+    expect(
+      await convertQuoteToWorkOrder(e.deps, cajero, q.id, { estimatedDeliveryDate: '2099-12-31' }),
+    ).toEqual({
       ok: false,
       error: { code: 'QUOTE_NOT_ACCEPTED' },
     });
@@ -172,14 +176,18 @@ describe('crear la orden desde una cotización aceptada', () => {
   it('una cotización no se convierte dos veces', async () => {
     const e = entorno();
     const { quote } = await ordenDesdeCotizacion(e);
-    const otra = await convertQuoteToWorkOrder(e.deps, cajero, quote.id);
+    const otra = await convertQuoteToWorkOrder(e.deps, cajero, quote.id, {
+      estimatedDeliveryDate: '2099-12-31',
+    });
     expect(!otra.ok && otra.error.code).toBe('ALREADY_CONVERTED');
     expect(await e.outbox.list()).toHaveLength(1);
   });
 
   it('una cotización que no existe, o quien no ha entrado con su PIN, se rechazan', async () => {
     const e = entorno();
-    const falsa = await convertQuoteToWorkOrder(e.deps, cajero, 'no-existe');
+    const falsa = await convertQuoteToWorkOrder(e.deps, cajero, 'no-existe', {
+      estimatedDeliveryDate: '2099-12-31',
+    });
     expect(!falsa.ok && falsa.error.code).toBe('NOT_FOUND');
     const q = cotizacion('ACCEPTED');
     await e.deps.quotes.save(q);
@@ -187,6 +195,7 @@ describe('crear la orden desde una cotización aceptada', () => {
       e.deps,
       { userId: cajero.userId, role: null },
       q.id,
+      { estimatedDeliveryDate: '2099-12-31' },
     );
     expect(!sinPersona.ok && sinPersona.error.code).toBe('NOT_AUTHORIZED');
   });
@@ -194,6 +203,7 @@ describe('crear la orden desde una cotización aceptada', () => {
   it('una orden manual se captura sin cotización y también sale como operación', async () => {
     const e = entorno();
     const r = await createManualWorkOrder(e.deps, cajero, {
+      estimatedDeliveryDate: '2099-12-31',
       customerId: CLIENTE,
       siteAddress: null,
       description: 'Puerta de baño',
@@ -207,12 +217,69 @@ describe('crear la orden desde una cotización aceptada', () => {
   it('una orden sin líneas se rechaza', async () => {
     const e = entorno();
     const r = await createManualWorkOrder(e.deps, cajero, {
+      estimatedDeliveryDate: '2099-12-31',
       customerId: CLIENTE,
       siteAddress: null,
       description: null,
       lines: [],
     });
     expect(!r.ok && r.error.code).toBe('EMPTY_ORDER');
+  });
+});
+
+describe('fecha estimada de entrega al crear [RF-M3-09, ADR-0044]', () => {
+  async function convertir(e: ReturnType<typeof entorno>, fecha: string) {
+    const q = cotizacion('ACCEPTED', 11_600);
+    await e.deps.quotes.save(q);
+    return convertQuoteToWorkOrder(e.deps, cajero, q.id, { estimatedDeliveryDate: fecha });
+  }
+
+  it('sin fecha no se crea la orden ni se encola nada', async () => {
+    const e = entorno();
+    for (const vacia of ['', '   ']) {
+      expect(await convertir(e, vacia)).toEqual({ ok: false, error: { code: 'DATE_REQUIRED' } });
+    }
+    expect(await e.outbox.list()).toHaveLength(0);
+  });
+
+  it.each(['2026-10-30', '2026-02-30', '31-12-2026', 'mañana'])(
+    'con la fecha "%s" (pasada o que no existe) no se crea',
+    async (mala) => {
+      const e = entorno();
+      expect(await convertir(e, mala)).toEqual({ ok: false, error: { code: 'INVALID_DATE' } });
+    },
+  );
+
+  it('hoy (hora de México) ya vale, aunque en UTC ya sea mañana', async () => {
+    // 31 oct 2026 a las 23:30 de México = 1 nov 05:30 UTC.
+    const e = entorno({}, '2026-11-01T05:30:00.000Z');
+    const r = await convertir(e, '2026-10-31');
+    expect(r.ok && r.value.estimatedDeliveryDate).toBe('2026-10-31');
+  });
+
+  it('la fecha viaja en la operación de creación', async () => {
+    const e = entorno();
+    await convertir(e, '2026-11-15');
+    const op = (await e.outbox.list()).at(-1);
+    expect(op?.envelope.payload).toMatchObject({ estimatedDeliveryDate: '2026-11-15' });
+    expect(parseOperation(op?.envelope).ok).toBe(true);
+  });
+
+  it('una orden entregada ya no cambia su fecha', async () => {
+    const e = entorno();
+    const { orden } = await ordenDesdeCotizacion(e);
+    await registerWorkOrderPayment(e.deps, cajero, orden.id, transferencia(11_600));
+    await advanceWorkOrder(e.deps, cajero, orden.id);
+    await advanceWorkOrder(e.deps, cajero, orden.id);
+    expect((await deliverWorkOrder(e.deps, cajero, orden.id)).ok).toBe(true);
+    const r = await updateWorkOrder(e.deps, cajero, orden.id, {
+      estimatedDeliveryDate: '2099-01-01',
+    });
+    expect(!r.ok && r.error.code).toBe('INVALID_TRANSITION');
+    // Las notas sí se pueden seguir anotando.
+    expect((await updateWorkOrder(e.deps, cajero, orden.id, { notes: 'Se entregó bien' })).ok).toBe(
+      true,
+    );
   });
 });
 

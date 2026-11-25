@@ -272,7 +272,9 @@ describe('todo cobro se liga al turno abierto de quien cobra', () => {
       updatedAt: '2026-10-31T15:00:00.000Z',
     };
     await e.orders.quotes.save(q);
-    const orden = await convertQuoteToWorkOrder(e.orders, ana, q.id);
+    const orden = await convertQuoteToWorkOrder(e.orders, ana, q.id, {
+      estimatedDeliveryDate: '2099-12-31',
+    });
     if (!orden.ok) {
       throw new Error('orden');
     }

@@ -238,7 +238,10 @@ describe('E1 y E2 · de la cotización a la entrega y el corte, sin conexión (s
     }
     expect((await markQuote(quoteDeps, cajera, emitida.value.id, 'ACCEPTED')).ok).toBe(true);
 
-    const orden = await convertQuoteToWorkOrder(orderDeps, cajera, emitida.value.id);
+    // El año de la prueba es único y puede pasar de 2099: la fecha va dentro de ese mismo año.
+    const orden = await convertQuoteToWorkOrder(orderDeps, cajera, emitida.value.id, {
+      estimatedDeliveryDate: `${String(year)}-12-31`,
+    });
     expect(orden.ok).toBe(true);
     if (!orden.ok) {
       return;

@@ -185,10 +185,16 @@ export const harness: ReceptorDelContrato & {
   async orderState(id) {
     const { data } = await servicio
       .from('work_orders')
-      .select('status, folio')
+      .select('status, folio, estimated_delivery_date')
       .eq('id', id)
       .limit(1);
-    const fila = data?.[0] as { readonly status: string; readonly folio: string } | undefined;
+    const fila = data?.[0] as
+      | {
+          readonly status: string;
+          readonly folio: string;
+          readonly estimated_delivery_date: string | null;
+        }
+      | undefined;
     if (fila === undefined) {
       return undefined;
     }
@@ -197,7 +203,12 @@ export const harness: ReceptorDelContrato & {
       (suma, p) => suma + p.amount_cents,
       0,
     );
-    return { status: fila.status, folio: fila.folio, paidCents: pagado };
+    return {
+      status: fila.status,
+      folio: fila.folio,
+      paidCents: pagado,
+      estimatedDeliveryDate: fila.estimated_delivery_date,
+    };
   },
   async customerName(id) {
     const { data } = await servicio.from('customers').select('name').eq('id', id).limit(1);

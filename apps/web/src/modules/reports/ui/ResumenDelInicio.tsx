@@ -5,6 +5,8 @@ import {
   collectionsByMethod,
   DEFAULT_OVERDUE_DAYS,
   dailyIncomeTrend,
+  isWorkOrderLate,
+  mexicoDate,
   ordersByStatus,
   periodOf,
   receivablesAgingReport,
@@ -210,6 +212,7 @@ export function ResumenDelInicio(props: ResumenDelInicioProps): ReactElement | n
   const porCobrar = cuentas.reduce((s, b) => s + b.balanceCents, 0);
   const cuentasAbiertas = cuentas.reduce((s, b) => s + b.count, 0);
   const atrasadas = cuentas.filter((b) => b.overdue).reduce((s, b) => s + b.count, 0);
+  const ordenesAtrasadas = ordenes.filter((o) => isWorkOrderLate(o, mexicoDate(ahora))).length;
   const tendencia = dailyIncomeTrend({ payments: pagos, sales: ventas, now: ahora });
 
   const ultimos14 = tendencia.slice(-14).map((d) => d.totalCents);
@@ -261,7 +264,8 @@ export function ResumenDelInicio(props: ResumenDelInicioProps): ReactElement | n
             clave: 'produccion',
             rotulo: t.produccion,
             valor: formatearPesos(enProduccion.cents),
-            detalle: t.trabajos(enProduccion.count),
+            tono: ordenesAtrasadas > 0 ? 'peligro' : 'neutro',
+            detalle: `${t.trabajos(enProduccion.count)} · ${t.ordenesAtrasadas(ordenesAtrasadas)}`,
           },
         ]}
       />

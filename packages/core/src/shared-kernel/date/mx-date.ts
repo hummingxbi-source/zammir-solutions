@@ -12,6 +12,14 @@ export function mexicoDate(instante: Date): string {
   }).format(instante);
 }
 
+/** ¿Es una fecha calendario real con forma `AAAA-MM-DD`? Rechaza `2026-02-31` aunque tenga la forma. */
+export function isCalendarDate(texto: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(texto)) {
+    return false;
+  }
+  return addDays(texto, 0) === texto;
+}
+
 /** Suma días naturales a una fecha calendario `AAAA-MM-DD` (aritmética de calendario, sin horas). */
 export function addDays(fecha: string, dias: number): string {
   const [anio, mes, dia] = fecha.split('-').map(Number);

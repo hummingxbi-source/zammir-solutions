@@ -5,6 +5,8 @@ import {
   balanceCents,
   convertQuoteToWorkOrder,
   filterWorkOrders,
+  isWorkOrderLate,
+  mexicoDate,
   summarizeOrders,
   type Customer,
   type CustomerId,
@@ -27,6 +29,7 @@ import { Indicador } from '../../../shared/ui/Indicador';
 import { Tarjeta } from '../../../shared/ui/Tarjeta';
 import { Campo } from '../../../shared/ui/Campo';
 import { Seleccion } from '../../../shared/ui/Seleccion';
+import { Ventana } from '../../../shared/ui/Ventana';
 import { formatearPesos } from '../../../shared/ui/formatos';
 import type { AutorizacionDeAdministrador } from '../../quotes/ui/DialogoDeDescuento';
 import { DetalleDeOrden, type FotosDeLaOrden, type Persona } from './DetalleDeOrden';
@@ -85,6 +88,10 @@ export function Ordenes(props: OrdenesProps): ReactElement {
   const [hasta, setHasta] = useState('');
   const [abierta, setAbierta] = useState<string | null>(null);
   const [creando, setCreando] = useState<string | null>(null);
+  // La cotización que se va a convertir: antes se pide la fecha estimada de entrega [RF-M3-09].
+  const [porFechar, setPorFechar] = useState<Quote | null>(null);
+  const [fechaDeEntrega, setFechaDeEntrega] = useState('');
+  const [soloAtrasadas, setSoloAtrasadas] = useState(false);
   const [error, setError] = useState<{ mensaje: string; queHacer: string } | null>(null);
   const [cargado, setCargado] = useState(false);
 
@@ -160,24 +167,35 @@ export function Ordenes(props: OrdenesProps): ReactElement {
     );
   }
 
-  async function convertir(q: Quote): Promise<void> {
+  const hoy = mexicoDate(deps.clock.now());
+
+  function pedirFecha(q: Quote): void {
+    setError(null);
+    setFechaDeEntrega('');
+    setPorFechar(q);
+  }
+
+  async function convertir(q: Quote, fecha: string): Promise<void> {
     if (actor === null) {
       return;
     }
     setError(null);
     setCreando(q.id);
-    const r = await convertQuoteToWorkOrder(deps, actor, q.id);
+    const r = await convertQuoteToWorkOrder(deps, actor, q.id, { estimatedDeliveryDate: fecha });
     setCreando(null);
     if (!r.ok) {
       setError(t.errores[r.error.code]);
       return;
     }
+    setPorFechar(null);
     props.onPorEnviar?.();
     await refrescar();
     setAbierta(r.value.id);
   }
 
+  const atrasadas = ordenes.filter((o) => isWorkOrderLate(o, hoy)).length;
   const visibles = filterWorkOrders(ordenes, {
+    overdue: soloAtrasadas ? { today: hoy } : null,
     status: filtro,
     customerId: clienteFiltro,
     responsibleId: responsableFiltro,
@@ -227,7 +245,7 @@ export function Ordenes(props: OrdenesProps): ReactElement {
                     aria-label={`${t.porConvertir.crear} · ${nombres.get(q.customerId)?.name ?? '—'} · ${q.folio ?? q.tempFolio ?? ''}`}
                     disabled={creando === q.id}
                     onClick={() => {
-                      void convertir(q);
+                      pedirFecha(q);
                     }}
                   >
                     {creando === q.id ? t.porConvertir.creando : t.porConvertir.crear}
@@ -246,9 +264,20 @@ export function Ordenes(props: OrdenesProps): ReactElement {
               aria-pressed={filtro === null}
               onClick={() => {
                 setFiltro(null);
+                setSoloAtrasadas(false);
               }}
             >
               {t.filtro.todas} ({String(ordenes.length)})
+            </button>
+            <button
+              type="button"
+              className="chip chip--peligro"
+              aria-pressed={soloAtrasadas}
+              onClick={() => {
+                setSoloAtrasadas(!soloAtrasadas);
+              }}
+            >
+              {t.filtro.atrasadas} ({String(atrasadas)})
             </button>
             {ESTADOS.map((estado) => (
               <button
@@ -348,6 +377,12 @@ export function Ordenes(props: OrdenesProps): ReactElement {
                           tono={TONO_DE_ESTADO[o.status]}
                           texto={t.estados[o.status]}
                         />
+                        {isWorkOrderLate(o, hoy) ? (
+                          <>
+                            {' '}
+                            <EtiquetaDeEstado tono="peligro" texto={t.atrasada} />
+                          </>
+                        ) : null}
                       </td>
                       <td data-label={t.tabla.total} className="tabla__num">
                         {formatearPesos(o.totalCents)}
@@ -363,6 +398,57 @@ export function Ordenes(props: OrdenesProps): ReactElement {
           ) : null}
         </Tarjeta>
       </div>
+
+      {porFechar !== null ? (
+        <Ventana
+          titulo={t.fechaDeEntrega.titulo}
+          onCerrar={() => {
+            setPorFechar(null);
+          }}
+          acciones={
+            <>
+              <Boton
+                variante="secundario"
+                onClick={() => {
+                  setPorFechar(null);
+                }}
+              >
+                {t.fechaDeEntrega.cancelar}
+              </Boton>
+              <Boton
+                disabled={fechaDeEntrega === '' || creando === porFechar.id}
+                onClick={() => {
+                  void convertir(porFechar, fechaDeEntrega);
+                }}
+              >
+                {creando === porFechar.id ? t.porConvertir.creando : t.fechaDeEntrega.crear}
+              </Boton>
+            </>
+          }
+        >
+          <p>
+            {t.fechaDeEntrega.ayuda(
+              nombres.get(porFechar.customerId)?.name ?? '—',
+              porFechar.folio ?? porFechar.tempFolio ?? '',
+            )}
+          </p>
+          <Campo
+            etiqueta={t.fechaDeEntrega.etiqueta}
+            type="date"
+            min={hoy}
+            required
+            value={fechaDeEntrega}
+            onChange={(e) => {
+              setFechaDeEntrega(e.target.value);
+            }}
+          />
+          {error !== null ? (
+            <Aviso tipo="error" queHacer={error.queHacer}>
+              {error.mensaje}
+            </Aviso>
+          ) : null}
+        </Ventana>
+      ) : null}
     </section>
   );
 }
