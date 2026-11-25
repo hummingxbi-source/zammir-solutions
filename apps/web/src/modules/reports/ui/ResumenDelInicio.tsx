@@ -13,6 +13,7 @@ import {
   salesReport,
   type CashShift,
   type CounterSale,
+  type Refund,
   type Payment,
   type WorkOrder,
   type WorkOrderStatus,
@@ -64,17 +65,20 @@ export function ResumenDelInicio(props: ResumenDelInicioProps): ReactElement | n
   const [pagos, setPagos] = useState<readonly Payment[]>([]);
   const [ordenes, setOrdenes] = useState<readonly WorkOrder[]>([]);
   const [ventas, setVentas] = useState<readonly CounterSale[]>([]);
+  const [devoluciones, setDevoluciones] = useState<readonly Refund[]>([]);
   const [cargado, setCargado] = useState(false);
   const idDeQuienUsa = props.actor?.userId ?? null;
   const [turno, setTurno] = useState<CashShift | null>(null);
   const [sinEnviar, setSinEnviar] = useState<number | null>(null);
 
   const refrescar = useCallback(async () => {
-    const [p, o, v] = await Promise.all([
+    const [p, o, v, d] = await Promise.all([
       deps.payments.list(),
       deps.orders.list(),
       props.sales.list(),
+      props.devoluciones?.list() ?? Promise.resolve([]),
     ]);
+    setDevoluciones(d);
     setPagos(p);
     setOrdenes(o);
     setVentas(v);
@@ -85,7 +89,7 @@ export function ResumenDelInicio(props: ResumenDelInicioProps): ReactElement | n
     );
     setSinEnviar(props.porEnviar === undefined ? null : await props.porEnviar());
     setCargado(true);
-  }, [deps, props.sales, idDeQuienUsa, props.turnos, props.porEnviar]);
+  }, [deps, props.devoluciones, props.sales, idDeQuienUsa, props.turnos, props.porEnviar]);
 
   useEffect(() => {
     void refrescar();
@@ -154,9 +158,12 @@ export function ResumenDelInicio(props: ResumenDelInicioProps): ReactElement | n
   };
 
   if (actor.role !== 'ADMIN') {
-    const mios = collectionsByCashier({ payments: pagos, sales: ventas, now: ahora }).DAY.rows.find(
-      (f) => f.userId === actor.userId,
-    );
+    const mios = collectionsByCashier({
+      payments: pagos,
+      sales: ventas,
+      refunds: devoluciones,
+      now: ahora,
+    }).DAY.rows.find((f) => f.userId === actor.userId);
     return (
       <div className="resumen">
         <PanelDeIndicadores
@@ -195,7 +202,12 @@ export function ResumenDelInicio(props: ResumenDelInicioProps): ReactElement | n
     );
   }
 
-  const dia = salesReport({ payments: pagos, sales: ventas, now: ahora }).DAY;
+  const dia = salesReport({
+    payments: pagos,
+    sales: ventas,
+    refunds: devoluciones,
+    now: ahora,
+  }).DAY;
   const c = dia.comparison;
   const palabra =
     c.trend === 'UP'
@@ -203,7 +215,12 @@ export function ResumenDelInicio(props: ResumenDelInicioProps): ReactElement | n
       : c.trend === 'DOWN'
         ? r.comparativo.baja
         : r.comparativo.igual;
-  const metodos = collectionsByMethod({ payments: pagos, sales: ventas, period: hoy });
+  const metodos = collectionsByMethod({
+    payments: pagos,
+    sales: ventas,
+    refunds: devoluciones,
+    period: hoy,
+  });
   const cuentas = receivablesAgingReport({
     orders: ordenes,
     payments: pagos,
@@ -214,10 +231,20 @@ export function ResumenDelInicio(props: ResumenDelInicioProps): ReactElement | n
   const cuentasAbiertas = cuentas.reduce((s, b) => s + b.count, 0);
   const atrasadas = cuentas.filter((b) => b.overdue).reduce((s, b) => s + b.count, 0);
   const ordenesAtrasadas = ordenes.filter((o) => isWorkOrderLate(o, mexicoDate(ahora))).length;
-  const tendencia = dailyIncomeTrend({ payments: pagos, sales: ventas, now: ahora });
+  const tendencia = dailyIncomeTrend({
+    payments: pagos,
+    sales: ventas,
+    refunds: devoluciones,
+    now: ahora,
+  });
 
   const ultimos14 = tendencia.slice(-14).map((d) => d.totalCents);
-  const cobrosDeHoy = collectionsByCashier({ payments: pagos, sales: ventas, now: ahora }).DAY.rows;
+  const cobrosDeHoy = collectionsByCashier({
+    payments: pagos,
+    sales: ventas,
+    refunds: devoluciones,
+    now: ahora,
+  }).DAY.rows;
   const nombreDe = (id: string): string =>
     props.personas.find((p) => p.id === id)?.name ?? r.sinNombre;
   const TONO_DE_ESTATUS: Record<WorkOrderStatus, TonoDeGrafica> = {

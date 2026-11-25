@@ -25,6 +25,9 @@ const etiquetas: ShiftCutLabels = {
   cancelled: 'Canceladas',
   cancelledSales: 'Ventas canceladas ({count})',
   cancelledNote: 'Los cobros de ventas canceladas no cuentan en el corte.',
+  refunds: 'Devoluciones ({count})',
+  refundedCash: 'Efectivo devuelto',
+  refundedTransfer: 'Devuelto por transferencia',
   differenceNote: 'Explicación',
   page: 'Página {n} de {total}',
 };
@@ -142,6 +145,28 @@ describe('hoja del corte de caja', () => {
       Object.entries(turno()).filter(([campo]) => campo !== 'differenceNote'),
     ) as unknown as CashShift;
     expect(filas(viejo, resumen()).some((f) => f.startsWith('Explicación'))).toBe(false);
+  });
+
+  it('las devoluciones del turno restan antes de lo esperado y van en su sección [RF-M4-10]', () => {
+    const h = hoja(
+      turno(),
+      resumen({
+        refundedCashCents: 11_600,
+        refundedTransferCents: 5_000,
+        refundCount: 2,
+        expectedCashCents: 158_400,
+      }),
+    );
+    const efectivo = h.sections.find((x) => x.title === 'Efectivo')?.rows.map((r) => r.label);
+    expect(efectivo?.slice(0, 2)).toEqual(['Efectivo devuelto', 'Efectivo esperado']);
+    const devoluciones = h.sections.find((x) => x.title === 'Devoluciones (2)');
+    expect(devoluciones?.rows.map((r) => `${r.label}: ${r.value}`)).toEqual([
+      'Efectivo devuelto: $116.00',
+      'Devuelto por transferencia: $50.00',
+    ]);
+    expect(hoja(turno(), resumen()).sections.some((x) => x.title.startsWith('Devoluciones'))).toBe(
+      false,
+    );
   });
 
   it('resalta el total, lo esperado y la diferencia', () => {

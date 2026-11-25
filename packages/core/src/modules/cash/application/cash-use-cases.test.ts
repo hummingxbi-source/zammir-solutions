@@ -428,16 +428,60 @@ describe('cerrar el turno y el corte', () => {
     expect(r.ok && r.value.pendingOperations).toBe(0);
   });
 
-  it('una venta cancelada sale del corte', async () => {
-    const e = entorno();
-    const { turno, venta } = await conVenta(e, 0);
-    await cancelCounterSale(e.counter, admin, venta.id, 'Error');
-    const r = await closeCashShift(e.cash, ana, turno.id, 0);
-    expect(r.ok && r.value.summary).toMatchObject({
-      cashCents: 0,
-      cancelledSalesCents: 11_600,
-      expectedCashCents: 0,
-      differenceCents: 0,
+  describe('devolución al cancelar una venta [RF-M4-10, ADR-0044]', () => {
+    it('cancelada en el mismo turno: lo cobrado se queda y lo devuelto sale del cajón; cuadra', async () => {
+      const e = entorno();
+      const { turno, venta } = await conVenta(e, 0);
+      const c = await cancelCounterSale(e.counter, ana, venta.id, 'Error', conPin);
+      expect(c.ok && c.value.refunds).toMatchObject([
+        { method: 'CASH', amountCents: 11_600, cashShiftId: turno.id, saleId: venta.id },
+      ]);
+      const r = await closeCashShift(e.cash, ana, turno.id, 0);
+      expect(r.ok && r.value.summary).toMatchObject({
+        cashCents: 11_600,
+        refundedCashCents: 11_600,
+        refundCount: 1,
+        cancelledSalesCents: 0,
+        expectedCashCents: 0,
+        differenceCents: 0,
+      });
+    });
+
+    it('quien cancela necesita su turno abierto si hay efectivo que devolver', async () => {
+      const e = entorno();
+      const { venta } = await conVenta(e, 0);
+      expect(await cancelCounterSale(e.counter, admin, venta.id, 'Error')).toEqual({
+        ok: false,
+        error: { code: 'NO_OPEN_SHIFT' },
+      });
+    });
+
+    it('cancelada después de cerrar su turno: ese corte no cambia y el de hoy resta lo devuelto', async () => {
+      const e = entorno();
+      const { turno, venta } = await conVenta(e, 0);
+      await closeCashShift(e.cash, ana, turno.id, 11_600);
+      const antes = await shiftSummary(e.cash, { ...turno, countedCashCents: 11_600 });
+      const hoy = await abrir(e, ana, 20_000);
+      expect((await cancelCounterSale(e.counter, ana, venta.id, 'Devolvió', conPin)).ok).toBe(true);
+      expect(await shiftSummary(e.cash, { ...turno, countedCashCents: 11_600 })).toEqual(antes);
+      expect(await shiftSummary(e.cash, hoy)).toMatchObject({
+        cashCents: 0,
+        refundedCashCents: 11_600,
+        expectedCashCents: 8_400,
+      });
+    });
+
+    it('una venta cancelada antes del cambio (sin devolución) sigue fuera del corte, como entonces', async () => {
+      const e = entorno();
+      const { turno, venta } = await conVenta(e, 0);
+      await e.counter.sales.save({ ...venta, status: 'CANCELLED' });
+      const r = await closeCashShift(e.cash, ana, turno.id, 0);
+      expect(r.ok && r.value.summary).toMatchObject({
+        cashCents: 0,
+        cancelledSalesCents: 11_600,
+        refundedCashCents: 0,
+        expectedCashCents: 0,
+      });
     });
   });
 

@@ -3,6 +3,7 @@ import {
   fixedClock,
   outboxCounterSaleStore,
   outboxPaymentStore,
+  outboxRefundStore,
   outboxTransferConfirmationStore,
   outboxWorkOrderStore,
   refreshDocuments,
@@ -192,6 +193,62 @@ describe('réplica de órdenes y pagos con el servidor real', () => {
     await refreshDocuments({ source: fuente, outbox, clock: reloj });
     expect(
       (await outboxTransferConfirmationStore(outbox).list()).filter((c) => c.paymentId === pagoId),
+    ).toHaveLength(1);
+  }, 60_000);
+
+  it('la devolución de una venta cancelada en una tablet baja a la otra [RF-M4-10]', async () => {
+    const quien = await nuevoDispositivo();
+    const otra = await nuevoDispositivo();
+    const usuario = await harness.newUser(true);
+    const admin = await harness.newUser(true, true);
+    const year = await harness.newYear();
+    const ventaId = harness.newUuid();
+    const devolucionId = harness.newUuid();
+    await quien.receiver.receive(
+      createCounterSaleOperation({
+        opId: harness.newUuid(),
+        deviceId: quien.id,
+        seq: 1,
+        userId: usuario,
+        year,
+        newUuid: () => harness.newUuid(),
+        publicCode: harness.newPublicCode(),
+        saleId: ventaId,
+      }),
+    );
+    const cancelada = await quien.receiver.receive({
+      opId: harness.newUuid(),
+      deviceId: quien.id,
+      seq: 2,
+      type: 'CancelCounterSale',
+      schemaVersion: 1,
+      userId: usuario,
+      authorizedBy: admin,
+      clientCreatedAt: `${String(year)}-06-16T18:00:00.000Z`,
+      payload: {
+        id: ventaId,
+        reason: 'Devolvió la pieza',
+        refunds: [{ id: devolucionId, method: 'CASH', amountCents: 11_600, cashShiftId: null }],
+      },
+    });
+    expect(cancelada.ok && cancelada.status).toBe('APPLIED');
+
+    const reloj = fixedClock(new Date('2026-10-31T20:00:00.000Z'));
+    const outbox = dexieOperaciones({ clock: reloj, nombre: `devolucion-${crypto.randomUUID()}` });
+    const fuente = supabaseDocumentReplica(otra.session);
+    expect((await refreshDocuments({ source: fuente, outbox, clock: reloj })).ok).toBe(true);
+    expect(
+      (await outboxRefundStore(outbox).list()).find((d) => d.id === devolucionId),
+    ).toMatchObject({
+      saleId: ventaId,
+      method: 'CASH',
+      amountCents: 11_600,
+      authorizedBy: admin,
+      syncStatus: 'SENT',
+    });
+    await refreshDocuments({ source: fuente, outbox, clock: reloj });
+    expect(
+      (await outboxRefundStore(outbox).list()).filter((d) => d.id === devolucionId),
     ).toHaveLength(1);
   }, 60_000);
 

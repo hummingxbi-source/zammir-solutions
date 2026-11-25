@@ -79,7 +79,10 @@ export function summarizeShift(entrada: {
   /** Ventas con su devolución registrada (en cualquier turno). */
   readonly refundedSaleIds?: ReadonlySet<string>;
   /** Devoluciones hechas en este turno. */
-  readonly refunds?: readonly { readonly method: 'CASH' | 'TRANSFER'; readonly amountCents: number }[];
+  readonly refunds?: readonly {
+    readonly method: 'CASH' | 'TRANSFER';
+    readonly amountCents: number;
+  }[];
   readonly countedCashCents: number | null;
 }): CashShiftSummary {
   const conDevolucion = entrada.refundedSaleIds ?? new Set<string>();

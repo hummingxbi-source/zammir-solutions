@@ -257,6 +257,33 @@ export function supabaseDocumentReplica(cliente: SupabaseClient): DocumentReplic
       );
     },
 
+    // Devoluciones al cancelar ventas [RF-M4-10]: solo se agregan, como los pagos.
+    async refundsChangedAfter(seq, limit) {
+      const r = await cliente
+        .from('refunds_for_device')
+        .select('*')
+        .gt('change_seq', seq)
+        .order('change_seq')
+        .limit(limit);
+      if (r.error !== null) {
+        return err({ code: 'DOCUMENTS_UNAVAILABLE' });
+      }
+      return ok(
+        (r.data as FilaDeDevolucion[]).map((f) => ({
+          id: f.id,
+          saleId: f.counter_sale_id,
+          method: f.method,
+          amountCents: f.amount_cents,
+          cashShiftId: f.cash_shift_id,
+          userId: f.user_id,
+          authorizedBy: f.authorized_by,
+          refundedAt: f.refunded_at,
+          syncStatus: 'SENT' as const,
+          changeSeq: f.change_seq,
+        })),
+      );
+    },
+
     // Confirmaciones de transferencias [RF-M4-11]: solo se agregan, como los pagos.
     async confirmationsChangedAfter(seq, limit) {
       const r = await cliente
@@ -279,6 +306,18 @@ export function supabaseDocumentReplica(cliente: SupabaseClient): DocumentReplic
       );
     },
   };
+}
+
+interface FilaDeDevolucion {
+  readonly id: string;
+  readonly counter_sale_id: string;
+  readonly method: 'CASH' | 'TRANSFER';
+  readonly amount_cents: number;
+  readonly cash_shift_id: string | null;
+  readonly user_id: string;
+  readonly authorized_by: string;
+  readonly refunded_at: string;
+  readonly change_seq: number;
 }
 
 interface FilaDeConfirmacion {
