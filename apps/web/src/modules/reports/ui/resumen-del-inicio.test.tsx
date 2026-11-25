@@ -143,7 +143,7 @@ describe('resumen del inicio', () => {
     expect(cobrar.getByText(/^1 cuenta/)).toBeTruthy();
     const produccion = within(screen.getByRole('group', { name: 'En producción' }));
     expect(produccion.getByText('$1,000.00')).toBeTruthy();
-    expect(produccion.getByText('1 trabajo')).toBeTruthy();
+    expect(produccion.getByText('1 trabajo · ninguno atrasado')).toBeTruthy();
   });
 
   it('muestra los medios de pago de hoy y la tendencia de 31 días con su tabla equivalente', async () => {

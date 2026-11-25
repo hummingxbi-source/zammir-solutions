@@ -1245,6 +1245,22 @@ a.boton {
   color: #ffffff;
 }
 
+/* Filtro de órdenes atrasadas [RF-M3-09]. */
+.chip--peligro {
+  color: var(--peligro);
+}
+
+.chip--peligro:hover {
+  border-color: var(--peligro);
+  color: var(--peligro);
+}
+
+.chip--peligro[aria-pressed='true'] {
+  border-color: var(--peligro);
+  background: var(--peligro);
+  color: #ffffff;
+}
+
 .filtros__campos {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));

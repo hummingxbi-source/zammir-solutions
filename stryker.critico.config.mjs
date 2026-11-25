@@ -10,6 +10,7 @@ export default {
     'packages/core/src/modules/catalog/domain/pricing/**/*.ts',
     'packages/core/src/modules/quotes/domain/quote.ts',
     'packages/core/src/modules/orders/domain/work-order.ts',
+    'packages/core/src/modules/orders/domain/order-board.ts',
     'packages/core/src/modules/payments/domain/payment.ts',
     'packages/core/src/modules/counter/domain/ticket.ts',
     'packages/core/src/modules/cash/domain/cash-shift.ts',

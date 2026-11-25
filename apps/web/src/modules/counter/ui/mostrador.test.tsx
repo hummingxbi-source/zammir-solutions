@@ -192,7 +192,7 @@ async function montar(
       updatedAt: '2026-10-31T15:00:00.000Z',
     };
     await orderDeps.quotes.save(q);
-    await convertQuoteToWorkOrder(orderDeps, cajero, q.id);
+    await convertQuoteToWorkOrder(orderDeps, cajero, q.id, { estimatedDeliveryDate: '2099-12-31' });
   }
   const porEnviar = vi.fn();
   const cash: CashDeps = {

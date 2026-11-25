@@ -152,7 +152,10 @@ export async function applyOrderOperation(ctx: {
           customerId: p.customerId,
           quoteId: p.quoteId ?? null,
           publicCode: p.publicCode,
-          fields: {},
+          fields:
+            p.estimatedDeliveryDate === undefined
+              ? {}
+              : { estimatedDeliveryDate: p.estimatedDeliveryDate },
           warrantyMonths: undefined,
           deliveredWithBalance: false,
           cancelDepositPaidCents: null,

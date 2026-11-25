@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import {
   countByStatus,
   filterWorkOrders,
+  isWorkOrderLate,
   summarizeOrders,
   WORK_ORDER_STATUSES,
 } from './order-board';
@@ -126,6 +127,62 @@ describe('conteo y resumen', () => {
           expect(r.inProductionCents).toBeGreaterThanOrEqual(0);
         },
       ),
+    );
+  });
+});
+
+describe('órdenes atrasadas [RF-M3-09, ADR-0044]', () => {
+  const conFecha = (status: string, fecha: string | null) =>
+    orden('x', { status, estimatedDeliveryDate: fecha });
+
+  it('el mismo día de su fecha todavía no va atrasada; al día siguiente sí', () => {
+    expect(isWorkOrderLate(conFecha('IN_PROCESS', '2026-11-10'), '2026-11-10')).toBe(false);
+    expect(isWorkOrderLate(conFecha('IN_PROCESS', '2026-11-10'), '2026-11-11')).toBe(true);
+    expect(isWorkOrderLate(conFecha('IN_PROCESS', '2026-11-10'), '2026-11-09')).toBe(false);
+  });
+
+  it.each(['WAITING', 'IN_PROCESS', 'READY'])('en %s y con la fecha pasada va atrasada', (s) => {
+    expect(isWorkOrderLate(conFecha(s, '2026-11-01'), '2026-12-01')).toBe(true);
+  });
+
+  it.each(['DELIVERED', 'CANCELLED'])('entregada o cancelada nunca va atrasada (%s)', (s) => {
+    expect(isWorkOrderLate(conFecha(s, '2026-11-01'), '2026-12-01')).toBe(false);
+  });
+
+  it('sin fecha (orden de antes del cambio) no se juzga, ni con el campo ausente', () => {
+    expect(isWorkOrderLate(conFecha('WAITING', null), '2099-01-01')).toBe(false);
+    expect(isWorkOrderLate(orden('y', { status: 'WAITING' }), '2099-01-01')).toBe(false);
+  });
+
+  it('el cambio de mes y de año se compara como fecha, no como texto suelto', () => {
+    expect(isWorkOrderLate(conFecha('READY', '2026-12-31'), '2027-01-01')).toBe(true);
+    expect(isWorkOrderLate(conFecha('READY', '2026-09-30'), '2026-10-01')).toBe(true);
+  });
+
+  it('el filtro de atrasadas se combina con los demás', () => {
+    const lista = [
+      orden('1', { status: 'WAITING', customerId: 'c1', estimatedDeliveryDate: '2026-11-01' }),
+      orden('2', { status: 'READY', customerId: 'c2', estimatedDeliveryDate: '2026-11-01' }),
+      orden('3', { status: 'WAITING', customerId: 'c1', estimatedDeliveryDate: '2026-12-31' }),
+      orden('4', { status: 'DELIVERED', customerId: 'c1', estimatedDeliveryDate: '2026-11-01' }),
+    ];
+    const hoy = { today: '2026-11-15' };
+    expect(filterWorkOrders(lista, { overdue: hoy }).map((o) => o.id)).toEqual(['1', '2']);
+    expect(filterWorkOrders(lista, { overdue: hoy, customerId: 'c1' }).map((o) => o.id)).toEqual([
+      '1',
+    ]);
+    expect(filterWorkOrders(lista, { overdue: null }).map((o) => o.id)).toHaveLength(4);
+  });
+
+  it('propiedad: atrasada si y solo si está viva y hoy es posterior a su fecha', () => {
+    const dia = fc
+      .date({ min: new Date('2020-01-01'), max: new Date('2035-12-31'), noInvalidDate: true })
+      .map((d) => d.toISOString().slice(0, 10));
+    fc.assert(
+      fc.property(fc.constantFrom(...WORK_ORDER_STATUSES), dia, dia, (status, fecha, hoy) => {
+        const viva = status !== 'DELIVERED' && status !== 'CANCELLED';
+        expect(isWorkOrderLate(conFecha(status, fecha), hoy)).toBe(viva && hoy > fecha);
+      }),
     );
   });
 });
