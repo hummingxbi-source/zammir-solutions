@@ -324,9 +324,20 @@ export const reopenCashShiftPayloadSchema = z.object({
 });
 
 /** Carga de `CancelCounterSale`: cancelar una venta con motivo; solo un administrador [S3-15]. */
+/** Una devolución al cancelar una venta [RF-M4-10]: por el mismo medio, en el turno de quien cancela. */
+const refundRowSchema = z.object({
+  id: uuid,
+  method: z.enum(['CASH', 'TRANSFER']),
+  amountCents: centavos.refine((n) => n > 0, { message: 'la devolución debe ser mayor a cero' }),
+  cashShiftId: uuid.nullable(),
+});
+
 export const cancelCounterSalePayloadSchema = z.object({
   id: uuid,
   reason: z.string().trim().min(1),
+  /** Devoluciones por medio de pago [RF-M4-10]. Opcional para cancelaciones viejas en cola: sin ellas, el
+   *  servidor la aplica como antes y la deja por revisar (REFUND_MISSING). */
+  refunds: z.array(refundRowSchema).optional(),
 });
 
 export type OperationStatus = 'APPLIED' | 'TO_REVIEW';

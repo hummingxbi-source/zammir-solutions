@@ -100,6 +100,8 @@ export * from './modules/orders/domain/order-board';
 export * from './modules/counter/domain/counter-sale';
 export * from './modules/counter/domain/ticket';
 export * from './modules/counter/application/counter-sale-store';
+export * from './modules/counter/application/refund-store';
+export * from './modules/counter/domain/refund';
 export * from './modules/counter/application/counter-use-cases';
 export * from './modules/counter/application/reconcile-sales';
 export * from './modules/cash/domain/cash-shift';
