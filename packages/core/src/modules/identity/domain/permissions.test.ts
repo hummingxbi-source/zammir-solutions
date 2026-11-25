@@ -47,6 +47,7 @@ const ESPERADO: readonly (readonly [
   ],
   ['Usuarios y dispositivos', 'USERS_AND_DEVICES', 'ALLOW', 'DENY'],
   ['Editar aviso de privacidad y términos', 'PRIVACY_NOTICE_EDIT', 'ALLOW', 'DENY'],
+  ['Confirmar que llegó una transferencia', 'TRANSFER_CONFIRM', 'ALLOW', 'DENY'],
 ];
 
 describe('matriz de permisos: una prueba por fila y por rol', () => {
@@ -67,7 +68,7 @@ describe('matriz de permisos: una prueba por fila y por rol', () => {
 
   it('la matriz tiene exactamente las filas esperadas (si se agrega una, hay que probarla)', () => {
     expect([...ALL_PERMISSIONS].sort()).toEqual(ESPERADO.map((fila) => fila[1]).sort());
-    expect(ESPERADO).toHaveLength(13);
+    expect(ESPERADO).toHaveLength(14);
   });
 
   it('la constante coincide con la tabla esperada', () => {

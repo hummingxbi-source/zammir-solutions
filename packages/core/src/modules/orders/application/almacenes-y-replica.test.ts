@@ -212,7 +212,13 @@ describe('réplica · cursores y páginas', () => {
     const pagos = Array.from({ length: total }, (_, i) => pagoReplicado(`p${String(i)}`, i + 1));
     const origen = fuente({ ordenes, ventas, pagos });
     const r = await refreshDocuments({ source: origen, outbox, clock: reloj });
-    expect(r.ok && r.value).toEqual({ orders: total, payments: total, sales: total, shifts: 0 });
+    expect(r.ok && r.value).toEqual({
+      orders: total,
+      payments: total,
+      sales: total,
+      shifts: 0,
+      confirmations: 0,
+    });
     expect(await outboxWorkOrderStore(outbox).list()).toHaveLength(total);
     expect(await outboxCounterSaleStore(outbox).list()).toHaveLength(total);
     expect(await outboxPaymentStore(outbox).list()).toHaveLength(total);
