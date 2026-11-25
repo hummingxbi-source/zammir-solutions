@@ -68,6 +68,7 @@ El **Cotizador** sirve para armar el presupuesto con el cliente, incluso en la o
 
    ![Una cotización en armado](capturas/04-cotizacion-en-armado.png)
 
+   **Cantos, perforaciones, biselados.** En una línea de vidrio toca **Cargo extra**, elige el cargo (por ejemplo, *Canto pulido*) y, si se cobra por pieza, cuántas (por ejemplo, 2 perforaciones). Toca **Agregar a la línea**: el cargo se calcula con la medida de esa pieza (por m², por metro lineal del perímetro o por pieza) y se suma al importe de la línea. Se ve en el detalle de la línea y se quita con **Quitar**. Los cargos extra se dan de alta en el **Catálogo** con el tipo *Cargo extra*; no salen en el buscador porque no se venden solos.
 5. Toca **Emitir cotización**. Queda con un **folio provisional** (algo como `T1-0001`), un **código** y una fecha de **vigencia**. Una vez emitida **ya no se puede cambiar**: si necesitas otra versión, toca **Duplicar**.
 
    ![Una cotización emitida](capturas/05-cotizacion-emitida.png)
