@@ -45,7 +45,7 @@ export const textos = {
       ayudaVentas:
         '"Ventas" es el efectivo recibido hoy: ventas de mostrador más los pagos de las órdenes, con IVA. Una venta cancelada no suma.',
       ayudaPorCobrar:
-        'Lo que los clientes todavía deben de sus órdenes. Se resalta lo que ya pasó del plazo.',
+        'Lo que los clientes todavía deben de sus órdenes. Se resalta lo entregado que ya pasó del plazo sin pagarse.',
       ayudaTendencia: 'Lo que entró cada día en el último mes, en hora de México.',
       ayudaTuTurno: 'Lo que cobraste tú hoy. El corte de caja se hace en el Mostrador.',
       hoy: 'Ventas de hoy',
@@ -1217,10 +1217,13 @@ export const textos = {
       saldo: 'Saldo',
       atrasadas: 'Atrasadas',
       sinFecha: 'Sin fecha válida',
+      porEntregar: 'Por entregar (aún no se cobra)',
       desde: (dias: number): string => `${String(dias)} días o más`,
+      dia: (dias: number): string =>
+        dias === 0 ? 'Entregadas hoy' : dias === 1 ? '1 día' : `${String(dias)} días`,
       cuantas: (n: number): string => (n === 1 ? '1 cuenta' : `${String(n)} cuentas`),
       leyenda: (dias: number): string =>
-        `Atrasadas (en rojo): las que llevan ${String(dias)} días o más sin pagarse.`,
+        `Atrasadas (en rojo): las entregadas hace ${dias === 1 ? '1 día' : `${String(dias)} días`} o más sin pagarse.`,
       entre: (de: number, a: number): string => `De ${String(de)} a ${String(a)} días`,
     },
     cajeros: {
@@ -1247,11 +1250,12 @@ export const textos = {
   cuentas: {
     titulo: 'Cuentas por cobrar',
     descripcion: (dias: number): string =>
-      `Órdenes con saldo pendiente, de la más atrasada a la más reciente. Se resaltan las que llevan ${String(dias)} días o más.`,
+      `Órdenes con saldo pendiente, de la más atrasada a la más reciente. Los días se cuentan desde la entrega y se resaltan las que llevan ${dias === 1 ? '1 día' : `${String(dias)} días`} o más sin pagarse. Lo que todavía no se entrega aparece como "Por entregar".`,
     vacioTitulo: 'Todo está cobrado',
     vacio: 'No hay cuentas por cobrar. Todas las órdenes están pagadas.',
     sinCliente: 'Sin cliente',
     sinFecha: 'Sin fecha',
+    porEntregar: 'Por entregar',
     atrasada: 'Atrasada',
     registrarPago: 'Registrar pago',
     resumen: {
@@ -1263,7 +1267,7 @@ export const textos = {
       cliente: 'Cliente',
       folio: 'Folio',
       saldo: 'Saldo',
-      dias: 'Días',
+      dias: 'Días desde la entrega',
       acciones: 'Acciones',
     },
     soloAdministradores: {
@@ -1762,7 +1766,7 @@ export const textos = {
   umbralDeAtraso: {
     titulo: 'Cuentas por cobrar atrasadas',
     descripcion:
-      'Días desde la fecha de la orden a partir de los cuales una cuenta se resalta como atrasada. Se usa en Cuentas por cobrar, en Reportes y en el panel de inicio.',
+      'Días desde la entrega a partir de los cuales una cuenta sin pagar se resalta como atrasada. Con 1, lo entregado hoy está al corriente y desde mañana sale atrasado. Se usa en Cuentas por cobrar, en Reportes y en el panel de inicio.',
     cargando: 'Cargando…',
     campo: 'Días para marcar una cuenta como atrasada',
     guardar: 'Guardar días',

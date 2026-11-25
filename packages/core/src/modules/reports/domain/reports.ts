@@ -229,18 +229,26 @@ export interface AgingBucket {
   /** Desde el umbral de atraso en adelante. */
   readonly overdue: boolean;
   readonly undated: boolean;
+  /** Saldos de órdenes que todavía no se entregan: aún no son exigibles [ADR-0044]. */
+  readonly notDelivered: boolean;
 }
 
-/** Agrupa las cuentas por antigüedad en tramos del tamaño del umbral configurado (PD-33): con 10 días, de
- *  0 a 9, de 10 a 19 y de 20 en adelante. Del umbral en adelante se resalta. Las de fecha inválida van
- *  aparte, sin días. */
+/** Agrupa las cuentas por antigüedad desde la entrega, en tramos del tamaño del umbral configurado (PD-33):
+ *  con 10 días, de 0 a 9, de 10 a 19 y de 20 en adelante; con 1 día, hoy, 1 y 2 o más. Del umbral en adelante
+ *  se resalta. Lo que no se ha entregado y lo de fecha inválida van aparte, sin días. */
 export function receivablesAging(
   filas: readonly ReceivableRow[],
   umbral: number,
 ): readonly AgingBucket[] {
   const paso = Math.max(1, umbral);
+  const POR_ENTREGAR = -2;
+  const SIN_FECHA = -1;
   const tramo = (f: ReceivableRow): number =>
-    f.daysOutstanding === null ? -1 : Math.min(2, Math.floor(f.daysOutstanding / paso));
+    f.notDelivered
+      ? POR_ENTREGAR
+      : f.daysOutstanding === null
+        ? SIN_FECHA
+        : Math.min(2, Math.floor(f.daysOutstanding / paso));
   const construir = (n: number): AgingBucket => {
     const delTramo = filas.filter((f) => tramo(f) === n);
     return {
@@ -249,12 +257,13 @@ export function receivablesAging(
       count: delTramo.length,
       balanceCents: delTramo.reduce((s, f) => s + f.balanceCents, 0),
       overdue: n >= 1,
-      undated: n < 0,
+      undated: n === SIN_FECHA,
+      notDelivered: n === POR_ENTREGAR,
     };
   };
   const tramos = [0, 1, 2].map(construir);
-  const sinFecha = construir(-1);
-  return sinFecha.count > 0 ? [...tramos, sinFecha] : tramos;
+  const aparte = [construir(POR_ENTREGAR), construir(SIN_FECHA)].filter((b) => b.count > 0);
+  return [...tramos, ...aparte];
 }
 
 export function receivablesAgingReport(entrada: {

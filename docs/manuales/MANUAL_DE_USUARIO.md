@@ -155,7 +155,7 @@ Una **orden de trabajo** es un trabajo aceptado que se fabrica o instala. Lleva 
 
 ## 5. Cuentas por cobrar
 
-**Cuentas por cobrar** lista las órdenes con saldo pendiente, **de la más atrasada a la más reciente**, y resalta las que llevan muchos días. Desde ahí toca **Registrar pago**. A partir de cuántos días se resalta una cuenta lo cambia un administrador en **Configuración**, en *Cuentas por cobrar atrasadas* (por omisión, 10 días). No es crédito: es el seguimiento de lo que falta por cobrar de trabajos ya en marcha.
+**Cuentas por cobrar** lista las órdenes con saldo pendiente, **de la más atrasada a la más reciente**. Los días se cuentan **desde la entrega**: lo que se entregó hoy y no se ha pagado está al corriente, y **desde el día siguiente sale como atrasado**. Las órdenes que todavía no se entregan aparecen como **Por entregar** (su saldo aún no se cobra). Desde ahí toca **Registrar pago**. A partir de cuántos días se resalta una cuenta lo cambia un administrador en **Configuración**, en *Cuentas por cobrar atrasadas* (por omisión, 1 día). No es crédito: es el seguimiento de lo que falta por cobrar de trabajos ya en marcha.
 
 ![Cuentas por cobrar](capturas/13-cuentas-por-cobrar.png)
 
