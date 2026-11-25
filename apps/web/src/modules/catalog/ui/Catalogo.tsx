@@ -5,6 +5,7 @@ import {
   searchProducts,
   updateProduct,
   type Category,
+  type CategoryAdmin,
   type ImportCatalogDeps,
   type PriceChange,
   type Product,
@@ -29,6 +30,7 @@ import { Ventana } from '../../../shared/ui/Ventana';
 import { formatearPesos } from '../../../shared/ui/formatos';
 import { useSesionAdmin } from '../../identity/ui/SesionAdmin';
 import { FormularioDeProducto } from './FormularioDeProducto';
+import { Categorias } from './Categorias';
 import { ImportarCatalogo } from './ImportarCatalogo';
 
 const t = textos.catalogo;
@@ -39,8 +41,13 @@ type Ventanilla =
   | { readonly tipo: 'importar' }
   | null;
 
+/** Lo que usa la pantalla del catálogo: también administra las categorías [RF-M1-08]. */
+export type CatalogoDeps = ImportCatalogDeps & {
+  readonly categories: ImportCatalogDeps['categories'] & CategoryAdmin;
+};
+
 export interface CatalogoProps {
-  readonly deps: ImportCatalogDeps;
+  readonly deps: CatalogoDeps;
   readonly actor: { readonly role: UserRole | null };
 }
 
@@ -357,16 +364,26 @@ export function Catalogo({ deps, actor }: CatalogoProps): ReactElement {
           />
         </Ventana>
       ) : null}
+
+      {actor.role === 'ADMIN' ? (
+        <Categorias
+          deps={{
+            categories: deps.categories,
+            products: deps.products,
+            idGenerator: deps.idGenerator,
+          }}
+          actor={actor}
+          categorias={categorias}
+          productos={productos}
+          onCambio={refrescar}
+        />
+      ) : null}
     </section>
   );
 }
 
 /** El catálogo con la sesión del administrador que lo abrió. */
-export function CatalogoDelAdministrador({
-  deps,
-}: {
-  readonly deps: ImportCatalogDeps;
-}): ReactElement {
+export function CatalogoDelAdministrador({ deps }: { readonly deps: CatalogoDeps }): ReactElement {
   const { usuario } = useSesionAdmin();
   return <Catalogo deps={deps} actor={{ role: usuario?.role ?? null }} />;
 }

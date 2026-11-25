@@ -13,6 +13,7 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). L
 - Catálogo de productos con categorías e historial de precios; los productos se desactivan, nunca se borran.
 - Reglas de precio por área (m²), longitud, pieza y servicio, con medidas en centímetros o metros que se suben al múltiplo que se cobra.
 - Importación del catálogo desde un archivo.
+- **Categorías que administra el administrador**: agregar, renombrar, ordenar y desactivar, sin borrar ni desactivar con productos activos, y con bitácora (AJ-08, RF-M1-08).
 - Las listas del administrador (productos, clientes y facturas) se leen por páginas y no se cortan a las 1000 filas (AJ-01).
 - Dinero en centavos enteros y precios con IVA incluido, con casos de oro de redondeo.
 

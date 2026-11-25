@@ -40,7 +40,6 @@ import {
   type DeviceCredentials,
   type DeviceRepository,
   type IdGenerator,
-  type ImportCatalogDeps,
   type LegalDeps,
   type ManageCustomersDeps,
   type ManageUsersDeps,
@@ -134,6 +133,7 @@ import { createSupabaseClient } from '../shared/infra/supabase-client';
 import { webCryptoPinHasher } from '../shared/infra/web-crypto-pin-hasher';
 import { systemClock } from '../shared/infra/system-clock';
 import { uuidIdGenerator } from '../shared/infra/uuid-id-generator';
+import type { CatalogoDeps } from '../modules/catalog/ui/Catalogo';
 
 /** Raíz de composición: el único lugar donde se eligen los adaptadores reales
  *  y se entregan a los casos de uso [00-principios §1.1]. */
@@ -144,7 +144,7 @@ export interface Composition {
   /** `null` si no hay servidor configurado. */
   readonly dispositivos: DeviceRepository | null;
   /** Importación del catálogo; `null` si no hay servidor configurado. */
-  readonly catalogo: ImportCatalogDeps | null;
+  readonly catalogo: CatalogoDeps | null;
   /** Lector de la bitácora; `null` si no hay servidor configurado. */
   readonly bitacora: AuditReader | null;
   /** Nombres de las personas, para mostrarlos en la bitácora en lugar de su identificador. */

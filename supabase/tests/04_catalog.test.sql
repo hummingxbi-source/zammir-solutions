@@ -72,8 +72,8 @@ select throws_ok(
   '42501', null, 'los productos no se borran'
 );
 select throws_ok(
-  $$ update public.product_categories set name = 'X' where sort_order = 1 $$,
-  '42501', null, 'las categorías no se cambian por la API'
+  $$ delete from public.product_categories where sort_order = 1 $$,
+  '42501', null, 'las categorías no se borran, ni el administrador [RF-M1-08]'
 );
 
 -- ---------- Un dispositivo vende pero no administra ----------
