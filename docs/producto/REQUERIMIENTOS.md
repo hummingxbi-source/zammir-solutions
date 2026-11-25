@@ -49,6 +49,8 @@
 - **RF-M1-05** Importación masiva desde CSV o Excel, con plantilla descargable y vista previa de errores antes de confirmar. El catálogo real (50 a 150 productos) llega del cliente en la etapa final.
 - **RF-M1-06** Historial de cambios de precio con usuario y fecha.
 - **RF-M1-07** *[Solo si P2 se activa]* Para piezas estándar: existencias, mínimo configurable y alerta de existencia baja. Descuento automático al vender o al entregar una orden. Sin compras, mermas ni costos.
+- **RF-M1-08** El administrador agrega, renombra, ordena y desactiva categorías. No se borran ni se desactivan con productos activos [ADR-0044].
+- **RF-M1-09** Cargos extra (cantos, perforaciones, biselados y similares): productos de tipo "Cargo extra" con su precio y unidad (m² por omisión; también metro lineal o pieza) que se agregan a una línea de vidrio y se cobran con la medida de esa línea [RN-02, ADR-0044].
 
 ## M2. Cotizador
 
@@ -79,6 +81,8 @@
 - **RF-M3-06** Comprobante de trabajo en PDF tamaño carta: folio, cliente, descripción y medidas, total, anticipo pagado, saldo, condiciones, garantía logo de ZAMMIR y, solo si la facturación está activa [ADR-0039], QR con código de verificación para autofacturación. Se genera al cobrar el anticipo y se vuelve a generar con el saldo liquidado al entregar. **[Cambio]** Se envía por WhatsApp y se puede imprimir en la misma hoja carta [ADR-0040].
 - **RF-M3-07** Vistas: tablero por estatus y lista con filtros (estatus, cliente, responsable, fechas). Resumen con valor en producción y saldo por cobrar de lo que ya está listo.
 - **RF-M3-08** Cancelación solo por administradores, con motivo. El tratamiento del anticipo se registra según el contrato **[POR DEFINIR]**.
+- **RF-M3-09** Fecha estimada de entrega obligatoria al crear la orden, con calendario; se cambia con rastro mientras no esté entregada ni cancelada. Una orden está **atrasada** si hoy es posterior a esa fecha y no se ha entregado; la lista la marca y la filtra [ADR-0044].
+- **RF-M3-10** Entregas por partes: al convertir una cotización se eligen las líneas de cada parte; cada parte es una orden con su dinero, ligada a las demás partes del mismo trabajo [ADR-0044].
 
 ## M4. Mostrador (venta y caja)
 
@@ -96,6 +100,9 @@
 - **RF-M4-07** Cancelar una venta: solo administradores, con motivo y rastro.
 - **RF-M4-08** Cambio de usuario por PIN en un toque, con bloqueo por inactividad.
   *Nota [Juanito, 2026-10-27]: en la demo el cajero se elegía de una lista sin autenticarse; Juanito quiere que cada cajero tenga su propia sesión. Ya está cubierto: nombre y PIN [ADR-0013]; el alta de cajeros la hace un administrador [RF-M8-01].*
+- **RF-M4-09** Si el efectivo contado difiere del esperado, aunque sea un centavo, el cierre del turno exige una explicación escrita; el conteo sigue siendo a ciegas [ADR-0044].
+- **RF-M4-10** Al cancelar una venta cobrada se registra la devolución por el mismo medio de pago en el turno abierto de quien cancela; el cobro original se queda en su turno [ADR-0044].
+- **RF-M4-11** Un administrador confirma que llegó una transferencia ("Ya llegó"), con quién y cuándo; mientras tanto se ve "Por confirmar" [ADR-0044].
 
 ## M5. Clientes e historial
 
@@ -107,7 +114,7 @@
 
 ## M6. Cuentas por cobrar
 
-- **RF-M6-01** Lista de órdenes con saldo mayor a cero: cliente, folio, saldo y días transcurridos. Antigüedad resaltada por umbral configurable (la demo usó 10 días).
+- **RF-M6-01** Lista de órdenes con saldo mayor a cero: cliente, folio, saldo y días transcurridos **desde la entrega**; lo que aún no se entrega aparece como "Por entregar". Antigüedad resaltada por umbral configurable: 1 día por omisión, es decir, atrasada desde el día siguiente a la entrega [ADR-0044] (la demo usó 10 días).
 - **RF-M6-02** Registrar el pago del saldo desde la lista.
 - **RF-M6-03** Botón de recordatorio por WhatsApp con mensaje prellenado y amable.
 - **RF-M6-04** Días calculados con fechas reales. La demo mostró "hace 741 días" por un error de datos: no debe repetirse.

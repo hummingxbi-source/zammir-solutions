@@ -49,5 +49,6 @@
 | [0041](docs/decisiones/0041-sin-verificacion-en-dos-pasos.md) | Sin verificación en dos pasos en las cuentas de administración | Aceptada | 2026-11-23 |
 | [0042](docs/decisiones/0042-recorrido-guiado-en-la-entrega.md) | El recorrido guiado entra en la entrega | Aceptada | 2026-11-23 |
 | [0043](docs/decisiones/0043-un-solo-proyecto-hasta-la-entrega.md) | Un solo proyecto de Supabase y de Vercel; se prueba en producción y se recrea vacío en la entrega | Aceptada | 2026-11-23 |
+| [0044](docs/decisiones/0044-ajustes-de-operacion-para-la-entrega.md) | Ajustes de operación para la entrega: devoluciones, corte con explicación, transferencias, atrasos, entregas por partes, categorías y cargos extra | Aceptada | 2026-11-24 |
 
 Plantilla para una nueva decisión: [`docs/decisiones/0000-plantilla.md`](docs/decisiones/0000-plantilla.md).
