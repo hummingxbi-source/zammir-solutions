@@ -23,6 +23,8 @@ export interface Category {
   readonly sortOrder: number;
   /** Valores fiscales que heredan los productos de la categoría. */
   readonly fiscalDefaults: FiscalData;
+  /** Una categoría no se borra: se desactiva, y deja de ofrecerse para productos nuevos [RF-M1-08]. */
+  readonly isActive: boolean;
 }
 
 /** Un producto del catálogo [RF-M1-01]. El precio incluye IVA y va en centavos [RN-06]. */
@@ -92,6 +94,11 @@ const OBJETO_IMPUESTO = /^\d{2}$/;
 
 /** Medida de prueba para comprobar que los parámetros de una regla son válidos sin calcular un precio real. */
 const MEDIDA_DE_PRUEBA = 1000 as Millimeters;
+
+/** Formato de las claves fiscales (vacías o con la forma del catálogo del SAT). */
+export function fiscalDataIsValid(fiscal: FiscalData): boolean {
+  return fiscalValido(fiscal);
+}
 
 function fiscalValido(fiscal: FiscalData): boolean {
   return (
