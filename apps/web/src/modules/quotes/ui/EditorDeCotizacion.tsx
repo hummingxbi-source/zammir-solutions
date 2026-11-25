@@ -13,7 +13,9 @@ import {
   money,
   parseLength,
   quoteTotals,
+  addQuoteLineExtra,
   removeQuoteLine,
+  removeQuoteLineExtra,
   searchProducts,
   shareQuote,
   type Authorization,
@@ -40,6 +42,7 @@ import { EtiquetaDeEstado, type TonoDeEstado } from '../../../shared/ui/Etiqueta
 import { Pestanas } from '../../../shared/ui/Pestanas';
 import { Tarjeta } from '../../../shared/ui/Tarjeta';
 import { Campo, CampoNumerico } from '../../../shared/ui/Campo';
+import { Seleccion } from '../../../shared/ui/Seleccion';
 import { AccionesDelDocumento } from '../../documents/ui/AccionesDelDocumento';
 import { imprimirDocumento } from '../../documents/ui/imprimir-documento';
 import { DialogoDeDescuento, type AutorizacionDeAdministrador } from './DialogoDeDescuento';
@@ -108,6 +111,10 @@ export function EditorDeCotizacion({
   const [avisoCatalogoCerrado, setAvisoCatalogoCerrado] = useState(false);
   const [pestana, setPestana] = useState<'datos' | 'vista'>('datos');
   const [ocupado, setOcupado] = useState(false);
+  // Cargo extra de una línea (canto, perforación…) [RF-M1-09].
+  const [extraDe, setExtraDe] = useState<string | null>(null);
+  const [extraId, setExtraId] = useState('');
+  const [cantidadExtra, setCantidadExtra] = useState('1');
 
   const esBorrador = quote.status === 'DRAFT';
 
@@ -117,8 +124,17 @@ export function EditorDeCotizacion({
     });
   }, [catalogo]);
 
+  // Los cargos extra no se venden solos: se agregan a una línea [RF-M1-09].
+  const extrasDelCatalogo = useMemo(
+    () => (productos ?? []).filter((p) => p.kind === 'EXTRA'),
+    [productos],
+  );
   const encontrados = useMemo(
-    () => searchProducts(productos ?? [], { text: busqueda }).slice(0, 12),
+    () =>
+      searchProducts(
+        (productos ?? []).filter((p) => p.kind !== 'EXTRA'),
+        { text: busqueda },
+      ).slice(0, 12),
     [productos, busqueda],
   );
 
@@ -190,6 +206,27 @@ export function EditorDeCotizacion({
 
   async function quitar(lineId: string): Promise<void> {
     aplicar(await removeQuoteLine(deps, actor, quote.id, lineId));
+  }
+
+  async function agregarExtra(lineId: string): Promise<void> {
+    const extra = extrasDelCatalogo.find((p) => p.id === extraId);
+    if (extra === undefined) {
+      return;
+    }
+    const piezas = Number(cantidadExtra);
+    const r = await addQuoteLineExtra(
+      deps,
+      actor,
+      quote.id,
+      lineId,
+      extra,
+      Number.isInteger(piezas) ? piezas : 0,
+    );
+    if (aplicar(r)) {
+      setExtraDe(null);
+      setExtraId('');
+      setCantidadExtra('1');
+    }
   }
 
   async function aplicarDescuento(
@@ -473,6 +510,18 @@ export function EditorDeCotizacion({
                         >
                           {t.descuento.boton}
                         </Boton>
+                        {extrasDelCatalogo.length > 0 ? (
+                          <Boton
+                            variante="secundario"
+                            aria-label={`${t.extras.agregar} · ${l.name}`}
+                            onClick={() => {
+                              setExtraDe(extraDe === l.id ? null : l.id);
+                              setExtraId(extrasDelCatalogo[0]?.id ?? '');
+                            }}
+                          >
+                            {t.extras.agregar}
+                          </Boton>
+                        ) : null}
                         <Boton
                           variante="peligro"
                           onClick={() => {
@@ -480,6 +529,63 @@ export function EditorDeCotizacion({
                           }}
                         >
                           {t.producto.quitar}
+                        </Boton>
+                      </div>
+                    ) : null}
+                    {esBorrador && (l.extras ?? []).length > 0 ? (
+                      <div className="ticket__extras">
+                        {(l.extras ?? []).map((x) => (
+                          <Boton
+                            key={x.productId}
+                            variante="secundario"
+                            aria-label={`${t.extras.quitar} ${x.name} · ${l.name}`}
+                            onClick={() => {
+                              void removeQuoteLineExtra(
+                                deps,
+                                actor,
+                                quote.id,
+                                l.id,
+                                x.productId,
+                              ).then(aplicar);
+                            }}
+                          >
+                            {t.extras.quitar} {x.name} ({cobra(x.amountCents)})
+                          </Boton>
+                        ))}
+                      </div>
+                    ) : null}
+                    {extraDe === l.id ? (
+                      <div
+                        className="ticket__extra"
+                        role="group"
+                        aria-label={t.extras.titulo(l.name)}
+                      >
+                        <Seleccion
+                          etiqueta={t.extras.cual}
+                          value={extraId}
+                          opciones={extrasDelCatalogo.map((p) => ({
+                            valor: p.id,
+                            texto: `${p.name} · ${cobra(p.listPrice)} ${t.extras.porUnidad[p.chargeUnit] ?? ''}`,
+                          }))}
+                          onChange={(e) => {
+                            setExtraId(e.target.value);
+                          }}
+                        />
+                        {extrasDelCatalogo.find((p) => p.id === extraId)?.chargeUnit === 'PIECE' ? (
+                          <CampoNumerico
+                            etiqueta={t.extras.cuantas}
+                            value={cantidadExtra}
+                            onChange={(e) => {
+                              setCantidadExtra(e.target.value);
+                            }}
+                          />
+                        ) : null}
+                        <Boton
+                          onClick={() => {
+                            void agregarExtra(l.id);
+                          }}
+                        >
+                          {t.extras.confirmar}
                         </Boton>
                       </div>
                     ) : null}

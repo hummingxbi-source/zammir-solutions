@@ -32,12 +32,16 @@
 | Panel de inicio | Pantalla aparte, accesible desde el logo; contenido por rol por definir (PD-31) [DC §12.2] | `home` |
 | Primeros pasos | Pantalla del primer ingreso con cinco tarjetas en el orden del trabajo [DC §12.2] | `gettingStarted` |
 | Cliente recurrente | Cliente con dos o más trabajos entregados [DC RF-M5-03] | `isRecurring` |
+| Devolución | Dinero que se le regresa al cliente al cancelar una venta cobrada, por el mismo medio, desde el turno de quien cancela [RF-M4-10] | `Refund` |
+| Parte (de un trabajo) | Orden de trabajo que lleva solo algunas líneas de una cotización que se entrega por partes [RF-M3-10] | `inParts` |
+| Transferencia por confirmar | Pago por transferencia que un administrador aún no confirma en su banco [RF-M4-11] | `TransferStatus.PENDING` |
 
 ## Productos
 
 | Término | Significado | En código |
 |---|---|---|
 | A medida | Producto que se cobra según medidas del cliente [RN-01] | `CUSTOM` |
+| Cargo extra | Canto, perforación, biselado o similar que se agrega a una línea de vidrio y se cobra con su medida (m², metro lineal o pieza); no se vende solo [RF-M1-09] | `EXTRA`, `LineExtra` |
 | Pieza estándar | Producto de medida fija, se cobra por pieza | `STANDARD` |
 | Servicio | Instalación, medición u otro trabajo, se cobra por visita o unidad | `SERVICE` |
 | Unidad de cobro | m², metro lineal, pieza o servicio | `ChargeUnit` |
