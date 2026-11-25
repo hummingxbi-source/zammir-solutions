@@ -55,23 +55,34 @@ export interface CashShiftSummary {
   /** Ventas de mostrador cobradas y anticipos/saldos de órdenes cobrados. */
   readonly salesCents: number;
   readonly orderPaymentsCents: number;
-  /** Fondo + efectivo cobrado: lo que debe haber en el cajón (PD-37: sin retiros). */
+  /** Fondo + efectivo cobrado − efectivo devuelto: lo que debe haber en el cajón (PD-37: sin retiros). */
   readonly expectedCashCents: number;
-  /** Cobros de ventas canceladas: no cuentan en el corte y se muestran aparte (PD-24). */
+  /** Devoluciones hechas EN ESTE TURNO al cancelar ventas (de este turno o de otros) [RF-M4-10]. */
+  readonly refundedCashCents: number;
+  readonly refundedTransferCents: number;
+  readonly refundCount: number;
+  /** Cobros de ventas canceladas antes de RF-M4-10 (sin devolución registrada): no cuentan y van aparte. */
   readonly cancelledSalesCents: number;
   readonly cancelledSalesCount: number;
   /** Contado − esperado; `null` mientras no se haya contado. */
   readonly differenceCents: number | null;
 }
 
-/** Calcula el corte de un turno a partir de su fondo y de sus cobros. Función pura: no lee nada más
- *  [RF-M4-06, RN-11]. Un cobro de una venta cancelada sale del corte y queda aparte (PD-24 sin respuesta). */
+/** Calcula el corte de un turno a partir de su fondo, sus cobros y las devoluciones hechas en él. Función pura
+ *  [RF-M4-06, RN-11]. Lo cobrado se queda en el turno donde se cobró aunque la venta se cancele después; lo que
+ *  se devolvió sale del turno donde se devolvió [RF-M4-10, ADR-0044]. Así un corte cerrado no cambia. Una venta
+ *  cancelada antes de RF-M4-10 (sin devolución registrada) sigue fuera del corte, como entonces. */
 export function summarizeShift(entrada: {
   readonly openingFloatCents: number;
   readonly payments: readonly ShiftPayment[];
   readonly cancelledSaleIds: ReadonlySet<string>;
+  /** Ventas con su devolución registrada (en cualquier turno). */
+  readonly refundedSaleIds?: ReadonlySet<string>;
+  /** Devoluciones hechas en este turno. */
+  readonly refunds?: readonly { readonly method: 'CASH' | 'TRANSFER'; readonly amountCents: number }[];
   readonly countedCashCents: number | null;
 }): CashShiftSummary {
+  const conDevolucion = entrada.refundedSaleIds ?? new Set<string>();
   let efectivo = 0;
   let transferencia = 0;
   let ventas = 0;
@@ -79,7 +90,11 @@ export function summarizeShift(entrada: {
   let canceladas = 0;
   const ventasCanceladas = new Set<string>();
   for (const p of entrada.payments) {
-    if (p.targetType === 'COUNTER_SALE' && entrada.cancelledSaleIds.has(p.targetId)) {
+    if (
+      p.targetType === 'COUNTER_SALE' &&
+      entrada.cancelledSaleIds.has(p.targetId) &&
+      !conDevolucion.has(p.targetId)
+    ) {
       canceladas += p.amountCents;
       ventasCanceladas.add(p.targetId);
       continue;
@@ -95,7 +110,16 @@ export function summarizeShift(entrada: {
       ordenes += p.amountCents;
     }
   }
-  const esperado = entrada.openingFloatCents + efectivo;
+  let devueltoEfectivo = 0;
+  let devueltoTransferencia = 0;
+  for (const d of entrada.refunds ?? []) {
+    if (d.method === 'CASH') {
+      devueltoEfectivo += d.amountCents;
+    } else {
+      devueltoTransferencia += d.amountCents;
+    }
+  }
+  const esperado = entrada.openingFloatCents + efectivo - devueltoEfectivo;
   return {
     openingFloatCents: entrada.openingFloatCents,
     cashCents: efectivo,
@@ -103,6 +127,9 @@ export function summarizeShift(entrada: {
     salesCents: ventas,
     orderPaymentsCents: ordenes,
     expectedCashCents: esperado,
+    refundedCashCents: devueltoEfectivo,
+    refundedTransferCents: devueltoTransferencia,
+    refundCount: (entrada.refunds ?? []).length,
     cancelledSalesCents: canceladas,
     cancelledSalesCount: ventasCanceladas.size,
     differenceCents: entrada.countedCashCents === null ? null : entrada.countedCashCents - esperado,
@@ -142,9 +169,14 @@ export function summarizeDay(
   let efectivo = 0;
   let transferencia = 0;
   let esperado = 0;
+  // Lo que quedó del día: lo cobrado menos lo devuelto [RF-M4-10].
   for (const { shift, summary } of delDia) {
-    efectivo += summary.cashCents;
-    transferencia += summary.transferCents;
+    const neto = {
+      cash: summary.cashCents - summary.refundedCashCents,
+      transfer: summary.transferCents - summary.refundedTransferCents,
+    };
+    efectivo += neto.cash;
+    transferencia += neto.transfer;
     esperado += summary.expectedCashCents;
     const actual = porCajero.get(shift.cashierId) ?? {
       cashCents: 0,
@@ -152,8 +184,8 @@ export function summarizeDay(
       shiftCount: 0,
     };
     porCajero.set(shift.cashierId, {
-      cashCents: actual.cashCents + summary.cashCents,
-      transferCents: actual.transferCents + summary.transferCents,
+      cashCents: actual.cashCents + neto.cash,
+      transferCents: actual.transferCents + neto.transfer,
       shiftCount: actual.shiftCount + 1,
     });
   }
