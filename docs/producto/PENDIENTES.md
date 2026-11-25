@@ -77,7 +77,7 @@
 | PR-29 | Umbral de antigüedad de cuentas por cobrar (era PD-33) | Días desde la **entrega**; atrasada desde el día siguiente (umbral 1, configurable); lo no entregado sale como "Por entregar" [ADR-0044]; AJ-04 | 24 nov 2026 |
 | PR-30 | Tiempos de entrega y qué es "atrasada" (era PD-41) | Fecha estimada obligatoria al crear la orden; atrasada si hoy es posterior y no se ha entregado [ADR-0044]; AJ-03 | 24 nov 2026 |
 | PR-31 | Confirmación de transferencias (era PD-43) | Un administrador marca "Ya llegó" con quién y cuándo; mientras, "Por confirmar" [ADR-0044]; AJ-05 | 24 nov 2026 |
-| PR-32 | Tolerancia de sobrante o faltante en el corte (era PD-44) | Cualquier diferencia, desde un centavo, exige explicación escrita; conteo a ciegas [ADR-0044]; AJ-02 | 24 nov 2026 |
+| PR-32 | Tolerancia de sobrante o faltante en el corte (era PD-44) | Cualquier diferencia, desde un centavo, exige explicación escrita [ADR-0044]; AJ-02 | 24 nov 2026 |
 | PR-33 | Entregas por partes (era PD-46) | Una orden por cada parte, eligiendo las líneas al convertir la cotización y ligadas entre sí [ADR-0044]; AJ-07 | 24 nov 2026 |
 | PR-34 | Categorías del catálogo (era PD-49) | Las 11 iniciales más las que el administrador agregue desde el sistema (canceles comerciales, vitrales, reparaciones a domicilio) [ADR-0044]; AJ-08 | 24 nov 2026 |
 

@@ -113,11 +113,11 @@ La réplica a las tablets ya pagina por `change_seq` y no tiene el problema.
 
 **Regla [ADR-0044]:** si el efectivo contado difiere del esperado, aunque sea un centavo, el cierre exige una explicación escrita.
 
-**Conteo a ciegas.** Hoy el cajero cuenta sin ver el esperado y la diferencia aparece después de cerrar. Se conserva así: captura el contado y toca **Cerrar**. Si hay diferencia, el sistema la muestra en ese momento y pide la explicación antes de terminar. Sin diferencia, cierra como hoy.
+**Cuándo se pide.** El cajero captura el contado y toca **Cerrar**. Si hay diferencia, el sistema la muestra en ese momento y pide la explicación antes de terminar. Sin diferencia, cierra como hoy. (El panel del turno ya muestra el efectivo que debe haber, así que no es un conteo a ciegas; eso no cambia.)
 
 **Núcleo.**
 - `closeCashShift(deps, actor, shiftId, countedCashCents, explicacion?)`: si `contado − esperado ≠ 0` y la explicación está vacía, regresa `REASON_REQUIRED`, que ya existe.
-- Hay que separar "calcular la diferencia" de "cerrar" para que la interfaz pida la explicación sin revelar el esperado antes del conteo.
+- `closingDifference(...)` calcula la diferencia con lo contado sin cerrar, para que la interfaz sepa si debe pedir la explicación.
 - `CashShift` gana `differenceNote: string | null`.
 - La carga `CloseCashShift` gana `differenceNote` (opcional, máximo 500 caracteres).
 
@@ -136,7 +136,7 @@ La réplica a las tablets ya pagina por `change_seq` y no tiene el problema.
 - Núcleo: diferencia 0 cierra sin nota; diferencia de ±1 centavo sin nota falla; con nota cierra y la nota viaja en la carga.
 - Contrato: cierre con diferencia y sin nota queda por revisar; con nota, aplicado.
 - pgTAP en `16_cash_shifts`.
-- Interfaz: el esperado no se ve antes de tocar Cerrar.
+- Interfaz: con diferencia aparece el paso de la explicación; si se corrige lo contado, se vuelve a revisar.
 - `cash-shift.ts` sigue en la mutación crítica.
 
 ### AJ-03 · Fecha de entrega obligatoria y órdenes atrasadas (PD-41)

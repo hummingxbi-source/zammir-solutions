@@ -100,7 +100,7 @@
 - **RF-M4-07** Cancelar una venta: solo administradores, con motivo y rastro.
 - **RF-M4-08** Cambio de usuario por PIN en un toque, con bloqueo por inactividad.
   *Nota [Juanito, 2026-10-27]: en la demo el cajero se elegía de una lista sin autenticarse; Juanito quiere que cada cajero tenga su propia sesión. Ya está cubierto: nombre y PIN [ADR-0013]; el alta de cajeros la hace un administrador [RF-M8-01].*
-- **RF-M4-09** Si el efectivo contado difiere del esperado, aunque sea un centavo, el cierre del turno exige una explicación escrita; el conteo sigue siendo a ciegas [ADR-0044].
+- **RF-M4-09** Si el efectivo contado difiere del esperado, aunque sea un centavo, el cierre del turno exige una explicación escrita [ADR-0044].
 - **RF-M4-10** Al cancelar una venta cobrada se registra la devolución por el mismo medio de pago en el turno abierto de quien cancela; el cobro original se queda en su turno [ADR-0044].
 - **RF-M4-11** Un administrador confirma que llegó una transferencia ("Ya llegó"), con quién y cuándo; mientras tanto se ve "Por confirmar" [ADR-0044].
 

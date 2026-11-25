@@ -36,7 +36,7 @@ Al preparar las preguntas finales para Luis, Juanito revisó cuáles le tocan al
    - Se puede cambiar, con rastro, mientras la orden no esté entregada ni cancelada.
    - La orden está **atrasada** si hoy es posterior a esa fecha y no se ha entregado.
 5. **Transferencias (PD-43).** Un administrador marca **"Ya llegó"** después de revisar su banco; queda quién y cuándo. Mientras no se marque, se ve "Por confirmar". No cambia los totales.
-6. **Diferencia en el corte (PD-44).** Cualquier diferencia entre el efectivo contado y el esperado, **desde un centavo**, exige una explicación escrita para cerrar el turno. Se conserva el conteo a ciegas.
+6. **Diferencia en el corte (PD-44).** Cualquier diferencia entre el efectivo contado y el esperado, **desde un centavo**, exige una explicación escrita para cerrar el turno.
 7. **Entregas por partes (PD-46).**
    - **Una orden por cada parte**, marcada "por partes" y ligada a las demás partes del mismo trabajo.
    - Se arma al convertir la cotización, eligiendo las líneas de cada parte.
