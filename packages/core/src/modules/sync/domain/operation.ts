@@ -75,6 +75,18 @@ export function parseEnvelope(crudo: unknown): Result<OperationEnvelope, Envelop
 const entero = z.number().int();
 const centavos = entero.min(0);
 
+/** Un cargo extra de la línea [RF-M1-09]: su importe ya está sumado en la línea. */
+const lineExtraSchema = z.object({
+  productId: uuid,
+  name: z.string().trim().min(1),
+  chargeUnit: z.enum(['SQUARE_METER', 'LINEAR_METER', 'PIECE']),
+  unitPriceCents: centavos,
+  ruleId: z.string().min(1),
+  ruleParams: z.unknown().optional(),
+  quantity: entero.min(1),
+  amountCents: centavos,
+});
+
 const quoteLineSchema = z
   .object({
     id: uuid,
@@ -93,9 +105,14 @@ const quoteLineSchema = z
     taxCents: centavos,
     isTaxExempt: z.boolean().optional(),
     detail: z.string().optional(),
+    /** Opcional: las líneas de antes no traen cargos extra. */
+    extras: z.array(lineExtraSchema).optional(),
   })
   .refine((l) => l.lineTotalCents === l.baseCents + l.taxCents, {
     message: 'el importe de la línea no es base + IVA',
+  })
+  .refine((l) => (l.extras ?? []).reduce((t, e) => t + e.amountCents, 0) <= l.lineTotalCents, {
+    message: 'los cargos extra suman más que la línea',
   });
 
 /** Carga de `IssueQuote`: la instantánea completa de la cotización emitida, con importes ya

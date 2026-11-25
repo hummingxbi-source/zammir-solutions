@@ -23,6 +23,8 @@ const UNIDADES_POR_TIPO: Readonly<Record<ProductKind, readonly ChargeUnit[]>> = 
   CUSTOM: ['SQUARE_METER', 'LINEAR_METER', 'PIECE'],
   STANDARD: ['PIECE'],
   SERVICE: ['SERVICE'],
+  // Cargo extra (cantos, perforaciones, biselados): m² por omisión [RF-M1-09].
+  EXTRA: ['SQUARE_METER', 'LINEAR_METER', 'PIECE'],
 };
 
 const REGLA_POR_UNIDAD: Readonly<Record<ChargeUnit, string>> = {
@@ -184,7 +186,7 @@ export function FormularioDeProducto({
         <Seleccion
           etiqueta={t.formulario.tipo}
           value={tipo}
-          opciones={(['CUSTOM', 'STANDARD', 'SERVICE'] as const).map((k) => ({
+          opciones={(['CUSTOM', 'STANDARD', 'SERVICE', 'EXTRA'] as const).map((k) => ({
             valor: k,
             texto: t.tipos[k],
           }))}
