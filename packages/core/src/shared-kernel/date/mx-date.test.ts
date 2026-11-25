@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { addDays, mexicoDate } from './mx-date';
+import { addDays, isCalendarDate, mexicoDate } from './mx-date';
 
 describe('mexicoDate', () => {
   it('a medio día es la misma fecha', () => {
@@ -28,4 +28,24 @@ describe('addDays', () => {
   ])('%s + %i días = %s', (fecha, dias, esperado) => {
     expect(addDays(fecha, dias)).toBe(esperado);
   });
+});
+
+describe('isCalendarDate', () => {
+  it.each(['2026-01-01', '2026-12-31', '2028-02-29', '2000-02-29'])('%s es una fecha real', (f) => {
+    expect(isCalendarDate(f)).toBe(true);
+  });
+
+  it.each(['2026-02-29', '2026-02-30', '2026-13-01', '2026-00-10', '2026-04-31', '1900-02-29'])(
+    '%s tiene la forma, pero no existe',
+    (f) => {
+      expect(isCalendarDate(f)).toBe(false);
+    },
+  );
+
+  it.each(['', '2026-1-01', '2026/01/01', '01-01-2026', ' 2026-01-01', '2026-01-01T00:00'])(
+    '"%s" no tiene la forma AAAA-MM-DD',
+    (f) => {
+      expect(isCalendarDate(f)).toBe(false);
+    },
+  );
 });

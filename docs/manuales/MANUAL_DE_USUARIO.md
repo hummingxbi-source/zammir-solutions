@@ -120,7 +120,7 @@ Una **orden de trabajo** es un trabajo aceptado que se fabrica o instala. Lleva 
 
 ### Crear la orden
 
-1. En **Órdenes de trabajo** verás las *Cotizaciones aceptadas por convertir*. Toca **Crear orden de trabajo** en la que sigue.
+1. En **Órdenes de trabajo** verás las *Cotizaciones aceptadas por convertir*. Toca **Crear orden de trabajo** en la que sigue. El sistema te pide la **fecha estimada de entrega** (el día en que queda lista para entregar o instalar); elígela en el calendario y toca **Crear la orden**. Sin fecha no se crea.
 
    ![Cotizaciones aceptadas por convertir](capturas/09-ordenes-por-convertir.png)
 
@@ -143,7 +143,8 @@ Una **orden de trabajo** es un trabajo aceptado que se fabrica o instala. Lleva 
 
 ### Seguir el trabajo
 
-- En **Datos del trabajo** anota **quién mide**, **quién fabrica** y **quién instala**, y la **fecha estimada de entrega**. Toca **Guardar datos**.
+- En **Datos del trabajo** anota **quién mide**, **quién fabrica** y **quién instala**, y cambia la **fecha estimada de entrega** si hace falta (no se puede dejar en blanco, y una orden entregada ya no la cambia). Toca **Guardar datos**. Cada cambio de fecha queda en la bitácora.
+- Si hoy ya pasó la fecha y la orden no se ha entregado, sale con la etiqueta **Atrasada**. En la lista, el botón **Atrasadas** deja solo esas; el panel de inicio dice cuántas hay.
 - Avanza el estatus con **Avanzar a**: **En espera → En proceso → Listo → Entregado**.
 - **Empezar sin anticipo** necesita el **PIN de un administrador**.
 - **Entregar con saldo pendiente** necesita el **PIN de un administrador** y un **motivo**.

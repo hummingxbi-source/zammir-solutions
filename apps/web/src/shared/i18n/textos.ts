@@ -60,6 +60,8 @@ export const textos = {
       sinDeudas: 'Nadie te debe nada',
       produccion: 'En producción',
       trabajos: (n: number): string => (n === 1 ? '1 trabajo' : `${String(n)} trabajos`),
+      ordenesAtrasadas: (n: number): string =>
+        n === 0 ? 'ninguno atrasado' : n === 1 ? '1 atrasado' : `${String(n)} atrasados`,
       tendencia: 'Ingresos de los últimos 31 días',
       resumenDelDia: 'Cifras clave de hoy',
       cobrosDeHoy: 'cobros hoy',
@@ -1474,7 +1476,21 @@ export const textos = {
       responsable: 'Responsable',
       desde: 'Desde',
       hasta: 'Hasta',
+      atrasadas: 'Atrasadas',
       sinResultados: 'Ninguna orden coincide con esos filtros.',
+    },
+    atrasada: 'Atrasada',
+    sinFecha: {
+      mensaje: 'Esta orden no tiene fecha estimada de entrega.',
+      queHacer: 'Escríbela en "Datos del trabajo" y guarda.',
+    },
+    fechaDeEntrega: {
+      titulo: 'Fecha estimada de entrega',
+      ayuda: (cliente: string, folio: string): string =>
+        `Orden de trabajo para ${cliente} (${folio}). ¿Para qué día queda lista para entregar o instalar?`,
+      etiqueta: 'Fecha estimada de entrega (obligatoria)',
+      crear: 'Crear la orden',
+      cancelar: 'Volver',
     },
     resumen: {
       titulo: 'Resumen',
@@ -1609,7 +1625,11 @@ export const textos = {
       },
       INVALID_DATE: {
         mensaje: 'La fecha no es válida.',
-        queHacer: 'Elige la fecha en el calendario.',
+        queHacer: 'Elige en el calendario una fecha de hoy en adelante.',
+      },
+      DATE_REQUIRED: {
+        mensaje: 'Falta la fecha estimada de entrega.',
+        queHacer: 'Elige en el calendario para qué día queda lista.',
       },
       NOTHING_TO_UPDATE: {
         mensaje: 'No hay cambios que guardar.',

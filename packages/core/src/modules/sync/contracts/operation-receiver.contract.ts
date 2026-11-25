@@ -31,10 +31,14 @@ export interface ReceptorDelContrato {
     { readonly status: string; readonly paidCents: number; readonly folio: string } | undefined
   >;
   /** Estado de una orden en el servidor y lo pagado (lectura independiente); `undefined` si no existe. */
-  orderState(
-    id: string,
-  ): Promise<
-    { readonly status: string; readonly paidCents: number; readonly folio: string } | undefined
+  orderState(id: string): Promise<
+    | {
+        readonly status: string;
+        readonly paidCents: number;
+        readonly folio: string;
+        readonly estimatedDeliveryDate: string | null;
+      }
+    | undefined
   >;
   /** Nombre con que quedó un cliente en el servidor (lectura independiente); `undefined` si no existe. */
   customerName(id: string): Promise<string | undefined>;
@@ -443,7 +447,10 @@ export function operationReceiverContract(
           return seq;
         };
         const instante = `${String(e.year)}-06-16T18:00:00.000Z`;
-        const crear = async (d: DispositivoDelContrato, opciones: { quoteId?: string } = {}) => {
+        const crear = async (
+          d: DispositivoDelContrato,
+          opciones: { quoteId?: string; estimatedDeliveryDate?: string } = {},
+        ) => {
           const id = e.h.newUuid();
           const r = await d.receiver.receive(
             createWorkOrderOperation({
@@ -503,6 +510,20 @@ export function operationReceiverContract(
         expect(r.ok && r.status).toBe('APPLIED');
         expect(r.ok && r.folio).toBe(`OT-${String(year)}-0001`);
         expect(await h.orderState(id)).toMatchObject({ status: 'WAITING', paidCents: 0 });
+      });
+
+      it('la fecha estimada de entrega viaja al crear la orden [RF-M3-09]', async () => {
+        const { dispositivo, crear, h } = await conOrden();
+        const { id, r } = await crear(dispositivo, { estimatedDeliveryDate: '2099-03-15' });
+        expect(r.ok && r.status).toBe('APPLIED');
+        expect(await h.orderState(id)).toMatchObject({ estimatedDeliveryDate: '2099-03-15' });
+      });
+
+      it('una orden vieja en cola, sin fecha estimada, se aplica igual', async () => {
+        const { dispositivo, crear, h } = await conOrden();
+        const { id, r } = await crear(dispositivo);
+        expect(r.ok && r.status).toBe('APPLIED');
+        expect(await h.orderState(id)).toMatchObject({ estimatedDeliveryDate: null });
       });
 
       it('una cotización aceptada se convierte una sola vez; la segunda queda por revisar', async () => {
@@ -1463,6 +1484,8 @@ export function createWorkOrderOperation(o: {
   readonly publicCode: string;
   readonly orderId: string;
   readonly quoteId?: string;
+  /** Sin fecha, la carga es la de antes de RF-M3-09 (una orden vieja en cola). */
+  readonly estimatedDeliveryDate?: string;
 }): Record<string, unknown> {
   const issuedAt = `${String(o.year)}-06-15T18:00:00.000Z`;
   return {
@@ -1479,6 +1502,9 @@ export function createWorkOrderOperation(o: {
       publicCode: o.publicCode,
       customerId: o.customerId,
       ...(o.quoteId === undefined ? {} : { quoteId: o.quoteId }),
+      ...(o.estimatedDeliveryDate === undefined
+        ? {}
+        : { estimatedDeliveryDate: o.estimatedDeliveryDate }),
       issuedAt,
       depositPercentBps: 5_000,
       depositRequiredCents: 5_800,
