@@ -164,9 +164,9 @@ describe('hoja del corte de caja', () => {
       'Efectivo devuelto: $116.00',
       'Devuelto por transferencia: $50.00',
     ]);
-    expect(hoja(turno(), resumen()).sections.some((x) => x.title.startsWith('Devoluciones'))).toBe(
-      false,
-    );
+    expect(
+      hoja(turno(), resumen()).sections.some((x) => (x.title ?? '').startsWith('Devoluciones')),
+    ).toBe(false);
   });
 
   it('resalta el total, lo esperado y la diferencia', () => {
