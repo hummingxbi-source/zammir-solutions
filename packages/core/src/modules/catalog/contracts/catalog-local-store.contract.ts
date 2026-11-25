@@ -42,6 +42,7 @@ export function replicatedCategory(id: string, sortOrder: number): Category {
     name: `Categoría ${id}`,
     sortOrder,
     fiscalDefaults: { productServiceKey: '01010101', unitKey: 'MTK', taxObject: '02' },
+    isActive: true,
   };
 }
 

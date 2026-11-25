@@ -379,6 +379,32 @@ export const textos = {
       `Intenta de nuevo en ${String(segundos)} segundos.`,
   },
   catalogo: {
+    categorias: {
+      titulo: 'Categorías',
+      ayuda:
+        'Agrega las categorías que necesites, cámbiales el nombre o el orden, y desactiva las que ya no uses. No se borran, y una categoría con productos activos no se desactiva.',
+      nombre: 'Nombre de la categoría',
+      nuevoNombre: (actual: string): string => `Nuevo nombre para ${actual}`,
+      comoSeCobra: 'Lo de esta categoría se cobra',
+      cobros: { SQUARE_METER: 'Por metro cuadrado', PIECE: 'Por pieza', SERVICE: 'Como servicio' },
+      agregar: 'Agregar categoría',
+      guardar: 'Guardar',
+      productosActivos: 'Productos activos en ella',
+      estado: 'Estado',
+      acciones: 'Acciones',
+      activa: 'Activa',
+      inactiva: 'Inactiva',
+      subir: 'Subir',
+      bajar: 'Bajar',
+      renombrar: 'Renombrar',
+      desactivar: 'Desactivar',
+      activar: 'Activar',
+      agregada: 'Categoría agregada.',
+      guardada: 'Nombre guardado.',
+      ordenada: 'Orden guardado.',
+      desactivada: 'Categoría desactivada. Ya no se ofrece para productos nuevos.',
+      activada: 'Categoría activada.',
+    },
     titulo: 'Catálogo',
     descripcion:
       'Tus productos y precios de lista, con IVA incluido. Lo que cambies aquí se usa en el cotizador y en el mostrador.',
@@ -496,6 +522,22 @@ export const textos = {
         mensaje: 'No se pudo leer o guardar el catálogo.',
         queHacer: 'Revisa tu conexión y vuelve a intentar.',
       },
+      CATEGORY_NAME_TAKEN: {
+        mensaje: 'Ya hay una categoría con ese nombre.',
+        queHacer: 'Escribe otro nombre o usa la que ya existe.',
+      },
+      CATEGORY_IN_USE: {
+        mensaje: 'La categoría tiene productos activos.',
+        queHacer: 'Cámbialos de categoría o desactívalos antes de desactivarla.',
+      },
+      INVALID_NAME: {
+        mensaje: 'El nombre de la categoría no es válido.',
+        queHacer: 'Escribe un nombre de 1 a 60 letras.',
+      },
+      INVALID_SORT_ORDER: {
+        mensaje: 'El orden no es válido.',
+        queHacer: 'Recarga el catálogo e intenta de nuevo.',
+      },
     },
   },
   importar: {
@@ -589,6 +631,14 @@ export const textos = {
         mensaje: 'El archivo tiene errores; no se importó nada.',
         queHacer: 'Corrígelos y vuelve a subirlo.',
       },
+      CATEGORY_NAME_TAKEN: {
+        mensaje: 'Una categoría está repetida.',
+        queHacer: 'Recarga el catálogo e intenta de nuevo.',
+      },
+      CATEGORY_IN_USE: {
+        mensaje: 'Una categoría está en uso.',
+        queHacer: 'Recarga el catálogo e intenta de nuevo.',
+      },
     },
   },
   bitacora: {
@@ -647,6 +697,11 @@ export const textos = {
       CASH_SHIFT_OPENED: 'Abrió un turno de caja',
       CASH_SHIFT_CLOSED: 'Cerró un turno de caja',
       CASH_SHIFT_REOPENED: 'Reabrió un corte de caja',
+      CATEGORY_CREATED: 'Agregó una categoría del catálogo',
+      CATEGORY_UPDATED: 'Cambió una categoría del catálogo',
+      CATEGORY_ACTIVATED: 'Activó una categoría del catálogo',
+      CATEGORY_DEACTIVATED: 'Desactivó una categoría del catálogo',
+      TRANSFER_CONFIRMED: 'Confirmó que llegó una transferencia',
     },
     campos: {
       nombre: 'Nombre',
