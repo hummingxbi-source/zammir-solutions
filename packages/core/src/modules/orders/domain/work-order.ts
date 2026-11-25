@@ -87,6 +87,9 @@ export interface WorkOrder {
   readonly cancelledFromStatus: WorkOrderStatus | null;
   /** Anticipo recibido al cancelar; solo se registra, sin devolución automática (PD-07). */
   readonly cancelDepositPaidCents: number | null;
+  /** Es una parte de un trabajo que se entrega por partes: las demás son las órdenes de la misma cotización
+   *  [RF-M3-10, ADR-0044]. Sin el campo (órdenes de antes), no lo es. */
+  readonly inParts?: boolean;
   /** Quién la creó (la persona que entró con su PIN). */
   readonly userId: UserId;
   readonly syncStatus: WorkOrderSyncStatus;

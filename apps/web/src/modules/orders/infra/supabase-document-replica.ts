@@ -41,6 +41,8 @@ interface FilaDeOrden {
   readonly cancel_reason: string | null;
   readonly cancelled_from_status: WorkOrderStatus | null;
   readonly cancel_deposit_paid_cents: number | null;
+  /** Antes de RF-M3-10 la vista no la traía. */
+  readonly in_parts?: boolean;
   readonly user_id: string;
   readonly review_reason: string | null;
   readonly change_seq: number;
@@ -148,6 +150,7 @@ export function supabaseDocumentReplica(cliente: SupabaseClient): DocumentReplic
           cancelReason: f.cancel_reason,
           cancelledFromStatus: f.cancelled_from_status,
           cancelDepositPaidCents: f.cancel_deposit_paid_cents,
+          ...(f.in_parts === true ? { inParts: true } : {}),
           userId: asId<'User'>(f.user_id),
           syncStatus: 'SENT',
           reviewReason: f.review_reason,
