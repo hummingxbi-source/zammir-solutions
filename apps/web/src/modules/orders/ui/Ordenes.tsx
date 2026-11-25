@@ -7,6 +7,9 @@ import {
   filterWorkOrders,
   isWorkOrderLate,
   mexicoDate,
+  partNumber,
+  partsOf,
+  pendingQuoteLines,
   summarizeOrders,
   type Customer,
   type CustomerId,
@@ -92,6 +95,9 @@ export function Ordenes(props: OrdenesProps): ReactElement {
   const [porFechar, setPorFechar] = useState<Quote | null>(null);
   const [fechaDeEntrega, setFechaDeEntrega] = useState('');
   const [soloAtrasadas, setSoloAtrasadas] = useState(false);
+  // Entrega por partes [RF-M3-10]: qué líneas van en esta parte.
+  const [porPartes, setPorPartes] = useState(false);
+  const [lineasElegidas, setLineasElegidas] = useState<ReadonlySet<string>>(new Set());
   const [error, setError] = useState<{ mensaje: string; queHacer: string } | null>(null);
   const [cargado, setCargado] = useState(false);
 
@@ -102,9 +108,8 @@ export function Ordenes(props: OrdenesProps): ReactElement {
     const cotizaciones = await deps.quotes.list();
     setPorConvertir(
       cotizaciones.filter(
-        (q) =>
-          q.status === 'ACCEPTED' &&
-          (q.convertedWorkOrderId === undefined || q.convertedWorkOrderId === null),
+        // Aceptadas con líneas que todavía no pasan a una orden (incluye las que van por partes).
+        (q) => q.status === 'ACCEPTED' && pendingQuoteLines(q).length > 0,
       ),
     );
     const c = await clientes.customers.list();
@@ -140,6 +145,10 @@ export function Ordenes(props: OrdenesProps): ReactElement {
         deps={deps}
         actor={actor}
         orden={seleccionada}
+        partes={partsOf(seleccionada, ordenes)}
+        onAbrirOrden={(id) => {
+          setAbierta(id);
+        }}
         pagos={pagosDe(seleccionada.id)}
         cliente={nombres.get(seleccionada.customerId) ?? null}
         personas={props.personas}
@@ -172,6 +181,10 @@ export function Ordenes(props: OrdenesProps): ReactElement {
   function pedirFecha(q: Quote): void {
     setError(null);
     setFechaDeEntrega('');
+    const pendientes = pendingQuoteLines(q);
+    // Si ya salió una parte, lo que sigue también es una parte.
+    setPorPartes(pendientes.length < q.lines.length);
+    setLineasElegidas(new Set(pendientes.map((l) => l.id)));
     setPorFechar(q);
   }
 
@@ -181,7 +194,10 @@ export function Ordenes(props: OrdenesProps): ReactElement {
     }
     setError(null);
     setCreando(q.id);
-    const r = await convertQuoteToWorkOrder(deps, actor, q.id, { estimatedDeliveryDate: fecha });
+    const r = await convertQuoteToWorkOrder(deps, actor, q.id, {
+      estimatedDeliveryDate: fecha,
+      ...(porPartes ? { inParts: true, lineIds: [...lineasElegidas] } : {}),
+    });
     setCreando(null);
     if (!r.ok) {
       setError(t.errores[r.error.code]);
@@ -240,6 +256,12 @@ export function Ordenes(props: OrdenesProps): ReactElement {
                   <span className="porconvertir__texto">
                     <strong>{nombres.get(q.customerId)?.name ?? '—'}</strong>
                     <span className="porconvertir__folio">{q.folio ?? q.tempFolio ?? ''}</span>
+                    {pendingQuoteLines(q).length < q.lines.length ? (
+                      <EtiquetaDeEstado
+                        tono="aviso"
+                        texto={t.partes.faltan(pendingQuoteLines(q).length)}
+                      />
+                    ) : null}
                   </span>
                   <Boton
                     aria-label={`${t.porConvertir.crear} · ${nombres.get(q.customerId)?.name ?? '—'} · ${q.folio ?? q.tempFolio ?? ''}`}
@@ -377,6 +399,15 @@ export function Ordenes(props: OrdenesProps): ReactElement {
                           tono={TONO_DE_ESTADO[o.status]}
                           texto={t.estados[o.status]}
                         />
+                        {partNumber(o, ordenes) !== null ? (
+                          <>
+                            {' '}
+                            <EtiquetaDeEstado
+                              tono="neutro"
+                              texto={t.partes.parte(partNumber(o, ordenes) ?? 0)}
+                            />
+                          </>
+                        ) : null}
                         {isWorkOrderLate(o, hoy) ? (
                           <>
                             {' '}
@@ -416,7 +447,11 @@ export function Ordenes(props: OrdenesProps): ReactElement {
                 {t.fechaDeEntrega.cancelar}
               </Boton>
               <Boton
-                disabled={fechaDeEntrega === '' || creando === porFechar.id}
+                disabled={
+                  fechaDeEntrega === '' ||
+                  creando === porFechar.id ||
+                  (porPartes && lineasElegidas.size === 0)
+                }
                 onClick={() => {
                   void convertir(porFechar, fechaDeEntrega);
                 }}
@@ -442,6 +477,41 @@ export function Ordenes(props: OrdenesProps): ReactElement {
               setFechaDeEntrega(e.target.value);
             }}
           />
+          <label className="casilla">
+            <input
+              type="checkbox"
+              checked={porPartes}
+              // Si ya salió una parte, lo que sigue también lo es.
+              disabled={pendingQuoteLines(porFechar).length < porFechar.lines.length}
+              onChange={(e) => {
+                setPorPartes(e.target.checked);
+              }}
+            />
+            {t.partes.preguntar}
+          </label>
+          {porPartes ? (
+            <fieldset className="partes__lineas">
+              <legend>{t.partes.queLineas}</legend>
+              {pendingQuoteLines(porFechar).map((l) => (
+                <label key={l.id} className="casilla">
+                  <input
+                    type="checkbox"
+                    checked={lineasElegidas.has(l.id)}
+                    onChange={(e) => {
+                      const nuevas = new Set(lineasElegidas);
+                      if (e.target.checked) {
+                        nuevas.add(l.id);
+                      } else {
+                        nuevas.delete(l.id);
+                      }
+                      setLineasElegidas(nuevas);
+                    }}
+                  />
+                  {l.name} · {l.detail} · {formatearPesos(l.lineTotalCents)}
+                </label>
+              ))}
+            </fieldset>
+          ) : null}
           {error !== null ? (
             <Aviso tipo="error" queHacer={error.queHacer}>
               {error.mensaje}

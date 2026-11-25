@@ -63,6 +63,8 @@ export interface BuildReceiptInput {
   /** Si el comprobante lleva QR y leyenda de autofacturación; en pausa no se menciona la factura [ADR-0039]. */
   readonly autofacturacion: boolean;
   readonly labels: ReceiptLabels;
+  /** "Parte 2" si el trabajo se entrega por partes [RF-M3-10]; va junto al folio. */
+  readonly partLabel?: string | null;
 }
 
 /** Arma el comprobante de trabajo [RF-M3-06]: folio, cliente, conceptos y medidas, total, anticipo, saldo,
@@ -101,7 +103,9 @@ export function buildWorkOrderDocument(entrada: BuildReceiptInput): QuoteDocumen
 
   return {
     business: entrada.business,
-    folioLabel: enviada ? folio : `${labels.provisionalNote} ${order.tempFolio}`,
+    folioLabel: `${enviada ? folio : `${labels.provisionalNote} ${order.tempFolio}`}${
+      entrada.partLabel === null || entrada.partLabel === undefined ? '' : ` · ${entrada.partLabel}`
+    }`,
     folio: order.folio,
     tempFolio: order.tempFolio,
     // Sin facturación el código no sirve de nada en el papel [ADR-0039].
