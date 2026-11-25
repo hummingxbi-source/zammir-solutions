@@ -40,8 +40,8 @@ grant select on exportacion to authenticated;
 
 select is((select jsonb_typeof(datos -> 'tables') from exportacion), 'object', 'entrega las tablas');
 select ok((select datos ? 'generated_at' from exportacion), 'dice cuándo se generó');
-select is((select count(*)::int from exportacion, jsonb_object_keys(datos -> 'tables')), 21,
-  'entrega las 21 tablas del negocio');
+select is((select count(*)::int from exportacion, jsonb_object_keys(datos -> 'tables')), 22,
+  'entrega las 22 tablas del negocio (con las confirmaciones de transferencias)');
 select is((select datos -> 'tables' -> 'customers' -> 0 ->> 'name' from exportacion), 'Cliente de prueba',
   'entrega los clientes con sus datos');
 select is((select datos -> 'tables' -> 'counter_sales' -> 0 ->> 'total_cents' from exportacion), '11600',

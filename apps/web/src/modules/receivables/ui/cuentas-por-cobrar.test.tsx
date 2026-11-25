@@ -230,9 +230,28 @@ describe('Cuentas por cobrar', () => {
       (await outbox.list()).find((o) => o.envelope.type === 'RegisterPayment')?.envelope.userId,
     ).toBe(admin.userId);
     await waitFor(() => {
-      expect(screen.queryByText('OT-2026-0001')).toBeNull();
+      expect(
+        within(screen.getByRole('table', { name: 'Cuentas por cobrar' })).queryByText(
+          'OT-2026-0001',
+        ),
+      ).toBeNull();
     });
     expect(screen.getByText('Por cobrar').nextElementSibling?.textContent).toBe('$200.00');
+
+    // Fue por transferencia: queda por confirmar hasta que se revisa el banco [RF-M4-11].
+    const pendientes = screen.getByRole('table', { name: 'Transferencias por confirmar' });
+    expect(within(pendientes).getByText('OT-2026-0001')).toBeTruthy();
+    expect(within(pendientes).getByText('$500.00')).toBeTruthy();
+    fireEvent.click(within(pendientes).getByRole('button', { name: /Ya llegó OT-2026-0001/ }));
+    expect(await screen.findByText(/Transferencia confirmada/)).toBeTruthy();
+    expect(await screen.findByText('No hay transferencias por confirmar.')).toBeTruthy();
+    const confirmacion = (await outbox.list()).find((o) => o.envelope.type === 'ConfirmTransfer');
+    expect(confirmacion?.envelope.userId).toBe(admin.userId);
+  });
+
+  it('sin transferencias pendientes lo dice', async () => {
+    await montar();
+    expect(await screen.findByText('No hay transferencias por confirmar.')).toBeTruthy();
   });
 
   it('el recordatorio abre WhatsApp con folio y saldo; sin teléfono avisa qué hacer', async () => {

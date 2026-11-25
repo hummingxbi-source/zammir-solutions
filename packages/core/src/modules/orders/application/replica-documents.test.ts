@@ -97,11 +97,11 @@ describe('réplica de órdenes y pagos', () => {
     const outbox = inMemorySyncOutbox({ clock: reloj });
     const origen = fuente([orden(ID_A, 1), orden(ID_B, 2)], [pago('p1', ID_A, 5_800, 1)]);
     const r = await refreshDocuments({ source: origen, outbox, clock: reloj });
-    expect(r).toEqual(ok({ orders: 2, payments: 1, sales: 0, shifts: 0 }));
+    expect(r).toEqual(ok({ orders: 2, payments: 1, sales: 0, shifts: 0, confirmations: 0 }));
     expect(await outboxWorkOrderStore(outbox).list()).toHaveLength(2);
     expect(await outboxPaymentStore(outbox).listByTarget(ID_A)).toHaveLength(1);
     const otra = await refreshDocuments({ source: origen, outbox, clock: reloj });
-    expect(otra).toEqual(ok({ orders: 0, payments: 0, sales: 0, shifts: 0 }));
+    expect(otra).toEqual(ok({ orders: 0, payments: 0, sales: 0, shifts: 0, confirmations: 0 }));
   });
 
   it('el documento local queda sin el número de cambio y marcado como enviado', async () => {

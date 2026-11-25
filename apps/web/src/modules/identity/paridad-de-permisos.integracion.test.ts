@@ -35,6 +35,8 @@ const PARIDAD: Readonly<Record<Permission, string>> = {
   INVOICE_GENERATE: 'pendiente: facturas (Sprint 4)',
   USERS_AND_DEVICES: 'probada',
   PRIVACY_NOTICE_EDIT: 'probada',
+  TRANSFER_CONFIRM:
+    'pendiente: se prueba en el contrato del receptor (ConfirmTransfer) y en pgTAP 26',
 };
 
 const sufijo = Math.random().toString(36).slice(2, 10);
