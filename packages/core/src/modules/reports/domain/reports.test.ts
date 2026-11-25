@@ -394,6 +394,36 @@ describe('antigüedad de las cuentas por cobrar', () => {
     expect(r[3]).toMatchObject({ undated: true, fromDays: null, count: 1, balanceCents: 700 });
   });
 
+  it('lo que no se ha entregado va en su propio grupo, antes del de fecha inválida, y nunca atrasado', () => {
+    const porEntregar = (saldo: number) =>
+      ({ daysOutstanding: null, balanceCents: saldo, notDelivered: true }) as never;
+    const r = receivablesAging(
+      [porEntregar(500), porEntregar(250), fila(null, 700), fila(3, 100)],
+      1,
+    );
+    expect(r).toHaveLength(5);
+    expect(r[3]).toMatchObject({
+      notDelivered: true,
+      undated: false,
+      overdue: false,
+      fromDays: null,
+      count: 2,
+      balanceCents: 750,
+    });
+    expect(r[4]).toMatchObject({ undated: true, notDelivered: false, count: 1 });
+    // Sin nada por entregar, el grupo no aparece.
+    expect(receivablesAging([fila(3, 100)], 1).some((b) => b.notDelivered)).toBe(false);
+  });
+
+  it('con el umbral de 1 día los tramos son hoy, 1 día y 2 o más', () => {
+    const r = receivablesAging([fila(0, 100), fila(1, 200), fila(2, 400), fila(30, 800)], 1);
+    expect(r.map((b) => [b.fromDays, b.toDays, b.count, b.overdue])).toEqual([
+      [0, 0, 1, false],
+      [1, 1, 1, true],
+      [2, null, 2, true],
+    ]);
+  });
+
   it('sin cuentas son tres tramos en cero', () => {
     const r = receivablesAging([], 10);
     expect(r.map((b) => b.count)).toEqual([0, 0, 0]);

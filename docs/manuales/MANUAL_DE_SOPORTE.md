@@ -140,7 +140,7 @@ El aviso de privacidad vigente se edita en **Configuración** (cada edición cre
 | Hay operaciones *sin enviar* desde hace horas | La tablet no ha tenido internet | Conectarla; se envían solas. No borres datos de la tablet |
 | *"Hay un problema con un documento. Avisa a soporte."* | El servidor rechazó una operación estructuralmente | Anotar el folio provisional y la hora; revisar `error_log` y la bitácora |
 | El corte de caja puede cambiar | Hay operaciones sin enviar | Esperar a que lleguen al servidor antes de revisar el corte |
-| Una cuenta por cobrar no se resalta como atrasada | Pasaron menos días que el umbral | **Configuración** → *Cuentas por cobrar atrasadas* (1 a 365 días; por omisión 10). La tablet recuerda el último valor para trabajar sin internet |
+| Una cuenta por cobrar no se resalta como atrasada | La orden no se ha entregado (sale "Por entregar"), o desde la entrega pasaron menos días que el umbral | **Configuración** → *Cuentas por cobrar atrasadas* (1 a 365 días; por omisión 1, contados desde la entrega). La tablet recuerda el último valor para trabajar sin internet |
 | Una factura está *En proceso* | El proveedor de timbrado no contestó | **Reintentar** en **Emitidas**; nunca se duplica |
 | *"Esta cuenta no es de administrador"* | Falta el rol en la cuenta | Ver §4, *Un administrador nuevo* |
 | El portal rechaza un folio | Ya facturado, fuera de plazo (fin de mes) o código incorrecto | Un administrador puede facturar desde **Facturas** aun fuera de plazo |

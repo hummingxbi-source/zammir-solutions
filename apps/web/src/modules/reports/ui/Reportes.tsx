@@ -44,6 +44,7 @@ import { Tabla } from '../../../shared/ui/Tabla';
 import { Tarjeta } from '../../../shared/ui/Tarjeta';
 import { pesosCompactos } from '../../../shared/ui/graficas-util';
 import { formatearPesos } from '../../../shared/ui/formatos';
+import { etiquetaDeTramo } from './etiqueta-de-tramo';
 
 const t = textos.reportes;
 
@@ -293,11 +294,7 @@ export function Reportes(props: ReportesProps): ReactElement {
           descripcion={t.cuentas.titulo}
           formatear={formatearPesos}
           datos={antiguedad.map((b) => ({
-            etiqueta: b.undated
-              ? t.cuentas.sinFecha
-              : b.toDays === null
-                ? t.cuentas.desde(b.fromDays ?? 0)
-                : t.cuentas.entre(b.fromDays ?? 0, b.toDays),
+            etiqueta: etiquetaDeTramo(b),
             valor: b.balanceCents,
             tono: b.overdue ? 'peligro' : 'acento',
             nota: t.cuentas.cuantas(b.count),

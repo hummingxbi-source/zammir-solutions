@@ -2,8 +2,9 @@ import { mexicoDate } from '../../../shared-kernel/date/mx-date';
 import type { WorkOrder } from '../../orders/domain/work-order';
 import { balanceCents, type Payment } from '../../payments/domain/payment';
 
-/** Días sin pagar a partir de los cuales una cuenta se resalta (PD-33: 10 por omisión, configurable). */
-export const DEFAULT_OVERDUE_DAYS = 10;
+/** Días desde la entrega a partir de los cuales una cuenta sale atrasada. Por omisión 1: lo entregado hoy y
+ *  sin pagar está al corriente y desde el día siguiente sale atrasado [RF-M6-01, ADR-0044]. Configurable. */
+export const DEFAULT_OVERDUE_DAYS = 1;
 
 /** Una orden con saldo por cobrar [RF-M6-01]. */
 export interface ReceivableRow {
@@ -15,7 +16,11 @@ export interface ReceivableRow {
   readonly balanceCents: number;
   /** Día en que se hizo la orden, en hora de México; `null` si la fecha no es válida. */
   readonly issuedOn: string | null;
-  /** Días naturales desde la orden. Nunca negativo; `null` si la fecha no es válida. */
+  /** Día en que se entregó, en hora de México; `null` si todavía no se entrega o la fecha no es válida. */
+  readonly deliveredOn: string | null;
+  /** Todavía no se entrega: el saldo aún no es exigible y no cuenta días [ADR-0044]. */
+  readonly notDelivered: boolean;
+  /** Días naturales desde la entrega. Nunca negativo; `null` si no se ha entregado o la fecha no es válida. */
   readonly daysOutstanding: number | null;
   /** Llegó o pasó el umbral de atraso. */
   readonly overdue: boolean;
@@ -36,19 +41,30 @@ function diasEntre(desde: string, hasta: string): number {
   return Math.round(ms / 86_400_000);
 }
 
-/** Día calendario de una orden, o `null` si el instante no es una fecha válida. */
-function diaDeLaOrden(iso: string): string | null {
+/** Día calendario de un instante, o `null` si no hay o no es una fecha válida. */
+function diaDe(iso: string | null | undefined): string | null {
+  if (iso === null || iso === undefined) {
+    return null;
+  }
   const instante = new Date(iso);
   return Number.isNaN(instante.getTime()) ? null : mexicoDate(instante);
 }
 
 /** Órdenes con saldo mayor a cero, de la más atrasada a la más reciente. Las canceladas no se cobran y las
- *  saldadas no aparecen. Los días se cuentan en calendario de México contra `today`; una fecha futura da 0
- *  y una inválida no da días [RN-17]. */
+ *  saldadas no aparecen. El saldo se vuelve exigible al entregar: los días se cuentan desde la entrega, en
+ *  calendario de México contra `today`; lo que no se ha entregado aparece por entregar, sin días ni
+ *  atraso [RF-M6-01, ADR-0044]. Una fecha futura da 0 y una inválida no da días [RN-17]. */
 export function buildReceivables(entrada: {
   readonly orders: readonly Pick<
     WorkOrder,
-    'id' | 'status' | 'customerId' | 'totalCents' | 'folio' | 'tempFolio' | 'issuedAt'
+    | 'id'
+    | 'status'
+    | 'customerId'
+    | 'totalCents'
+    | 'folio'
+    | 'tempFolio'
+    | 'issuedAt'
+    | 'deliveredAt'
   >[];
   readonly payments: readonly Pick<Payment, 'targetType' | 'targetId' | 'amountCents'>[];
   /** Hoy, `AAAA-MM-DD`, en hora de México. */
@@ -68,8 +84,9 @@ export function buildReceivables(entrada: {
     if (saldo <= 0) {
       continue;
     }
-    const dia = diaDeLaOrden(o.issuedAt);
-    const dias = dia === null ? null : Math.max(0, diasEntre(dia, entrada.today));
+    const entregada = o.status === 'DELIVERED';
+    const entrega = entregada ? diaDe(o.deliveredAt) : null;
+    const dias = entrega === null ? null : Math.max(0, diasEntre(entrega, entrada.today));
     filas.push({
       orderId: o.id,
       folio: o.folio ?? o.tempFolio,
@@ -77,7 +94,9 @@ export function buildReceivables(entrada: {
       totalCents: o.totalCents,
       paidCents: o.totalCents - saldo,
       balanceCents: saldo,
-      issuedOn: dia,
+      issuedOn: diaDe(o.issuedAt),
+      deliveredOn: entrega,
+      notDelivered: !entregada,
       daysOutstanding: dias,
       overdue: dias !== null && dias >= umbral,
     });
