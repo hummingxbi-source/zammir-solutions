@@ -1524,6 +1524,16 @@ export const textos = {
       sinResultados: 'Ninguna orden coincide con esos filtros.',
     },
     atrasada: 'Atrasada',
+    partes: {
+      titulo: 'Partes del trabajo',
+      preguntar: '¿Se entrega por partes? (una orden por cada parte)',
+      queLineas: 'Líneas que van en esta parte',
+      faltan: (n: number): string => (n === 1 ? 'Falta 1 línea' : `Faltan ${String(n)} líneas`),
+      parte: (n: number): string => `Parte ${String(n)}`,
+      esParte: (n: number, total: number): string =>
+        `Este trabajo se entrega por partes: esta es la parte ${String(n)} de ${String(total)} hasta ahora.`,
+      ver: (n: number, folio: string): string => `Ver parte ${String(n)} (${folio})`,
+    },
     sinFecha: {
       mensaje: 'Esta orden no tiene fecha estimada de entrega.',
       queHacer: 'Escríbela en "Datos del trabajo" y guarda.',
@@ -1674,6 +1684,14 @@ export const textos = {
       DATE_REQUIRED: {
         mensaje: 'Falta la fecha estimada de entrega.',
         queHacer: 'Elige en el calendario para qué día queda lista.',
+      },
+      NO_LINES_SELECTED: {
+        mensaje: 'No elegiste ninguna línea para esta parte.',
+        queHacer: 'Marca al menos una línea.',
+      },
+      LINE_NOT_PENDING: {
+        mensaje: 'Una de las líneas ya está en otra parte.',
+        queHacer: 'Cierra la ventana y vuelve a abrirla para ver lo que falta.',
       },
       NOTHING_TO_UPDATE: {
         mensaje: 'No hay cambios que guardar.',

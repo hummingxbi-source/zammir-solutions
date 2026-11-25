@@ -86,7 +86,7 @@ function aceptada(): Quote {
   };
 }
 
-async function montar(opciones: { actor?: QuoteActor | null } = {}) {
+async function montar(opciones: { actor?: QuoteActor | null; dosLineas?: boolean } = {}) {
   const reloj = fixedClock(new Date('2026-10-31T18:00:00.000Z'));
   const outbox = inMemorySyncOutbox({ clock: reloj });
   const deps: OrderDeps = {
@@ -118,7 +118,11 @@ async function montar(opciones: { actor?: QuoteActor | null } = {}) {
   }
   const clientes: ManageCustomersDeps = { customers, idGenerator: ids };
   const photos = inMemoryPhotoStore();
-  const cotizacion = aceptada();
+  const base = aceptada();
+  const cotizacion =
+    opciones.dosLineas === true
+      ? { ...base, lines: [linea(), { ...linea(), name: 'Espejo 4 mm' }] }
+      : base;
   await deps.quotes.save(cotizacion);
   const porEnviar = vi.fn();
   const props: OrdenesProps = {
@@ -358,6 +362,34 @@ describe('Órdenes de trabajo', () => {
     // Hoy es el 31 de octubre: todavía no va atrasada.
     fireEvent.click(screen.getByRole('button', { name: /Volver|Órdenes/ }));
     expect(await screen.findByRole('button', { name: 'Atrasadas (0)' })).toBeTruthy();
+  });
+
+  it('por partes: la primera parte lleva las líneas elegidas y la cotización queda con lo que falta', async () => {
+    const { outbox } = await montar({ dosLineas: true });
+    fireEvent.click(await screen.findByRole('button', { name: /Crear orden de trabajo/ }));
+    const ventana = await screen.findByRole('dialog', { name: 'Fecha estimada de entrega' });
+    fireEvent.change(within(ventana).getByLabelText(/Fecha estimada de entrega/), {
+      target: { value: '2026-11-15' },
+    });
+    fireEvent.click(within(ventana).getByLabelText(/Se entrega por partes/));
+    const lineas = within(ventana).getByRole('group', { name: 'Líneas que van en esta parte' });
+    // Se quita el espejo: va en la siguiente parte.
+    fireEvent.click(within(lineas).getByLabelText(/Espejo 4 mm/));
+    fireEvent.click(within(ventana).getByRole('button', { name: 'Crear la orden' }));
+    await screen.findByRole('heading', { name: /T1-0001 · Ana López/ });
+    expect(screen.getByRole('navigation', { name: 'Partes del trabajo' }).textContent).toMatch(
+      /parte 1 de 1/,
+    );
+    const carga = (await outbox.list())[0]?.envelope.payload as {
+      inParts?: boolean;
+      lines: { name: string }[];
+    };
+    expect(carga.inParts).toBe(true);
+    expect(carga.lines.map((l) => l.name)).toEqual(['Vidrio claro 6 mm']);
+    // De vuelta en la lista, la cotización sigue por convertir con lo que falta.
+    fireEvent.click(screen.getByRole('button', { name: /Volver a las órdenes/ }));
+    expect(await screen.findByText('Falta 1 línea')).toBeTruthy();
+    expect(screen.getByText('Parte 1')).toBeTruthy();
   });
 
   it('guarda responsables, fecha y notas', async () => {

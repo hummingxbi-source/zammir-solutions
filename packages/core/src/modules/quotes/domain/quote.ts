@@ -66,10 +66,25 @@ export interface Quote {
   readonly syncStatus: QuoteSyncStatus;
   /** Motivo por el que un administrador debe revisarla, si el servidor la marcó. */
   readonly reviewReason: string | null;
-  /** Orden de trabajo en que se convirtió; una cotización no se convierte dos veces [RF-M2-08]. */
+  /** Primera orden de trabajo en que se convirtió [RF-M2-08]. */
   readonly convertedWorkOrderId?: string | null;
+  /** Líneas ya convertidas en orden, cuando se entrega por partes [RF-M3-10]. Sin el campo, una cotización con
+   *  orden se considera convertida completa, como antes. */
+  readonly convertedLineIds?: readonly string[];
   /** Última modificación local (ISO, UTC). */
   readonly updatedAt: string;
+}
+
+/** Líneas de la cotización que todavía no pasan a ninguna orden [RF-M3-10, ADR-0044]. Cada línea entra en una
+ *  sola orden: así una parte no cobra dos veces lo mismo. */
+export function pendingQuoteLines(
+  q: Pick<Quote, 'lines' | 'convertedWorkOrderId' | 'convertedLineIds'>,
+): readonly QuoteLine[] {
+  if (q.convertedLineIds !== undefined) {
+    const hechas = new Set(q.convertedLineIds);
+    return q.lines.filter((l) => !hechas.has(l.id));
+  }
+  return q.convertedWorkOrderId === undefined || q.convertedWorkOrderId === null ? q.lines : [];
 }
 
 export interface QuoteTotals {
