@@ -1,6 +1,12 @@
 import type { Clock } from '../../../shared-kernel/clock';
 import { formatTempFolio } from '../../../shared-kernel/folio/folio';
-import type { CustomerId, IdGenerator, QuoteId, UserId } from '../../../shared-kernel/id';
+import type {
+  CustomerId,
+  IdGenerator,
+  ProductId,
+  QuoteId,
+  UserId,
+} from '../../../shared-kernel/id';
 import type { Random } from '../../../shared-kernel/random';
 import { err, ok, type Result } from '../../../shared-kernel/result';
 import type { SellableProduct } from '../../catalog/application/ports';
@@ -20,11 +26,14 @@ import {
   type QuoteStatus,
 } from '../domain/quote';
 import {
+  addLineExtra,
   buildQuoteLine,
   recalculateQuoteLine,
+  removeLineExtra,
   repriceQuoteLine,
   type LineInput,
   type QuoteLineError,
+  type QuoteProduct,
 } from '../domain/quote-line';
 import type { QuoteStore } from './quote-store';
 
@@ -197,6 +206,64 @@ export async function updateQuoteLine(
   );
 }
 
+/** Agrega (o cambia) un cargo extra en una línea del borrador: cantos, perforaciones, biselados…, cobrado con
+ *  la medida de la pieza [RF-M1-09, ADR-0044]. */
+export async function addQuoteLineExtra(
+  deps: QuoteDeps,
+  actor: QuoteActor,
+  id: QuoteId,
+  lineId: string,
+  extra: QuoteProduct & { readonly kind?: string },
+  cantidad = 1,
+): Promise<Result<Quote, QuoteError>> {
+  return cambiarLinea(deps, actor, id, lineId, (l) =>
+    addLineExtra(l, extra, cantidad, lineDeps(deps)),
+  );
+}
+
+/** Quita un cargo extra de una línea del borrador. */
+export async function removeQuoteLineExtra(
+  deps: QuoteDeps,
+  actor: QuoteActor,
+  id: QuoteId,
+  lineId: string,
+  productId: ProductId,
+): Promise<Result<Quote, QuoteError>> {
+  return cambiarLinea(deps, actor, id, lineId, (l) =>
+    removeLineExtra(l, productId, lineDeps(deps)),
+  );
+}
+
+async function cambiarLinea(
+  deps: QuoteDeps,
+  actor: QuoteActor,
+  id: QuoteId,
+  lineId: string,
+  cambio: (linea: QuoteLine) => Result<QuoteLine, QuoteLineError>,
+): Promise<Result<Quote, QuoteError>> {
+  if (!puedeCotizar(deps, actor)) {
+    return err({ code: 'NOT_AUTHORIZED' });
+  }
+  const q = await cargarBorrador(deps, id);
+  if (!q.ok) {
+    return q;
+  }
+  const actual = q.value.lines.find((l) => l.id === lineId);
+  if (actual === undefined) {
+    return err({ code: 'LINE_NOT_FOUND' });
+  }
+  const nueva = cambio(actual);
+  if (!nueva.ok) {
+    return nueva;
+  }
+  return ok(
+    await guardar(deps, {
+      ...q.value,
+      lines: q.value.lines.map((l) => (l.id === lineId ? nueva.value : l)),
+    }),
+  );
+}
+
 export async function removeQuoteLine(
   deps: QuoteDeps,
   actor: QuoteActor,
@@ -303,6 +370,7 @@ function aCarga(q: Quote, lineas: readonly QuoteLine[]) {
       taxCents: l.taxCents,
       isTaxExempt: l.isTaxExempt,
       detail: l.detail,
+      ...(l.extras === undefined || l.extras.length === 0 ? {} : { extras: l.extras }),
     })),
   };
 }
@@ -458,6 +526,20 @@ export async function duplicateQuote(
       continue;
     }
     actual = agregada.value;
+    // Los cargos extra se vuelven a aplicar con el precio de hoy; uno que ya no se vende se omite [RF-M1-09].
+    const nuevaLinea = actual.lines.at(-1);
+    for (const extra of linea.extras ?? []) {
+      const deHoy = await catalogo(extra.productId);
+      const con =
+        deHoy === null || nuevaLinea === undefined
+          ? null
+          : await addQuoteLineExtra(deps, actor, actual.id, nuevaLinea.id, deHoy, extra.quantity);
+      if (!con?.ok) {
+        omitidas.push(`${linea.name}: ${extra.name}`);
+        continue;
+      }
+      actual = con.value;
+    }
   }
   return ok({ quote: actual, omitted: omitidas });
 }
