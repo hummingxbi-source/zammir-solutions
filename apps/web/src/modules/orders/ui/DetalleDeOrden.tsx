@@ -66,6 +66,9 @@ export interface DetalleDeOrdenProps {
   readonly onCambio: () => void;
   readonly onPorEnviar: () => void;
   readonly onVolver: () => void;
+  /** Las partes del mismo trabajo, si se entrega por partes [RF-M3-10]. */
+  readonly partes?: readonly WorkOrder[];
+  readonly onAbrirOrden?: (id: string) => void;
   /** Fotos de la medición (S3-03); sin esto no se ofrecen. */
   readonly fotos?: FotosDeLaOrden;
   /** Comprobante de trabajo por WhatsApp (S3-09); sin esto no se ofrece. */
@@ -236,6 +239,32 @@ export function DetalleDeOrden(props: DetalleDeOrdenProps): ReactElement {
         <Aviso tipo="error" queHacer={t.sinFecha.queHacer}>
           {t.sinFecha.mensaje}
         </Aviso>
+      ) : null}
+      {(props.partes ?? []).length > 0 ? (
+        <nav className="nota partes" aria-label={t.partes.titulo}>
+          <span>
+            {t.partes.esParte(
+              (props.partes ?? []).findIndex((p) => p.id === orden.id) + 1,
+              (props.partes ?? []).length,
+            )}
+          </span>
+          {(props.partes ?? [])
+            .filter((p) => p.id !== orden.id)
+            .map((p) => (
+              <Boton
+                key={p.id}
+                variante="secundario"
+                onClick={() => {
+                  props.onAbrirOrden?.(p.id);
+                }}
+              >
+                {t.partes.ver(
+                  (props.partes ?? []).findIndex((x) => x.id === p.id) + 1,
+                  p.folio ?? p.tempFolio,
+                )}
+              </Boton>
+            ))}
+        </nav>
       ) : null}
       {orden.reviewReason !== null ? (
         <Aviso tipo="error">

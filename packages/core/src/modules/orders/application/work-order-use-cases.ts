@@ -25,7 +25,7 @@ import {
 } from '../../payments/domain/payment';
 import type { QuoteStore } from '../../quotes/application/quote-store';
 import type { QuoteActor } from '../../quotes/application/quote-use-cases';
-import { quoteTotals } from '../../quotes/domain/quote';
+import { pendingQuoteLines, quoteTotals } from '../../quotes/domain/quote';
 import type { SyncOutbox } from '../../sync/application/ports';
 import { generatePublicCode } from '../../sync/domain/public-code';
 import { CURRENT_SCHEMA_VERSION } from '../../sync/domain/operation';
@@ -56,6 +56,9 @@ export type OrderErrorCode =
   | 'REASON_REQUIRED'
   | 'INVALID_DATE'
   | 'DATE_REQUIRED'
+  /** Por partes: no se eligió ninguna línea, o una ya pasó a otra orden [RF-M3-10]. */
+  | 'NO_LINES_SELECTED'
+  | 'LINE_NOT_PENDING'
   | 'NOTHING_TO_UPDATE'
   | 'STORAGE_FAILED';
 
@@ -135,11 +138,17 @@ interface NuevaOrden {
   readonly lines: readonly WorkOrderLine[];
   /** Fecha estimada de entrega (`AAAA-MM-DD`), obligatoria al crear la orden [RF-M3-09, ADR-0044]. */
   readonly estimatedDeliveryDate: string;
+  /** Es una parte de un trabajo que se entrega por partes [RF-M3-10]. */
+  readonly inParts?: boolean;
 }
 
 /** Lo que se pide al convertir una cotización en orden. */
 export interface OpcionesDeConversion {
   readonly estimatedDeliveryDate: string;
+  /** Se entrega por partes: esta orden lleva solo `lineIds` y las demás líneas quedan para otra parte
+   *  [RF-M3-10, ADR-0044]. Sin `lineIds`, van todas las que faltan. */
+  readonly inParts?: boolean;
+  readonly lineIds?: readonly string[];
 }
 
 /** La fecha de entrega de una orden nueva: obligatoria, real y no anterior a hoy (hora de México). */
@@ -201,6 +210,7 @@ async function crearOrden(
         installedBy: null,
         estimatedDeliveryDate: entrada.estimatedDeliveryDate,
         notes: null,
+        ...(entrada.inParts === true ? { inParts: true } : {}),
         tempFolio: folio.value,
         folio: null,
         publicCode: generatePublicCode(deps.random),
@@ -240,6 +250,7 @@ async function crearOrden(
           taxCents: nueva.taxCents,
           totalCents: nueva.totalCents,
           estimatedDeliveryDate: entrada.estimatedDeliveryDate,
+          ...(entrada.inParts === true ? { inParts: true } : {}),
           lines: nueva.lines.map(lineaAPayload),
         },
       });
@@ -248,10 +259,15 @@ async function crearOrden(
       }
       await tx.putDocument(WORK_ORDERS_COLLECTION, nueva.id, nueva);
       if (entrada.quoteId !== null) {
-        const q = (await tx.getDocument('quotes', entrada.quoteId)) as Record<string, unknown>;
+        const q = (await tx.getDocument('quotes', entrada.quoteId)) as Record<string, unknown> & {
+          readonly convertedWorkOrderId?: string | null;
+          readonly convertedLineIds?: readonly string[];
+        };
         await tx.putDocument('quotes', entrada.quoteId, {
           ...q,
-          convertedWorkOrderId: nueva.id,
+          // La primera orden se queda como "la" orden de la cotización, como antes.
+          convertedWorkOrderId: q.convertedWorkOrderId ?? nueva.id,
+          convertedLineIds: [...(q.convertedLineIds ?? []), ...entrada.lines.map((l) => l.id)],
           updatedAt: instante,
         });
       }
@@ -281,16 +297,33 @@ export async function convertQuoteToWorkOrder(
   if (q.status !== 'ACCEPTED') {
     return err({ code: 'QUOTE_NOT_ACCEPTED' });
   }
-  if (q.convertedWorkOrderId !== undefined && q.convertedWorkOrderId !== null) {
+  const pendientes = pendingQuoteLines(q);
+  if (pendientes.length === 0) {
     return err({ code: 'ALREADY_CONVERTED' });
+  }
+  // Si ya salió una parte, lo que sigue también es una parte [RF-M3-10].
+  const yaHayParte = pendientes.length < q.lines.length;
+  const porPartes = opciones.inParts === true || yaHayParte;
+  let lineas = pendientes;
+  if (opciones.lineIds !== undefined) {
+    if (opciones.lineIds.length === 0) {
+      return err({ code: 'NO_LINES_SELECTED' });
+    }
+    const porId = new Map(pendientes.map((l) => [l.id, l]));
+    if (opciones.lineIds.some((id) => !porId.has(id))) {
+      return err({ code: 'LINE_NOT_PENDING' });
+    }
+    const elegidas = new Set(opciones.lineIds);
+    lineas = pendientes.filter((l) => elegidas.has(l.id));
   }
   return crearOrden(deps, actor, {
     customerId: q.customerId,
     quoteId: q.id,
     siteAddress: q.siteAddress,
     description: null,
-    lines: q.lines,
+    lines: lineas,
     estimatedDeliveryDate: opciones.estimatedDeliveryDate,
+    ...(porPartes ? { inParts: true } : {}),
   });
 }
 

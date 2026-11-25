@@ -254,6 +254,7 @@ export interface SharedStore {
     | 'metodoDePago'
     | 'confirmadas'
     | 'convertidas'
+    | 'lineasConvertidas'
     | 'codigosDeOrden'
     | 'ventas'
     | 'codigosDeVenta'
@@ -284,6 +285,7 @@ export function crearAlmacen(): SharedStore {
       metodoDePago: new Map(),
       confirmadas: new Set(),
       convertidas: new Set(),
+      lineasConvertidas: new Set(),
       codigosDeOrden: new Set(),
       ventas: new Map(),
       turnos: new Map(),
