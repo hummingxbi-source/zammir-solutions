@@ -812,10 +812,16 @@ export function operationReceiverContract(
           );
           return { id, r };
         };
+        /** Cancela devolviendo lo cobrado de la venta por omisión (11 600 en efectivo) [RF-M4-10]. */
         const cancelar = (
           d: DispositivoDelContrato,
           id: string,
           extra2: Record<string, unknown> = {},
+          carga: Record<string, unknown> = {
+            refunds: [
+              { id: e.h.newUuid(), method: 'CASH', amountCents: 11_600, cashShiftId: null },
+            ],
+          },
         ) => {
           seq += 1;
           return d.receiver.receive({
@@ -826,7 +832,7 @@ export function operationReceiverContract(
             schemaVersion: 1,
             userId: e.usuario,
             clientCreatedAt: `${String(e.year)}-06-16T18:00:00.000Z`,
-            payload: { id, reason: 'Error de captura' },
+            payload: { id, reason: 'Error de captura', ...carga },
             ...extra2,
           });
         };
@@ -1309,21 +1315,101 @@ export function operationReceiverContract(
         expect(await h.shiftState(a.id)).toMatchObject({ status: 'CLOSED', expectedCents: 5_800 });
       });
 
-      it('una venta cancelada sale del cobro del turno', async () => {
-        const { h, dispositivo, abrir, cerrar, vender, enviar, admin } = await conTurnos();
-        const a = await abrir(dispositivo, 1_000);
-        const venta = await vender(dispositivo, a.id);
-        await enviar(
-          dispositivo,
-          'CancelCounterSale',
-          { id: venta.id, reason: 'Error' },
-          { authorizedBy: admin },
-        );
-        const r = await cerrar(dispositivo, a.id, 1_000, 1_000);
-        expect(r.ok && r.status).toBe('APPLIED');
-        expect(await h.shiftState(a.id)).toMatchObject({
-          expectedCents: 1_000,
-          differenceCents: 0,
+      describe('devolución al cancelar una venta [RF-M4-10, ADR-0044]', () => {
+        const devolucion = (h: ReceptorDelContrato, turno: string | null, monto = 11_600) => ({
+          id: h.newUuid(),
+          method: 'CASH',
+          amountCents: monto,
+          cashShiftId: turno,
+        });
+
+        it('cancelada en el mismo turno: el efectivo devuelto sale de ese cajón y el corte cuadra', async () => {
+          const { h, dispositivo, abrir, cerrar, vender, enviar, admin } = await conTurnos();
+          const a = await abrir(dispositivo, 1_000);
+          const venta = await vender(dispositivo, a.id);
+          const c = await enviar(
+            dispositivo,
+            'CancelCounterSale',
+            { id: venta.id, reason: 'Error', refunds: [devolucion(h, a.id)] },
+            { authorizedBy: admin },
+          );
+          expect(c.ok && c.status).toBe('APPLIED');
+          const r = await cerrar(dispositivo, a.id, 1_000, 1_000);
+          expect(r.ok && r.status).toBe('APPLIED');
+          expect(await h.shiftState(a.id)).toMatchObject({
+            expectedCents: 1_000,
+            differenceCents: 0,
+          });
+        });
+
+        it('cancelada después de cerrar su turno: ese corte no cambia y el efectivo sale del turno de hoy', async () => {
+          const { h, dispositivo, abrir, cerrar, vender, enviar, admin } = await conTurnos();
+          const ayer = await abrir(dispositivo, 0);
+          const venta = await vender(dispositivo, ayer.id);
+          await cerrar(dispositivo, ayer.id, 11_600, 11_600);
+          const hoy = await abrir(dispositivo, 20_000);
+          const c = await enviar(
+            dispositivo,
+            'CancelCounterSale',
+            { id: venta.id, reason: 'Devolvió la pieza', refunds: [devolucion(h, hoy.id)] },
+            { authorizedBy: admin },
+          );
+          expect(c.ok && c.status).toBe('APPLIED');
+          expect(await h.shiftState(ayer.id)).toMatchObject({
+            expectedCents: 11_600,
+            differenceCents: 0,
+          });
+          // 20 000 de fondo − 11 600 devueltos.
+          const r = await cerrar(dispositivo, hoy.id, 8_400, 8_400);
+          expect(r.ok && r.status).toBe('APPLIED');
+          expect(await h.shiftState(hoy.id)).toMatchObject({ expectedCents: 8_400 });
+        });
+
+        it('si lo devuelto no suma lo cobrado se aplica, pero queda por revisar', async () => {
+          const { h, dispositivo, abrir, vender, enviar, admin } = await conTurnos();
+          const a = await abrir(dispositivo, 0);
+          const venta = await vender(dispositivo, a.id);
+          const c = await enviar(
+            dispositivo,
+            'CancelCounterSale',
+            { id: venta.id, reason: 'Error', refunds: [devolucion(h, a.id, 10_000)] },
+            { authorizedBy: admin },
+          );
+          expect(c.ok && c.status).toBe('TO_REVIEW');
+          expect(c.ok && c.reason).toBe('REFUND_MISMATCH');
+        });
+
+        it('devolver efectivo en un turno ya cerrado queda por revisar', async () => {
+          const { h, dispositivo, abrir, cerrar, vender, enviar, admin } = await conTurnos();
+          const a = await abrir(dispositivo, 0);
+          const venta = await vender(dispositivo, a.id);
+          await cerrar(dispositivo, a.id, 11_600, 11_600);
+          const c = await enviar(
+            dispositivo,
+            'CancelCounterSale',
+            { id: venta.id, reason: 'Error', refunds: [devolucion(h, a.id)] },
+            { authorizedBy: admin },
+          );
+          expect(c.ok && c.reason).toBe('SHIFT_CLOSED');
+        });
+
+        it('una cancelación vieja en cola, sin devolución: su cobro sale del turno, como antes, y queda por revisar', async () => {
+          const { h, dispositivo, abrir, cerrar, vender, enviar, admin } = await conTurnos();
+          const a = await abrir(dispositivo, 1_000);
+          const venta = await vender(dispositivo, a.id);
+          const c = await enviar(
+            dispositivo,
+            'CancelCounterSale',
+            { id: venta.id, reason: 'Error' },
+            { authorizedBy: admin },
+          );
+          expect(c.ok && c.reason).toBe('REFUND_MISSING');
+          const r = await cerrar(dispositivo, a.id, 1_000, 1_000);
+          expect(r.ok && r.status).toBe('APPLIED');
+          expect(await h.shiftState(a.id)).toMatchObject({
+            expectedCents: 1_000,
+            differenceCents: 0,
+          });
         });
       });
 

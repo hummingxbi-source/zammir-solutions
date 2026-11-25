@@ -2,6 +2,8 @@ import { err, ok, type Result } from '../../../shared-kernel/result';
 import type { Payment } from '../../payments/domain/payment';
 import { PAYMENT_CONFIRMATIONS_COLLECTION } from '../../payments/application/confirm-transfer';
 import type { TransferConfirmation } from '../../payments/domain/transfer-confirmation';
+import { REFUNDS_COLLECTION } from '../../counter/application/refund-store';
+import type { Refund } from '../../counter/domain/refund';
 import type { Clock } from '../../../shared-kernel/clock';
 import type { CounterSale } from '../../counter/domain/counter-sale';
 import { COUNTER_SALES_COLLECTION } from '../../counter/application/counter-sale-store';
@@ -23,6 +25,7 @@ export type ReplicatedPayment = Payment & { readonly changeSeq: number };
 export type ReplicatedSale = Omit<CounterSale, 'updatedAt'> & { readonly changeSeq: number };
 export type ReplicatedShift = Omit<CashShift, 'updatedAt'> & { readonly changeSeq: number };
 export type ReplicatedConfirmation = TransferConfirmation & { readonly changeSeq: number };
+export type ReplicatedRefund = Refund & { readonly changeSeq: number };
 
 /** De dónde baja la tablet las órdenes y los pagos de las demás tablets (el servidor). */
 export interface DocumentReplicaSource {
@@ -47,6 +50,11 @@ export interface DocumentReplicaSource {
     seq: number,
     limit: number,
   ): Promise<Result<readonly ReplicatedConfirmation[], ReplicaDocumentsError>>;
+  /** Devoluciones al cancelar ventas [RF-M4-10]. Opcional, como las confirmaciones. */
+  refundsChangedAfter?(
+    seq: number,
+    limit: number,
+  ): Promise<Result<readonly ReplicatedRefund[], ReplicaDocumentsError>>;
 }
 
 export const DOCUMENT_REPLICA_PAGE_SIZE = 500;
@@ -248,11 +256,38 @@ export async function refreshDocuments(deps: {
       break;
     }
   }
+  // Las devoluciones también solo se agregan: una que ya está no se toca [RF-M4-10, RN-18].
+  let devoluciones = 0;
+  const deDevoluciones = deps.source.refundsChangedAfter?.bind(deps.source);
+  for (; deDevoluciones !== undefined;) {
+    const desde = await cursor(deps.outbox, 'refunds');
+    const pagina = await deDevoluciones(desde, DOCUMENT_REPLICA_PAGE_SIZE);
+    if (!pagina.ok) {
+      return err(pagina.error);
+    }
+    if (pagina.value.length > 0) {
+      const mayor = Math.max(...pagina.value.map((d) => d.changeSeq));
+      await deps.outbox.transaction(async (tx) => {
+        for (const completa of pagina.value) {
+          const d = sinCambio(completa);
+          if ((await tx.getDocument(REFUNDS_COLLECTION, d.id)) === undefined) {
+            await tx.putDocument(REFUNDS_COLLECTION, d.id, { ...d, syncStatus: 'SENT' });
+          }
+        }
+        await tx.putDocument(META, 'refunds', mayor);
+      });
+      devoluciones += pagina.value.length;
+    }
+    if (pagina.value.length < DOCUMENT_REPLICA_PAGE_SIZE) {
+      break;
+    }
+  }
   return ok({
     orders: ordenes,
     payments: pagos,
     sales: ventas,
     shifts: turnos,
     confirmations: confirmaciones,
+    refunds: devoluciones,
   });
 }

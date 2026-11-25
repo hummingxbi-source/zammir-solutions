@@ -9,6 +9,7 @@ import {
   type CustomerHistory,
   type CustomerId,
   outboxCounterSaleStore,
+  outboxRefundStore,
   outboxCustomers,
   attachOrderPhoto,
   outboxPaymentStore,
@@ -926,6 +927,7 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
           return {
             deps: base.deps,
             sales: outboxCounterSaleStore(envio.outbox),
+            devoluciones: outboxRefundStore(envio.outbox),
             personas: base.personas,
             turnos: outboxCashShiftStore(envio.outbox),
             porEnviar: () => envio.outbox.pendingCount(),
