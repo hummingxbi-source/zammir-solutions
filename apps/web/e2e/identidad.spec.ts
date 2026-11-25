@@ -93,6 +93,9 @@ test('los componentes nuevos no tienen violaciones graves ni de contraste', asyn
 test('el panel de inicio y el marco tampoco tienen violaciones graves ni de contraste', async ({
   page,
 }) => {
+  // Sin animaciones: si axe mide a media animación de entrada, el texto aún está semitransparente y el contraste
+  // falla al azar. El contraste que importa es el de la pantalla ya quieta.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
   const resultado = await new AxeBuilder({ page }).analyze();
   const graves = resultado.violations.filter(
