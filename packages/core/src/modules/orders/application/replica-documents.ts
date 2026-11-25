@@ -1,5 +1,7 @@
 import { err, ok, type Result } from '../../../shared-kernel/result';
 import type { Payment } from '../../payments/domain/payment';
+import { PAYMENT_CONFIRMATIONS_COLLECTION } from '../../payments/application/confirm-transfer';
+import type { TransferConfirmation } from '../../payments/domain/transfer-confirmation';
 import type { Clock } from '../../../shared-kernel/clock';
 import type { CounterSale } from '../../counter/domain/counter-sale';
 import { COUNTER_SALES_COLLECTION } from '../../counter/application/counter-sale-store';
@@ -20,6 +22,7 @@ export type ReplicatedWorkOrder = Omit<WorkOrder, 'updatedAt'> & { readonly chan
 export type ReplicatedPayment = Payment & { readonly changeSeq: number };
 export type ReplicatedSale = Omit<CounterSale, 'updatedAt'> & { readonly changeSeq: number };
 export type ReplicatedShift = Omit<CashShift, 'updatedAt'> & { readonly changeSeq: number };
+export type ReplicatedConfirmation = TransferConfirmation & { readonly changeSeq: number };
 
 /** De dónde baja la tablet las órdenes y los pagos de las demás tablets (el servidor). */
 export interface DocumentReplicaSource {
@@ -39,6 +42,11 @@ export interface DocumentReplicaSource {
     seq: number,
     limit: number,
   ): Promise<Result<readonly ReplicatedPayment[], ReplicaDocumentsError>>;
+  /** Confirmaciones de transferencias [RF-M4-11]. Opcional: una fuente que no las tenga no baja ninguna. */
+  confirmationsChangedAfter?(
+    seq: number,
+    limit: number,
+  ): Promise<Result<readonly ReplicatedConfirmation[], ReplicaDocumentsError>>;
 }
 
 export const DOCUMENT_REPLICA_PAGE_SIZE = 500;
@@ -212,5 +220,39 @@ export async function refreshDocuments(deps: {
       break;
     }
   }
-  return ok({ orders: ordenes, payments: pagos, sales: ventas, shifts: turnos });
+
+  // Las confirmaciones de transferencias, como los pagos, solo se agregan [RF-M4-11, RN-18].
+  let confirmaciones = 0;
+  const deConfirmaciones = deps.source.confirmationsChangedAfter?.bind(deps.source);
+  for (; deConfirmaciones !== undefined;) {
+    const desde = await cursor(deps.outbox, 'payment-confirmations');
+    const pagina = await deConfirmaciones(desde, DOCUMENT_REPLICA_PAGE_SIZE);
+    if (!pagina.ok) {
+      return err(pagina.error);
+    }
+    if (pagina.value.length > 0) {
+      const mayor = Math.max(...pagina.value.map((c) => c.changeSeq));
+      await deps.outbox.transaction(async (tx) => {
+        for (const completa of pagina.value) {
+          const c = sinCambio(completa);
+          await tx.putDocument(PAYMENT_CONFIRMATIONS_COLLECTION, c.paymentId, {
+            ...c,
+            syncStatus: 'SENT',
+          });
+        }
+        await tx.putDocument(META, 'payment-confirmations', mayor);
+      });
+      confirmaciones += pagina.value.length;
+    }
+    if (pagina.value.length < DOCUMENT_REPLICA_PAGE_SIZE) {
+      break;
+    }
+  }
+  return ok({
+    orders: ordenes,
+    payments: pagos,
+    sales: ventas,
+    shifts: turnos,
+    confirmations: confirmaciones,
+  });
 }

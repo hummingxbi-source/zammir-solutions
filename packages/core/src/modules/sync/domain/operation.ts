@@ -20,6 +20,7 @@ export const OPERATION_TYPES = [
   'OpenCashShift',
   'CloseCashShift',
   'ReopenCashShift',
+  'ConfirmTransfer',
 ] as const;
 
 export type OperationType = (typeof OPERATION_TYPES)[number];
@@ -310,6 +311,12 @@ export const closeCashShiftPayloadSchema = z.object({
   differenceNote: z.string().trim().min(1).max(500).optional(),
 });
 
+/** Carga de `ConfirmTransfer`: un administrador confirma que llegó una transferencia [RF-M4-11]. */
+export const confirmTransferPayloadSchema = z.object({
+  paymentId: uuid,
+  confirmedAt: z.iso.datetime(),
+});
+
 /** Carga de `ReopenCashShift`: solo un administrador, con motivo [S3-17, RN-19]. */
 export const reopenCashShiftPayloadSchema = z.object({
   id: uuid,
@@ -372,6 +379,7 @@ const ESQUEMAS_DE_CARGA: Partial<Record<OperationType, z.ZodType>> = {
   OpenCashShift: openCashShiftPayloadSchema,
   CloseCashShift: closeCashShiftPayloadSchema,
   ReopenCashShift: reopenCashShiftPayloadSchema,
+  ConfirmTransfer: confirmTransferPayloadSchema,
 };
 
 /** Valida una operación completa: el sobre y, según el tipo, su carga. Es la comprobación que hace la

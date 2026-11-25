@@ -256,5 +256,34 @@ export function supabaseDocumentReplica(cliente: SupabaseClient): DocumentReplic
         })),
       );
     },
+
+    // Confirmaciones de transferencias [RF-M4-11]: solo se agregan, como los pagos.
+    async confirmationsChangedAfter(seq, limit) {
+      const r = await cliente
+        .from('payment_confirmations_for_device')
+        .select('*')
+        .gt('change_seq', seq)
+        .order('change_seq')
+        .limit(limit);
+      if (r.error !== null) {
+        return err({ code: 'DOCUMENTS_UNAVAILABLE' });
+      }
+      return ok(
+        (r.data as FilaDeConfirmacion[]).map((f) => ({
+          paymentId: f.payment_id,
+          confirmedBy: f.confirmed_by,
+          confirmedAt: f.confirmed_at,
+          syncStatus: 'SENT' as const,
+          changeSeq: f.change_seq,
+        })),
+      );
+    },
   };
+}
+
+interface FilaDeConfirmacion {
+  readonly payment_id: string;
+  readonly confirmed_by: string;
+  readonly confirmed_at: string;
+  readonly change_seq: number;
 }

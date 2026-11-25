@@ -3,15 +3,20 @@ import { PedirEntrarConPin } from '../../identity/ui/PedirEntrarConPin';
 import type { ReactElement } from 'react';
 import {
   buildReceivables,
+  confirmTransfer,
   defaultPermissionPolicy,
   DEFAULT_OVERDUE_DAYS,
   mexicoDate,
+  outboxCounterSaleStore,
+  outboxTransferConfirmationStore,
+  pendingTransfers,
   registerWorkOrderPayment,
   remindReceivable,
   summarizeReceivables,
   type Customer,
   type ManageCustomersDeps,
   type OrderDeps,
+  type Payment,
   type PaymentRowInput,
   type QuoteActor,
   type ReceivableRow,
@@ -55,14 +60,27 @@ export function CuentasPorCobrar(props: CuentasPorCobrarProps): ReactElement {
   const [cobrando, setCobrando] = useState<ReceivableRow | null>(null);
   const [error, setError] = useState<{ mensaje: string; queHacer: string } | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
+  // Transferencias por confirmar [RF-M4-11]: el folio de la orden o venta a la que pertenecen.
+  const [porConfirmar, setPorConfirmar] = useState<readonly Payment[]>([]);
+  const [folios, setFolios] = useState<ReadonlyMap<string, string>>(new Map());
+  const [confirmando, setConfirmando] = useState<string | null>(null);
   const umbral = props.diasDeAtraso ?? DEFAULT_OVERDUE_DAYS;
 
   const refrescar = useCallback(async () => {
-    const [ordenes, pagos, lista] = await Promise.all([
+    const [ordenes, pagos, lista, ventas, confirmadas] = await Promise.all([
       deps.orders.list(),
       deps.payments.list(),
       clientes.customers.list(),
+      outboxCounterSaleStore(deps.outbox).list(),
+      outboxTransferConfirmationStore(deps.outbox).confirmedIds(),
     ]);
+    setPorConfirmar(pendingTransfers(pagos, confirmadas));
+    setFolios(
+      new Map([
+        ...ordenes.map((o): [string, string] => [o.id, o.folio ?? o.tempFolio]),
+        ...ventas.map((v): [string, string] => [v.id, v.folio ?? v.tempFolio]),
+      ]),
+    );
     setFilas(
       buildReceivables({
         orders: ordenes,
@@ -121,6 +139,21 @@ export function CuentasPorCobrar(props: CuentasPorCobrarProps): ReactElement {
     props.onPorEnviar?.();
     await refrescar();
     return null;
+  }
+
+  async function confirmar(pago: Payment): Promise<void> {
+    setError(null);
+    setAviso(null);
+    setConfirmando(pago.id);
+    const r = await confirmTransfer(deps, persona, pago.id);
+    setConfirmando(null);
+    if (!r.ok) {
+      setError(t.transferencias.errores[r.error.code]);
+      return;
+    }
+    setAviso(t.transferencias.confirmada);
+    props.onPorEnviar?.();
+    await refrescar();
   }
 
   function recordar(fila: ReceivableRow): void {
@@ -233,6 +266,57 @@ export function CuentasPorCobrar(props: CuentasPorCobrarProps): ReactElement {
                       </Boton>
                     </span>
                   ) : null,
+              },
+            ]}
+          />
+        )}
+      </Tarjeta>
+
+      <Tarjeta rotulo={t.transferencias.titulo}>
+        <p className="nota">{t.transferencias.ayuda}</p>
+        {porConfirmar.length === 0 ? (
+          <p className="mostrador__vacio">{t.transferencias.vacio}</p>
+        ) : (
+          <Tabla
+            descripcion={t.transferencias.titulo}
+            claveDeFila={(p) => p.id}
+            filas={porConfirmar}
+            columnas={[
+              {
+                clave: 'fecha',
+                rotulo: t.transferencias.columnas.fecha,
+                celda: (p) => mexicoDate(new Date(p.paidAt)),
+              },
+              {
+                clave: 'folio',
+                rotulo: t.transferencias.columnas.folio,
+                celda: (p) => folios.get(p.targetId) ?? '—',
+              },
+              {
+                clave: 'importe',
+                rotulo: t.transferencias.columnas.importe,
+                numerica: true,
+                celda: (p) => formatearPesos(p.amountCents),
+              },
+              {
+                clave: 'referencia',
+                rotulo: t.transferencias.columnas.referencia,
+                celda: (p) => p.reference ?? t.transferencias.sinReferencia,
+              },
+              {
+                clave: 'accion',
+                rotulo: t.columnas.acciones,
+                celda: (p) => (
+                  <Boton
+                    aria-label={`${t.transferencias.yaLlego} ${folios.get(p.targetId) ?? ''} ${formatearPesos(p.amountCents)}`}
+                    disabled={confirmando === p.id}
+                    onClick={() => {
+                      void confirmar(p);
+                    }}
+                  >
+                    {t.transferencias.yaLlego}
+                  </Boton>
+                ),
               },
             ]}
           />

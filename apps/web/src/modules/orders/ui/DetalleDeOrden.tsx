@@ -7,6 +7,8 @@ import {
   deliverWorkOrder,
   isWorkOrderLate,
   mexicoDate,
+  outboxTransferConfirmationStore,
+  transferStatus,
   registerWorkOrderPayment,
   updateWorkOrder,
   type Authorization,
@@ -86,6 +88,21 @@ export function DetalleDeOrden(props: DetalleDeOrdenProps): ReactElement {
   const [fabrica, setFabrica] = useState<string>(orden.builtBy ?? SIN_ASIGNAR);
   const [instala, setInstala] = useState<string>(orden.installedBy ?? SIN_ASIGNAR);
   const [fecha, setFecha] = useState(orden.estimatedDeliveryDate ?? '');
+  // Transferencias ya confirmadas [RF-M4-11]: para decir "Por confirmar" o "Confirmada" en cada pago.
+  const [confirmadas, setConfirmadas] = useState<ReadonlySet<string>>(new Set());
+  useEffect(() => {
+    let vigente = true;
+    void outboxTransferConfirmationStore(deps.outbox)
+      .confirmedIds()
+      .then((ids) => {
+        if (vigente) {
+          setConfirmadas(ids);
+        }
+      });
+    return () => {
+      vigente = false;
+    };
+  }, [deps, pagos]);
   const [notas, setNotas] = useState(orden.notes ?? '');
   const [fotosDeLaOrden, setFotosDeLaOrden] = useState<readonly OrderPhoto[]>([]);
   const fotos = props.fotos;
@@ -266,6 +283,19 @@ export function DetalleDeOrden(props: DetalleDeOrdenProps): ReactElement {
                     {p.changeCents !== null && p.changeCents > 0
                       ? ` · ${t.detalle.cambio} ${formatearPesos(p.changeCents)}`
                       : ''}
+                    {transferStatus(p, confirmadas) === 'NOT_A_TRANSFER' ? null : (
+                      <>
+                        {' '}
+                        <EtiquetaDeEstado
+                          tono={transferStatus(p, confirmadas) === 'CONFIRMED' ? 'exito' : 'aviso'}
+                          texto={
+                            transferStatus(p, confirmadas) === 'CONFIRMED'
+                              ? textos.cuentas.transferencias.confirmadaEtiqueta
+                              : textos.cuentas.transferencias.porConfirmar
+                          }
+                        />
+                      </>
+                    )}
                   </li>
                 ))}
               </ul>
