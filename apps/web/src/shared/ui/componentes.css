@@ -1758,3 +1758,18 @@ h3.reportes__subtitulo:not(.rotulo) {
   margin: 0 0 1rem;
   font-size: 2rem;
 }
+
+/* Entregas por partes [RF-M3-10]: las líneas de la parte y los enlaces a las demás partes. */
+.partes__lineas {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0.75rem 0 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--borde-suave);
+  border-radius: var(--radio-medio);
+}
+
+.partes {
+  flex-wrap: wrap;
+  align-items: center;
+}

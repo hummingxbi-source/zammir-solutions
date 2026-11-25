@@ -156,6 +156,11 @@ function armar(cambios: Partial<Parameters<typeof buildWorkOrderDocument>[0]> = 
 }
 
 describe('enlace de autofacturación', () => {
+  it('si se entrega por partes, el folio dice qué parte es [RF-M3-10]', () => {
+    expect(armar({ partLabel: 'Parte 2' }).folioLabel).toMatch(/ · Parte 2$/);
+    expect(armar().folioLabel).not.toMatch(/Parte/);
+  });
+
   it('lleva el folio y el código, sin datos personales, con dominio de prueba si no hay otro', () => {
     expect(autoinvoiceUrl(null, 'OT-2026-0012', 'ABCD2345')).toBe(
       `${TEST_SELF_INVOICING_BASE_URL}/f/OT-2026-0012/ABCD2345`,

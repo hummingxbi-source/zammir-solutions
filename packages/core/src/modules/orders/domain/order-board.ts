@@ -79,6 +79,28 @@ export function filterWorkOrders(
   });
 }
 
+/** Las partes de un trabajo que se entrega por partes: las órdenes "por partes" de la misma cotización, en el
+ *  orden en que se crearon [RF-M3-10]. */
+export function partsOf<
+  O extends Pick<WorkOrder, 'id' | 'quoteId' | 'inParts' | 'issuedAt' | 'tempFolio'>,
+>(orden: Pick<WorkOrder, 'quoteId' | 'inParts'>, ordenes: readonly O[]): readonly O[] {
+  if (orden.inParts !== true || orden.quoteId === null) {
+    return [];
+  }
+  return ordenes
+    .filter((o) => o.inParts === true && o.quoteId === orden.quoteId)
+    .sort((a, b) => a.issuedAt.localeCompare(b.issuedAt) || a.tempFolio.localeCompare(b.tempFolio));
+}
+
+/** Qué número de parte es (1, 2…); `null` si no se entrega por partes. */
+export function partNumber(
+  orden: Pick<WorkOrder, 'id' | 'quoteId' | 'inParts'>,
+  ordenes: readonly Pick<WorkOrder, 'id' | 'quoteId' | 'inParts' | 'issuedAt' | 'tempFolio'>[],
+): number | null {
+  const i = partsOf(orden, ordenes).findIndex((o) => o.id === orden.id);
+  return i < 0 ? null : i + 1;
+}
+
 /** Cuántas órdenes hay en cada estatus. */
 export function countByStatus(
   ordenes: readonly Pick<WorkOrder, 'status'>[],

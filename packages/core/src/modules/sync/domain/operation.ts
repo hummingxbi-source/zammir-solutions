@@ -166,6 +166,9 @@ export const createWorkOrderPayloadSchema = z
       .string()
       .regex(/^\d{4}-\d{2}-\d{2}$/)
       .optional(),
+    /** Parte de un trabajo que se entrega por partes [RF-M3-10]: la cotización se puede convertir otra vez
+     *  mientras sus líneas no estén en otra orden. */
+    inParts: z.boolean().optional(),
     lines: z.array(quoteLineSchema).min(1),
   })
   .superRefine((o, ctx) => {
