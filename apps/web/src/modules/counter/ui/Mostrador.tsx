@@ -166,8 +166,13 @@ export function Mostrador(props: MostradorProps): ReactElement {
   const { alCambiarElEnvio } = props;
   useEffect(() => alCambiarElEnvio?.(() => void refrescar()), [alCambiarElEnvio, refrescar]);
 
+  // Los cargos extra se agregan a una línea en el cotizador; no se venden solos [RF-M1-09].
   const encontrados = useMemo(
-    () => searchProducts(productos ?? [], { text: busqueda }).slice(0, 12),
+    () =>
+      searchProducts(
+        (productos ?? []).filter((p) => p.kind !== 'EXTRA'),
+        { text: busqueda },
+      ).slice(0, 12),
     [productos, busqueda],
   );
 

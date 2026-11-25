@@ -91,6 +91,9 @@ const TIPOS: Readonly<Record<string, ProductKind>> = {
   'pieza estandar': 'STANDARD',
   estandar: 'STANDARD',
   servicio: 'SERVICE',
+  // Cantos, perforaciones, biselados: se agregan a una línea de vidrio [RF-M1-09].
+  extra: 'EXTRA',
+  'cargo extra': 'EXTRA',
 };
 
 const UNIDADES: Readonly<Record<string, ChargeUnit>> = {
