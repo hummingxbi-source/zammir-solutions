@@ -237,6 +237,8 @@ Tus **productos y precios de lista, con IVA incluido**. Lo que cambies aquí se 
 
 ![El catálogo](capturas/23-catalogo.png)
 
+**Categorías.** Abajo, en la tarjeta *Categorías*, puedes **agregar** una categoría nueva (por ejemplo, "Canceles comerciales" o "Vitrales"; elige si lo de ella se cobra por metro cuadrado, por pieza o como servicio), **renombrarla**, **subirla o bajarla** en la lista y **desactivarla**. No se borran. Una categoría con productos activos no se desactiva: primero cámbialos de categoría o desactívalos. Una categoría desactivada ya no se ofrece al dar de alta productos ni al importar. No se repiten nombres, aunque cambien los acentos o las mayúsculas.
+
 ### Configuración
 
 Aquí se edita el **aviso de privacidad** (cada cambio crea una versión nueva y las anteriores se conservan), los **términos del servicio** y las **condiciones de la cotización**. El texto del aviso es un **borrador** que debe revisar el asesor de ZAMMIR **(pendiente)**.

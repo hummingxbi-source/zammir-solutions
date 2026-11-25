@@ -20,6 +20,14 @@ const porServicio: FiscalData = {
   taxObject: '02',
 };
 
+/** Claves fiscales de prueba según cómo se cobra lo de la categoría; las heredan las categorías que agrega el
+ *  administrador hasta que el contador revise las reales (PD-29, en pausa con la facturación) [RF-M1-08]. */
+export const TEST_FISCAL_DEFAULTS = {
+  SQUARE_METER: porMetroCuadrado,
+  PIECE: porPieza,
+  SERVICE: porServicio,
+} as const;
+
 export interface InitialCategory {
   readonly name: string;
   readonly fiscalDefaults: FiscalData;

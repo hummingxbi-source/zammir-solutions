@@ -27,7 +27,8 @@ async function leerContexto(
   const productos = await deps.products.list();
   if (!productos.ok) return productos;
   return ok({
-    categories: categorias.value,
+    // Una categoría desactivada no recibe productos nuevos [RF-M1-08].
+    categories: categorias.value.filter((c) => (c.isActive as boolean | undefined) !== false),
     codes: productos.value.flatMap((p) => (p.code === null ? [] : [p.code])),
   });
 }

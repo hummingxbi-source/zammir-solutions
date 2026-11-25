@@ -58,8 +58,12 @@ export function FormularioDeProducto({
 }: FormularioDeProductoProps): ReactElement {
   const [nombre, setNombre] = useState(inicial?.name ?? '');
   const [codigo, setCodigo] = useState(inicial?.code ?? '');
+  // Solo se ofrecen las categorías activas, más la que ya tiene el producto al editarlo [RF-M1-08].
+  const ofrecidas = categorias.filter(
+    (c) => (c.isActive as boolean | undefined) !== false || c.id === inicial?.categoryId,
+  );
   const [categoriaId, setCategoriaId] = useState<string>(
-    inicial?.categoryId ?? categorias[0]?.id ?? '',
+    inicial?.categoryId ?? ofrecidas[0]?.id ?? '',
   );
   const [tipo, setTipo] = useState<ProductKind>(inicial?.kind ?? 'CUSTOM');
   const [unidad, setUnidad] = useState<ChargeUnit>(inicial?.chargeUnit ?? 'SQUARE_METER');
@@ -162,7 +166,7 @@ export function FormularioDeProducto({
         <Seleccion
           etiqueta={t.formulario.categoria}
           value={categoriaId}
-          opciones={categorias.map((c) => ({ valor: c.id, texto: c.name }))}
+          opciones={ofrecidas.map((c) => ({ valor: c.id, texto: c.name }))}
           onChange={(e) => {
             setCategoriaId(e.target.value);
           }}
