@@ -55,6 +55,11 @@ const TABLAS_ESPERADAS = [
   { name: 'warranties', label: 'Garantías', summary: ['starts_on', 'duration_months', 'coverage'] },
   { name: 'payments', label: 'Pagos', summary: ['kind', 'method', 'amount_cents', 'paid_at'] },
   {
+    name: 'payment_confirmations',
+    label: 'Transferencias confirmadas',
+    summary: ['payment_id', 'confirmed_by', 'confirmed_at'],
+  },
+  {
     name: 'counter_sales',
     label: 'Ventas de mostrador',
     summary: ['folio', 'temp_folio', 'status', 'issued_at', 'total_cents'],
@@ -137,6 +142,9 @@ const ETIQUETAS_ESPERADAS = {
   method: 'Método',
   amount_cents: 'Importe',
   paid_at: 'Pagado',
+  payment_id: 'Pago',
+  confirmed_by: 'Confirmó',
+  confirmed_at: 'Confirmada',
   business_day: 'Día',
   opening_float_cents: 'Fondo inicial',
   counted_cash_cents: 'Efectivo contado',

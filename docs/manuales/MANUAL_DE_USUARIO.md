@@ -157,6 +157,8 @@ Una **orden de trabajo** es un trabajo aceptado que se fabrica o instala. Lleva 
 
 **Cuentas por cobrar** lista las órdenes con saldo pendiente, **de la más atrasada a la más reciente**. Los días se cuentan **desde la entrega**: lo que se entregó hoy y no se ha pagado está al corriente, y **desde el día siguiente sale como atrasado**. Las órdenes que todavía no se entregan aparecen como **Por entregar** (su saldo aún no se cobra). Desde ahí toca **Registrar pago**. A partir de cuántos días se resalta una cuenta lo cambia un administrador en **Configuración**, en *Cuentas por cobrar atrasadas* (por omisión, 1 día). No es crédito: es el seguimiento de lo que falta por cobrar de trabajos ya en marcha.
 
+**Transferencias por confirmar.** Abajo, en la misma pantalla, salen los pagos por transferencia que todavía nadie confirma, de la más antigua a la más reciente, con su folio, importe y referencia. Revisa en tu banco que llegó cada una y toca **Ya llegó**. Queda quién la confirmó y cuándo (también sin internet; se envía sola). En el detalle de cada orden, cada transferencia dice **Por confirmar** o **Confirmada**. Confirmar no cambia los totales: la transferencia cuenta desde que se cobró.
+
 ![Cuentas por cobrar](capturas/13-cuentas-por-cobrar.png)
 
 ---

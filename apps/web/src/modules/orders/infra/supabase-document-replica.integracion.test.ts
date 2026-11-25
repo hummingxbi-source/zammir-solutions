@@ -3,6 +3,7 @@ import {
   fixedClock,
   outboxCounterSaleStore,
   outboxPaymentStore,
+  outboxTransferConfirmationStore,
   outboxWorkOrderStore,
   refreshDocuments,
 } from '@zammir/core';
@@ -122,6 +123,75 @@ describe('réplica de órdenes y pagos con el servidor real', () => {
     expect(await outboxPaymentStore(outbox).listByTarget(ventaId)).toHaveLength(2);
     expect(
       (await outboxCounterSaleStore(outbox).list()).filter((v) => v.id === ventaId),
+    ).toHaveLength(1);
+  }, 60_000);
+
+  it('la confirmación de una transferencia hecha en una tablet baja a la otra [RF-M4-11]', async () => {
+    const quien = await nuevoDispositivo();
+    const otra = await nuevoDispositivo();
+    const usuario = await harness.newUser(true);
+    const admin = await harness.newUser(true, true);
+    const cliente = await harness.newCustomer();
+    const year = await harness.newYear();
+    const orderId = harness.newUuid();
+    const pagoId = harness.newUuid();
+    const instante = `${String(year)}-06-16T18:00:00.000Z`;
+    const enviar = (seq: number, type: string, payload: Record<string, unknown>, extra = {}) =>
+      quien.receiver.receive({
+        opId: harness.newUuid(),
+        deviceId: quien.id,
+        seq,
+        type,
+        schemaVersion: 1,
+        userId: usuario,
+        clientCreatedAt: instante,
+        payload,
+        ...extra,
+      });
+    await quien.receiver.receive(
+      createWorkOrderOperation({
+        opId: harness.newUuid(),
+        deviceId: quien.id,
+        seq: 1,
+        userId: usuario,
+        customerId: cliente,
+        year,
+        newUuid: () => harness.newUuid(),
+        publicCode: harness.newPublicCode(),
+        orderId,
+      }),
+    );
+    await enviar(2, 'RegisterPayment', {
+      groupId: harness.newUuid(),
+      target: { type: 'WORK_ORDER', id: orderId },
+      kind: 'DEPOSIT',
+      paidAt: instante,
+      rows: [{ id: pagoId, method: 'TRANSFER', amountCents: 5_800, reference: 'SPEI 77' }],
+    });
+    const confirmada = await enviar(
+      3,
+      'ConfirmTransfer',
+      { paymentId: pagoId, confirmedAt: instante },
+      { authorizedBy: admin },
+    );
+    expect(confirmada.ok && confirmada.status).toBe('APPLIED');
+
+    const reloj = fixedClock(new Date('2026-10-31T20:00:00.000Z'));
+    const outbox = dexieOperaciones({
+      clock: reloj,
+      nombre: `confirmacion-${crypto.randomUUID()}`,
+    });
+    const fuente = supabaseDocumentReplica(otra.session);
+    expect((await refreshDocuments({ source: fuente, outbox, clock: reloj })).ok).toBe(true);
+    const confirmaciones = await outboxTransferConfirmationStore(outbox).list();
+    expect(confirmaciones.find((c) => c.paymentId === pagoId)).toMatchObject({
+      confirmedBy: admin,
+      syncStatus: 'SENT',
+    });
+    // Traer otra vez no duplica.
+    await refreshDocuments({ source: fuente, outbox, clock: reloj });
+    expect(
+      (await outboxTransferConfirmationStore(outbox).list()).filter((c) => c.paymentId === pagoId),
     ).toHaveLength(1);
   }, 60_000);
 
