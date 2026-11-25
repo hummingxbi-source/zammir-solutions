@@ -35,6 +35,24 @@ export interface QuoteLine {
   readonly isTaxExempt: boolean;
   /** El cálculo tal como se muestra: `1.20 m × 0.80 m = 0.96 m² × $280.00 = $268.80`. */
   readonly detail: string;
+  /** Cargos extra de la pieza (cantos, perforaciones, biselados…), ya sumados en `baseCents`, `taxCents` y
+   *  `lineTotalCents` [RF-M1-09, RN-02]. Sin el campo (líneas de antes), no hay. */
+  readonly extras?: readonly LineExtra[];
+}
+
+/** Un cargo extra ligado a una línea: un producto "Cargo extra" del catálogo, cobrado con la medida de la pieza
+ *  según su propia regla (m², metro lineal o pieza) [RF-M1-09, ADR-0044]. Su precio se copia al cotizar. */
+export interface LineExtra {
+  readonly productId: ProductId;
+  readonly name: string;
+  readonly chargeUnit: ChargeUnit;
+  readonly unitPriceCents: number;
+  readonly ruleId: string;
+  readonly ruleParams: unknown;
+  /** Cuántos, si se cobra por pieza (perforaciones); con m² o metro lineal se usa la medida de la línea. */
+  readonly quantity: number;
+  /** Importe del extra, con IVA incluido, ya calculado. */
+  readonly amountCents: number;
 }
 
 /** Estado de envío de la cotización respecto al servidor [GLOSARIO]. */

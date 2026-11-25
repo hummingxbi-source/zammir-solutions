@@ -419,7 +419,12 @@ export const textos = {
     vacio:
       'Agrega tu primer producto o importa muchos de una vez desde un archivo. Los productos nunca se borran: se desactivan.',
     sinResultados: 'Ningún producto coincide con esa búsqueda.',
-    tipos: { CUSTOM: 'A medida', STANDARD: 'Pieza estándar', SERVICE: 'Servicio' },
+    tipos: {
+      CUSTOM: 'A medida',
+      STANDARD: 'Pieza estándar',
+      SERVICE: 'Servicio',
+      EXTRA: 'Cargo extra (canto, perforación…)',
+    },
     unidades: {
       SQUARE_METER: 'Metro cuadrado',
       LINEAR_METER: 'Metro lineal',
@@ -2193,6 +2198,19 @@ export const textos = {
       cambiar: 'Cambiar medidas',
       quitar: 'Quitar',
     },
+    extras: {
+      agregar: 'Cargo extra',
+      titulo: (linea: string): string => `Cargo extra para ${linea}`,
+      cual: 'Cargo extra (canto, perforación, biselado…)',
+      cuantas: '¿Cuántas?',
+      confirmar: 'Agregar a la línea',
+      quitar: 'Quitar',
+      porUnidad: {
+        SQUARE_METER: 'por m²',
+        LINEAR_METER: 'por metro lineal',
+        PIECE: 'por pieza',
+      } as Record<string, string>,
+    },
     lineas: {
       titulo: 'Conceptos',
       vacio: 'Todavía no hay conceptos. Agrega el primero.',
@@ -2272,6 +2290,11 @@ export const textos = {
       NOT_FOUND: {
         mensaje: 'No se encontró la cotización.',
         queHacer: 'Vuelve a la lista e inténtalo de nuevo.',
+      },
+      EXTRA_INVALID: {
+        mensaje: 'Ese cargo extra no se puede agregar a esta línea.',
+        queHacer:
+          'Un cargo por m² o metro lineal necesita una pieza con medidas; uno por pieza, una cantidad de 1 o más.',
       },
       NOT_EDITABLE: {
         mensaje: 'Esta cotización ya se emitió y no se puede cambiar.',
