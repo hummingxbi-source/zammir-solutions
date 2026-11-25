@@ -218,6 +218,7 @@ describe('réplica · cursores y páginas', () => {
       sales: total,
       shifts: 0,
       confirmations: 0,
+      refunds: 0,
     });
     expect(await outboxWorkOrderStore(outbox).list()).toHaveLength(total);
     expect(await outboxCounterSaleStore(outbox).list()).toHaveLength(total);

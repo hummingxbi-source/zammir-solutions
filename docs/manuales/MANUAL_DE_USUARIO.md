@@ -188,7 +188,8 @@ Al terminar tu turno:
 
    ![El corte de caja](capturas/15-corte-de-caja.png)
 
-- Las **ventas canceladas no cuentan**.
+- **Cancelar una venta ya cobrada** (en *Ventas de hoy*, botón **Cancelar**, con el PIN de un administrador y un motivo): el sistema te dice cuánto se le devuelve al cliente y por qué medio, **el mismo con que pagó**. Necesitas tu turno abierto: el efectivo devuelto **sale de tu cajón** y aparece en tu corte como *Efectivo devuelto*. El cobro original se queda en el turno donde se cobró, así que un corte ya cerrado no cambia.
+- En los reportes, el cobro cuenta el día en que se cobró y la devolución resta el día en que se hizo.
 - La explicación de la diferencia sale en la hoja del corte y en la tabla de turnos.
 - Cada cajero ve **solo su corte**; los administradores ven los de todos.
 - Si hay operaciones **sin enviar**, el corte puede cambiar cuando lleguen al servidor; un administrador debe revisarlo.

@@ -60,6 +60,11 @@ const TABLAS_ESPERADAS = [
     summary: ['payment_id', 'confirmed_by', 'confirmed_at'],
   },
   {
+    name: 'refunds',
+    label: 'Devoluciones',
+    summary: ['counter_sale_id', 'method', 'amount_cents', 'refunded_at'],
+  },
+  {
     name: 'counter_sales',
     label: 'Ventas de mostrador',
     summary: ['folio', 'temp_folio', 'status', 'issued_at', 'total_cents'],
@@ -145,6 +150,8 @@ const ETIQUETAS_ESPERADAS = {
   payment_id: 'Pago',
   confirmed_by: 'Confirmó',
   confirmed_at: 'Confirmada',
+  counter_sale_id: 'Venta',
+  refunded_at: 'Devuelta',
   business_day: 'Día',
   opening_float_cents: 'Fondo inicial',
   counted_cash_cents: 'Efectivo contado',

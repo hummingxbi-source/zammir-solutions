@@ -16,6 +16,8 @@ import {
   type CashShiftStore,
   type ComparisonMode,
   type CounterSale,
+  type Refund,
+  type RefundStore,
   type CounterSaleStore,
   type OrderDeps,
   type Payment,
@@ -57,6 +59,8 @@ const TONO_DE_ESTATUS: Record<WorkOrderStatus, TonoDeGrafica> = {
 };
 
 export interface ReportesProps {
+  /** Devoluciones al cancelar ventas [RF-M4-10]: restan el día en que se hicieron. */
+  readonly devoluciones?: RefundStore;
   readonly deps: Pick<OrderDeps, 'orders' | 'payments' | 'clock'>;
   readonly sales: CounterSaleStore;
   /** Nombres de las personas, para mostrar quién cobró. */
@@ -108,19 +112,22 @@ export function Reportes(props: ReportesProps): ReactElement {
   const [pagos, setPagos] = useState<readonly Payment[]>([]);
   const [ordenes, setOrdenes] = useState<readonly WorkOrder[]>([]);
   const [ventas, setVentas] = useState<readonly CounterSale[]>([]);
+  const [devoluciones, setDevoluciones] = useState<readonly Refund[]>([]);
   const [periodoDeMetodo, setPeriodoDeMetodo] = useState<PeriodKind>('MONTH');
   const [periodoDeProductos, setPeriodoDeProductos] = useState<'WEEK' | 'MONTH'>('MONTH');
 
   const refrescar = useCallback(async () => {
-    const [p, o, v] = await Promise.all([
+    const [p, o, v, d] = await Promise.all([
       deps.payments.list(),
       deps.orders.list(),
       props.sales.list(),
+      props.devoluciones?.list() ?? Promise.resolve([]),
     ]);
+    setDevoluciones(d);
     setPagos(p);
     setOrdenes(o);
     setVentas(v);
-  }, [deps, props.sales]);
+  }, [deps, props.devoluciones, props.sales]);
 
   useEffect(() => {
     void refrescar();
@@ -156,6 +163,7 @@ export function Reportes(props: ReportesProps): ReactElement {
   const ventasPorPeriodo = salesReport({
     payments: pagos,
     sales: ventas,
+    refunds: devoluciones,
     now: ahora,
     ...(props.modoDeComparacion === undefined ? {} : { mode: props.modoDeComparacion }),
   });
@@ -171,9 +179,19 @@ export function Reportes(props: ReportesProps): ReactElement {
     now: ahora,
     overdueDays: umbral,
   });
-  const cajeros = collectionsByCashier({ payments: pagos, sales: ventas, now: ahora });
+  const cajeros = collectionsByCashier({
+    payments: pagos,
+    sales: ventas,
+    refunds: devoluciones,
+    now: ahora,
+  });
   const periodoMetodo = periodOf(ahora, periodoDeMetodo);
-  const metodos = collectionsByMethod({ payments: pagos, sales: ventas, period: periodoMetodo });
+  const metodos = collectionsByMethod({
+    payments: pagos,
+    sales: ventas,
+    refunds: devoluciones,
+    period: periodoMetodo,
+  });
   const nombre = (id: string): string =>
     props.personas.find((p) => p.id === id)?.name ?? t.sinNombre;
   const pendientes = estatus.filter((e) => e.pending);
@@ -183,7 +201,12 @@ export function Reportes(props: ReportesProps): ReactElement {
     texto: t.periodos[k],
   }));
 
-  const tendencia = dailyIncomeTrend({ payments: pagos, sales: ventas, now: ahora });
+  const tendencia = dailyIncomeTrend({
+    payments: pagos,
+    sales: ventas,
+    refunds: devoluciones,
+    now: ahora,
+  });
   const activos = pendientes.reduce((n, e) => n + e.count, 0);
 
   return (
