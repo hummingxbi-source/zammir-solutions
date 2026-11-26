@@ -32,7 +32,7 @@ Reglas de trabajo:
 HummingX BI es una consultoría de software y business intelligence para negocios pequeños y regionales, con sede en el Valle de Teotihuacán, Estado de México. La fundan tres socios: Juan Jesús Curiel García (director general y responsable de este proyecto), Jesús Emmanuel Cruz Pérez y Juan Pablo Rodríguez Montero. HummingX BI todavía no está constituida como sociedad; no escribas razones sociales ni datos fiscales de HummingX en ninguna pantalla. La marca "HummingX BI" solo puede aparecer como nombre comercial.
 
 1.2 Quién es el cliente
-Soluciones en Vidrio y Aluminio ZAMMIR es una vidriería con un solo local en Otumba de Gómez Farías, con año y medio de operación. La dirigen Luis Ramírez Rodríguez (dueño) y su socio Ricardo. Tienen 3 empleados, los tres cobran en el mostrador, pero solo se usa una caja a la vez. El internet es de Telmex.
+Soluciones en Vidrio y Aluminio ZAMMIR es una vidriería con un solo local en Otumba de Gómez Farías, con año y medio de operación. La dirigen Luis (dueño) y su socio Ricardo. Tienen 3 empleados, los tres cobran en el mostrador, pero solo se usa una caja a la vez. El internet es de Telmex.
 
 1.3 Estado actual (octubre de 2026)
 - El cliente respondió un cuestionario diagnóstico, vio una demo en video de su panel y aceptó avanzar.

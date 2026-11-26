@@ -8,7 +8,7 @@
 
 **Cliente:** Soluciones en Vidrio y Aluminio ZAMMIR, vidriería de un solo local en Otumba de Gómez Farías, Estado de México, con año y medio de operación [DC §1.2].
 
-- Dueño: Luis Ramírez Rodríguez. Socio: Ricardo.
+- Dueño: Luis. Socio: Ricardo. Los nombres completos no se escriben en el repositorio [ADR-0010].
 - 3 empleados que cobran en el mostrador (una sola caja a la vez) y ellos mismos instalan [DC §4].
 - Hoy no usan ningún sistema ni equipo de cómputo [DC §2].
 - Muchos de sus clientes finales son personas mayores o poco familiarizadas con la tecnología [DC §2].
