@@ -1,6 +1,6 @@
 # Restauración de un respaldo
 
-> Historia S5-06 · recorrido **E9** · requerimiento **RNF-21**. El respaldo nocturno corre desde el 24 de noviembre de 2026. Lo que ya se probó es el procedimiento en local, con datos inventados; **falta ensayar la restauración de una copia real de la nube** en Supabase local [ADR-0043].
+> Historia S5-06 · recorrido **E9** · requerimiento **RNF-21**. El respaldo nocturno corre desde el 24 de noviembre de 2026. El procedimiento se ensayó en local con datos inventados y, el 25 nov, **con una copia real de la nube** restaurada en Supabase local [ADR-0043] (§4 y §6).
 > Para quién: Juanito (HummingX BI) y quien lo releve. Va enlazada desde el [manual de soporte](../manuales/MANUAL_DE_SOPORTE.md) §7.
 
 ## 1. Para qué sirve y qué se promete
@@ -66,6 +66,18 @@ Resultado del 8 de noviembre de 2026, con los datos que dejan las pruebas de int
 
 **28 tablas y 3,201 renglones, todas idénticas** (mismo número de renglones y mismo contenido); la cuenta restaurada inicia sesión y su función de administrador responde; la numeración automática siguió contando.
 
+### Ensayo con una copia real de la nube
+
+Para probar que una copia **de verdad** abre con la clave guardada y se restaura completa:
+
+```bash
+pnpm db:start
+gh run download <id de la corrida> -n respaldo-zammir-AAAA-MM-DD -n fotos-zammir-AAAA-MM-DD -D <carpeta fuera del repositorio>
+bash scripts/ensayo-restauracion-nube.sh <esa carpeta>
+```
+
+Pide escribir `SI` y la `CLAVE_DE_RESPALDO`, que no se ve en pantalla. Abre las copias en una carpeta temporal y la borra al terminar. Cuenta los renglones que trae la copia, recrea la base local con las migraciones, restaura datos, cuentas y fotos (§3 paso 4) y compara tabla por tabla. Solo imprime conteos. En Windows se corre con `C:\Program Files\Git\bin\bash.exe` y no necesita `pnpm`.
+
 **Qué demuestra y qué no.** Demuestra que la estructura se recrea desde cero, que **los datos y las cuentas de acceso** se pueden restaurar completos y que sabemos comprobarlo. **No** demuestra: el respaldo de la plataforma de Supabase (no existe todavía), cuánto tarda con los datos de varios años, ni el paso de las tablets (punto 7).
 
 ## 5. Lista de verificación después de restaurar
@@ -85,13 +97,12 @@ Resultado del 8 de noviembre de 2026, con los datos que dejan las pruebas de int
 |---|---|---|---|---|---|
 | 8 nov 2026 | Local (datos inventados) | Claude | Aprobado: 28 tablas idénticas | ~45 s | Primer ensayo; ver sección 4 |
 | 20 nov 2026 | Local (datos inventados, tras llenar la base con las pruebas de integración) | Claude | Aprobado: 28 tablas idénticas (3,841 renglones), la cuenta de administrador restaurada inicia sesión y la numeración sigue sin chocar | respaldo 0.7 s · base limpia 38.4 s · restauración 1.4 s | Segundo ensayo, con todas las migraciones actuales (umbral, hoja carta); 439 pruebas de la base y 317 de integración en verde antes del ensayo |
-| *(pendiente, antes del 28 nov)* | Supabase local, con una copia real del respaldo de la nube | Juanito | | | S5-06 completo; paso 4 a mano (el ensayo `pnpm ensayo:restauracion` solo restaura la copia que él mismo saca de la base local) |
+| 25 nov 2026 | Supabase local, con la copia real de la nube `respaldo-zammir-2026-11-26` y `fotos-zammir-2026-11-26` | Juanito, con Claude | **Aprobado:** la clave del gestor abrió las dos copias; 30 tablas con los mismos renglones que la copia; 2 cuentas restauradas (1 de administrador) | abrir 1 s · base limpia 40 s · restaurar 2 s · fotos 7 s · **total 69 s** | `scripts/ensayo-restauracion-nube.sh`. Compara el **número de renglones** de cada tabla contra lo que trae la copia, no su contenido. La copia del 26 nov casi no tenía datos (1 cliente, 0 productos, 0 cotizaciones y 0 fotos). No se probó iniciar sesión con la cuenta restaurada ni reconectar tablets. |
 
 ## 7. Pendientes que afectan a este documento
 
 | Falta | Depende de |
 |---|---|
 | Comprobar la copia de las fotos con una foto real | PD-57 |
-| Ensayo con una copia del proyecto en la nube | Juanito, con Docker y `CLAVE_DE_RESPALDO`; se restaura en Supabase local [ADR-0043] |
 | Objetivo de tiempo de recuperación | Luis y Juanito |
 | Comprobar el paso de las tablets | Ensayo en producción |

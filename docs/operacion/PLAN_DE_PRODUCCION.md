@@ -60,7 +60,7 @@ El plan gratuito no incluye respaldos de la plataforma, así que este es **el ú
 
 1. [x] En el entorno `produccion` de GitHub: secretos `SUPABASE_DB_URL` (Session pooler del único proyecto) y `CLAVE_DE_RESPALDO` (guardada también en el gestor). Hecho el 2026-11-24.
 2. [x] **Actions → Respaldo nocturno → Run workflow**: la primera copia salió en verde el 2026-11-24 (`respaldo-zammir-2026-11-24`, unos 215 KB). Desde entonces corre sola cada noche.
-3. [ ] **Ensayar la restauración** de una copia de la nube con Supabase local (ver `RESTAURACION.md` §3 paso 4; se hace a mano) y anotar el resultado en su registro de ensayos. **Antes del 28 nov.**
+3. [x] **Ensayar la restauración** de una copia de la nube con Supabase local y anotar el resultado en su registro de ensayos. **Aprobado el 2026-11-25** con `scripts/ensayo-restauracion-nube.sh` (`RESTAURACION.md` §6).
 4. [x] **Entorno propio del respaldo y fotos** [ADR-0045, ADR-0046], **antes** de fusionar el PR que cambia el flujo. Hecho el 2026-11-25:
    - en Supabase, **Storage → S3 Configuration**: crear una llave de acceso S3 y anotar el *endpoint* y la región;
    - en GitHub, crear el entorno `respaldo` (sin revisores) con `SUPABASE_DB_URL`, `CLAVE_DE_RESPALDO`, `SUPABASE_S3_ENDPOINT`, `SUPABASE_S3_REGION`, `SUPABASE_S3_ACCESS_KEY_ID` y `SUPABASE_S3_SECRET_ACCESS_KEY`.
@@ -135,6 +135,6 @@ Solo cuando las pruebas físicas pasaron y Luis aceptó lo probado. **No se borr
 | Pendiente | Efecto |
 |---|---|
 | **PD-54** | Sin el modelo de la impresora no se cierra la prueba 1 de la fase 4 |
-| **PD-32** | El respaldo nocturno debe estar en verde y ensayado antes de cualquier dato real |
+| **PR-38** (era PD-32) | Respaldo en verde y restauración ensayada el 25 nov; se repite con el proyecto nuevo de la entrega (P12) |
 | **PD-57** | La copia de las fotos está activa; falta comprobarla con una foto real |
 | **PP-33** | Las cabeceras de seguridad se confirman con la prueba 9 de la fase 4 |
