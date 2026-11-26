@@ -103,13 +103,12 @@ Si hubiera que repetirlo:
 
 El plan gratuito de Supabase **no incluye respaldos de la plataforma** y ZAMMIR pide **30 días** de historial [RNF-21, PD-32, ADR-0038]: este respaldo nocturno es **la única copia**, así que activarlo y ensayar su restauración es obligatorio antes de operar con datos reales. El flujo `.github/workflows/respaldo-nocturno.yml` saca cada noche una copia **cifrada** y la guarda 30 días.
 
-1. En el entorno `respaldo` de GitHub, agregar los secretos (hasta la entrega apuntan al único proyecto; en la entrega se cambian por los del nuevo). *Hasta que se fusione el PR del entorno propio, el flujo los lee de `produccion` [ADR-0045].*
+1. En el entorno `respaldo` de GitHub, agregar los secretos (hasta la entrega apuntan al único proyecto; en la entrega se cambian por los del nuevo).
    - `SUPABASE_DB_URL`: la cadena de conexión (Supabase → *Connect → Session pooler*), con su contraseña.
    - `CLAVE_DE_RESPALDO`: una frase larga. **Guardarla también fuera de GitHub**: sin ella, una copia no se puede abrir.
-2. **Actions → Respaldo nocturno → Run workflow** para probar a mano. Debe terminar en verde y dejar un archivo `respaldo-zammir-AAAA-MM-DD.tar.enc`.
+   - Para las fotos de medición [ADR-0046], de Supabase → **Storage → S3 Configuration**: `SUPABASE_S3_ENDPOINT`, `SUPABASE_S3_REGION`, y una llave de acceso nueva en `SUPABASE_S3_ACCESS_KEY_ID` y `SUPABASE_S3_SECRET_ACCESS_KEY`. Es una llave del proyecto, no de la cuenta.
+2. **Actions → Respaldo nocturno → Run workflow** para probar a mano. Debe terminar en verde y dejar dos artefactos: `respaldo-zammir-AAAA-MM-DD` (la base, 30 días) y `fotos-zammir-AAAA-MM-DD` (las fotos; se guardan las dos más recientes).
 3. **Ensayar la restauración** de esa copia en Supabase local (ver [`RESTAURACION.md`](RESTAURACION.md)) antes de dar el respaldo por bueno.
-
-> El respaldo copia la base y las cuentas, pero **todavía no las fotos de medición** (PD-57).
 
 ## Lista de verificación antes de dar por lista la producción
 

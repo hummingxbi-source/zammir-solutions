@@ -8,7 +8,7 @@
 Si se pierde o se daña la base de producción (un error humano, una falla de la plataforma), hay que volver a tener **los datos de ZAMMIR** en un entorno limpio y comprobar que están completos.
 
 - **Cuántos días hacia atrás** [RNF-21]: respaldos diarios con **al menos 30 días** de historial. El plan gratuito de Supabase no incluye respaldos [ADR-0038], así que la única copia es el **respaldo nocturno** de GitHub (`.github/workflows/respaldo-nocturno.yml`), cifrado y con 30 días de vida.
-- **Qué no copia todavía:** las **fotos de medición** del depósito `order-photos` (PD-57). Hasta que se amplíe el respaldo, una restauración trae los datos y las cuentas, pero no las fotos.
+- **Las fotos de medición** del depósito `order-photos` van en su propia copia cifrada, `fotos-zammir-AAAA-MM-DD`. Como las fotos no se cambian ni se borran, se guardan solo las dos copias más recientes [ADR-0046].
 - **Cuánto se puede perder:** con respaldos diarios, **hasta un día de captura** del servidor. La tablet no pierde lo que ya capturó: lo guarda y lo envía cuando vuelve a haber servidor. GitHub puede retrasar varias horas una corrida programada: las del 21 al 25 nov empezaron entre las 15:47 y las 19:40 UTC, no a las 08:00 UTC del horario.
 - **Cuánto tarda:** el objetivo de tiempo lo define ZAMMIR con Juanito **(pendiente)**. El ensayo local midió los pasos (§4) para tener una referencia.
 
@@ -17,7 +17,8 @@ Si se pierde o se daña la base de producción (un error humano, una falla de la
 | Copia | Qué trae | Quién la toma | Estado |
 |---|---|---|---|
 | Respaldos diarios del plan de Supabase | — | — | **No existen** en el plan gratuito [ADR-0038] |
-| Respaldo nocturno de GitHub | Datos de `public` y las cuentas (`auth.users` y `auth.identities`), cifrados | El flujo *Respaldo nocturno*, cada noche, con 30 días de vida | **Activo** desde el 24 nov 2026. **No trae las fotos de medición** (PD-57) |
+| Respaldo nocturno de GitHub: la base | Datos de `public` y las cuentas (`auth.users` y `auth.identities`), cifrados | El flujo *Respaldo nocturno*, cada noche, con 30 días de vida | **Activo** desde el 24 nov 2026 |
+| Respaldo nocturno de GitHub: las fotos | Todas las fotos de medición, cifradas | El mismo flujo, cada noche; se guardan las dos copias más recientes | Construido [ADR-0046]; se activa con los secretos del entorno `respaldo` |
 | Exportación del negocio (Configuración) | Datos en CSV, JSON y PDF para leer; **sin PIN ni cuentas de tablets** | Un administrador, a mano | Existe (S5-08). **No sustituye al respaldo**: no se puede restaurar a partir de ella |
 
 ## 3. Procedimiento (producción)
@@ -33,6 +34,7 @@ Si se pierde o se daña la base de producción (un error humano, una falla de la
    - *Respaldo del panel de Supabase:* no existe en el plan gratuito [ADR-0038]. Si algún día se cambia de plan, usar la opción de restaurar a un proyecto nuevo **(verificar en el panel: los nombres pueden cambiar)**.
    - *Respaldo nocturno de GitHub* (`.github/workflows/respaldo-nocturno.yml`): bajar el archivo `respaldo-zammir-AAAA-MM-DD.tar.enc` de **Actions → Respaldo nocturno** y abrirlo con la frase `CLAVE_DE_RESPALDO`: `openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 -pass env:CLAVE_DE_RESPALDO -in respaldo-zammir-AAAA-MM-DD.tar.enc | tar -x`. Salen `public.dump` y `auth.dump`, que se restauran como dice la siguiente viñeta.
    - *Exportación nocturna o `pg_dump`:* restaurar solo los **datos** de `public` y de las cuentas (`auth.users` y `auth.identities`) con `pg_restore --data-only --disable-triggers`. Es exactamente lo que hace el ensayo (`scripts/ensayo-de-restauracion.mjs`); léelo como receta. Antes de restaurar hay que vaciar los datos de arranque que traen las migraciones (categorías, ajustes y documentos legales) para no duplicarlos.
+   - *Fotos de medición* (después de los datos): bajar el artefacto `fotos-zammir-AAAA-MM-DD` más reciente y abrirlo con la misma frase: `mkdir fotos && openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 -pass env:CLAVE_DE_RESPALDO -in fotos-zammir-AAAA-MM-DD.tar.enc | tar -C fotos -x`. Con las variables `SUPABASE_S3_*` del proyecto **de destino** (Storage → S3 Configuration), correr `bash scripts/fotos-de-medicion.sh restaurar fotos`: agrega lo que falta y no borra nada. En local, el *endpoint* y las llaves salen de `supabase status`, y desde Docker se usa `host.docker.internal` en lugar de `127.0.0.1`.
 5. **Reapuntar la aplicación.**
    - En Vercel, cambiar `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` al proyecto nuevo, **solo en *Production***, y volver a desplegar.
    - Desplegar migraciones y funciones con el flujo *Desplegar a Supabase*, no a mano.
@@ -74,7 +76,7 @@ Resultado del 8 de noviembre de 2026, con los datos que dejan las pruebas de int
 - [ ] Un **administrador** inicia sesión y ve **Usuarios** y **Configuración**.
 - [ ] Una **tablet** se conecta, baja el catálogo, entra con PIN, cotiza y envía.
 - [ ] La función `salud` responde `{"ok":true}`.
-- [ ] Las **fotos de medición** de una orden conocida se ven (cuando el respaldo las incluya, PD-57).
+- [ ] Las **fotos de medición** están completas: `scripts/fotos-de-medicion.sh copiar` sobre el proyecto restaurado da el mismo número de fotos que la copia, y las de una orden conocida se ven en su detalle.
 - [ ] *Solo con la facturación activa [ADR-0039]:* el portal `/factura` encuentra un folio de prueba, y una factura ya emitida se descarga (XML y PDF) y no se puede facturar otra vez.
 
 ## 6. Registro de ensayos
@@ -89,7 +91,7 @@ Resultado del 8 de noviembre de 2026, con los datos que dejan las pruebas de int
 
 | Falta | Depende de |
 |---|---|
-| Fotos de medición en el respaldo | PD-57 |
+| Activar la copia de las fotos (llave S3 y entorno `respaldo`) | PD-57 |
 | Ensayo con una copia del proyecto en la nube | Juanito, con Docker y `CLAVE_DE_RESPALDO`; se restaura en Supabase local [ADR-0043] |
 | Objetivo de tiempo de recuperación | Luis y Juanito |
 | Comprobar el paso de las tablets | Ensayo en producción |

@@ -1,21 +1,30 @@
-# Respaldo nocturno de la base de producción, fuera de Supabase [RNF-21, S4-27, PD-32].
-# El plan gratuito de Supabase no incluye respaldos de la plataforma [ADR-0038]; ZAMMIR pide 30 días. Cada noche se saca una copia
-# cifrada y se guarda como artefacto del repositorio privado con 30 días de vida: son 30 copias a la mano.
+# Respaldo nocturno de la base de producción y de las fotos de medición, fuera de Supabase [RNF-21, S4-27, PD-32, PD-57].
+# El plan gratuito de Supabase no incluye respaldos de la plataforma [ADR-0038]; ZAMMIR pide 30 días. Cada noche se sacan
+# dos copias cifradas y se guardan como artefactos del repositorio:
+#   respaldo-zammir-AAAA-MM-DD   la base (datos de `public` y las cuentas), 30 días de vida: son 30 copias a la mano.
+#   fotos-zammir-AAAA-MM-DD      las fotos del depósito `order-photos`. Las fotos no se cambian ni se borran [RN-18], así
+#                                que la copia más reciente trae todas: se conservan solo las dos más recientes [ADR-0046].
+# El repositorio es público hasta la entrega y privado después [ADR-0045]: las copias solo las protege su cifrado.
 #
-# Secretos del entorno "produccion" (Settings > Environments):
-#   SUPABASE_DB_URL       cadena de conexión de la base (Connect > Session pooler), con su contraseña
-#   CLAVE_DE_RESPALDO     frase larga para cifrar las copias. Guárdela también FUERA de GitHub (gestor de
-#                         contraseñas): sin ella una copia no se puede abrir.
+# Secretos del entorno "respaldo" (Settings > Environments), sin revisores para que la copia nunca espere [ADR-0045]:
+#   SUPABASE_DB_URL                 cadena de conexión de la base (Connect > Session pooler), con su contraseña
+#   CLAVE_DE_RESPALDO               frase larga para cifrar las copias. Guárdela también FUERA de GitHub (gestor de
+#                                   contraseñas): sin ella una copia no se puede abrir.
+#   SUPABASE_S3_ENDPOINT            Storage > S3 Configuration > Endpoint
+#   SUPABASE_S3_REGION              Storage > S3 Configuration > Region
+#   SUPABASE_S3_ACCESS_KEY_ID       Storage > S3 Configuration > Access keys (llave del proyecto, no de la cuenta)
+#   SUPABASE_S3_SECRET_ACCESS_KEY   su secreto
 # Cómo se restaura una copia: docs/operacion/RESTAURACION.md.
 name: Respaldo nocturno
 
 on:
   schedule:
-    - cron: '0 8 * * *' # 08:00 UTC = 02:00 en la Ciudad de México (sin horario de verano)
+    - cron: '0 8 * * *' # 08:00 UTC = 02:00 en la Ciudad de México (sin horario de verano); GitHub puede retrasarlo
   workflow_dispatch:
 
 permissions:
   contents: read
+  actions: write # para borrar las copias de fotos viejas
 
 concurrency:
   group: respaldo-nocturno
@@ -23,11 +32,14 @@ concurrency:
 
 jobs:
   respaldar:
-    name: Copia cifrada de la base de producción
+    name: Copias cifradas de la base y de las fotos
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    environment: produccion
+    environment: respaldo
     steps:
+      - name: Traer los scripts
+        uses: actions/checkout@v4
+
       - name: Sacar la copia (estructura y datos de la aplicación, y las cuentas)
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
@@ -53,6 +65,7 @@ jobs:
           ls -l "respaldo-zammir-${fecha}.tar.enc"
           echo "FECHA_DE_COPIA=${fecha}" >> "$GITHUB_ENV"
 
+      # La copia de la base se guarda antes de las fotos: si las fotos fallan, la base ya quedó a salvo.
       - name: Guardar 30 días
         uses: actions/upload-artifact@v4
         with:
@@ -60,3 +73,42 @@ jobs:
           path: respaldo-zammir-*.tar.enc
           retention-days: 30
           if-no-files-found: error
+
+      - name: Copiar las fotos de medición
+        env:
+          SUPABASE_S3_ENDPOINT: ${{ secrets.SUPABASE_S3_ENDPOINT }}
+          SUPABASE_S3_REGION: ${{ secrets.SUPABASE_S3_REGION }}
+          SUPABASE_S3_ACCESS_KEY_ID: ${{ secrets.SUPABASE_S3_ACCESS_KEY_ID }}
+          SUPABASE_S3_SECRET_ACCESS_KEY: ${{ secrets.SUPABASE_S3_SECRET_ACCESS_KEY }}
+        run: bash scripts/fotos-de-medicion.sh copiar fotos
+
+      - name: Cifrar las fotos
+        env:
+          CLAVE_DE_RESPALDO: ${{ secrets.CLAVE_DE_RESPALDO }}
+        run: |
+          set -euo pipefail
+          tar -C fotos -cf - . \
+            | openssl enc -aes-256-cbc -pbkdf2 -iter 600000 -salt -pass env:CLAVE_DE_RESPALDO \
+            > "fotos-zammir-${FECHA_DE_COPIA}.tar.enc"
+          ls -l "fotos-zammir-${FECHA_DE_COPIA}.tar.enc"
+
+      - name: Guardar las fotos
+        uses: actions/upload-artifact@v4
+        with:
+          name: fotos-zammir-${{ env.FECHA_DE_COPIA }}
+          path: fotos-zammir-*.tar.enc
+          retention-days: 30
+          if-no-files-found: error
+
+      # Solo después de guardar la copia nueva se borran las viejas: siempre queda al menos una copia de fotos.
+      - name: Dejar solo las dos copias de fotos más recientes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api --paginate "repos/${GITHUB_REPOSITORY}/actions/artifacts?per_page=100" \
+            --jq '.artifacts[] | select(.name | startswith("fotos-zammir-")) | select(.expired | not) | "\(.created_at) \(.id)"' \
+            | sort -r | tail -n +3 | while read -r _ id; do
+                echo "Se borra la copia de fotos $id"
+                gh api -X DELETE "repos/${GITHUB_REPOSITORY}/actions/artifacts/${id}"
+              done

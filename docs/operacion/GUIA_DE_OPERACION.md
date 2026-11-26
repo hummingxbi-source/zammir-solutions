@@ -21,7 +21,7 @@
 - [ ] Si alguien reportó un problema, pedir **sección, hora y folio** (nunca PIN ni contraseñas) y revisar `error_log` (§6 del manual de soporte).
 
 ### Cada semana (10 minutos)
-- [ ] **Respaldo:** en GitHub, **Actions → Respaldo nocturno**, la última corrida debe ser de las últimas 24 horas y estar en verde. GitHub puede retrasar varias horas una corrida programada; si una no salió, correrla a mano (*Run workflow*).
+- [ ] **Respaldo:** en GitHub, **Actions → Respaldo nocturno**, la última corrida debe ser de las últimas 24 horas, estar en verde y dejar sus dos copias (`respaldo-zammir-…` y `fotos-zammir-…`). GitHub puede retrasar varias horas una corrida programada; si una no salió, correrla a mano (*Run workflow*).
 - [ ] **Errores:** `select * from public.admin_error_log(100)` desde una sesión de administrador (o el editor SQL de Supabase). Un error que se repite se atiende; uno aislado se anota.
 - [ ] **Tablets:** en **Usuarios → Tablets**, la columna *Último envío* de cada una debe ser reciente. Una tablet que lleva días sin enviar tiene capturas sin llegar.
 
@@ -51,7 +51,7 @@ El detalle está en el [manual de soporte](../manuales/MANUAL_DE_SOPORTE.md) §3
 
 ## 4. Restaurar un respaldo
 
-Procedimiento, lista de verificación y registro de ensayos: **[RESTAURACION.md](RESTAURACION.md)**. Siempre en un entorno **limpio**, nunca encima del de producción. Ya se ensayó en local (`pnpm ensayo:restauracion`); **falta ensayarlo con una copia real de la nube**. El respaldo todavía no trae las fotos de medición (PD-57).
+Procedimiento, lista de verificación y registro de ensayos: **[RESTAURACION.md](RESTAURACION.md)**. Siempre en un entorno **limpio**, nunca encima del de producción. Ya se ensayó en local (`pnpm ensayo:restauracion`); **falta ensayarlo con una copia real de la nube**, incluidas las fotos de medición [ADR-0046].
 
 ## 5. Rotar claves
 
@@ -67,6 +67,7 @@ Rotar es cambiar una llave por otra nueva, porque se filtró, porque alguien que
 | **Token de la cuenta de Supabase** (`SUPABASE_ACCESS_TOKEN`) | Secreto del entorno de despliegue en GitHub | El despliegue falla hasta actualizarlo | Es un token de la **cuenta**: alcanza también el otro proyecto. Generar uno nuevo, actualizarlo en GitHub y revocar el viejo en Supabase |
 | **Conexión de la base del respaldo** (`SUPABASE_DB_URL`) | Secreto del entorno del respaldo en GitHub | El respaldo falla hasta actualizarla | Cambia si cambia la contraseña de la base. Actualizarla y correr el respaldo a mano |
 | **Clave del respaldo** (`CLAVE_DE_RESPALDO`) | Secreto del entorno del respaldo en GitHub y gestor de contraseñas | Las copias nuevas se cifran con la nueva; **las viejas solo abren con la vieja** | Guardar las dos en el gestor hasta que venzan las copias viejas (30 días) |
+| **Llave S3 del almacenamiento** (`SUPABASE_S3_ACCESS_KEY_ID` y `SUPABASE_S3_SECRET_ACCESS_KEY`) | Secretos del entorno `respaldo` en GitHub | La copia de las fotos falla hasta actualizarla | Lee y escribe todo el almacenamiento del proyecto. Crear una nueva en Supabase → Storage → S3 Configuration, actualizar los dos secretos, correr el respaldo a mano y borrar la vieja |
 | **Pimienta del portal** (`PORTAL_HASH_PEPPER`) | Secreto de las funciones | Se olvidan los intentos fallidos acumulados (no daña nada) | Cambiarla; no requiere más |
 | *Al reactivar la facturación:* llaves del PAC, de Turnstile y el CSD | Secretos de las funciones y el PAC | No se puede facturar hasta actualizarlas | Ver el [manual de soporte](../manuales/MANUAL_DE_SOPORTE.md) §5 y [ADR-0039] |
 
@@ -128,7 +129,7 @@ Al reportar un problema se pide: **sección**, **hora aproximada**, **folio** (s
 |---|---|
 | Aviso automático de caídas | Cuenta del monitoreo (PP-32) |
 | Purga de errores programada | Mantenimiento programado (S4-26) |
-| Fotos de medición en el respaldo | PD-57 |
+| Activar la copia de las fotos (llave S3 y entorno `respaldo`) | PD-57 |
 | Ensayo de restauración con una copia de la nube | S5-06 |
 | Repositorio privado y vigilancia de minutos de Actions | PD-59 |
 | Tiempos de respuesta y alcance del soporte | El contrato |
