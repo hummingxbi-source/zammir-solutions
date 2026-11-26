@@ -30,7 +30,7 @@ Hay **un solo entorno en la nube** [ADR-0043]: la cuenta de Supabase solo admite
    - **Project URL** y **Project ref** (la parte antes de `.supabase.co`).
    - La llave **publishable** o *anon* (pública; va en Vercel). La llave **service role** (secreta) **no se copia a ningún lado**: las funciones la reciben solas.
 4. **Authentication → Sign In / Providers:** apagar **Allow new users to sign up** (nadie debe poder crear cuentas por su cuenta). En *Email*, exigir contraseñas de **12 caracteres o más**.
-5. **Authentication → Users → Add user:** crear la cuenta del primer administrador (correo y contraseña largos, **sin** enviar invitación). Luego en **SQL Editor** darle el rol:
+5. **Authentication → Users → Add user:** crear la cuenta de cada administrador, **sin** enviar invitación. En la entrega, Luis y Ricardo están presentes y **cada uno escribe su propia contraseña** (12 caracteres o más); HummingX no la conoce [ADR-0045]. Luego en **SQL Editor** darle el rol:
 
    ```sql
    update auth.users
@@ -44,7 +44,7 @@ Hay **un solo entorno en la nube** [ADR-0043]: la cuenta de Supabase solo admite
 
 ## Paso 2 · GitHub: secretos y entornos (despliegue de la base)
 
-1. En el repositorio: **Settings → Environments → New environment** y crear **`pruebas`** y **`produccion`**. Hasta la entrega, `pruebas` guarda los secretos del único proyecto. En la entrega, los del proyecto nuevo van a `produccion`, con **Required reviewers** (una persona aprueba cada despliegue), y `pruebas` se vacía.
+1. En el repositorio: **Settings → Environments → New environment** y crear **`pruebas`**, **`produccion`** y **`respaldo`**. Hasta la entrega, `pruebas` guarda los secretos de despliegue del único proyecto. En la entrega, los del proyecto nuevo van a `produccion` y `pruebas` se vacía. **No** se ponen *Required reviewers*: no existen en un repositorio privado con la cuenta gratuita, y el despliegue solo se corre a mano [ADR-0045]. `respaldo` guarda los secretos del respaldo nocturno (paso 7).
 2. Dentro de cada entorno, **Add secret**:
 
    | Secreto | De dónde sale |
@@ -62,7 +62,7 @@ En **Edge Functions → Secrets** (o con `supabase secrets set`):
 | Secreto | Hasta la entrega | Proyecto de la entrega |
 |---|---|---|
 | `BILLING_PROVIDER` | **Sin valor** mientras la facturación esté en pausa [ADR-0039]; `simulated` solo para ensayarla (facturas **sin validez fiscal**) | **Sin valor** hasta tener el PAC real (S4-15, S5-02): sin valor, no se emiten facturas [ADR-0031] |
-| `PORTAL_HASH_PEPPER` | Cadena aleatoria de 32+ caracteres | **Otra** cadena aleatoria distinta, guardada en el gestor |
+| `PORTAL_HASH_PEPPER` | Opcional: solo lo usa el portal de autofacturación, apagado; sin él usa la llave de servicio | **Otra** cadena aleatoria de 32+ caracteres, guardada en el gestor |
 | `INVOICE_RETRY_WAIT_SECONDS`, `INVOICE_RETRY_MAX_ATTEMPTS` | Valores de [ADR-0033] | Igual |
 | `TURNSTILE_SECRET_KEY` | Opcional | Opcional (ver PP-30) |
 
@@ -86,11 +86,11 @@ En **Edge Functions → Secrets** (o con `supabase secrets set`):
 
 Si hubiera que repetirlo:
 
-1. Comprar el dominio (Cloudflare Registrar si ofrece la terminación elegida; si no, otro registrador) y poner su DNS en **Cloudflare**. En la entrega queda a nombre de **ZAMMIR**.
+1. Comprar el dominio (Cloudflare Registrar si ofrece la terminación elegida; si no, otro registrador) y poner su DNS en **Cloudflare**. Queda a nombre de **HummingX BI** [ADR-0045].
 2. En el proyecto de Vercel: **Settings → Domains → Add** el subdominio (`sistema.zammir-solutions.com`).
 3. En Cloudflare, crear el registro DNS que Vercel indique (normalmente un `CNAME`) y dejarlo **solo DNS** (nube gris) para que Vercel emita el certificado.
 4. Esperar a que Vercel muestre el dominio en verde y abrirlo con `https://`.
-5. Anotar el dominio en `APP_PUBLIC_URL` (secreto de las funciones) y en el acta de entrega.
+5. Anotar el dominio en el acta de entrega. `APP_PUBLIC_URL` aparece en `.env.example` y en `ENTORNOS.md`, pero hoy ninguna función lo lee: no hace falta definirlo.
 
 ## Paso 6 · Primera tablet
 
@@ -103,11 +103,13 @@ Si hubiera que repetirlo:
 
 El plan gratuito de Supabase **no incluye respaldos de la plataforma** y ZAMMIR pide **30 días** de historial [RNF-21, PD-32, ADR-0038]: este respaldo nocturno es **la única copia**, así que activarlo y ensayar su restauración es obligatorio antes de operar con datos reales. El flujo `.github/workflows/respaldo-nocturno.yml` saca cada noche una copia **cifrada** y la guarda 30 días.
 
-1. En el entorno `produccion` de GitHub, agregar los secretos (hasta la entrega apuntan al único proyecto; en la entrega se cambian por los del nuevo):
+1. En el entorno `respaldo` de GitHub, agregar los secretos (hasta la entrega apuntan al único proyecto; en la entrega se cambian por los del nuevo). *Hasta que se fusione el PR del entorno propio, el flujo los lee de `produccion` [ADR-0045].*
    - `SUPABASE_DB_URL`: la cadena de conexión (Supabase → *Connect → Session pooler*), con su contraseña.
    - `CLAVE_DE_RESPALDO`: una frase larga. **Guardarla también fuera de GitHub**: sin ella, una copia no se puede abrir.
 2. **Actions → Respaldo nocturno → Run workflow** para probar a mano. Debe terminar en verde y dejar un archivo `respaldo-zammir-AAAA-MM-DD.tar.enc`.
-3. **Ensayar la restauración** de esa copia en un proyecto limpio (ver [`RESTAURACION.md`](RESTAURACION.md)) antes de dar el respaldo por bueno.
+3. **Ensayar la restauración** de esa copia en Supabase local (ver [`RESTAURACION.md`](RESTAURACION.md)) antes de dar el respaldo por bueno.
+
+> El respaldo copia la base y las cuentas, pero **todavía no las fotos de medición** (PD-57).
 
 ## Lista de verificación antes de dar por lista la producción
 
@@ -119,10 +121,10 @@ El plan gratuito de Supabase **no incluye respaldos de la plataforma** y ZAMMIR 
 - [ ] `BILLING_PROVIDER` **sin valor** en producción hasta tener el PAC y el CSD reales.
 - [ ] Dominio de ZAMMIR en HTTPS y anotado en el acta. ✅ en HTTPS desde el 2026-11-23.
 - [ ] Tablet instalada desde el dominio y registrada; ensayo en modo avión hecho.
-- [ ] Respaldo nocturno corrió en verde y se ensayó su restauración.
+- [ ] Respaldo nocturno corrió en verde, desde el entorno `respaldo`, y se ensayó su restauración.
 - [ ] Contraseñas largas y distintas en un gestor para las cuentas de administrador y las de Supabase, Vercel, GitHub y Cloudflare. La verificación en dos pasos **no se usa** [ADR-0041].
 - [ ] Cabeceras de seguridad, incluida la política de contenido, probadas con la tablet (PP-33; prueba 9 de la fase 4 de `PLAN_DE_PRODUCCION.md`).
-- [ ] Anualidad: fechas de renovación de Supabase, Vercel, dominio y PAC anotadas en la guía de operación.
+- [ ] Fecha de renovación del dominio anotada en la guía de operación (Supabase y Vercel son gratuitos [ADR-0038]; el PAC está en pausa [ADR-0039]).
 
 ## Si algo sale mal
 

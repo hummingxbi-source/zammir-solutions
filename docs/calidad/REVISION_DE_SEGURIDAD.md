@@ -40,7 +40,7 @@ La base y el código cumplen lo que se pidió. Se encontró **un permiso de sobr
 
 ## Pendiente (no bloquea esta historia)
 
-1. **Cabeceras de seguridad en el navegador** (`Content-Security-Policy`, `X-Content-Type-Options`, `Referrer-Policy`, protección contra que otra página meta la aplicación en un marco). No hay `vercel.json` todavía. Una política de contenido mal puesta rompe la conexión con Supabase o el portal, así que conviene definirla **al configurar el despliegue de producción** (S4-26 / S5-01) y probarla con la tablet. Propuesta PP-33.
+1. ~~**Cabeceras de seguridad en el navegador**~~ **Hecho el 24 nov (PR #113):** ver la actualización del 25 de noviembre. Falta probar la política de contenido con la tablet (P4 del plan maestro).
 2. **Las huellas del PIN viajan a las tablets.** La vista `login_users` entrega a toda tablet activa el hash y la sal de los PIN, para poder entrar sin internet [ADR-0013]. Es una decisión de diseño conocida: un PIN de 4 a 6 dígitos se puede adivinar si alguien extrae esos datos de una tablet. Se mitiga con la revocación de tablets, el límite de intentos y PIN más largo para administradores; está en los riesgos de `AUTENTICACION.md` y sigue vigente.
 3. **Cuentas de administrador.** Hoy el rol se pone a mano en la cuenta de Supabase. Se decidió **no usar verificación en dos pasos** [ADR-0041]: la protección son contraseñas largas y distintas en un gestor. Falta documentar quién tiene acceso (manual de soporte, S5-14).
 
@@ -58,6 +58,18 @@ Se repitió la revisión sobre `main` después de los cambios de las últimas do
 | Registro de impresiones (marca COPIA) | Solo guarda identificadores de documentos ya impresos en `localStorage`, sin datos de clientes. | Cumple. |
 
 **Sigue pendiente:** la `Content-Security-Policy` (`vercel.json` ya trae `X-Content-Type-Options`, `Referrer-Policy` y `X-Frame-Options`, pero no la política de contenido; definirla junto con el despliegue de producción y probarla en la tablet, PP-33), el hallazgo de las huellas del PIN, sin cambios.
+
+## Actualización del 25 de noviembre de 2026
+
+Se revisó `main` después de la fase 10 (AJ-01 a AJ-09) y del despliegue a producción.
+
+| Tema | Qué se revisó | Resultado |
+|---|---|---|
+| **Cabeceras del navegador** | `vercel.json` trae `Content-Security-Policy`, `Permissions-Policy`, `X-Content-Type-Options`, `Referrer-Policy` y `X-Frame-Options` (PR #113). Se confirmó que `https://sistema.zammir-solutions.com` las sirve (respuesta del 25 nov). | Cumple. Falta probar la política de contenido con la tablet: entrar, sincronizar, subir una foto e imprimir (P4). |
+| **Tablas nuevas** | Las migraciones crean hoy **28 tablas** en `public`: las 26 anteriores más `payment_confirmations` (AJ-05) y `refunds` (AJ-06). `product_categories` ya existía; AJ-08 solo la amplía. | La prueba 22 revisa **todas** las tablas por consulta, sin lista fija, así que cubre las nuevas sola. Corre en el CI de cada Pull Request y estuvo en verde en `main`. No se corrió `pnpm test:db` en local para esta actualización. |
+| **Repositorio público** | El repositorio sigue público hasta la entrega [ADR-0045]. Las copias del respaldo se guardan como artefactos **cifrados** (AES-256 con `CLAVE_DE_RESPALDO`). | Riesgo aceptado hasta la entrega: una copia se puede descargar y solo la protege la clave. Se vuelve privado después de la entrega (PD-59). |
+| **Fotos de medición** | El respaldo nocturno no las copia. | Hueco de continuidad, no de acceso: PD-57. |
+| **Token de la cuenta de Supabase** | `SUPABASE_ACCESS_TOKEN` (entorno `pruebas`) es un token de la **cuenta**, no del proyecto: también alcanza el otro proyecto de la cuenta. | Revocarlo en Supabase el día de la entrega y crear uno nuevo solo para el entorno `produccion` (plan maestro §4.3). |
 
 ## Cómo se repite esta revisión
 

@@ -1,7 +1,7 @@
 # Manual de soporte (borrador)
 
 > Historia S4-29. Para **Juanito** (HummingX BI) y para quien lo releve. Cubre lo que hay que saber para desplegar, vigilar, dar de alta, resolver problemas, restaurar un respaldo y atender solicitudes sobre los datos de un cliente.
-> Es un **borrador**: lo que depende de decisiones o cuentas que todavía no existen está marcado con **(pendiente: …)** y su pendiente (`PD-xx` / `PP-xx`, ver [`PENDIENTES.md`](../producto/PENDIENTES.md)). Se completa y se ensaya en el Sprint 5 (S5-06, S5-14).
+> Documento **interno** de HummingX: no forma parte del expediente que recibe ZAMMIR [ADR-0045]. Lo que depende de decisiones o del contrato está marcado con **(pendiente: …)** y su pendiente (`PD-xx` / `PP-xx`, ver [`PENDIENTES.md`](../producto/PENDIENTES.md)).
 > Reglas que no se rompen: **nunca datos reales en pruebas**, **ningún agente de IA entra a producción** [RNF-19] y **el certificado (CSD) de ZAMMIR nunca pasa por el código**: se sube directo al proveedor de timbrado [RF-M10-02].
 
 ## 1. El sistema en una página
@@ -10,8 +10,9 @@
 |---|---|---|
 | Aplicación | La que usan las tablets y la computadora. Funciona sin internet y guarda lo que se captura en la tablet. | Vercel |
 | Base de datos y cuentas | Todos los datos, las cuentas de administradores y las tablets registradas. | Supabase (Postgres y Auth) |
-| Funciones de servidor | Lo que no puede hacer la tablet: recibir operaciones, registrar tablets, facturar, cancelar, reintentar, portal de autofacturación, registro de errores y salud. | Supabase (Edge Functions) |
-| Proveedor de timbrado (PAC) | Quien timbra las facturas. Hoy hay un **simulado** sin validez fiscal. | Externo, **pendiente** (PD-05) |
+| Funciones de servidor | Lo que no puede hacer la tablet: recibir operaciones, registrar tablets, registro de errores y salud. Las de facturación (facturar, cancelar, reintentar y el portal) están apagadas [ADR-0039]. | Supabase (Edge Functions) |
+| Fotos de medición | Las fotos de cada orden que toma la tablet. | Supabase (depósito `order-photos`) |
+| Proveedor de timbrado (PAC) | **En pausa** [ADR-0039]. Existe un proveedor **simulado** sin validez fiscal, solo para ensayar. | — |
 
 Los detalles técnicos están en [`docs/arquitectura/`](../arquitectura/README.md). Cómo se pasa de una tablet a la base: [`SINCRONIZACION.md`](../arquitectura/SINCRONIZACION.md).
 
@@ -19,14 +20,14 @@ Los detalles técnicos están en [`docs/arquitectura/`](../arquitectura/README.m
 
 | Cuenta | Para qué | Quién |
 |---|---|---|
-| GitHub (repositorio privado y Actions) | Código e integración continua | Juanito |
-| Supabase (pruebas y producción, proyectos separados) | Base de datos, cuentas, funciones | Juanito, con ZAMMIR para el plan de pago |
-| Vercel (pruebas y producción) | Despliegue de la aplicación | Juanito |
-| Cloudflare | Dominio y, si se usa, Turnstile del portal | Juanito / Luis (PD-10, PD-51) |
-| Proveedor de timbrado | Timbrado de facturas | Por definir (PD-05) |
-| Monitoreo de disponibilidad | Avisar a Juanito si el servicio se cae | **Pendiente (PP-32)** |
+| GitHub (`hummingxbi-source/zammir-solutions`) | Código, integración continua, despliegue de la base y respaldo nocturno. Público hasta la entrega; privado después (PD-59) | HummingX BI |
+| Supabase (un solo proyecto, plan gratuito [ADR-0038, ADR-0043]) | Base de datos, cuentas, fotos y funciones | HummingX BI (organización "HummingX BI") |
+| Vercel (plan gratuito) | Despliegue de la aplicación | HummingX BI |
+| Cloudflare | Dominio `zammir-solutions.com` y DNS | HummingX BI |
+| Proveedor de timbrado | En pausa [ADR-0039] | — |
+| Monitoreo de disponibilidad | Avisar a HummingX si el servicio se cae | **Pendiente (PP-32)** |
 
-Los accesos de producción se entregan a Juanito por un canal seguro. Ninguno se guarda en el repositorio ni se pega en un chat [CLAUDE.md regla 7].
+Las cuentas, el dominio y el código son de HummingX BI; los datos son de ZAMMIR [ADR-0045]. Ninguna llave se guarda en el repositorio ni se pega en un chat [CLAUDE.md regla 7]. Quién tiene cada acceso: [guía de operación](../operacion/GUIA_DE_OPERACION.md) §7.
 
 ## 3. Desplegar
 
@@ -46,13 +47,13 @@ Los accesos de producción se entregan a Juanito por un canal seguro. Ninguno se
 |---|---|---|
 | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` | Navegador | Conectar la aplicación con Supabase (públicas, protegidas por RLS) |
 | `SUPABASE_SERVICE_ROLE_KEY` | Solo funciones de servidor | **Nunca** al navegador |
-| `BILLING_PROVIDER` | Servidor | `simulated` mientras no haya proveedor real; con otro valor el servidor no emite nada |
+| `BILLING_PROVIDER` | Servidor | **Sin valor** mientras la facturación esté en pausa: no se emite nada [ADR-0039]. `simulated` solo para ensayarla (sin validez fiscal) |
 | `INVOICE_RETRY_WAIT_SECONDS`, `INVOICE_RETRY_MAX_ATTEMPTS` | Servidor | Espera y tope de los reintentos de facturas (por omisión 120 s y 8 intentos) |
 | `TURNSTILE_SECRET_KEY`, `VITE_TURNSTILE_SITE_KEY` | Servidor / navegador | Protección del portal contra automatización (opcional, PD-51) |
 | `PORTAL_HASH_PEPPER`, `PORTAL_WINDOW_SECONDS`, `PORTAL_MAX_FAILS_*` | Servidor | Límites de intentos del portal |
 | `VITE_APP_VERSION`, `APP_VERSION` | Navegador / servidor | Versión que se anota en cada error |
 
-**Después de desplegar**, comprueba: la función `salud` responde (§6), el portal `/factura` abre, y una tablet de pruebas entra, cotiza y envía.
+**Después de desplegar**, comprueba: la función `salud` responde (§6) y una tablet entra, cotiza y envía. *(Con la facturación activa, también que el portal `/factura` abra.)*
 
 ## 4. Altas de rutina
 
@@ -109,10 +110,10 @@ Los errores del navegador y de las funciones de servidor se guardan **sin datos 
 
 ## 7. Respaldo y restauración
 
-- **Meta** [RNF-21]: respaldos diarios con **al menos 30 días** de historial. Si el plan de Supabase retiene menos, se programa una exportación nocturna a otro almacenamiento **(pendiente: retención real del plan y destino, PD-32, S4-27)**.
+- **Meta** [RNF-21]: respaldos diarios con **al menos 30 días** de historial. El plan gratuito de Supabase no tiene respaldos [ADR-0038]: la única copia es el **respaldo nocturno** de GitHub (*Actions → Respaldo nocturno*), cifrado con `CLAVE_DE_RESPALDO` y con 30 días de vida.
 - **Exportación del negocio (S5-08):** además del respaldo, un administrador puede llevarse todos los datos en CSV, JSON y PDF desde **Configuración** → **Exportar los datos**. No sustituye al respaldo (no trae los PIN ni las cuentas de acceso, y el PDF de cada factura se vuelve a generar), pero es una copia legible por cualquier programa. Los archivos traen datos personales: se guardan en un lugar seguro.
-- **Qué se respalda:** toda la base (clientes, cotizaciones, órdenes, ventas, pagos, facturas y bitácora). Los archivos de factura (XML y PDF) viven en la propia base.
-- **Restauración (recorrido E9).** El procedimiento completo, la lista de verificación y el registro de ensayos están en [`docs/operacion/RESTAURACION.md`](../operacion/RESTAURACION.md). En resumen: se restaura **siempre en un proyecto de Supabase limpio** (nunca encima del de producción), con las migraciones desde cero y luego los datos y las cuentas de la copia, y se comprueba que cada tabla quedó igual. Ya se ensayó en local con datos inventados (`pnpm ensayo:restauracion`, 28 tablas idénticas en menos de un minuto); **falta ensayarlo en producción** con un respaldo real y comprobar cómo vuelven a conectarse las tablets.
+- **Qué se respalda:** los datos del esquema `public` (clientes, cotizaciones, órdenes, ventas, pagos, cortes y bitácora) y las cuentas de acceso (`auth.users` y `auth.identities`). **Todavía no** se respaldan las **fotos de medición** (PD-57).
+- **Restauración (recorrido E9).** El procedimiento completo, la lista de verificación y el registro de ensayos están en [`docs/operacion/RESTAURACION.md`](../operacion/RESTAURACION.md). En resumen: se restaura **siempre en un proyecto de Supabase limpio** (nunca encima del de producción), con las migraciones desde cero y luego los datos y las cuentas de la copia, y se comprueba que cada tabla quedó igual. Ya se ensayó en local con datos inventados (`pnpm ensayo:restauracion`, 28 tablas idénticas en menos de un minuto); **falta ensayarlo con una copia real de la nube**, restaurada en Supabase local, y comprobar cómo vuelven a conectarse las tablets.
 - Después de restaurar, las **tablets** probablemente deban conectarse otra vez con un código nuevo (un proyecto nuevo tiene otras llaves de sesión); lo que tuvieran sin enviar se conserva en la tablet. Los folios definitivos los asigna el servidor.
 
 ## 8. Solicitudes de un cliente sobre sus datos
@@ -149,18 +150,17 @@ El aviso de privacidad vigente se edita en **Configuración** (cada edición cre
 
 ## 10. Soporte a ZAMMIR
 
-- Atención por **WhatsApp o correo en horario hábil**. HummingX no compromete disponibilidad de 24 horas [RNF-20]. Las fallas de terceros (internet, nube, SAT, proveedor de timbrado) quedan fuera, pero el sistema sigue capturando sin internet y reintenta.
+- Atención por **WhatsApp o correo, de lunes a viernes de 9:00 a 21:00** [ADR-0045]. Los datos de contacto van en el contrato y en la guía rápida. HummingX no compromete disponibilidad de 24 horas [RNF-20]. Las fallas de terceros (internet, nube, SAT, proveedor de timbrado) quedan fuera, pero el sistema sigue capturando sin internet y reintenta.
 - Al reportar un problema, pide: **sección**, **hora aproximada**, **folio** (si hay) y **qué esperaba ver**. No pidas ni aceptes por chat contraseñas, PIN, llaves ni datos fiscales completos.
 
 ## 11. Lo que falta para cerrar este manual
 
 | Falta | Depende de |
 |---|---|
-| Despliegue y variables de producción | Dominio y producción (PD-10, S4-26, S5-01) |
 | Aviso automático de caídas | Cuenta del monitoreo (PP-32) |
 | Probar la impresión en la tablet con la impresora de Wi-Fi de Luis | Modelo de la impresora (PD-54) y la tablet (S5-05) |
 | Reintentos y purga programados | Mantenimiento programado (S4-26) |
-| Proveedor de timbrado y certificado | PD-04, PD-05, S4-15 |
-| Retención de respaldos y ensayo de restauración | PD-32, S4-27, S5-06 |
+| Proveedor de timbrado y certificado (al reactivar la facturación) | PD-04, PD-05, S4-15, [ADR-0039] |
+| Fotos en el respaldo y ensayo de restauración con una copia de la nube | PD-57, S5-06 |
 | Copia de los datos de un solo cliente, y partir la exportación completa si crece demasiado | PP-34 |
 | Criterio para cancelar datos personales | Asesor de ZAMMIR |
