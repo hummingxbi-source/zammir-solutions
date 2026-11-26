@@ -96,7 +96,7 @@ Titularidad [ADR-0045]: las cuentas de la plataforma, el dominio y el código so
 **Reglas:**
 1. Las contraseñas, llaves y PIN **nunca** se mandan por chat, por correo ni se guardan en el repositorio. Las llaves de la plataforma viven solo en los paneles y en el gestor de contraseñas de HummingX.
 2. **Una cuenta por persona**; nada de contraseñas compartidas. Contraseñas largas y distintas; no se usa verificación en dos pasos [ADR-0041].
-3. **Registro de accesos:** el anexo B del acta de entrega anota qué recibió ZAMMIR. Para las cuentas de la plataforma, una tabla interna con *quién, a qué, desde cuándo y quién lo concedió*. Al terminar la relación con alguien se revoca el mismo día y se anota.
+3. **Registro de accesos:** el anexo C del acta de entrega anota qué recibió ZAMMIR. Para las cuentas de la plataforma, una tabla interna con *quién, a qué, desde cuándo y quién lo concedió*. Al terminar la relación con alguien se revoca el mismo día y se anota.
 4. Ningún agente de IA recibe accesos de producción [RNF-19].
 
 ## 8. Plan de soporte

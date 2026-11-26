@@ -101,6 +101,7 @@ Y en el ADR-0045, **el anticipo al cancelar una orden** (PD-07, ya resuelto):
 | D6 | **Monitoreo de caídas** (PP-32): cuenta gratuita que consulte `salud` | ⏳ Sin ella, nadie se entera de una caída hasta que llama Luis |
 | D7 | **Titularidad** de cuentas, dominio y código | ✅ HummingX BI; los datos son de ZAMMIR [ADR-0045] |
 | D8 | **Contraseñas de los administradores** | ✅ Luis y Ricardo escriben la suya en persona [ADR-0045] |
+| D9 | **Dónde se capacita** (PD-60). El guion de la §6.2 capacita el domingo y el lunes **después** de recrear el proyecto. Lo que se haga ahí (ventas, cancelaciones, cortes) queda para siempre: nada contable se borra [RN-18], y el acta promete entregar el sistema sin datos de prueba | ⏳ *(propuesta)* Capacitar con datos inventados en `zammir-pruebas` el domingo y el lunes, y recrear el proyecto el lunes **después** de la última sesión y **antes** de la entrega formal. La otra opción es capacitar en el proyecto real y cancelar con motivo cada documento de práctica, dejándolo anotado en el acta |
 
 ### 4.2 Lo que se corrigió en los documentos (25 nov) y lo que sigue
 
@@ -134,7 +135,7 @@ Ya corregidos, con [ADR-0039], [ADR-0040], [ADR-0043], [ADR-0044] y [ADR-0045]:
 
 ### 4.4 Versión 1.0.0 y repositorio privado (después de firmar el acta)
 
-Seguir los pasos de la sección *Publicar la versión* de `ACTA_DE_ENTREGA.md`:
+Seguir los pasos de `CIERRE_DEL_PROYECTO.md` §6:
 
 1. Subir `apps/web/package.json` y `packages/core/package.json` a `1.0.0`.
 2. Poner la fecha en `CHANGELOG.md`.
@@ -187,9 +188,9 @@ Los tres socios firman por HummingX BI el contrato y el acta de entrega [ADR-004
 | | 3. Aceptación (2 h) | Luis ejecuta el plan de aceptación | Hoja de resultados (anexo A del acta) |
 | **Dom 29** | 4. Correcciones | Lo que haya salido el sábado, por PR | — |
 | | 5. Paso a producción | Recrear el proyecto, datos reales, usuarios y tablets (§4.3), y P11 y P12 | — |
-| | 6. Capacitación de Luis (3 h) y de Ricardo (3 h) | Luis completa solo un recorrido de cotización a cobro. Ricardo, lo mismo más los reportes | Acta de capacitación (sesiones 1 y 2) |
-| **Lun 30** | 7. Capacitación del mostrador (3 h) | Cada persona entra con su PIN, cobra, hace su corte y reimprime | Acta de capacitación (sesión 3) |
-| | 8. Entrega formal (1 h) | Repaso de lo entregado, entrega del expediente, firma del contrato y del acta de entrega, y foto y video de cierre | Contrato, acta de entrega con sus anexos y acuse del aviso de privacidad |
+| | 6. Capacitación de Luis (3 h) y de Ricardo (3 h) | Luis completa solo un recorrido de cotización a cobro. Ricardo, lo mismo más los reportes | Anexo B del acta (sesiones 1 y 2) |
+| **Lun 30** | 7. Capacitación del mostrador (3 h) | Cada persona entra con su PIN, cobra, hace su corte y reimprime | Anexo B del acta (sesión 3) |
+| | 8. Entrega formal (1 h) | Repaso de lo entregado, entrega del expediente, firma del contrato y del acta de entrega, constancias de capacitación, y foto y video de cierre | Contrato y acta de entrega (anexos C, D y E) |
 | **Mar 1 dic** | 9. Cierre | Etiquetar `v1.0.0`, pasar el repositorio a privado, actualizar `CIERRE_DEL_PROYECTO.md` y la retrospectiva | — |
 
 > El orden importa: **primero se prueba con datos inventados y Luis acepta; después se recrea el proyecto vacío y se cargan los datos reales** [ADR-0043]. No se recrea antes de que pasen las pruebas.
@@ -202,50 +203,35 @@ Los tres socios firman por HummingX BI el contrato y el acta de entrega [ADR-004
 
 ---
 
-## 7. Expediente de la entrega (10 documentos) [ADR-0045]
+## 7. Expediente de la entrega (5 documentos) [ADR-0047]
 
-> **Dónde se guardan.** Las **plantillas sin datos** viven en el repositorio, en `docs/entrega/`. **La versión llenada**, con nombres completos, montos o números de serie, se guarda en una carpeta local que **git ignora**, se imprime y se exporta a PDF desde ahí [CLAUDE.md regla 7]. Los PDF firmados se copian además al almacenamiento de HummingX.
-> Cada documento lleva el encabezado de HummingX BI y de ZAMMIR, su folio, versión, fecha y lugar.
+> **Dónde se guardan.** Las **plantillas sin datos** viven en el repositorio: el acta en `docs/entrega/ACTA_DE_ENTREGA.md` y las demás en [`docs/entrega/plantillas/`](plantillas/README.md). **La versión llenada**, con nombres completos, montos, números de serie, datos de soporte y firmas, se prepara en la carpeta local `privado/`, que **git ignora**, y se imprime y exporta a PDF desde ahí [CLAUDE.md regla 7]. Los PDF firmados se copian además al almacenamiento de HummingX.
+> Todo va en **una carpeta** con portada, índice y folios. Cada documento lleva su folio, versión, fecha y lugar.
 
-**Formales (se firman)**
-
-| Folio | Documento | Fuente o estado | Firma |
+| Folio | Documento | Plantilla | Se firma |
 |---|---|---|---|
-| HMX-ZAM-01 | **Contrato de prestación de servicios**: alcance, entregables, soporte, garantía del software, titularidad del dominio y del código, datos personales (HummingX los trata por cuenta de ZAMMIR) y terminación | ❌ Plantilla por redactar. No hay borrador previo. Debe concordar con `ALCANCE.md`, ADR-0038, ADR-0039 y ADR-0045. Lo que no esté definido queda [POR DEFINIR]. **Lo revisa un abogado**, incluida la forma de firmar de HummingX, que no está constituida | Luis y los tres socios de HummingX |
-| HMX-ZAM-02 | **Acta de capacitación**: un apartado por sesión, con asistentes, temas, duración, criterio de S5-11 a S5-13 cumplido sí o no, y observaciones | ❌ Plantilla por redactar | Quien recibe y quien imparte, en cada sesión |
-| HMX-ZAM-03 | **Acta de entrega y aceptación final**, con sus anexos: A, constancia de pruebas de aceptación; B, registro de entrega de accesos sin contraseñas; C, carta de entrega de equipo | ✅ [`ACTA_DE_ENTREGA.md`](ACTA_DE_ENTREGA.md) | Luis y los tres socios de HummingX |
-| HMX-ZAM-04 | **Aviso de privacidad** con hoja de acuse | 🟡 Borrador base en el sistema (PD-12) | Luis |
+| HMX-ZAM-01 | **Contrato de prestación de servicios**: alcance, entregables, soporte, garantía del software, titularidad del dominio y del código, datos personales (HummingX los trata por cuenta de ZAMMIR) y terminación | ❌ **Se redacta al final.** No hay borrador previo. Debe concordar con `ALCANCE.md`, ADR-0038, ADR-0039 y ADR-0045. Lo no definido queda [POR DEFINIR]. **Lo revisa un abogado**, incluida la forma de firmar de HummingX, que no está constituida | Luis y los tres socios de HummingX |
+| HMX-ZAM-02 | **Acta de entrega y aceptación**, con anexos: **A** constancia de pruebas de aceptación · **B** capacitación (un apartado por sesión) · **C** entrega de accesos, sin contraseñas · **D** entrega de equipo · **E** aviso de privacidad y su acuse | ✅ [`ACTA_DE_ENTREGA.md`](ACTA_DE_ENTREGA.md) | Luis y los tres socios; anexo A el sábado, anexo B en cada sesión y el resto el lunes |
+| HMX-ZAM-03 | **Informe técnico de entrega**: ficha técnica, calidad y seguridad (cifras **corridas el mismo día**) y plan de continuidad. Es un informe de HummingX: sin sellos ni la palabra "certificado" | ✅ [`plantillas/INFORME_TECNICO_DE_ENTREGA.md`](plantillas/INFORME_TECNICO_DE_ENTREGA.md) | No |
+| HMX-ZAM-04 | **Manual de usuario** | ✅ [`MANUAL_DE_USUARIO.md`](../manuales/MANUAL_DE_USUARIO.md), versión 1.0; faltan capturas de las pantallas de AJ-02 a AJ-09 | No |
+| HMX-ZAM-05 | **Guías rápidas por rol** para plastificar, con bienvenida y soporte al reverso | ✅ [`plantillas/GUIAS_RAPIDAS.md`](plantillas/GUIAS_RAPIDAS.md) | No |
+| ✦ | *Constancia de capacitación* por persona (opcional) | ✅ [`plantillas/CONSTANCIA_DE_CAPACITACION.md`](plantillas/CONSTANCIA_DE_CAPACITACION.md) | HummingX |
 
-**De confianza**
-
-| Folio | Documento | Fuente o estado |
-|---|---|---|
-| HMX-ZAM-05 | **Informe de calidad y seguridad**: pruebas automáticas, mutación, RLS en todas las tablas, secretos, dependencias, CSP, respaldo y ensayo de restauración, y lo que **no** se probó | ❌ Con cifras **corridas el mismo día**. Fuentes: `REVISION_DE_SEGURIDAD.md`, `TESTING.md`, el CI y `RESTAURACION.md`. Son informes de HummingX: sin sellos ni la palabra "certificado" |
-| HMX-ZAM-06 | **Ficha técnica del sistema** (una hoja) | ❌ |
-| HMX-ZAM-07 | **Plan de continuidad** (una hoja): qué pasa si se va el internet, si se pierde una tablet o si se cae el servidor | ❌ Resumen de `RESTAURACION.md` en lenguaje de Luis |
-
-**De uso diario**
-
-| Folio | Documento | Fuente o estado |
-|---|---|---|
-| HMX-ZAM-08 | **Manual de usuario** en PDF | 🟡 `MANUAL_DE_USUARIO.md` (§4.2) |
-| HMX-ZAM-09 | **Guías rápidas para plastificar** (Administrador y Cajero / vendedor), con la bienvenida y los datos de soporte al reverso | ❌ |
-| HMX-ZAM-10 | **Constancia de capacitación** por persona | ❌ |
-
-**Internos (no se entregan):** orden del día, minuta de cada día, hoja de hallazgos, `MANUAL_DE_SOPORTE.md` y `GUIA_DE_OPERACION.md`.
+**Internos (no se entregan):** orden del día, minuta de cada día y hoja de hallazgos ([`plantillas/INTERNOS_DE_LA_ENTREGA.md`](plantillas/INTERNOS_DE_LA_ENTREGA.md)), `MANUAL_DE_SOPORTE.md` y `GUIA_DE_OPERACION.md`.
 
 **Lo que recibe ZAMMIR** (va en el acta):
 
 - El sistema en `https://sistema.zammir-solutions.com`, con sus datos reales y sin datos de prueba.
-- Las dos tablets con la aplicación instalada y conectadas (anexo C del acta).
+- Las dos tablets con la aplicación instalada y conectadas (anexo D del acta).
 - La impresión en hoja carta probada con su impresora.
-- Sus cuentas de administrador y los PIN de su equipo (anexo B del acta).
+- Sus cuentas de administrador y el registro de quién tiene PIN en la tablet (anexo C del acta).
 - La exportación de sus datos, probada (CSV, JSON y PDF).
 - El expediente de la entrega.
 
 **Fuera de la entrega**, y así se escribe en el acta:
 
 - Facturación activa (en pausa [ADR-0039]).
+- Ticket térmico e impresora Bluetooth [ADR-0040].
 - Portal de seguimiento P1.
 - Existencias P2.
 - Las propuestas sin aprobar de `PENDIENTES.md`.
@@ -290,7 +276,7 @@ Los tres socios firman por HummingX BI el contrato y el acta de entrega [ADR-004
 | **Comandos** | `pnpm test` · `pnpm lint` · `pnpm db:start` · `pnpm db:reset && pnpm test:db` · `pnpm test:integracion` (sirve las funciones con `pnpm funciones:empaquetar` y `supabase functions serve --no-verify-jwt --env-file supabase/functions/pruebas.env`) · `pnpm test:e2e` · `pnpm test:mutacion:critico` · `pnpm build && pnpm check:bundle` · `pnpm ensayo:restauracion` |
 | **Flujos de GitHub** | *Integración continua* (unos 10 min), *Mutación* (unos 35 min), *Desplegar a Supabase* (entrada `entorno`: `pruebas` o `produccion`) y *Respaldo nocturno* (programado a las 2:00 a. m.; GitHub lo ha corrido con horas de retraso) |
 | **Migraciones** | 41 en `supabase/migrations`, aditivas. La última es `20261125070000_cargos_extra.sql` |
-| **Decisiones** | ADR-0001 a ADR-0046 en `docs/decisiones/`, índice en `DECISIONES.md` |
+| **Decisiones** | ADR-0001 a ADR-0047 en `docs/decisiones/`, índice en `DECISIONES.md` |
 | **Pendientes** | `docs/producto/PENDIENTES.md` (PD abiertos, PR resueltos, PP propuestas) |
 | **Correcciones de interfaz que pidió Juanito** | Lo del 14 nov ya se atendió (PR #92, #93, #110 y #111). La lista sigue abierta para lo que reporte al probar |
 
@@ -306,7 +292,9 @@ Los tres socios firman por HummingX BI el contrato y el acta de entrega [ADR-004
 - [ ] Copia de fotos comprobada con una foto real (P2, PD-57).
 - [ ] P2 a P5 hechas con las dos tablets.
 - [x] Documentos de la §4.2 corregidos por PR.
-- [ ] Expediente de la §7 redactado como plantilla. Los llenados van en la carpeta local que git ignora.
+- [x] Expediente de la §7 redactado como plantilla, salvo el contrato (ADR-0047).
+- [ ] Contrato (HMX-ZAM-01) redactado y revisado por un abogado.
+- [ ] Versiones llenadas en `privado/` y exportadas a PDF.
 - [ ] Catálogo real listo para cargar, o un plan B acordado con Luis.
-- [ ] Impresiones: contrato, acta de entrega con anexos, plan de aceptación, acta de capacitación, aviso de privacidad, informe, ficha, plan de continuidad, guías rápidas, constancias y hoja de hallazgos.
+- [ ] Impresiones: contrato, acta de entrega con sus anexos A a E, hoja de resultados del plan de aceptación, informe técnico, manual de usuario, guías rápidas (plastificadas), constancias y, para uso interno, orden del día, minuta y hoja de hallazgos.
 - [ ] Gestor de contraseñas listo con las cuentas nuevas de la plataforma.

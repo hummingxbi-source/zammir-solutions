@@ -106,7 +106,7 @@ Solo cuando las pruebas físicas pasaron y Luis aceptó lo probado. **No se borr
 - [ ] **Datos del negocio, garantía y textos legales** definitivos (PD-06, PD-11, PD-12).
 - [ ] **Aceptación firmada** por Luis (S5-10).
 - [ ] **Capacitaciones** con Luis, Ricardo y el equipo de mostrador (S5-11 a S5-13).
-- [ ] **Entrega:** se firma el acta con el registro de accesos (anexo B) y se anotan las fechas de renovación del dominio. El dominio y las cuentas siguen a nombre de HummingX BI [ADR-0045] (S5-14 a S5-16).
+- [ ] **Entrega:** se firma el acta con la entrega de accesos (anexo C) y se anotan las fechas de renovación del dominio. El dominio y las cuentas siguen a nombre de HummingX BI [ADR-0045] (S5-14 a S5-16).
 - [ ] **Después de firmar:** pasar el repositorio a privado y comprobar que Vercel siga desplegando (PD-59).
 
 ## 8. Lo que no se hace
