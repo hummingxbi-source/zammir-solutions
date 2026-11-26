@@ -51,7 +51,7 @@ El detalle está en el [manual de soporte](../manuales/MANUAL_DE_SOPORTE.md) §3
 
 ## 4. Restaurar un respaldo
 
-Procedimiento, lista de verificación y registro de ensayos: **[RESTAURACION.md](RESTAURACION.md)**. Siempre en un entorno **limpio**, nunca encima del de producción. Ya se ensayó en local (`pnpm ensayo:restauracion`); **falta ensayarlo con una copia real de la nube**, incluidas las fotos de medición [ADR-0046].
+Procedimiento, lista de verificación y registro de ensayos: **[RESTAURACION.md](RESTAURACION.md)**. Siempre en un entorno **limpio**, nunca encima del de producción. Ya se ensayó en local (`pnpm ensayo:restauracion`) y, el 25 nov, con una copia real de la nube (`scripts/ensayo-restauracion-nube.sh`). Repetirlo al menos una vez al año (§2).
 
 ## 5. Rotar claves
 
@@ -129,8 +129,7 @@ Al reportar un problema se pide: **sección**, **hora aproximada**, **folio** (s
 |---|---|
 | Aviso automático de caídas | Cuenta del monitoreo (PP-32) |
 | Purga de errores programada | Mantenimiento programado (S4-26) |
-| Activar la copia de las fotos (llave S3 y entorno `respaldo`) | PD-57 |
-| Ensayo de restauración con una copia de la nube | S5-06 |
+| Comprobar la copia de las fotos con una foto real | PD-57 |
 | Repositorio privado y vigilancia de minutos de Actions | PD-59 |
 | Tiempos de respuesta y alcance del soporte | El contrato |
 | Criterio legal para cancelar datos personales y para avisar de una exposición | Asesor de ZAMMIR |

@@ -15,7 +15,7 @@
 | **Construcción** | Fases 0 a 10 construidas y fusionadas en `main`. La última fue la fase 10, *ajustes de operación para la entrega* [ADR-0044], en los PR #114 a #123 (detalle en la §2). |
 | **Producción** | `https://sistema.zammir-solutions.com` responde 200 y sirve el último `main` (Vercel). Lleva la política de contenido (CSP) y la política de permisos. La función `salud` responde `{"ok":true}`. Verificado el 25 nov. |
 | **Base en la nube** | Un solo proyecto de Supabase, **`zammir-pruebas`**, con **datos inventados** [ADR-0043]. El 25 nov se aplicaron las 8 migraciones de la fase 10 (41 en total) y se desplegaron las 11 funciones, con *Desplegar a Supabase* en el entorno `pruebas`. En la entrega **se borra y se crea uno nuevo vacío**. |
-| **Respaldo nocturno** | Activo desde el 24 nov y cifrado; se guarda 30 días en GitHub. Copia la base y las cuentas. La copia de las **fotos de medición** ya está construida [ADR-0046] y se activa con una llave S3 y el entorno `respaldo` (PD-57). **Falta ensayar la restauración de una copia de la nube** (§5). |
+| **Respaldo nocturno** | Activo desde el 24 nov y cifrado; se guarda 30 días en GitHub. Copia la base y las cuentas. La copia de las **fotos de medición** está activa desde el 25 nov, en el entorno `respaldo` [ADR-0046]; falta comprobarlo con una foto real tomada en la tablet (P2), porque `zammir-pruebas` no tenía fotos en las primeras corridas (PD-57). **Restauración de una copia de la nube ensayada y aprobada el 25 nov** (P1). |
 | **Calidad automática** | CI en verde en cada PR. Al 24 nov, en local: 2,674 pruebas de unidad y componentes, 339 de integración con Supabase local y 500 de base de datos (pgTAP, 31 archivos). También pasan lint, Prettier, dependencias, mutación del dominio y escaneo de secretos. **Para el informe de calidad se vuelven a correr.** |
 | **Facturación** | **En pausa** [ADR-0039]. El código existe y está probado, pero está apagado por interruptor. El contador de ZAMMIR sigue facturando. |
 | **Impresión** | Hoja **carta** con la impresión de Android, o PDF por WhatsApp [ADR-0040]. **No hay ticket térmico.** |
@@ -148,8 +148,8 @@ Seguir los pasos de la sección *Publicar la versión* de `ACTA_DE_ENTREGA.md`:
 
 | # | Prueba | Quién | Cuándo | Cómo se sabe que pasó |
 |---|---|---|---|---|
-| P1 | **Ensayo de restauración** de una copia **de la nube** con Supabase local. Se hace a mano con `RESTAURACION.md` §3 paso 4: `pnpm ensayo:restauracion` solo restaura la copia que él mismo saca de la base local | Juanito (necesita Docker y la clave del respaldo) | **Antes del 28**, sin falta | Anotado en el registro de `RESTAURACION.md`. Es la única copia que existe (plan gratuito) |
-| P2 | **Primera tablet** (PLAN_DE_PRODUCCION §4): instalar, conectar, PIN y **modo avión** | Juanito | Antes del 28 | La venta hecha sin internet aparece en Reportes al reconectar |
+| P1 | ✅ **Ensayo de restauración** de una copia **de la nube** con Supabase local (`scripts/ensayo-restauracion-nube.sh`) | Juanito, con Claude | **Hecho el 25 nov** | Aprobado: 30 tablas con los mismos renglones, en 69 s (registro de `RESTAURACION.md`). La copia casi no tenía datos |
+| P2 | **Primera tablet** (PLAN_DE_PRODUCCION §4): instalar, conectar, PIN y **modo avión**. La copia del 26 nov mostró que `zammir-pruebas` **no tiene productos**: antes, cargar un catálogo **inventado** (Catálogo → **Importar desde archivo**) | Juanito | Antes del 28 | La venta hecha sin internet aparece en Reportes al reconectar |
 | P3 | **Dos tablets a la vez** | Juanito | Antes del 28 | Los folios no chocan y los totales coinciden |
 | P4 | **Política de contenido (CSP):** entrar, sincronizar, subir una foto e imprimir | Juanito | Antes del 28 | Nada se bloquea y la consola no muestra avisos de CSP |
 | P5 | **Recorrido a mano de AJ-02 a AJ-09** en la tablet (escenarios 15 a 23 del plan de aceptación) | Juanito | Antes del 28 | Cada función hace lo de la tabla de la §2 |
@@ -301,8 +301,9 @@ Los tres socios firman por HummingX BI el contrato y el acta de entrega [ADR-004
 - [ ] Luis dio la hora de las sesiones.
 - [x] Decisiones D1, D2, D4, D7 y D8 tomadas y registradas [ADR-0045].
 - [ ] D3, D5 y D6 decididas o anotadas.
-- [ ] Ensayo de restauración de una copia de la nube aprobado (P1).
-- [ ] Respaldo con las fotos de medición y en su entorno propio: construido [ADR-0046]; falta la llave S3, el entorno `respaldo` y una corrida en verde (PD-57).
+- [x] Ensayo de restauración de una copia de la nube aprobado (P1, 25 nov).
+- [x] Respaldo con las fotos de medición y en su entorno propio [ADR-0046]: activo desde el 25 nov.
+- [ ] Copia de fotos comprobada con una foto real (P2, PD-57).
 - [ ] P2 a P5 hechas con las dos tablets.
 - [x] Documentos de la §4.2 corregidos por PR.
 - [ ] Expediente de la §7 redactado como plantilla. Los llenados van en la carpeta local que git ignora.
