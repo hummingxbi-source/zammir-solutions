@@ -15,7 +15,7 @@
 | **Construcción** | Fases 0 a 10 construidas y fusionadas en `main`. La última fue la fase 10, *ajustes de operación para la entrega* [ADR-0044], en los PR #114 a #123 (detalle en la §2). |
 | **Producción** | `https://sistema.zammir-solutions.com` responde 200 y sirve el último `main` (Vercel). Lleva la política de contenido (CSP) y la política de permisos. La función `salud` responde `{"ok":true}`. Verificado el 25 nov. |
 | **Base en la nube** | Un solo proyecto de Supabase, **`zammir-pruebas`**, con **datos inventados** [ADR-0043]. El 25 nov se aplicaron las 8 migraciones de la fase 10 (41 en total) y se desplegaron las 11 funciones, con *Desplegar a Supabase* en el entorno `pruebas`. En la entrega **se borra y se crea uno nuevo vacío**. |
-| **Respaldo nocturno** | Activo desde el 24 nov y cifrado; se guarda 30 días en GitHub. Copia la base y las cuentas. La copia de las **fotos de medición** ya está construida [ADR-0046] y se activa con una llave S3 y el entorno `respaldo` (PD-57). **Falta ensayar la restauración de una copia de la nube** (§5). |
+| **Respaldo nocturno** | Activo desde el 24 nov y cifrado; se guarda 30 días en GitHub. Copia la base y las cuentas. La copia de las **fotos de medición** está activa desde el 25 nov, en el entorno `respaldo` [ADR-0046]; falta comprobarlo con una foto real tomada en la tablet (P2), porque `zammir-pruebas` no tenía fotos en las primeras corridas (PD-57). **Falta ensayar la restauración de una copia de la nube** (§5). |
 | **Calidad automática** | CI en verde en cada PR. Al 24 nov, en local: 2,674 pruebas de unidad y componentes, 339 de integración con Supabase local y 500 de base de datos (pgTAP, 31 archivos). También pasan lint, Prettier, dependencias, mutación del dominio y escaneo de secretos. **Para el informe de calidad se vuelven a correr.** |
 | **Facturación** | **En pausa** [ADR-0039]. El código existe y está probado, pero está apagado por interruptor. El contador de ZAMMIR sigue facturando. |
 | **Impresión** | Hoja **carta** con la impresión de Android, o PDF por WhatsApp [ADR-0040]. **No hay ticket térmico.** |
@@ -302,7 +302,8 @@ Los tres socios firman por HummingX BI el contrato y el acta de entrega [ADR-004
 - [x] Decisiones D1, D2, D4, D7 y D8 tomadas y registradas [ADR-0045].
 - [ ] D3, D5 y D6 decididas o anotadas.
 - [ ] Ensayo de restauración de una copia de la nube aprobado (P1).
-- [ ] Respaldo con las fotos de medición y en su entorno propio: construido [ADR-0046]; falta la llave S3, el entorno `respaldo` y una corrida en verde (PD-57).
+- [x] Respaldo con las fotos de medición y en su entorno propio [ADR-0046]: activo desde el 25 nov.
+- [ ] Copia de fotos comprobada con una foto real (P2, PD-57).
 - [ ] P2 a P5 hechas con las dos tablets.
 - [x] Documentos de la §4.2 corregidos por PR.
 - [ ] Expediente de la §7 redactado como plantilla. Los llenados van en la carpeta local que git ignora.

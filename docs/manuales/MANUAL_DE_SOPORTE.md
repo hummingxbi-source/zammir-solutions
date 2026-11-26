@@ -161,6 +161,6 @@ El aviso de privacidad vigente se edita en **Configuración** (cada edición cre
 | Probar la impresión en la tablet con la impresora de Wi-Fi de Luis | Modelo de la impresora (PD-54) y la tablet (S5-05) |
 | Reintentos y purga programados | Mantenimiento programado (S4-26) |
 | Proveedor de timbrado y certificado (al reactivar la facturación) | PD-04, PD-05, S4-15, [ADR-0039] |
-| Activar la copia de las fotos y ensayar la restauración con una copia de la nube | PD-57, S5-06 |
+| Comprobar la copia de las fotos con una foto real y ensayar la restauración con una copia de la nube | PD-57, S5-06 |
 | Copia de los datos de un solo cliente, y partir la exportación completa si crece demasiado | PP-34 |
 | Criterio para cancelar datos personales | Asesor de ZAMMIR |

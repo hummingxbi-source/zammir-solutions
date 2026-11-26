@@ -129,7 +129,7 @@ Al reportar un problema se pide: **sección**, **hora aproximada**, **folio** (s
 |---|---|
 | Aviso automático de caídas | Cuenta del monitoreo (PP-32) |
 | Purga de errores programada | Mantenimiento programado (S4-26) |
-| Activar la copia de las fotos (llave S3 y entorno `respaldo`) | PD-57 |
+| Comprobar la copia de las fotos con una foto real | PD-57 |
 | Ensayo de restauración con una copia de la nube | S5-06 |
 | Repositorio privado y vigilancia de minutos de Actions | PD-59 |
 | Tiempos de respuesta y alcance del soporte | El contrato |

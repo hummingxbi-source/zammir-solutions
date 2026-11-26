@@ -18,7 +18,7 @@ Si se pierde o se daña la base de producción (un error humano, una falla de la
 |---|---|---|---|
 | Respaldos diarios del plan de Supabase | — | — | **No existen** en el plan gratuito [ADR-0038] |
 | Respaldo nocturno de GitHub: la base | Datos de `public` y las cuentas (`auth.users` y `auth.identities`), cifrados | El flujo *Respaldo nocturno*, cada noche, con 30 días de vida | **Activo** desde el 24 nov 2026 |
-| Respaldo nocturno de GitHub: las fotos | Todas las fotos de medición, cifradas | El mismo flujo, cada noche; se guardan las dos copias más recientes | Construido [ADR-0046]; se activa con los secretos del entorno `respaldo` |
+| Respaldo nocturno de GitHub: las fotos | Todas las fotos de medición, cifradas | El mismo flujo, cada noche; se guardan las dos copias más recientes | **Activo desde el 25 nov 2026** [ADR-0046] |
 | Exportación del negocio (Configuración) | Datos en CSV, JSON y PDF para leer; **sin PIN ni cuentas de tablets** | Un administrador, a mano | Existe (S5-08). **No sustituye al respaldo**: no se puede restaurar a partir de ella |
 
 ## 3. Procedimiento (producción)
@@ -91,7 +91,7 @@ Resultado del 8 de noviembre de 2026, con los datos que dejan las pruebas de int
 
 | Falta | Depende de |
 |---|---|
-| Activar la copia de las fotos (llave S3 y entorno `respaldo`) | PD-57 |
+| Comprobar la copia de las fotos con una foto real | PD-57 |
 | Ensayo con una copia del proyecto en la nube | Juanito, con Docker y `CLAVE_DE_RESPALDO`; se restaura en Supabase local [ADR-0043] |
 | Objetivo de tiempo de recuperación | Luis y Juanito |
 | Comprobar el paso de las tablets | Ensayo en producción |
