@@ -43,7 +43,7 @@ Se construyen apagados por defecto, activables por configuración [DC §3.2].
 
 | Clave | Función | Estado |
 |---|---|---|
-| P1 | Portal de seguimiento para el cliente final: aceptar cotización en línea, línea de tiempo del trabajo | Se le pregunta al cliente en el cuestionario de acuerdos, y **Juanito todavía no aprueba el diseño del portal de la demo** (PD-13). **Ojo:** el comprobante con folio y QR de autofacturación **sí es obligatorio**, porque lo necesita la facturación |
+| P1 | Portal de seguimiento para el cliente final: aceptar cotización en línea, línea de tiempo del trabajo | Se le pregunta al cliente en el cuestionario de acuerdos, y **Juanito todavía no aprueba el diseño del portal de la demo** (PD-13). Con la facturación en pausa, el comprobante lleva folio pero **no** QR [ADR-0039]; al reactivarla, el QR de autofacturación vuelve a ser obligatorio |
 | P2 | Existencias de piezas estándar (puertas y ventanas) con alerta de mínimo | Propuesta de HummingX; la demo lo mostró (PD-14) |
 
 ## 4. Fuera del alcance
@@ -65,7 +65,7 @@ No construir, aunque parezca natural [DC §3.3, §7.8]:
 
 ## 5. Equipo y dispositivos
 
-El cliente compra el equipo directamente; HummingX recomienda modelos y configura [DC §8.1].
+El documento fuente decía que el cliente compra el equipo y HummingX recomienda y configura [DC §8.1]. En la entrega, **una tablet va incluida en el contrato y ZAMMIR compró la otra**; HummingX configura las dos [ADR-0045].
 
 | Elemento | Detalle | Fuente |
 |---|---|---|
@@ -94,6 +94,6 @@ Según [DC §13]:
 - Registro de decisiones (`DECISIONES.md`).
 - Manual de usuario y manual de soporte (Juanito los edita).
 - Plan de respaldo.
-- Accesos entregados a Juanito por un canal seguro.
+- Accesos de ZAMMIR (cuentas de administrador y PIN) entregados en persona, sin contraseñas por mensaje. Las cuentas de la plataforma, el dominio y el código son de HummingX BI [ADR-0045].
 - Capacitación presencial de 3 horas en tres sesiones: una con Luis, una con Ricardo y una con el equipo de mostrador.
 - Acta de entrega.

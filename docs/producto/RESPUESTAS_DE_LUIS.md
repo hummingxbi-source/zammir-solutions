@@ -63,6 +63,6 @@
 1. La **constancia de situación fiscal**, el **logo en archivo original** y la **lista de productos y precios** (la más importante: sin ella no hay catálogo real).
 2. Si tienen **e.firma vigente** (con su contador).
 3. Qué productos llevan **IVA 0 % o exento**.
-4. **De qué depende** el anticipo, qué pasa con él al cancelar y cuánto dura la garantía de cada producto.
-5. Cómo manejan las **entregas por partes**.
+4. Cuánto dura la garantía de cada producto. *(El anticipo al cancelar lo decidió HummingX [ADR-0045].)*
+5. ~~Cómo manejan las entregas por partes~~ (resuelto en [ADR-0044]).
 6. La **hora** de las tres sesiones del 28, 29 y 30 de noviembre.

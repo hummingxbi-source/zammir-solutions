@@ -14,6 +14,8 @@
 | Facturación | Apagada: **no** se define `VITE_FACTURACION` en Vercel ni `FACTURACION_ACTIVA` en Supabase, y `BILLING_PROVIDER` queda **sin valor** [ADR-0039]. |
 | Impresión | Hoja carta con la impresión de Android [ADR-0040]. Falta confirmar el modelo de la impresora de Luis (PD-54). |
 | Verificación en dos pasos | No se usa [ADR-0041]. |
+| Titularidad | Las cuentas, el dominio y el código son de **HummingX BI**; los datos son de ZAMMIR [ADR-0045]. |
+| Repositorio | **Público hasta la entrega**; se vuelve privado después de firmar (PD-59, [ADR-0045]). No se usan *Required reviewers*. |
 
 ## 1. Quién hace qué
 
@@ -34,7 +36,7 @@
 1. [x] Supabase `zammir-pruebas`: pasos 1 a 5 de `PUESTA_EN_PRODUCCION.md` (registro abierto **apagado**, contraseñas de 12 caracteres o más, primer administrador con su rol).
 2. [x] GitHub: entorno **`pruebas`** con sus tres secretos (`SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`, `SUPABASE_DB_PASSWORD`).
 3. [x] **Actions → Desplegar a Supabase** con entorno `pruebas`: terminó en verde.
-4. [ ] Secretos de las funciones en Supabase: `PORTAL_HASH_PEPPER` (una cadena larga aleatoria). `BILLING_PROVIDER` queda **sin valor** mientras la facturación esté en pausa.
+4. ➖ **`PORTAL_HASH_PEPPER` no se definió en `zammir-pruebas`, y no hace falta:** solo lo usa el portal de autofacturación, que está apagado; sin él, la función usa la llave de servicio (`supabase/functions/_shared/portal.ts`). Se define en el proyecto nuevo de la entrega (§7, paso 3). `BILLING_PROVIDER` queda **sin valor** mientras la facturación esté en pausa.
 5. [x] Vercel `zammir-pruebas`: rama de producción `main`, con `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` de ese Supabase.
 6. [x] **Dominio:** `sistema.zammir-solutions.com` en Vercel y su `CNAME` en Cloudflare, en **solo DNS** (nube gris). Responde por `https://`.
 
@@ -58,7 +60,9 @@ El plan gratuito no incluye respaldos de la plataforma, así que este es **el ú
 
 1. [x] En el entorno `produccion` de GitHub: secretos `SUPABASE_DB_URL` (Session pooler del único proyecto) y `CLAVE_DE_RESPALDO` (guardada también en el gestor). Hecho el 2026-11-24.
 2. [x] **Actions → Respaldo nocturno → Run workflow**: la primera copia salió en verde el 2026-11-24 (`respaldo-zammir-2026-11-24`, unos 215 KB). Desde entonces corre sola cada noche.
-3. [ ] **Ensayar la restauración** de esa copia con Supabase local (ver `RESTAURACION.md`) y anotar el resultado en su registro de ensayos.
+3. [ ] **Ensayar la restauración** de una copia de la nube con Supabase local (ver `RESTAURACION.md` §3 paso 4; se hace a mano) y anotar el resultado en su registro de ensayos. **Antes del 28 nov.**
+4. [ ] **Entorno propio del respaldo** [ADR-0045]: crear el entorno `respaldo` en GitHub, sin revisores, con `SUPABASE_DB_URL` y `CLAVE_DE_RESPALDO`, y quitarlos de `produccion`. Va junto con el PR que cambia el flujo.
+5. [ ] **Fotos de medición en el respaldo** (PD-57). Mismo PR.
 
 ## 6. Fase 4 · Pruebas físicas (Juanito, Luis y el equipo; S4-33, S5-05, S5-09)
 
@@ -84,22 +88,23 @@ Solo cuando las pruebas físicas pasaron y Luis aceptó lo probado. **No se borr
 
 **Proyecto vacío:**
 
-1. Borrar el proyecto `zammir-pruebas` en Supabase y crear uno nuevo vacío (pasos 1 a 5 de `PUESTA_EN_PRODUCCION.md`, con **otra** contraseña de base).
-2. GitHub: los secretos del proyecto nuevo van al entorno **`produccion`**, con **Required reviewers**. El entorno `pruebas` se vacía.
+1. Borrar el proyecto `zammir-pruebas` en Supabase y crear uno nuevo vacío (pasos 1 a 5 de `PUESTA_EN_PRODUCCION.md`, con **otra** contraseña de base). Incluye **apagar el registro abierto** y exigir **contraseñas de 12 caracteres o más** (paso 1.4).
+2. GitHub: los secretos del proyecto nuevo van al entorno **`produccion`**, **sin** *Required reviewers* [ADR-0045], con un `SUPABASE_ACCESS_TOKEN` **nuevo**. El entorno `pruebas` se vacía y el token viejo **se revoca en Supabase**: es de la cuenta y alcanza también el otro proyecto.
 3. **Desplegar a Supabase** con entorno `produccion`, y los secretos de las funciones (`PORTAL_HASH_PEPPER` **nuevo**).
 4. Vercel: cambiar `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` por las del proyecto nuevo, **solo para *Production***, y quitarlas de *Preview*, para que una vista previa no escriba en los datos reales. Redesplegar.
-5. Actualizar `SUPABASE_DB_URL` del respaldo, correrlo a mano y confirmar que sale la copia.
+5. Actualizar `SUPABASE_DB_URL` en el entorno `respaldo`, correr el respaldo a mano y confirmar que sale la copia del proyecto nuevo.
 
 **Datos reales:**
 
-- [ ] **Administradores** (Luis y Ricardo) con su correo y contraseña.
-- [ ] **Usuarios reales** con PIN propio (S5-04). Los nombres los da Luis; los permisos de cada rol los asigna HummingX.
+- [ ] **Administradores** (Luis y Ricardo) con su correo. **Cada uno escribe su contraseña en persona** [ADR-0045].
+- [ ] **Usuarios reales** con PIN propio (S5-04): Luis y Ricardo como administradores y la persona del mostrador como **Cajero / vendedor** [ADR-0045]. Cada quien escribe su PIN en persona.
 - [ ] **Las dos tablets** reconectadas con códigos nuevos.
 - [ ] **Catálogo real** y reglas de precio (S5-03; PD-02 y PD-03).
 - [ ] **Datos del negocio, garantía y textos legales** definitivos (PD-06, PD-11, PD-12).
 - [ ] **Aceptación firmada** por Luis (S5-10).
 - [ ] **Capacitaciones** con Luis, Ricardo y el equipo de mostrador (S5-11 a S5-13).
-- [ ] **Entrega:** el dominio queda a nombre de ZAMMIR, se entrega la guía de operación con los accesos por un canal seguro y se anotan las fechas de renovación (S5-14 a S5-16).
+- [ ] **Entrega:** se firma el acta con el registro de accesos (anexo B) y se anotan las fechas de renovación del dominio. El dominio y las cuentas siguen a nombre de HummingX BI [ADR-0045] (S5-14 a S5-16).
+- [ ] **Después de firmar:** pasar el repositorio a privado y comprobar que Vercel siga desplegando (PD-59).
 
 ## 8. Lo que no se hace
 
@@ -128,4 +133,5 @@ Solo cuando las pruebas físicas pasaron y Luis aceptó lo probado. **No se borr
 |---|---|
 | **PD-54** | Sin el modelo de la impresora no se cierra la prueba 1 de la fase 4 |
 | **PD-32** | El respaldo nocturno debe estar en verde y ensayado antes de cualquier dato real |
+| **PD-57** | El respaldo todavía no copia las fotos de medición |
 | **PP-33** | Las cabeceras de seguridad se confirman con la prueba 9 de la fase 4 |

@@ -9,10 +9,10 @@
 - **ZAMMIR funciona sin internet.** Puedes cotizar y cobrar aunque no haya señal: todo se guarda en la tablet y **sale solo cuando vuelve la conexión**. Un cobro o una cotización que dice *"Guardada en la tablet"* no se pierde.
 - **Dos tipos de persona:**
   - **Cajero / vendedor:** cotiza, vende en el mostrador, cobra y avanza los trabajos.
-  - **Administrador** (Luis, Ricardo): además da descuentos, autoriza excepciones, ve los reportes, factura y administra personas, tablets y catálogo.
+  - **Administrador** (Luis, Ricardo): además da descuentos, autoriza excepciones, ve los reportes y administra personas, tablets y catálogo.
 - **Dos formas de entrar:**
   - En la **tablet**, con tu **nombre y tu PIN**.
-  - En la **computadora**, solo los administradores, con **correo y contraseña**, para las secciones de administración (Usuarios, Clientes, Catálogo, Configuración y Facturas).
+  - En la **computadora**, solo los administradores, con **correo y contraseña**, para las secciones de administración (Usuarios, Clientes, Catálogo y Configuración). *Facturas* aparecerá cuando se reactive la facturación (§9).
 - **Cada quien usa su PIN.** Nunca compartas tu PIN: lo que hagas queda anotado con tu nombre.
 - **Los precios ya incluyen IVA.**
 
@@ -228,7 +228,7 @@ Aquí das de alta a las personas del mostrador, les asignas **rol** y **PIN**, y
 
 ### Clientes
 
-La **ficha del cliente** reúne sus cotizaciones, órdenes, ventas, pagos, garantías y **facturas**, y marca si es **recurrente** (dos o más trabajos entregados).
+La **ficha del cliente** reúne sus cotizaciones, órdenes, ventas, pagos y garantías, y marca si es **recurrente** (dos o más trabajos entregados).
 
 ![Clientes](capturas/22-clientes.png)
 
