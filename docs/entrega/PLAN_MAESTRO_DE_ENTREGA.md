@@ -15,7 +15,7 @@
 | **Construcción** | Fases 0 a 10 construidas y fusionadas en `main`. La última fue la fase 10, *ajustes de operación para la entrega* [ADR-0044], en los PR #114 a #123 (detalle en la §2). |
 | **Producción** | `https://sistema.zammir-solutions.com` responde 200 y sirve el último `main` (Vercel). Lleva la política de contenido (CSP) y la política de permisos. La función `salud` responde `{"ok":true}`. Verificado el 25 nov. |
 | **Base en la nube** | Un solo proyecto de Supabase, **`zammir-pruebas`**, con **datos inventados** [ADR-0043]. El 25 nov se aplicaron las 8 migraciones de la fase 10 (41 en total) y se desplegaron las 11 funciones, con *Desplegar a Supabase* en el entorno `pruebas`. En la entrega **se borra y se crea uno nuevo vacío**. |
-| **Respaldo nocturno** | Activo desde el 24 nov y cifrado; se guarda 30 días en GitHub. Copia la base y las cuentas, pero **todavía no las fotos de medición** (PD-57). **Falta ensayar la restauración de una copia de la nube** (§5). |
+| **Respaldo nocturno** | Activo desde el 24 nov y cifrado; se guarda 30 días en GitHub. Copia la base y las cuentas. La copia de las **fotos de medición** ya está construida [ADR-0046] y se activa con una llave S3 y el entorno `respaldo` (PD-57). **Falta ensayar la restauración de una copia de la nube** (§5). |
 | **Calidad automática** | CI en verde en cada PR. Al 24 nov, en local: 2,674 pruebas de unidad y componentes, 339 de integración con Supabase local y 500 de base de datos (pgTAP, 31 archivos). También pasan lint, Prettier, dependencias, mutación del dominio y escaneo de secretos. **Para el informe de calidad se vuelven a correr.** |
 | **Facturación** | **En pausa** [ADR-0039]. El código existe y está probado, pero está apagado por interruptor. El contador de ZAMMIR sigue facturando. |
 | **Impresión** | Hoja **carta** con la impresión de Android, o PDF por WhatsApp [ADR-0040]. **No hay ticket térmico.** |
@@ -116,7 +116,6 @@ Ya corregidos, con [ADR-0039], [ADR-0040], [ADR-0043], [ADR-0044] y [ADR-0045]:
 |---|---|
 | Plan de soporte en `GUIA_DE_OPERACION.md` §8 y `MANUAL_DE_SOPORTE.md` §10 | Tiempos de respuesta y alcance del servicio, cuando estén en el contrato. El horario ya está: lunes a viernes, de 9:00 a 21:00 |
 | `MANUAL_DE_USUARIO.md` | Quitar "(borrador)" y agregar capturas de las pantallas de AJ-02 a AJ-09 (hoy no hay), y exportarlo a PDF |
-| `respaldo-nocturno.yml` | Su comentario dice "repositorio privado": se corrige en el PR del respaldo (PD-57) |
 
 ### 4.3 Configuración el día de la entrega (sigue `PLAN_DE_PRODUCCION.md` §7 y `PUESTA_EN_PRODUCCION.md`)
 
@@ -126,7 +125,7 @@ Ya corregidos, con [ADR-0039], [ADR-0040], [ADR-0043], [ADR-0044] y [ADR-0045]:
    - vaciar el entorno `pruebas` y **revocar en Supabase el token viejo**, porque es de la cuenta y alcanza también el otro proyecto.
 3. Correr *Desplegar a Supabase* con el entorno `produccion`. Definir `PORTAL_HASH_PEPPER` **nuevo** en los secretos de las funciones. `BILLING_PROVIDER` queda sin valor.
 4. Vercel: poner `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` del proyecto nuevo **solo en *Production***, quitarlas de *Preview* y redesplegar.
-5. Respaldo nocturno: actualizar `SUPABASE_DB_URL` en el entorno `respaldo`, correrlo a mano y confirmar que sale la copia.
+5. Respaldo nocturno: en el entorno `respaldo`, actualizar `SUPABASE_DB_URL` y las cuatro `SUPABASE_S3_*` con una llave S3 **nueva** del proyecto nuevo. Correrlo a mano y confirmar que salen la copia de la base y la de las fotos.
 6. Cuentas de **Luis y Ricardo** con su correo, **sin enviar invitación**. **Cada uno escribe su contraseña en persona.** Después, su rol de administrador por SQL (`PUESTA_EN_PRODUCCION.md` paso 1.5).
 7. Las **tres personas con PIN**: Luis y Ricardo como administradores y la persona del mostrador como **Cajero / vendedor**. Cada quien escribe el suyo en persona; **nunca** se manda por mensaje.
 8. **Dos tablets:** reconectar cada una con un código nuevo.
@@ -160,7 +159,7 @@ Seguir los pasos de la sección *Publicar la versión* de `ACTA_DE_ENTREGA.md`:
 | P9 | **Corte de internet a propósito** en el local | Equipo | Sáb 28 | Se sigue cotizando y cobrando |
 | P10 | **Tiempos y accesibilidad** (S4-33): letra, botones, contraste, uso con una mano | Equipo | Sáb 28 | Se anota lo que tarde o cueste |
 | P11 | **Prueba de humo en producción** ya recreada (§4.3 paso 10) | HummingX | Día de la recreación | Sin datos de prueba al terminar |
-| P12 | **Respaldo del proyecto nuevo** | Juanito | Día de la recreación | Sale la copia del proyecto nuevo, con las fotos si ya se amplió el respaldo (PD-57) |
+| P12 | **Respaldo del proyecto nuevo** | Juanito | Día de la recreación | Salen las dos copias del proyecto nuevo: la base y las fotos |
 
 **Hoja de hallazgos:** cada problema se anota con pantalla, qué se esperaba, qué pasó, hora y foto, **sin datos reales ni llaves**. Se corrige en una rama con PR y CI en verde. **Nunca se corrige directo en producción.**
 
@@ -291,7 +290,7 @@ Los tres socios firman por HummingX BI el contrato y el acta de entrega [ADR-004
 | **Comandos** | `pnpm test` · `pnpm lint` · `pnpm db:start` · `pnpm db:reset && pnpm test:db` · `pnpm test:integracion` (sirve las funciones con `pnpm funciones:empaquetar` y `supabase functions serve --no-verify-jwt --env-file supabase/functions/pruebas.env`) · `pnpm test:e2e` · `pnpm test:mutacion:critico` · `pnpm build && pnpm check:bundle` · `pnpm ensayo:restauracion` |
 | **Flujos de GitHub** | *Integración continua* (unos 10 min), *Mutación* (unos 35 min), *Desplegar a Supabase* (entrada `entorno`: `pruebas` o `produccion`) y *Respaldo nocturno* (programado a las 2:00 a. m.; GitHub lo ha corrido con horas de retraso) |
 | **Migraciones** | 41 en `supabase/migrations`, aditivas. La última es `20261125070000_cargos_extra.sql` |
-| **Decisiones** | ADR-0001 a ADR-0045 en `docs/decisiones/`, índice en `DECISIONES.md` |
+| **Decisiones** | ADR-0001 a ADR-0046 en `docs/decisiones/`, índice en `DECISIONES.md` |
 | **Pendientes** | `docs/producto/PENDIENTES.md` (PD abiertos, PR resueltos, PP propuestas) |
 | **Correcciones de interfaz que pidió Juanito** | Lo del 14 nov ya se atendió (PR #92, #93, #110 y #111). La lista sigue abierta para lo que reporte al probar |
 
@@ -303,7 +302,7 @@ Los tres socios firman por HummingX BI el contrato y el acta de entrega [ADR-004
 - [x] Decisiones D1, D2, D4, D7 y D8 tomadas y registradas [ADR-0045].
 - [ ] D3, D5 y D6 decididas o anotadas.
 - [ ] Ensayo de restauración de una copia de la nube aprobado (P1).
-- [ ] Respaldo con las fotos de medición y en su entorno propio (PD-57).
+- [ ] Respaldo con las fotos de medición y en su entorno propio: construido [ADR-0046]; falta la llave S3, el entorno `respaldo` y una corrida en verde (PD-57).
 - [ ] P2 a P5 hechas con las dos tablets.
 - [x] Documentos de la §4.2 corregidos por PR.
 - [ ] Expediente de la §7 redactado como plantilla. Los llenados van en la carpeta local que git ignora.

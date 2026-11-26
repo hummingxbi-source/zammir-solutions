@@ -112,7 +112,7 @@ Los errores del navegador y de las funciones de servidor se guardan **sin datos 
 
 - **Meta** [RNF-21]: respaldos diarios con **al menos 30 días** de historial. El plan gratuito de Supabase no tiene respaldos [ADR-0038]: la única copia es el **respaldo nocturno** de GitHub (*Actions → Respaldo nocturno*), cifrado con `CLAVE_DE_RESPALDO` y con 30 días de vida.
 - **Exportación del negocio (S5-08):** además del respaldo, un administrador puede llevarse todos los datos en CSV, JSON y PDF desde **Configuración** → **Exportar los datos**. No sustituye al respaldo (no trae los PIN ni las cuentas de acceso, y el PDF de cada factura se vuelve a generar), pero es una copia legible por cualquier programa. Los archivos traen datos personales: se guardan en un lugar seguro.
-- **Qué se respalda:** los datos del esquema `public` (clientes, cotizaciones, órdenes, ventas, pagos, cortes y bitácora) y las cuentas de acceso (`auth.users` y `auth.identities`). **Todavía no** se respaldan las **fotos de medición** (PD-57).
+- **Qué se respalda:** los datos del esquema `public` (clientes, cotizaciones, órdenes, ventas, pagos, cortes y bitácora) y las cuentas de acceso (`auth.users` y `auth.identities`). Las **fotos de medición** van en otra copia cifrada, `fotos-zammir-…`; se guardan las dos más recientes [ADR-0046].
 - **Restauración (recorrido E9).** El procedimiento completo, la lista de verificación y el registro de ensayos están en [`docs/operacion/RESTAURACION.md`](../operacion/RESTAURACION.md). En resumen: se restaura **siempre en un proyecto de Supabase limpio** (nunca encima del de producción), con las migraciones desde cero y luego los datos y las cuentas de la copia, y se comprueba que cada tabla quedó igual. Ya se ensayó en local con datos inventados (`pnpm ensayo:restauracion`, 28 tablas idénticas en menos de un minuto); **falta ensayarlo con una copia real de la nube**, restaurada en Supabase local, y comprobar cómo vuelven a conectarse las tablets.
 - Después de restaurar, las **tablets** probablemente deban conectarse otra vez con un código nuevo (un proyecto nuevo tiene otras llaves de sesión); lo que tuvieran sin enviar se conserva en la tablet. Los folios definitivos los asigna el servidor.
 
@@ -161,6 +161,6 @@ El aviso de privacidad vigente se edita en **Configuración** (cada edición cre
 | Probar la impresión en la tablet con la impresora de Wi-Fi de Luis | Modelo de la impresora (PD-54) y la tablet (S5-05) |
 | Reintentos y purga programados | Mantenimiento programado (S4-26) |
 | Proveedor de timbrado y certificado (al reactivar la facturación) | PD-04, PD-05, S4-15, [ADR-0039] |
-| Fotos en el respaldo y ensayo de restauración con una copia de la nube | PD-57, S5-06 |
+| Activar la copia de las fotos y ensayar la restauración con una copia de la nube | PD-57, S5-06 |
 | Copia de los datos de un solo cliente, y partir la exportación completa si crece demasiado | PP-34 |
 | Criterio para cancelar datos personales | Asesor de ZAMMIR |

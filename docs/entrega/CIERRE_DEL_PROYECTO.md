@@ -9,7 +9,7 @@
 |---|---|---|---|
 | 1 | **Aceptación firmada por Luis** y acta de entrega | ⏳ Pendiente | Plan de escenarios actualizado con la fase 10 ([`PLAN_DE_ACEPTACION_CLIENTE.md`](../calidad/PLAN_DE_ACEPTACION_CLIENTE.md)) y acta lista para firmar ([`ACTA_DE_ENTREGA.md`](ACTA_DE_ENTREGA.md)). Se ejecutan con Luis el sábado 28 (S5-10) |
 | 2 | **Cero errores críticos abiertos**; los menores, registrados con fecha | ⏳ Se revisa al cierre | Sin errores críticos conocidos hoy. Se confirma con las pruebas con el equipo real (S5-09) |
-| 3 | **Respaldo restaurado con éxito** al menos una vez | 🟡 En local sí; con una copia de la nube falta | Ensayos locales aprobados el 8 y el 20 nov ([`RESTAURACION.md`](../operacion/RESTAURACION.md)). El respaldo nocturno corre desde el 24 nov. Falta restaurar una copia real de la nube en Supabase local (S5-06, [ADR-0043]). El respaldo todavía no copia las fotos de medición (PD-57) |
+| 3 | **Respaldo restaurado con éxito** al menos una vez | 🟡 En local sí; con una copia de la nube falta | Ensayos locales aprobados el 8 y el 20 nov ([`RESTAURACION.md`](../operacion/RESTAURACION.md)). El respaldo nocturno corre desde el 24 nov. Falta restaurar una copia real de la nube en Supabase local (S5-06, [ADR-0043]). La copia de las fotos de medición está construida [ADR-0046]; falta activarla (PD-57) |
 | 4 | **Manual de usuario y de soporte entregados**; las tres sesiones de capacitación hechas | 🟡 Manuales en borrador; capacitación pendiente | [`MANUAL_DE_USUARIO.md`](../manuales/MANUAL_DE_USUARIO.md) y [`MANUAL_DE_SOPORTE.md`](../manuales/MANUAL_DE_SOPORTE.md). Sesiones con Luis, Ricardo y el mostrador el 29 y 30 nov (S5-11 a S5-13) |
 | 5 | **Guía de operación y plan de soporte** en el repositorio | 🟡 Guía lista; plan de soporte según el contrato | [`GUIA_DE_OPERACION.md`](../operacion/GUIA_DE_OPERACION.md). Horario de atención fijado [ADR-0045]; tiempos de respuesta según el contrato |
 | 6 | **Versión `1.0.0` etiquetada** | ⏳ Pendiente (a propósito) | [`CHANGELOG.md`](../../CHANGELOG.md) preparado; se etiqueta al firmar el acta (instrucciones en el acta) |
@@ -33,7 +33,7 @@
 | Bloqueo | Depende de | Historias |
 |---|---|---|
 | Ensayo de restauración con una copia de la nube | Juanito (Docker y la clave del respaldo) | S5-06 |
-| Fotos de medición en el respaldo | PR del respaldo (PD-57) | S4-27 |
+| Activar la copia de las fotos de medición | Llave S3 y entorno `respaldo` (PD-57, [ADR-0046]) | S4-27 |
 | Producción vacía | Recrear el proyecto de Supabase en la entrega [ADR-0043] | S4-26 |
 | Catálogo, precios y ajustes reales | Las respuestas de Luis (PD-02, PD-03, PD-06, PD-53) | S5-03, S5-04 |
 | Tablets e impresora | Las pruebas P2 a P6 del plan maestro | S4-33, S4-34, S5-05, S5-09 |
@@ -50,7 +50,7 @@
 
 - **La compuerta de calidad obligatoria** (formato, lint, tipos, dependencias, pruebas, base de datos, integración, extremo a extremo, mutación y escaneo de secretos). Atrapó problemas reales antes de fusionar: una prueba inestable cuyo nombre aleatorio chocaba con el limpiador de datos personales, textos de prueba que el escáner de secretos tomó por un token, y permisos de sobra en una tabla que la revisión de seguridad encontró.
 - **La mutación en lo que importa** (dinero, reglas, el limpiador de datos personales, el ZIP de la exportación) obligó a escribir pruebas más exactas: el limpiador pasó de 78 % a 97 % de mutantes muertos.
-- **Una decisión, un ADR.** Cuarenta y cinco decisiones registradas con su contexto; cuando algo se discutió de nuevo, ya estaba escrito por qué se había decidido así.
+- **Una decisión, un ADR.** Cuarenta y seis decisiones registradas con su contexto; cuando algo se discutió de nuevo, ya estaba escrito por qué se había decidido así.
 - **Un núcleo puro** (sin navegador ni servidor) con el que se probó casi todo sin infraestructura, y **adaptadores simulados** (proveedor de timbrado) que dejaron construir toda la facturación sin esperar al proveedor real.
 - **Pull Requests pequeños con CI**, y la regla de no avanzar con algo en rojo.
 
