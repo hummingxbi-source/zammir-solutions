@@ -411,6 +411,8 @@ export const textos = {
     agregar: 'Agregar producto',
     importar: 'Importar desde archivo',
     editar: 'Editar',
+    duplicar: 'Duplicar',
+    nombreDeCopia: (nombre: string): string => `${nombre} (copia)`,
     desactivar: 'Desactivar',
     activar: 'Activar',
     activo: 'Activo',
@@ -454,6 +456,7 @@ export const textos = {
     formulario: {
       tituloAlta: 'Agregar producto',
       tituloEdicion: 'Editar producto',
+      tituloDuplicar: 'Duplicar producto',
       nombre: 'Nombre',
       codigo: 'Código (opcional)',
       categoria: 'Categoría',
