@@ -46,6 +46,9 @@ export interface Product {
   readonly fiscal: FiscalData;
   readonly warrantyMonths: number | null;
   readonly warrantyText: string | null;
+  /** Precio abierto [RF-M1-10, ADR-0048]: `listPrice` es de referencia y el precio se fija al cotizar o
+   *  vender. Sin el campo, el precio es fijo. */
+  readonly isOpenPrice?: boolean;
 }
 
 /** Lo que se captura para dar de alta un producto: todo menos el identificador. */
@@ -69,7 +72,9 @@ export type ProductErrorCode =
   | 'RULE_NOT_REGISTERED'
   | 'RULE_PARAMS_INVALID'
   | 'FISCAL_INVALID'
-  | 'WARRANTY_INVALID';
+  | 'WARRANTY_INVALID'
+  /** Un cargo extra copia su precio del catálogo a la pieza: no puede tener precio abierto. */
+  | 'OPEN_PRICE_NOT_ALLOWED';
 
 export interface ProductError {
   readonly code: ProductErrorCode;
@@ -128,6 +133,9 @@ export function buildProduct(
   }
   if (!UNIDADES_POR_TIPO[borrador.kind].includes(borrador.chargeUnit)) {
     return err({ code: 'KIND_UNIT_MISMATCH' });
+  }
+  if (borrador.isOpenPrice === true && borrador.kind === 'EXTRA') {
+    return err({ code: 'OPEN_PRICE_NOT_ALLOWED' });
   }
   if (!reglas.has(borrador.ruleId)) {
     return err({ code: 'RULE_NOT_REGISTERED' });

@@ -287,7 +287,9 @@ export async function removeQuoteLine(
 
 /** Descuento o cambio de precio de una línea [RF-M2-03, PD-45, RN-19]. Un administrador puede hacerlo;
  *  un cajero necesita el PIN de un administrador (`authorization`). El precio anterior queda en la línea
- *  (`catalogPriceCents`) y la bitácora la escribe el servidor al recibir la cotización. */
+ *  (`catalogPriceCents`) y la bitácora la escribe el servidor al recibir la cotización.
+ *  Precio abierto [RF-M1-10, ADR-0048]: fijar el precio en la referencia o arriba no es un descuento y lo
+ *  hace cualquiera que pueda cotizar, sin PIN; bajar de la referencia sigue siendo un descuento. */
 export async function applyQuoteDiscount(
   deps: QuoteDeps,
   actor: QuoteActor,
@@ -296,13 +298,6 @@ export async function applyQuoteDiscount(
   nuevoPrecioCents: number,
   authorization?: Authorization,
 ): Promise<Result<Quote, QuoteError>> {
-  const decision = permisos(deps).check(actor.role, 'PRICE_OVERRIDE');
-  if (decision === 'DENY') {
-    return err({ code: 'NOT_AUTHORIZED' });
-  }
-  if (decision === 'NEEDS_ADMIN_AUTHORIZATION' && authorization === undefined) {
-    return err({ code: 'AUTHORIZATION_REQUIRED' });
-  }
   const q = await cargarBorrador(deps, id);
   if (!q.ok) {
     return q;
@@ -311,6 +306,20 @@ export async function applyQuoteDiscount(
   if (actual === undefined) {
     return err({ code: 'LINE_NOT_FOUND' });
   }
+  const precioAbierto = actual.isOpenPrice === true && nuevoPrecioCents >= actual.catalogPriceCents;
+  if (precioAbierto) {
+    if (!puedeCotizar(deps, actor)) {
+      return err({ code: 'NOT_AUTHORIZED' });
+    }
+  } else {
+    const decision = permisos(deps).check(actor.role, 'PRICE_OVERRIDE');
+    if (decision === 'DENY') {
+      return err({ code: 'NOT_AUTHORIZED' });
+    }
+    if (decision === 'NEEDS_ADMIN_AUTHORIZATION' && authorization === undefined) {
+      return err({ code: 'AUTHORIZATION_REQUIRED' });
+    }
+  }
   const nueva = repriceQuoteLine(actual, nuevoPrecioCents, lineDeps(deps));
   if (!nueva.ok) {
     return nueva;
@@ -318,8 +327,9 @@ export async function applyQuoteDiscount(
   const guardada = await guardar(deps, {
     ...q.value,
     lines: q.value.lines.map((l) => (l.id === lineId ? nueva.value : l)),
-    // Queda quién autorizó: un administrador se autoriza a sí mismo; un cajero, con el PIN de otro.
-    discountAuthorizedBy: authorization?.adminId ?? actor.userId,
+    // Queda quién autorizó: un administrador se autoriza a sí mismo; un cajero, con el PIN de otro. Un
+    // precio abierto no es un descuento: no cambia quién autorizó.
+    ...(precioAbierto ? {} : { discountAuthorizedBy: authorization?.adminId ?? actor.userId }),
   });
   return ok(guardada);
 }

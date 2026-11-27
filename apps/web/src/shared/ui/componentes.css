@@ -846,6 +846,13 @@ a.boton {
   gap: 0.5rem;
 }
 
+/* Fijar el precio de una línea con precio abierto, dentro del ticket [RF-M1-10]. */
+.ticket__precio {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 0.5rem;
+}
+
 .ticket__cantidad {
   min-width: 2rem;
   text-align: center;
@@ -1432,6 +1439,13 @@ h3.reportes__subtitulo:not(.rotulo) {
   width: 1.5rem;
   height: 1.5rem;
   accent-color: var(--acento);
+}
+
+/* Texto de ayuda debajo de la etiqueta de una casilla. */
+.casilla__ayuda {
+  display: block;
+  font-size: var(--texto-rotulo);
+  color: var(--tinta-suave, inherit);
 }
 
 /* ---------- Clientes ---------- */

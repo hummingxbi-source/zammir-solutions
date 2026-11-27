@@ -24,6 +24,29 @@ function error(cambios: Partial<ProductDraft>): string {
 }
 
 describe('buildProduct', () => {
+  it('precio abierto: se acepta en productos a medida, piezas y servicios, no en cargos extra [RF-M1-10]', () => {
+    const abierto = buildProduct(id, { ...base, isOpenPrice: true }, reglas);
+    expect(abierto.ok && abierto.value.isOpenPrice).toBe(true);
+    expect(
+      error({
+        isOpenPrice: true,
+        kind: 'EXTRA',
+        chargeUnit: 'SQUARE_METER',
+        ruleId: 'AREA',
+        ruleParams: {},
+      }),
+    ).toBe('OPEN_PRICE_NOT_ALLOWED');
+    expect(
+      error({
+        isOpenPrice: false,
+        kind: 'EXTRA',
+        chargeUnit: 'SQUARE_METER',
+        ruleId: 'AREA',
+        ruleParams: {},
+      }),
+    ).toBe('sin error');
+  });
+
   it('acepta un producto completo y le asigna el identificador', () => {
     const r = buildProduct(id, base, reglas);
     expect(r.ok && r.value).toEqual(completo);

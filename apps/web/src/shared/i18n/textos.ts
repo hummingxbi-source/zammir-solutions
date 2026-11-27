@@ -465,6 +465,9 @@ export const textos = {
       precio: 'Precio de lista con IVA',
       garantia: 'Garantía sugerida en meses (opcional)',
       exento: 'Este producto está exento de IVA',
+      precioAbierto: 'Precio abierto: el precio se fija al cotizar o vender',
+      precioAbiertoAyuda:
+        'El precio de lista queda como referencia. Cobrar más no pide PIN; cobrar menos es un descuento y pide el PIN de un administrador.',
       historial: 'Cambios de precio',
       guardar: 'Guardar producto',
       guardando: 'Guardando…',
@@ -512,6 +515,10 @@ export const textos = {
       WARRANTY_INVALID: {
         mensaje: 'La garantía debe ser un número de meses mayor a cero.',
         queHacer: 'Corrígela o déjala en blanco.',
+      },
+      OPEN_PRICE_NOT_ALLOWED: {
+        mensaje: 'Un cargo extra no puede tener precio abierto.',
+        queHacer: 'Quita la marca de precio abierto o cambia el tipo.',
       },
       CODE_TAKEN: {
         mensaje: 'Ese código ya lo usa otro producto.',
@@ -587,6 +594,7 @@ export const textos = {
       regla: 'Regla',
       base_metro_lineal: 'Base del metro lineal',
       garantia_meses: 'Garantía (meses)',
+      precio_abierto: 'Precio abierto',
     },
     errores: {
       NAME_REQUIRED_IN_ROW: 'Falta el nombre.',
@@ -597,6 +605,7 @@ export const textos = {
       PRICE_TOO_MANY_DECIMALS: 'El precio solo puede tener dos decimales.',
       PRICE_NEGATIVE: 'El precio no puede ser negativo.',
       EXEMPT_INVALID: 'En "exento" escribe sí o no.',
+      OPEN_PRICE_INVALID: 'En "precio abierto" escribe sí o no, o déjalo vacío.',
       CODE_DUPLICATE_IN_FILE: 'Este código ya aparece antes en el archivo.',
       CODE_DUPLICATE_IN_CATALOG: 'Este código ya existe en el catálogo.',
       RULE_UNKNOWN: 'La regla de precio no existe.',
@@ -604,6 +613,7 @@ export const textos = {
         'Un producto por metro lineal necesita la base: "largo" o "perímetro".',
       LINEAR_BASIS_INVALID: 'La base del metro lineal debe ser "largo" o "perímetro".',
       WARRANTY_INVALID: 'La garantía debe ser un número entero de meses mayor que cero.',
+      OPEN_PRICE_NOT_ALLOWED: 'Un cargo extra no puede tener precio abierto.',
       NAME_REQUIRED: 'Falta el nombre.',
       KIND_UNIT_MISMATCH: 'Ese tipo de producto no se cobra con esa unidad.',
       RULE_UNIT_MISMATCH: 'La regla de precio no corresponde a la unidad.',
@@ -1411,6 +1421,15 @@ export const textos = {
       total: 'Total',
       cobrar: 'Cobrar',
       vaciar: 'Vaciar el ticket',
+      fijarPrecio: 'Fijar precio',
+      cancelarPrecio: 'Cancelar',
+      precioPorUnidad: 'Precio por unidad (con IVA)',
+      precioFijado: 'precio fijado',
+      referencia: (precio: string): string => `Precio de referencia: ${precio}.`,
+      precioDebajo: (precio: string): string =>
+        `En el mostrador el precio no puede quedar debajo de la referencia (${precio}).`,
+      precioDebajoQueHacer:
+        'Escribe un precio igual o mayor. Para dar un descuento, hazlo en el cotizador con el PIN de un administrador.',
     },
     cobrada: {
       titulo: 'Venta registrada',
@@ -2218,12 +2237,19 @@ export const textos = {
       iva: 'IVA',
       total: 'Total',
       conDescuento: 'con descuento autorizado',
+      precioFijado: 'precio fijado',
     },
     descuento: {
       titulo: 'Descuento',
+      tituloAbierto: 'Fijar precio',
       boton: 'Dar descuento',
+      botonAbierto: 'Fijar precio',
       nuevoPrecio: 'Precio nuevo por unidad (con IVA)',
+      precioAbierto: 'Precio por unidad (con IVA)',
+      referencia: (precio: string): string =>
+        `Precio de referencia: ${precio}. Si cobras menos es un descuento y necesita el PIN de un administrador.`,
       aplicar: 'Aplicar descuento',
+      aplicarAbierto: 'Fijar precio',
       pedirPin: 'Un descuento necesita el PIN de un administrador.',
       administrador: 'Administrador',
       pin: 'PIN del administrador',

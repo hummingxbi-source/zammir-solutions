@@ -12,6 +12,7 @@ import { textos } from '../../../shared/i18n/textos';
 import { Aviso } from '../../../shared/ui/Aviso';
 import { Boton } from '../../../shared/ui/Boton';
 import { Campo, CampoNumerico } from '../../../shared/ui/Campo';
+import { formatearPesos } from '../../../shared/ui/formatos';
 
 const t = textos.cotizador.descuento;
 
@@ -41,7 +42,9 @@ export interface DialogoDeDescuentoProps {
   readonly onCancelar: () => void;
 }
 
-/** Pide el precio nuevo y, a un cajero, el PIN de un administrador [RF-M2-03, PD-45]. */
+/** Pide el precio nuevo y, a un cajero, el PIN de un administrador [RF-M2-03, PD-45]. Con precio abierto
+ *  [RF-M1-10, ADR-0048] el precio del catálogo es la referencia: fijarlo en ella o arriba no pide PIN; bajar de
+ *  ella es un descuento y sí lo pide. */
 export function DialogoDeDescuento({
   linea,
   pedirPin,
@@ -55,6 +58,11 @@ export function DialogoDeDescuento({
   const [pin, setPin] = useState('');
   const [error, setError] = useState<{ mensaje: string; queHacer: string } | null>(null);
   const [trabajando, setTrabajando] = useState(false);
+  const abierto = linea.isOpenPrice === true;
+  const capturado = parseMoney(precio);
+  // Con precio abierto, el PIN solo hace falta si el precio queda debajo de la referencia.
+  const necesitaPin =
+    pedirPin && (!abierto || (capturado.ok && capturado.value < linea.catalogPriceCents));
 
   useEffect(() => {
     if (pedirPin) {
@@ -75,7 +83,7 @@ export function DialogoDeDescuento({
     }
     setTrabajando(true);
     let permiso: Authorization | undefined;
-    if (pedirPin) {
+    if (necesitaPin) {
       const r = await autorizacion.autorizar(adminId, pin);
       if (!r.ok) {
         setTrabajando(false);
@@ -106,27 +114,28 @@ export function DialogoDeDescuento({
   return (
     <form
       role="dialog"
-      aria-label={`${t.titulo}: ${linea.name}`}
+      aria-label={`${abierto ? t.tituloAbierto : t.titulo}: ${linea.name}`}
       className="dialogo"
       onSubmit={(e) => void aplicar(e)}
     >
       <h3>
-        {t.titulo}: {linea.name}
+        {abierto ? t.tituloAbierto : t.titulo}: {linea.name}
       </h3>
-      {pedirPin ? <p>{t.pedirPin}</p> : null}
+      {abierto ? <p>{t.referencia(formatearPesos(linea.catalogPriceCents))}</p> : null}
+      {necesitaPin ? <p>{t.pedirPin}</p> : null}
       {error !== null ? (
         <Aviso tipo="error" queHacer={error.queHacer}>
           {error.mensaje}
         </Aviso>
       ) : null}
       <CampoNumerico
-        etiqueta={t.nuevoPrecio}
+        etiqueta={abierto ? t.precioAbierto : t.nuevoPrecio}
         value={precio}
         onChange={(e) => {
           setPrecio(e.target.value);
         }}
       />
-      {pedirPin ? (
+      {necesitaPin ? (
         <>
           <div className="campo">
             <label className="campo__etiqueta" htmlFor="admin-descuento">
@@ -159,7 +168,7 @@ export function DialogoDeDescuento({
         </>
       ) : null}
       <Boton type="submit" disabled={trabajando}>
-        {t.aplicar}
+        {abierto ? t.aplicarAbierto : t.aplicar}
       </Boton>
       <Boton variante="secundario" onClick={onCancelar}>
         {t.cancelar}

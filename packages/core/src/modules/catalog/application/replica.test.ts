@@ -103,6 +103,20 @@ describe('refreshCatalog', () => {
     expect(!b.ok && b.error.code).toBe('NOT_FOUND');
   });
 
+  it('un producto con precio abierto se ofrece para vender con su marca [RF-M1-10]', async () => {
+    const s = servidor([
+      replicatedProduct('a', 1, { isOpenPrice: true }),
+      replicatedProduct('b', 2),
+    ]);
+    const store = inMemoryCatalogLocalStore();
+    await refreshCatalog({ source: s.fuente, store });
+    const lector = localProductReader(store);
+    const a = await lector.findSellable(asId<'Product'>('a'));
+    const b = await lector.findSellable(asId<'Product'>('b'));
+    expect(a.ok && a.value.isOpenPrice).toBe(true);
+    expect(b.ok && 'isOpenPrice' in b.value).toBe(false);
+  });
+
   it('sin conexión conserva lo guardado y avisa del error', async () => {
     const s = servidor([replicatedProduct('a', 1)]);
     const store = inMemoryCatalogLocalStore();

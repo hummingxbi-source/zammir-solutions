@@ -496,7 +496,9 @@ export function EditorDeCotizacion({
                         {l.detail}
                         {l.unitPriceCents < l.catalogPriceCents
                           ? ` · ${t.lineas.conDescuento}`
-                          : ''}
+                          : l.isOpenPrice === true && l.unitPriceCents > l.catalogPriceCents
+                            ? ` · ${t.lineas.precioFijado}`
+                            : ''}
                       </span>
                     </div>
                     <span className="ticket__importe">{cobra(l.lineTotalCents)}</span>
@@ -508,7 +510,7 @@ export function EditorDeCotizacion({
                             setDescuentoDe(l.id);
                           }}
                         >
-                          {t.descuento.boton}
+                          {l.isOpenPrice === true ? t.descuento.botonAbierto : t.descuento.boton}
                         </Boton>
                         {extrasDelCatalogo.length > 0 ? (
                           <Boton

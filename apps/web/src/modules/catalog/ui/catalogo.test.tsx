@@ -222,6 +222,31 @@ describe('Catálogo', () => {
     expect(lista.ok && lista.value[0]?.chargeUnit).toBe('LINEAR_METER');
   });
 
+  it('un servicio con precio abierto se guarda con su marca; un cargo extra no ofrece la casilla [RF-M1-10]', async () => {
+    const deps = await montar({ conProductos: false });
+    fireEvent.click(await botonAgregar());
+    const dialogo = await screen.findByRole('dialog', { name: 'Agregar producto' });
+    fireEvent.change(within(dialogo).getByLabelText('Nombre'), {
+      target: { value: 'Reparación de ventana' },
+    });
+    fireEvent.change(within(dialogo).getByLabelText('Tipo'), { target: { value: 'SERVICE' } });
+    fireEvent.change(within(dialogo).getByLabelText('Precio de lista con IVA'), {
+      target: { value: '500' },
+    });
+    fireEvent.click(within(dialogo).getByLabelText(/Precio abierto/));
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Guardar producto' }));
+    await screen.findByText('Producto agregado al catálogo.');
+    const lista = await deps.products.list();
+    expect(lista.ok && lista.value[0]?.isOpenPrice).toBe(true);
+
+    fireEvent.click(await botonAgregar());
+    const otro = await screen.findByRole('dialog', { name: 'Agregar producto' });
+    fireEvent.change(within(otro).getByLabelText('Tipo'), { target: { value: 'EXTRA' } });
+    await waitFor(() => {
+      expect(within(otro).queryByLabelText(/Precio abierto/)).toBeNull();
+    });
+  });
+
   it('un servicio solo se cobra como servicio y una pieza estándar como pieza', async () => {
     await montar({ conProductos: false });
     fireEvent.click(await botonAgregar());

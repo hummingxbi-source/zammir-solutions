@@ -75,6 +75,7 @@ export function FormularioDeProducto({
   });
   const [precio, setPrecio] = useState(inicial === undefined ? '' : pesosATexto(inicial.listPrice));
   const [exento, setExento] = useState(inicial?.isTaxExempt ?? false);
+  const [abierto, setAbierto] = useState(inicial?.isOpenPrice === true);
   const [garantia, setGarantia] = useState(
     inicial?.warrantyMonths === null || inicial?.warrantyMonths === undefined
       ? ''
@@ -134,6 +135,8 @@ export function FormularioDeProducto({
       fiscal: inicial?.categoryId === categoria.id ? inicial.fiscal : categoria.fiscalDefaults,
       warrantyMonths: meses,
       warrantyText: inicial?.warrantyText ?? null,
+      // Un cargo extra copia su precio a la pieza: nunca tiene precio abierto [RF-M1-10].
+      ...(abierto && tipo !== 'EXTRA' ? { isOpenPrice: true } : {}),
     };
     setTrabajando(true);
     const falla = await onGuardar(borrador);
@@ -243,6 +246,21 @@ export function FormularioDeProducto({
         />
         {t.formulario.exento}
       </label>
+      {tipo === 'EXTRA' ? null : (
+        <label className="casilla">
+          <input
+            type="checkbox"
+            checked={abierto}
+            onChange={(e) => {
+              setAbierto(e.target.checked);
+            }}
+          />
+          <span>
+            {t.formulario.precioAbierto}
+            <span className="casilla__ayuda">{t.formulario.precioAbiertoAyuda}</span>
+          </span>
+        </label>
+      )}
 
       {historial !== undefined && historial.length > 0 ? (
         <section aria-label={t.formulario.historial}>

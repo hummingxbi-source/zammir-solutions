@@ -35,6 +35,7 @@ function paraVender(p: Product): SellableProduct {
     isTaxExempt: p.isTaxExempt,
     ruleId: p.ruleId,
     ruleParams: p.ruleParams,
+    ...(p.isOpenPrice === true ? { isOpenPrice: true } : {}),
   };
 }
 

@@ -281,6 +281,53 @@ describe('Mostrador', () => {
     );
   });
 
+  it('precio abierto: fija un precio arriba de la referencia; abajo no se acepta y dice qué hacer [RF-M1-10]', async () => {
+    const reparacion: SellableProduct = {
+      ...chapa,
+      id: asId<'Product'>('00000000-0000-4000-8000-00000000f0a1'),
+      code: 'REP',
+      name: 'Reparación de ventana',
+      kind: 'SERVICE',
+      chargeUnit: 'SERVICE',
+      listPrice: precio(50_000),
+      ruleId: 'SERVICE',
+      isOpenPrice: true,
+    };
+    await montar({ productos: [chapa, reparacion] });
+    fireEvent.change(await screen.findByLabelText('Buscar producto o servicio'), {
+      target: { value: 'repar' },
+    });
+    fireEvent.click(await screen.findByRole('button', { name: /Reparación de ventana/ }));
+    await screen.findByText('Reparación de ventana', { selector: 'strong' });
+    const total = () =>
+      screen.getByText('Total', { selector: 'dt' }).nextElementSibling?.textContent;
+    expect(total()).toBe('$500.00');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Fijar precio' }));
+    const forma = await screen.findByRole('form', { name: 'Fijar precio: Reparación de ventana' });
+    fireEvent.change(within(forma).getByLabelText('Precio por unidad (con IVA)'), {
+      target: { value: '300' },
+    });
+    fireEvent.click(within(forma).getByRole('button', { name: 'Fijar precio' }));
+    expect(await screen.findByText(/no puede quedar debajo de la referencia/)).toBeTruthy();
+    expect(total()).toBe('$500.00');
+
+    fireEvent.change(within(forma).getByLabelText('Precio por unidad (con IVA)'), {
+      target: { value: '750' },
+    });
+    fireEvent.click(within(forma).getByRole('button', { name: 'Fijar precio' }));
+    await waitFor(() => {
+      expect(total()).toBe('$750.00');
+    });
+    expect(screen.getByText(/precio fijado/)).toBeTruthy();
+  });
+
+  it('un producto de precio fijo no ofrece fijar precio en el mostrador', async () => {
+    await montar();
+    await agregarChapa();
+    expect(screen.queryByRole('button', { name: 'Fijar precio' })).toBeNull();
+  });
+
   it('el vidrio a medida pide medidas y muestra el cálculo al centavo', async () => {
     await montar();
     fireEvent.change(await screen.findByLabelText('Buscar producto o servicio'), {

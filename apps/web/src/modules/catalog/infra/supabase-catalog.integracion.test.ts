@@ -310,6 +310,31 @@ describe('réplica del catálogo en la tablet con Supabase', () => {
     expect(!fuera.ok && fuera.error.code).toBe('NOT_FOUND');
   });
 
+  it('un producto con precio abierto llega a la tablet con su marca; uno de precio fijo, sin ella [RF-M1-10]', async () => {
+    const comoAdmin = await catalogoComo(admin);
+    const abierto = asId<'Product'>(crypto.randomUUID());
+    const fijo = asId<'Product'>(crypto.randomUUID());
+    productosCreados.push(abierto, fijo);
+    const cat = await categoria();
+    expect(
+      (await comoAdmin.create({ ...productoDePrueba(abierto, cat), isOpenPrice: true })).ok,
+    ).toBe(true);
+    expect((await comoAdmin.create(productoDePrueba(fijo, cat))).ok).toBe(true);
+
+    const leido = await comoAdmin.list();
+    expect(leido.ok && leido.value.find((p) => p.id === abierto)?.isOpenPrice).toBe(true);
+
+    const store = inMemoryCatalogLocalStore();
+    await refreshCatalog({ source: supabaseCatalogReplica(await clienteDeTablet()), store });
+    const lector = localProductReader(store);
+    const a = await lector.findSellable(abierto);
+    const f = await lector.findSellable(fijo);
+    expect(a.ok && a.value.isOpenPrice).toBe(true);
+    expect(f.ok && 'isOpenPrice' in f.value).toBe(false);
+    const paraVender = await supabaseCatalog(await clienteDeTablet()).findSellable(abierto);
+    expect(paraVender.ok && paraVender.value.isOpenPrice).toBe(true);
+  });
+
   it('un cajero sin dispositivo no baja nada', async () => {
     const cliente = crearCliente(ANON);
     await supabaseAdminAuth(cliente).signIn(cajero.email, cajero.password);

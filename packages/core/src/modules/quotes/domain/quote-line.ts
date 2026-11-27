@@ -32,6 +32,9 @@ export interface QuoteProduct {
   readonly isTaxExempt: boolean;
   readonly ruleId: string;
   readonly ruleParams: unknown;
+  /** Precio abierto [RF-M1-10, ADR-0048]: el precio del catálogo es de referencia y se puede fijar más
+   *  arriba al cotizar o vender. Sin el campo, el precio es fijo. */
+  readonly isOpenPrice?: boolean;
 }
 
 export interface LineInput {
@@ -110,6 +113,7 @@ function calcularLinea(
     | 'isTaxExempt'
     | 'catalogPriceCents'
     | 'extras'
+    | 'isOpenPrice'
   >,
   unitPriceCents: number,
   entrada: LineInput,
@@ -249,6 +253,7 @@ export function buildQuoteLine(
       ruleParams: producto.ruleParams,
       isTaxExempt: producto.isTaxExempt,
       catalogPriceCents: producto.listPrice,
+      ...(producto.isOpenPrice === true ? { isOpenPrice: true } : {}),
     },
     producto.listPrice,
     entrada,
@@ -276,8 +281,8 @@ export function recalculateQuoteLine(
   );
 }
 
-/** Cambia el precio unitario de una línea (descuento o ajuste). Nunca negativo ni mayor que el del
- *  catálogo: un aumento no es un descuento y no se hace por aquí. El permiso lo valida el caso de uso. */
+/** Cambia el precio unitario de una línea (descuento o ajuste). Nunca negativo. Solo sube del precio del
+ *  catálogo si el producto tiene precio abierto [RF-M1-10, ADR-0048]. El permiso lo valida el caso de uso. */
 export function repriceQuoteLine(
   linea: QuoteLine,
   nuevoPrecioCents: number,
@@ -286,7 +291,7 @@ export function repriceQuoteLine(
   if (
     !Number.isSafeInteger(nuevoPrecioCents) ||
     nuevoPrecioCents < 0 ||
-    nuevoPrecioCents > linea.catalogPriceCents
+    (nuevoPrecioCents > linea.catalogPriceCents && linea.isOpenPrice !== true)
   ) {
     return err({ code: 'PRICE_INVALID' });
   }

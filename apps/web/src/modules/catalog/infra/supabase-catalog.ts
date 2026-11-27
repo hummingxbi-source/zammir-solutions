@@ -48,6 +48,8 @@ interface FilaParaVender {
   readonly is_tax_exempt: boolean;
   readonly rule_id: string;
   readonly rule_params: unknown;
+  /** Precio abierto [RF-M1-10]. Antes de CE-01 la vista no la traía. */
+  readonly is_open_price?: boolean;
 }
 
 interface FilaReplicada extends FilaParaVender {
@@ -150,6 +152,7 @@ function aParaVender(fila: FilaParaVender): Result<SellableProduct, CatalogError
     isTaxExempt: fila.is_tax_exempt,
     ruleId: fila.rule_id,
     ruleParams: fila.rule_params,
+    ...(fila.is_open_price === true ? { isOpenPrice: true } : {}),
   });
 }
 
@@ -194,6 +197,7 @@ function aFila(p: Product) {
     is_active: p.isActive,
     rule_id: p.ruleId,
     rule_params: p.ruleParams,
+    is_open_price: p.isOpenPrice === true,
     fiscal_product_service_key: p.fiscal.productServiceKey,
     fiscal_unit_key: p.fiscal.unitKey,
     fiscal_tax_object: p.fiscal.taxObject,
