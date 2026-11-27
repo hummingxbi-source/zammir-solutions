@@ -1,5 +1,6 @@
 import type { LengthUnit } from '../../../../shared-kernel/measure/length';
 import { formatMoney } from '../../../../shared-kernel/money/money';
+import { saleUnitFor } from '../sale-unit';
 import { readAdjustments } from './adjustments';
 import type { PriceAdjustment, PriceResult } from './types';
 
@@ -43,8 +44,9 @@ function nota(ajuste: PriceAdjustment): string {
 }
 
 /** El cálculo a la vista, con las unidades claras [RN-04]. Ejemplo:
- *  `1.20 m × 0.80 m = 0.96 m² × $280.00 = $268.80`. */
-export function formatPriceDetail(resultado: PriceResult): string {
+ *  `1.20 m × 0.80 m = 0.96 m² × $280.00 = $268.80`. Con unidad de venta, la cantidad la dice:
+ *  `2 rollos × $45.00 = $90.00` [RF-M1-11]. */
+export function formatPriceDetail(resultado: PriceResult, unidadDeVenta?: string): string {
   const { detail, unitPrice, amount } = resultado;
   const precio = formatMoney(unitPrice);
   const importe = formatMoney(amount);
@@ -72,7 +74,10 @@ export function formatPriceDetail(resultado: PriceResult): string {
     }
     case 'PIECE':
     case 'SERVICE':
-      texto = `${String(detail.quantity)} × ${precio} = ${importe}`;
+      texto =
+        unidadDeVenta === undefined
+          ? `${String(detail.quantity)} × ${precio} = ${importe}`
+          : `${String(detail.quantity)} ${saleUnitFor(detail.quantity, unidadDeVenta)} × ${precio} = ${importe}`;
       break;
   }
   const notas = resultado.adjustments.map(nota);

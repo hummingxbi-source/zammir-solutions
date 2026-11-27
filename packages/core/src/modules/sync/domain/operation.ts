@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { err, ok, type Result } from '../../../shared-kernel/result';
+import { MAX_SALE_UNIT_LENGTH } from '../../catalog/domain/sale-unit';
 
 /** Tipos de operación que la tablet manda al servidor [ADR-0016]. Cada caso de uso que cambia datos
  *  compartidos es un tipo; los demás cambios son solo locales. */
@@ -107,6 +108,8 @@ const quoteLineSchema = z
     detail: z.string().optional(),
     /** Opcional: las líneas de antes no traen cargos extra. */
     extras: z.array(lineExtraSchema).optional(),
+    /** Opcional: unidad de venta copiada del producto [RF-M1-11]; una tablet de antes no la manda. */
+    saleUnitName: z.string().trim().min(1).max(MAX_SALE_UNIT_LENGTH).optional(),
   })
   .refine((l) => l.lineTotalCents === l.baseCents + l.taxCents, {
     message: 'el importe de la línea no es base + IVA',

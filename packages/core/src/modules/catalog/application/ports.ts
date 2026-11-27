@@ -35,6 +35,8 @@ export interface SellableProduct {
   readonly isOpenPrice?: boolean;
   /** Descripción opcional [RF-M1-13]. */
   readonly description?: string;
+  /** Unidad de venta de lo que se cobra por pieza o servicio [RF-M1-11]. */
+  readonly saleUnitName?: string;
 }
 
 /** Puerto de lectura para vender: solo productos activos. */

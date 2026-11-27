@@ -10,6 +10,8 @@ import {
 import type { PriceRegistry } from '../pricing/registry';
 import {
   buildProduct,
+  isProductServiceKey,
+  isUnitKey,
   MAX_DESCRIPTION_LENGTH,
   type Category,
   type ChargeUnit,
@@ -17,6 +19,7 @@ import {
   type ProductErrorCode,
   type ProductKind,
 } from '../product';
+import { MAX_SALE_UNIT_LENGTH } from '../sale-unit';
 import { normalizeSearchText } from '../search';
 
 /** Columnas de la plantilla, en el orden en que se descargan. */
@@ -38,6 +41,9 @@ export const IMPORT_COLUMNS = [
   'minimo_por_trabajo',
   'ancho_maximo_mm',
   'alto_maximo_mm',
+  'unidad_venta',
+  'clave_sat',
+  'clave_unidad_sat',
 ] as const;
 
 export type ImportColumn = (typeof IMPORT_COLUMNS)[number];
@@ -80,6 +86,9 @@ export type ImportErrorCode =
   | 'WARRANTY_INVALID'
   /** Un ajuste del cobro que la regla del producto no admite (por ejemplo, área mínima en una pieza). */
   | 'ADJUSTMENT_NOT_ALLOWED'
+  /** Claves del SAT con otro formato: 8 dígitos para el producto, 2 o 3 letras o dígitos para la unidad. */
+  | 'SAT_KEY_INVALID'
+  | 'SAT_UNIT_KEY_INVALID'
   | AdjustmentTextErrorCode
   | ProductErrorCode;
 
@@ -231,6 +240,20 @@ export function analyzeCatalogImport(
     if (descripcion.length > MAX_DESCRIPTION_LENGTH)
       falla('descripcion', 'DESCRIPTION_TOO_LONG_IN_ROW');
 
+    // Unidad de venta [RF-M1-11]: opcional, solo por pieza o servicio.
+    const unidadDeVenta = valor('unidad_venta');
+    if (unidadDeVenta !== '' && unidad !== undefined && unidad !== 'PIECE' && unidad !== 'SERVICE')
+      falla('unidad_venta', 'SALE_UNIT_NOT_ALLOWED');
+    else if (unidadDeVenta.length > MAX_SALE_UNIT_LENGTH)
+      falla('unidad_venta', 'SALE_UNIT_TOO_LONG');
+
+    // Claves del SAT por producto [RF-M1-11]: vacías, se heredan de la categoría.
+    const claveSat = valor('clave_sat');
+    if (claveSat !== '' && !isProductServiceKey(claveSat)) falla('clave_sat', 'SAT_KEY_INVALID');
+    const claveUnidad = valor('clave_unidad_sat').toUpperCase();
+    if (claveUnidad !== '' && !isUnitKey(claveUnidad))
+      falla('clave_unidad_sat', 'SAT_UNIT_KEY_INVALID');
+
     const codigo = valor('codigo');
     if (codigo !== '') {
       const clave = codigo.toLowerCase();
@@ -303,11 +326,16 @@ export function analyzeCatalogImport(
       isActive: true,
       ruleId: regla,
       ruleParams: parametros,
-      fiscal: categoria.fiscalDefaults,
+      fiscal: {
+        ...categoria.fiscalDefaults,
+        ...(claveSat === '' ? {} : { productServiceKey: claveSat }),
+        ...(claveUnidad === '' ? {} : { unitKey: claveUnidad }),
+      },
       warrantyMonths: garantia,
       warrantyText: null,
       ...(abierto ? { isOpenPrice: true } : {}),
       ...(descripcion === '' ? {} : { description: descripcion }),
+      ...(unidadDeVenta === '' ? {} : { saleUnitName: unidadDeVenta }),
     };
     const construido = buildProduct(asId<'Product'>('importacion'), borrador, contexto.priceRules);
     if (!construido.ok) {
@@ -335,6 +363,7 @@ export function analyzeCatalogImport(
       warrantyText: p.warrantyText,
       ...(p.isOpenPrice === true ? { isOpenPrice: true } : {}),
       ...(p.description === undefined ? {} : { description: p.description }),
+      ...(p.saleUnitName === undefined ? {} : { saleUnitName: p.saleUnitName }),
     };
     return { number: numero, draft: normalizado, errors: [] };
   });

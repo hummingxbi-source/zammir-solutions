@@ -33,6 +33,33 @@ describe('buildProduct', () => {
     expect(error({ description: 'a'.repeat(501) })).toBe('DESCRIPTION_TOO_LONG');
   });
 
+  it('unidad de venta: solo por pieza o servicio, sin espacios sobrantes y de hasta 20 caracteres [RF-M1-11]', () => {
+    const pieza: Partial<ProductDraft> = {
+      kind: 'STANDARD',
+      chargeUnit: 'PIECE',
+      ruleId: 'PIECE',
+      ruleParams: {},
+    };
+    const con = buildProduct(id, { ...base, ...pieza, saleUnitName: '  rollo ' }, reglas);
+    expect(con.ok && con.value.saleUnitName).toBe('rollo');
+    const blanco = buildProduct(id, { ...base, ...pieza, saleUnitName: '  ' }, reglas);
+    expect(blanco.ok && 'saleUnitName' in blanco.value).toBe(false);
+    expect(
+      error({
+        kind: 'SERVICE',
+        chargeUnit: 'SERVICE',
+        ruleId: 'SERVICE',
+        ruleParams: {},
+        saleUnitName: 'hora',
+      }),
+    ).toBe('sin error');
+    expect(error({ ...pieza, saleUnitName: 'a'.repeat(20) })).toBe('sin error');
+    expect(error({ ...pieza, saleUnitName: 'a'.repeat(21) })).toBe('SALE_UNIT_TOO_LONG');
+    // Lo que se cobra por m² o metro lineal ya dice su unidad.
+    expect(error({ saleUnitName: 'hoja' })).toBe('SALE_UNIT_NOT_ALLOWED');
+    expect(error({ saleUnitName: '   ' })).toBe('sin error');
+  });
+
   it('precio abierto: se acepta en productos a medida, piezas y servicios, no en cargos extra [RF-M1-10]', () => {
     const abierto = buildProduct(id, { ...base, isOpenPrice: true }, reglas);
     expect(abierto.ok && abierto.value.isOpenPrice).toBe(true);

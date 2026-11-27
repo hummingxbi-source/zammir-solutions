@@ -41,6 +41,9 @@ export interface QuoteLine {
   /** El producto tiene precio abierto: `unitPriceCents` puede quedar arriba de `catalogPriceCents`, que es la
    *  referencia [RF-M1-10, ADR-0048]. Sin el campo (líneas de antes o de precio fijo), no. */
   readonly isOpenPrice?: boolean;
+  /** Copia de la unidad de venta del producto ("rollo", "par", "hora") al armar la línea; así se lee la
+   *  cantidad en pantalla y en los documentos [RF-M1-11]. Sin el campo, no tiene. */
+  readonly saleUnitName?: string;
 }
 
 /** Un cargo extra ligado a una línea: un producto "Cargo extra" del catálogo, cobrado con la medida de la pieza

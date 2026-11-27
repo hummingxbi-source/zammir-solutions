@@ -53,6 +53,9 @@ function fila(cambios: Partial<Record<(typeof IMPORT_COLUMNS)[number], string>> 
     minimo_por_trabajo: '',
     ancho_maximo_mm: '',
     alto_maximo_mm: '',
+    unidad_venta: '',
+    clave_sat: '',
+    clave_unidad_sat: '',
   };
   return IMPORT_COLUMNS.map((c) => cambios[c] ?? base[c]).join(',');
 }
@@ -254,6 +257,42 @@ ${fila({ unidad: 'metro lineal', base_metro_lineal: 'largo', area_minima_m2: '1'
     ).toEqual([['area_minima_m2:ADJUSTMENT_NOT_ALLOWED', 'alto_maximo_mm:ADJUSTMENT_NOT_ALLOWED']]);
   });
 
+  it('unidad de venta: opcional, solo por pieza o servicio [RF-M1-11]', () => {
+    const pieza = { tipo: 'pieza estándar', unidad: 'pieza', categoria: 'Herrajes' };
+    const r = analizar(
+      `${ENCABEZADO}
+${fila({ ...pieza, codigo: 'A', unidad_venta: 'par' })}
+${fila({ ...pieza, codigo: 'B' })}`,
+    );
+    expect(r.rows.map((x) => x.draft?.saleUnitName)).toEqual(['par', undefined]);
+    expect(
+      errores(`${ENCABEZADO}
+${fila({ unidad_venta: 'hoja' })}`),
+    ).toEqual([['unidad_venta:SALE_UNIT_NOT_ALLOWED']]);
+    expect(
+      errores(`${ENCABEZADO}
+${fila({ ...pieza, unidad_venta: 'a'.repeat(21) })}`),
+    ).toEqual([['unidad_venta:SALE_UNIT_TOO_LONG']]);
+  });
+
+  it('claves del SAT: vacías se heredan de la categoría; escritas se validan y la unidad va en mayúsculas', () => {
+    const categoria = categorias.find((c) => c.name === 'Vidrio claro / flotado');
+    const heredada = analizar(`${ENCABEZADO}
+${fila()}`);
+    expect(heredada.rows[0]?.draft?.fiscal).toEqual(categoria?.fiscalDefaults);
+    const propia = analizar(`${ENCABEZADO}
+${fila({ clave_sat: '30171500', clave_unidad_sat: 'h87' })}`);
+    expect(propia.rows[0]?.draft?.fiscal).toEqual({
+      ...categoria?.fiscalDefaults,
+      productServiceKey: '30171500',
+      unitKey: 'H87',
+    });
+    expect(
+      errores(`${ENCABEZADO}
+${fila({ clave_sat: '3017', clave_unidad_sat: 'PIEZA' })}`),
+    ).toEqual([['clave_sat:SAT_KEY_INVALID', 'clave_unidad_sat:SAT_UNIT_KEY_INVALID']]);
+  });
+
   it('una regla indicada a mano se respeta si existe', () => {
     const r = analizar(`${ENCABEZADO}\n${fila({ regla: 'area' })}`);
     expect(r.rows[0]?.draft?.ruleId).toBe('AREA');
@@ -371,6 +410,7 @@ describe('plantilla descargable', () => {
     expect(r.valid).toBe(true);
     expect(r.rows).toHaveLength(4);
     expect(r.rows[1]?.draft?.ruleParams).toEqual({ maxWidthMm: 1800, maxHeightMm: 2600 });
+    expect(r.rows[3]?.draft?.saleUnitName).toBe('visita');
   });
 
   it('los ejemplos conservan los acentos', () => {
