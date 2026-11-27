@@ -344,6 +344,48 @@ describe('Mostrador', () => {
     );
   });
 
+  it('agrega un cargo extra a la línea de vidrio, suma al total y se puede quitar [RF-M1-17]', async () => {
+    const canto: SellableProduct = {
+      ...vidrio,
+      id: asId<'Product'>('00000000-0000-4000-8000-00000000f0e1'),
+      code: 'CP',
+      name: 'Canto pulido',
+      kind: 'EXTRA',
+      listPrice: precio(12_000),
+    };
+    await montar({ productos: [vidrio, chapa, canto] });
+    // Un cargo extra no se vende solo: no sale en el buscador.
+    fireEvent.change(await screen.findByLabelText('Buscar producto o servicio'), {
+      target: { value: 'canto' },
+    });
+    expect(screen.queryByRole('button', { name: /Canto pulido/ })).toBeNull();
+    fireEvent.change(screen.getByLabelText('Buscar producto o servicio'), {
+      target: { value: 'vidrio' },
+    });
+    fireEvent.click(await screen.findByRole('button', { name: /Vidrio claro 6 mm/ }));
+    fireEvent.change(screen.getByLabelText('Ancho (cm)'), { target: { value: '100' } });
+    fireEvent.change(screen.getByLabelText('Alto (cm)'), { target: { value: '100' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar al ticket' }));
+    await screen.findByText(/100 cm × 100 cm = 1\.00 m² × \$280\.00 = \$280\.00/);
+    fireEvent.click(screen.getByRole('button', { name: 'Cargo extra · Vidrio claro 6 mm' }));
+    const grupo = screen.getByRole('group', { name: 'Cargo extra para Vidrio claro 6 mm' });
+    fireEvent.click(within(grupo).getByRole('button', { name: 'Agregar a la línea' }));
+    const total = () =>
+      screen.getByText('Total', { selector: 'dt' }).nextElementSibling?.textContent;
+    await waitFor(() => {
+      expect(total()).toBe('$400.00');
+    });
+    expect(
+      screen.getByText(/\+ Canto pulido: 100 cm × 100 cm = 1\.00 m² × \$120\.00 = \$120\.00/),
+    ).toBeTruthy();
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Quitar Canto pulido · Vidrio claro 6 mm' }),
+    );
+    await waitFor(() => {
+      expect(total()).toBe('$280.00');
+    });
+  });
+
   it('una medida mal escrita no agrega nada y dice qué hacer', async () => {
     await montar();
     fireEvent.change(await screen.findByLabelText('Buscar producto o servicio'), {

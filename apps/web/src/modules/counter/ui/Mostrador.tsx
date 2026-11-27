@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { PedirEntrarConPin } from '../../identity/ui/PedirEntrarConPin';
 import type { ReactElement, SyntheticEvent } from 'react';
 import {
+  addTicketLineExtra,
+  removeTicketLineExtra,
   formatMaxMeasure,
   addToTicket,
   balanceCents,
@@ -57,6 +59,7 @@ import { PanelDeIndicadores } from '../../../shared/ui/PanelDeIndicadores';
 import { Tarjeta } from '../../../shared/ui/Tarjeta';
 import { CampoNumerico } from '../../../shared/ui/Campo';
 import { Campo } from '../../../shared/ui/Campo';
+import { Seleccion } from '../../../shared/ui/Seleccion';
 import { formatearPesos } from '../../../shared/ui/formatos';
 import { DialogoDeAutorizacion } from '../../orders/ui/DialogoDeAutorizacion';
 import { TurnoDeCaja, type HojaDelCorte, type Persona } from './TurnoDeCaja';
@@ -64,6 +67,8 @@ import { DialogoDeCobro } from '../../orders/ui/DialogoDeCobro';
 import type { AutorizacionDeAdministrador } from '../../quotes/ui/DialogoDeDescuento';
 
 const t = textos.mostrador;
+// Los cargos extra se ven y se capturan igual que en el cotizador [RF-M1-17].
+const tx = textos.cotizador.extras;
 
 /** Medida máxima aceptada al capturar (10 m), igual que en el cotizador. */
 const MEDIDA_MAXIMA_MM = 10_000;
@@ -135,6 +140,10 @@ export function Mostrador(props: MostradorProps): ReactElement {
   const [alto, setAlto] = useState('');
   const [cantidad, setCantidad] = useState('1');
   const [ticket, setTicket] = useState<Ticket>(EMPTY_TICKET);
+  // Cargo extra de una línea del ticket (canto, perforación…) [RF-M1-17].
+  const [extraDe, setExtraDe] = useState<string | null>(null);
+  const [extraId, setExtraId] = useState('');
+  const [cantidadExtra, setCantidadExtra] = useState('1');
   // Precio abierto [RF-M1-10]: la línea a la que se le está fijando el precio y lo que se escribió.
   const [precioDe, setPrecioDe] = useState<string | null>(null);
   const [precioTexto, setPrecioTexto] = useState('');
@@ -172,7 +181,11 @@ export function Mostrador(props: MostradorProps): ReactElement {
   const { alCambiarElEnvio } = props;
   useEffect(() => alCambiarElEnvio?.(() => void refrescar()), [alCambiarElEnvio, refrescar]);
 
-  // Los cargos extra se agregan a una línea en el cotizador; no se venden solos [RF-M1-09].
+  // Los cargos extra no se venden solos: se agregan a una línea del ticket [RF-M1-09, RF-M1-17].
+  const extrasDelCatalogo = useMemo(
+    () => (productos ?? []).filter((p) => p.kind === 'EXTRA'),
+    [productos],
+  );
   const encontrados = useMemo(
     () =>
       searchProducts(
@@ -272,6 +285,39 @@ export function Mostrador(props: MostradorProps): ReactElement {
     if (r.ok) {
       setTicket(r.value);
       setUltima(null);
+    } else {
+      mostrarError(r.error.code);
+    }
+  }
+
+  function agregarExtra(lineId: string): void {
+    const extra = extrasDelCatalogo.find((p) => p.id === extraId);
+    if (extra === undefined) {
+      return;
+    }
+    const piezas = Number(cantidadExtra);
+    const r = addTicketLineExtra(
+      ticket,
+      lineId,
+      extra,
+      Number.isInteger(piezas) ? piezas : 0,
+      lineDeps,
+    );
+    if (r.ok) {
+      setTicket(r.value);
+      setExtraDe(null);
+      setExtraId('');
+      setCantidadExtra('1');
+      setError(null);
+    } else {
+      mostrarError(r.error.code);
+    }
+  }
+
+  function quitarExtra(lineId: string, productId: SellableProduct['id']): void {
+    const r = removeTicketLineExtra(ticket, lineId, productId, lineDeps);
+    if (r.ok) {
+      setTicket(r.value);
     } else {
       mostrarError(r.error.code);
     }
@@ -694,6 +740,18 @@ export function Mostrador(props: MostradorProps): ReactElement {
                           >
                             +
                           </Boton>
+                          {extrasDelCatalogo.length > 0 ? (
+                            <Boton
+                              variante="secundario"
+                              aria-label={`${tx.agregar} · ${l.name}`}
+                              onClick={() => {
+                                setExtraDe(extraDe === l.id ? null : l.id);
+                                setExtraId(extrasDelCatalogo[0]?.id ?? '');
+                              }}
+                            >
+                              {tx.agregar}
+                            </Boton>
+                          ) : null}
                           <Boton
                             variante="secundario"
                             onClick={() => {
@@ -703,6 +761,59 @@ export function Mostrador(props: MostradorProps): ReactElement {
                             {t.ticket.quitar}
                           </Boton>
                         </div>
+                        {(l.extras ?? []).length > 0 ? (
+                          <div className="ticket__extras">
+                            {(l.extras ?? []).map((x) => (
+                              <Boton
+                                key={x.productId}
+                                variante="secundario"
+                                aria-label={`${tx.quitar} ${x.name} · ${l.name}`}
+                                onClick={() => {
+                                  quitarExtra(l.id, x.productId);
+                                }}
+                              >
+                                {tx.quitar} {x.name} ({cobra(x.amountCents)})
+                              </Boton>
+                            ))}
+                          </div>
+                        ) : null}
+                        {extraDe === l.id ? (
+                          <div
+                            className="ticket__extra"
+                            role="group"
+                            aria-label={tx.titulo(l.name)}
+                          >
+                            <Seleccion
+                              etiqueta={tx.cual}
+                              value={extraId}
+                              opciones={extrasDelCatalogo.map((p) => ({
+                                valor: p.id,
+                                texto: `${p.name} · ${cobra(p.listPrice)} ${tx.porUnidad[p.chargeUnit] ?? ''}`,
+                              }))}
+                              onChange={(e) => {
+                                setExtraId(e.target.value);
+                              }}
+                            />
+                            {extrasDelCatalogo.find((p) => p.id === extraId)?.chargeUnit ===
+                            'PIECE' ? (
+                              <CampoNumerico
+                                etiqueta={tx.cuantas}
+                                entero
+                                value={cantidadExtra}
+                                onChange={(e) => {
+                                  setCantidadExtra(e.target.value);
+                                }}
+                              />
+                            ) : null}
+                            <Boton
+                              onClick={() => {
+                                agregarExtra(l.id);
+                              }}
+                            >
+                              {tx.confirmar}
+                            </Boton>
+                          </div>
+                        ) : null}
                       </li>
                     ))}
                   </ul>
