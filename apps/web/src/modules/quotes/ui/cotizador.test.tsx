@@ -263,6 +263,21 @@ describe('Cotizador', () => {
     expect(screen.getByText('Todavía no hay conceptos. Agrega el primero.')).toBeTruthy();
   });
 
+  it('avisa la medida máxima del producto y no agrega una pieza que la pasa [RF-M1-14]', async () => {
+    montar({ productos: [{ ...vidrio, ruleParams: { maxWidthMm: 1800, maxHeightMm: 2600 } }] });
+    await empezarConClienteNuevo();
+    fireEvent.change(await screen.findByLabelText('Buscar producto o servicio'), {
+      target: { value: 'vidrio' },
+    });
+    fireEvent.click(await screen.findByRole('button', { name: /Vidrio claro 6 mm/ }));
+    expect(screen.getByText('Medida máxima de este producto: 180 × 260 cm')).toBeTruthy();
+    fireEvent.change(screen.getByLabelText('Ancho (cm)'), { target: { value: '181' } });
+    fireEvent.change(screen.getByLabelText('Alto (cm)'), { target: { value: '80' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar a la cotización' }));
+    expect(await screen.findByText('La medida pasa del máximo de este producto.')).toBeTruthy();
+    expect(screen.getByText('Todavía no hay conceptos. Agrega el primero.')).toBeTruthy();
+  });
+
   it('los campos de medida abren el teclado numérico', async () => {
     montar();
     await empezarConClienteNuevo();

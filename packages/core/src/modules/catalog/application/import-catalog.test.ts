@@ -45,7 +45,7 @@ describe('importCatalog', () => {
   it('la plantilla descargable, con sus ejemplos, se importa tal cual', async () => {
     const deps = entorno();
     const r = await importCatalog(deps, { role: 'ADMIN' }, parseCsv(catalogImportTemplate()));
-    expect(r.ok && r.value).toHaveLength(3);
+    expect(r.ok && r.value).toHaveLength(4);
   });
 
   it('todo o nada: con una fila mala no se importa ninguna y se devuelve el detalle', async () => {

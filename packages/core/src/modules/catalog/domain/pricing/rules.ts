@@ -51,6 +51,8 @@ const paramsArea = z.strictObject({
   measureStepMm: medidaOpcional,
   minAreaMm2: medidaOpcional,
   minAmountCents: minimoOpcional,
+  maxWidthMm: medidaOpcional,
+  maxHeightMm: medidaOpcional,
 });
 
 const paramsLineal = z.strictObject({
@@ -58,6 +60,9 @@ const paramsLineal = z.strictObject({
   basis: z.enum(['LENGTH', 'PERIMETER']),
   measureStepMm: medidaOpcional,
   minAmountCents: minimoOpcional,
+  /** Con base en el largo, es el largo máximo. */
+  maxWidthMm: medidaOpcional,
+  maxHeightMm: medidaOpcional,
 });
 
 const paramsSinAjustes = z.strictObject({});
@@ -79,6 +84,13 @@ function conMinimo(
   ajustes.push({ kind: 'MIN_AMOUNT', minAmount: minimo, calculated: calculado });
   return minimo;
 }
+
+/** La medida máxima se compara con lo capturado, antes de subirlo al paso: es la pieza real [RF-M1-14]. */
+function pasaDelMaximo(medida: number | null, maximo: number | null | undefined): boolean {
+  return medida !== null && maximo !== null && maximo !== undefined && medida > maximo;
+}
+
+const MUY_GRANDE: PriceError = { code: 'MEASURE_TOO_LARGE' };
 
 function ajustarPaso(paso: number | null | undefined, medida: number): number {
   return paso === null || paso === undefined ? medida : subirAlPaso(medida, paso);
@@ -109,6 +121,9 @@ export const reglaPorArea: PriceRule = defineRule('AREA', paramsArea, (entrada, 
   const medida = conAnchoYAlto(entrada);
   if (medida === null) {
     return err({ code: 'INPUT_INVALID' });
+  }
+  if (pasaDelMaximo(medida.ancho, p.maxWidthMm) || pasaDelMaximo(medida.alto, p.maxHeightMm)) {
+    return err(MUY_GRANDE);
   }
   const ajustes: PriceAdjustment[] = [];
   anotarPaso(p.measureStepMm, ajustes);
@@ -149,11 +164,17 @@ export const reglaPorMetroLineal: PriceRule = defineRule('LINEAR', paramsLineal,
     if (largo === null) {
       return err({ code: 'INPUT_INVALID' });
     }
+    if (pasaDelMaximo(largo, p.maxWidthMm)) {
+      return err(MUY_GRANDE);
+    }
     ancho = ajustarPaso(p.measureStepMm, largo);
   } else {
     const medida = conAnchoYAlto(entrada);
     if (medida === null) {
       return err({ code: 'INPUT_INVALID' });
+    }
+    if (pasaDelMaximo(medida.ancho, p.maxWidthMm) || pasaDelMaximo(medida.alto, p.maxHeightMm)) {
+      return err(MUY_GRANDE);
     }
     ancho = ajustarPaso(p.measureStepMm, medida.ancho);
     alto = ajustarPaso(p.measureStepMm, medida.alto);

@@ -1,5 +1,12 @@
 import { asId } from '../../../../shared-kernel/id';
 import { parseMoney } from '../../../../shared-kernel/money/parse-money';
+import {
+  adjustmentFieldsFor,
+  paramsWithAdjustments,
+  parseAdjustmentTexts,
+  type AdjustmentField,
+  type AdjustmentTextErrorCode,
+} from '../pricing/adjustments';
 import type { PriceRegistry } from '../pricing/registry';
 import {
   buildProduct,
@@ -26,9 +33,24 @@ export const IMPORT_COLUMNS = [
   'garantia_meses',
   'precio_abierto',
   'descripcion',
+  'redondeo_mm',
+  'area_minima_m2',
+  'minimo_por_trabajo',
+  'ancho_maximo_mm',
+  'alto_maximo_mm',
 ] as const;
 
 export type ImportColumn = (typeof IMPORT_COLUMNS)[number];
+
+/** Columna de cada ajuste del cobro [RF-M1-14]. Opcionales: vacías o ausentes, el ajuste está apagado. */
+const COLUMNA_DE_AJUSTE: Readonly<Record<AdjustmentField, ImportColumn>> = {
+  measureStepMm: 'redondeo_mm',
+  minAreaMm2: 'area_minima_m2',
+  minAmountCents: 'minimo_por_trabajo',
+  maxWidthMm: 'ancho_maximo_mm',
+  maxHeightMm: 'alto_maximo_mm',
+};
+const CAMPOS_DE_AJUSTE = Object.keys(COLUMNA_DE_AJUSTE) as AdjustmentField[];
 
 /** Sin estas columnas el archivo no se puede leer. */
 export const REQUIRED_IMPORT_COLUMNS: readonly ImportColumn[] = [
@@ -56,6 +78,9 @@ export type ImportErrorCode =
   | 'LINEAR_BASIS_REQUIRED'
   | 'LINEAR_BASIS_INVALID'
   | 'WARRANTY_INVALID'
+  /** Un ajuste del cobro que la regla del producto no admite (por ejemplo, área mínima en una pieza). */
+  | 'ADJUSTMENT_NOT_ALLOWED'
+  | AdjustmentTextErrorCode
   | ProductErrorCode;
 
 export interface ImportRowError {
@@ -228,6 +253,22 @@ export function analyzeCatalogImport(
       else if (base === 'largo') parametros = { basis: 'LENGTH' };
       else if (base === 'perimetro') parametros = { basis: 'PERIMETER' };
       else falla('base_metro_lineal', 'LINEAR_BASIS_INVALID');
+    }
+
+    // Ajustes del cobro [RF-M1-14]: los que la regla admite se convierten; uno que no admite es un error.
+    if (regla !== null) {
+      const basis = parametros.basis === 'PERIMETER' ? 'PERIMETER' : 'LENGTH';
+      const admitidos = adjustmentFieldsFor(regla, regla === 'LINEAR' ? basis : null);
+      const textos = Object.fromEntries(
+        CAMPOS_DE_AJUSTE.map((campo) => [campo, valor(COLUMNA_DE_AJUSTE[campo])]),
+      ) as Record<AdjustmentField, string>;
+      for (const campo of CAMPOS_DE_AJUSTE) {
+        if (textos[campo] !== '' && !admitidos.includes(campo))
+          falla(COLUMNA_DE_AJUSTE[campo], 'ADJUSTMENT_NOT_ALLOWED');
+      }
+      const ajustes = parseAdjustmentTexts(textos, admitidos);
+      for (const e of ajustes.errors) falla(COLUMNA_DE_AJUSTE[e.field], e.code);
+      parametros = paramsWithAdjustments(regla, parametros, ajustes.adjustments);
     }
 
     const textoGarantia = valor('garantia_meses');

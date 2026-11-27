@@ -472,6 +472,15 @@ export const textos = {
       precioAbierto: 'Precio abierto: el precio se fija al cotizar o vender',
       precioAbiertoAyuda:
         'El precio de lista queda como referencia. Cobrar más no pide PIN; cobrar menos es un descuento y pide el PIN de un administrador.',
+      ajustes: 'Ajustes del cobro (opcionales)',
+      ajustesAyuda:
+        'Déjalos vacíos para cobrar la medida exacta, sin mínimo ni medida máxima. Las piezas ya cotizadas no cambian.',
+      redondeo: 'Subir cada medida al múltiplo de (mm)',
+      areaMinima: 'Área mínima por pieza (m²)',
+      minimo: 'Cobro mínimo por trabajo, con IVA',
+      anchoMaximo: 'Ancho máximo (mm)',
+      altoMaximo: 'Alto máximo (mm)',
+      largoMaximo: 'Largo máximo (mm)',
       historial: 'Cambios de precio',
       guardar: 'Guardar producto',
       guardando: 'Guardando…',
@@ -527,6 +536,26 @@ export const textos = {
       DESCRIPTION_TOO_LONG: {
         mensaje: 'La descripción es muy larga.',
         queHacer: 'Déjala en 500 caracteres o menos.',
+      },
+      MEASURE_STEP_INVALID: {
+        mensaje: 'El redondeo de medidas no es válido.',
+        queHacer: 'Escribe milímetros enteros, por ejemplo 10, o déjalo vacío.',
+      },
+      MIN_AREA_INVALID: {
+        mensaje: 'El área mínima no es válida.',
+        queHacer: 'Escríbela en m² con hasta 3 decimales, por ejemplo 0.5, o déjala vacía.',
+      },
+      MIN_AMOUNT_INVALID: {
+        mensaje: 'El cobro mínimo no es válido.',
+        queHacer: 'Escríbelo en pesos, mayor a cero, o déjalo vacío.',
+      },
+      MAX_WIDTH_INVALID: {
+        mensaje: 'La medida máxima no es válida.',
+        queHacer: 'Escribe milímetros enteros, por ejemplo 1800, o déjala vacía.',
+      },
+      MAX_HEIGHT_INVALID: {
+        mensaje: 'El alto máximo no es válido.',
+        queHacer: 'Escribe milímetros enteros, por ejemplo 2600, o déjalo vacío.',
       },
       CODE_TAKEN: {
         mensaje: 'Ese código ya lo usa otro producto.',
@@ -604,6 +633,11 @@ export const textos = {
       garantia_meses: 'Garantía (meses)',
       precio_abierto: 'Precio abierto',
       descripcion: 'Descripción',
+      redondeo_mm: 'Redondeo (mm)',
+      area_minima_m2: 'Área mínima (m²)',
+      minimo_por_trabajo: 'Mínimo por trabajo',
+      ancho_maximo_mm: 'Ancho máximo (mm)',
+      alto_maximo_mm: 'Alto máximo (mm)',
     },
     errores: {
       NAME_REQUIRED_IN_ROW: 'Falta el nombre.',
@@ -616,6 +650,13 @@ export const textos = {
       EXEMPT_INVALID: 'En "exento" escribe sí o no.',
       OPEN_PRICE_INVALID: 'En "precio abierto" escribe sí o no, o déjalo vacío.',
       DESCRIPTION_TOO_LONG_IN_ROW: 'La descripción puede tener hasta 500 caracteres.',
+      ADJUSTMENT_NOT_ALLOWED:
+        'Este ajuste no aplica a esta forma de cobro: déjalo vacío (por ejemplo, el área mínima solo es para m²).',
+      MEASURE_STEP_INVALID: 'El redondeo debe ser en milímetros enteros, por ejemplo 10.',
+      MIN_AREA_INVALID: 'El área mínima va en m² con hasta 3 decimales, por ejemplo 0.5.',
+      MIN_AMOUNT_INVALID: 'El mínimo por trabajo debe ser un monto en pesos mayor a cero.',
+      MAX_WIDTH_INVALID: 'El ancho máximo debe ser en milímetros enteros, por ejemplo 1800.',
+      MAX_HEIGHT_INVALID: 'El alto máximo debe ser en milímetros enteros, por ejemplo 2600.',
       CODE_DUPLICATE_IN_FILE: 'Este código ya aparece antes en el archivo.',
       CODE_DUPLICATE_IN_CATALOG: 'Este código ya existe en el catálogo.',
       RULE_UNKNOWN: 'La regla de precio no existe.',
@@ -1417,6 +1458,7 @@ export const textos = {
       m: 'metros',
       ancho: 'Ancho',
       alto: 'Alto',
+      medidaMaxima: 'Medida máxima de este producto:',
       cantidad: 'Cantidad',
       agregar: 'Agregar al ticket',
       cancelar: 'Cancelar',
@@ -1567,6 +1609,10 @@ export const textos = {
       INPUT_INVALID: {
         mensaje: 'Falta información para calcular el precio.',
         queHacer: 'Revisa las medidas y la cantidad.',
+      },
+      MEASURE_TOO_LARGE: {
+        mensaje: 'La medida pasa del máximo de este producto.',
+        queHacer: 'Revisa la medida. Si es correcta, divide la pieza o elige otro producto.',
       },
       AMOUNT_INVALID: {
         mensaje: 'El importe no es válido.',
@@ -2220,6 +2266,7 @@ export const textos = {
       sinResultados: 'No hay productos con eso.',
       ancho: 'Ancho',
       alto: 'Alto',
+      medidaMaxima: 'Medida máxima de este producto:',
       cantidad: 'Cantidad',
       unidad: 'Unidad de las medidas',
       cm: 'centímetros',
@@ -2364,6 +2411,10 @@ export const textos = {
       INPUT_INVALID: {
         mensaje: 'Las medidas o la cantidad no son válidas.',
         queHacer: 'Revisa ancho, alto y cantidad.',
+      },
+      MEASURE_TOO_LARGE: {
+        mensaje: 'La medida pasa del máximo de este producto.',
+        queHacer: 'Revisa la medida. Si es correcta, divide la pieza o elige otro producto.',
       },
       RULE_NOT_REGISTERED: {
         mensaje: 'Este producto no tiene una regla de precio.',

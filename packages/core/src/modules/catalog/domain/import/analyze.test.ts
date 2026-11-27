@@ -48,6 +48,11 @@ function fila(cambios: Partial<Record<(typeof IMPORT_COLUMNS)[number], string>> 
     garantia_meses: '',
     precio_abierto: '',
     descripcion: '',
+    redondeo_mm: '',
+    area_minima_m2: '',
+    minimo_por_trabajo: '',
+    ancho_maximo_mm: '',
+    alto_maximo_mm: '',
   };
   return IMPORT_COLUMNS.map((c) => cambios[c] ?? base[c]).join(',');
 }
@@ -191,6 +196,64 @@ ${fila({ descripcion: 'a'.repeat(501) })}`),
     ).toEqual([['descripcion:DESCRIPTION_TOO_LONG_IN_ROW']]);
   });
 
+  it('ajustes del cobro: opcionales; vacíos quedan apagados [RF-M1-14]', () => {
+    const r = analizar(
+      `${ENCABEZADO}
+${fila({ codigo: 'A', redondeo_mm: '50', area_minima_m2: '0.5', minimo_por_trabajo: '350', ancho_maximo_mm: '1800', alto_maximo_mm: '2600' })}
+${fila({ codigo: 'B' })}`,
+    );
+    expect(r.valid).toBe(true);
+    expect(r.rows.map((x) => x.draft?.ruleParams)).toEqual([
+      {
+        measureStepMm: 50,
+        minAreaMm2: 500_000,
+        minAmountCents: 350_00,
+        maxWidthMm: 1800,
+        maxHeightMm: 2600,
+      },
+      {},
+    ]);
+  });
+
+  it('ajustes del cobro en metro lineal: el largo máximo va en ancho y conserva la base', () => {
+    const r = analizar(
+      `${ENCABEZADO}
+${fila({ unidad: 'metro lineal', base_metro_lineal: 'largo', ancho_maximo_mm: '6100', minimo_por_trabajo: '100' })}`,
+    );
+    expect(r.rows[0]?.draft?.ruleParams).toEqual({
+      basis: 'LENGTH',
+      minAmountCents: 100_00,
+      maxWidthMm: 6100,
+    });
+  });
+
+  it('un ajuste mal escrito o que la regla no admite se marca en su columna', () => {
+    expect(
+      errores(
+        `${ENCABEZADO}
+${fila({ redondeo_mm: '0', area_minima_m2: 'medio', ancho_maximo_mm: '1.5' })}`,
+      ),
+    ).toEqual([
+      [
+        'redondeo_mm:MEASURE_STEP_INVALID',
+        'area_minima_m2:MIN_AREA_INVALID',
+        'ancho_maximo_mm:MAX_WIDTH_INVALID',
+      ],
+    ]);
+    expect(
+      errores(
+        `${ENCABEZADO}
+${fila({ tipo: 'servicio', unidad: 'servicio', minimo_por_trabajo: '100' })}`,
+      ),
+    ).toEqual([['minimo_por_trabajo:ADJUSTMENT_NOT_ALLOWED']]);
+    expect(
+      errores(
+        `${ENCABEZADO}
+${fila({ unidad: 'metro lineal', base_metro_lineal: 'largo', area_minima_m2: '1', alto_maximo_mm: '100' })}`,
+      ),
+    ).toEqual([['area_minima_m2:ADJUSTMENT_NOT_ALLOWED', 'alto_maximo_mm:ADJUSTMENT_NOT_ALLOWED']]);
+  });
+
   it('una regla indicada a mano se respeta si existe', () => {
     const r = analizar(`${ENCABEZADO}\n${fila({ regla: 'area' })}`);
     expect(r.rows[0]?.draft?.ruleId).toBe('AREA');
@@ -306,7 +369,8 @@ describe('plantilla descargable', () => {
     expect(parseCsv(plantilla)[0]).toEqual([...IMPORT_COLUMNS]);
     const r = analizar(plantilla);
     expect(r.valid).toBe(true);
-    expect(r.rows).toHaveLength(3);
+    expect(r.rows).toHaveLength(4);
+    expect(r.rows[1]?.draft?.ruleParams).toEqual({ maxWidthMm: 1800, maxHeightMm: 2600 });
   });
 
   it('los ejemplos conservan los acentos', () => {

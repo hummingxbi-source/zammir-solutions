@@ -1,8 +1,15 @@
 import { useEffect, useState } from 'react';
 import type { ReactElement, SyntheticEvent } from 'react';
 import {
+  adjustmentFieldsFor,
+  adjustmentsToTexts,
   MAX_DESCRIPTION_LENGTH,
+  paramsWithAdjustments,
+  parseAdjustmentTexts,
   parseMoney,
+  readAdjustments,
+  type AdjustmentField,
+  type AdjustmentTexts,
   type Category,
   type ChargeUnit,
   type PriceChange,
@@ -46,6 +53,19 @@ export interface FormularioDeProductoProps {
   readonly onCancelar: () => void;
 }
 
+/** Etiqueta de cada ajuste del cobro; con base en el largo, el máximo es el del largo. */
+function etiquetaDeAjuste(campo: AdjustmentField, porLargo: boolean): string {
+  const f = t.formulario;
+  const etiquetas: Readonly<Record<AdjustmentField, string>> = {
+    measureStepMm: f.redondeo,
+    minAreaMm2: f.areaMinima,
+    minAmountCents: f.minimo,
+    maxWidthMm: porLargo ? f.largoMaximo : f.anchoMaximo,
+    maxHeightMm: f.altoMaximo,
+  };
+  return etiquetas[campo];
+}
+
 function pesosATexto(centavos: number): string {
   return `${String(Math.floor(centavos / 100))}.${String(centavos % 100).padStart(2, '0')}`;
 }
@@ -79,6 +99,14 @@ export function FormularioDeProducto({
   const [exento, setExento] = useState(inicial?.isTaxExempt ?? false);
   const [abierto, setAbierto] = useState(inicial?.isOpenPrice === true);
   const [descripcion, setDescripcion] = useState(inicial?.description ?? '');
+  // Ajustes del cobro [RF-M1-14]: apagados (vacíos) mientras no se capturen.
+  const [ajustes, setAjustes] = useState<AdjustmentTexts>(() =>
+    adjustmentsToTexts(readAdjustments(inicial?.ruleParams)),
+  );
+  const camposDeAjuste = adjustmentFieldsFor(
+    REGLA_POR_UNIDAD[unidad],
+    unidad === 'LINEAR_METER' ? base : null,
+  );
   const [garantia, setGarantia] = useState(
     inicial?.warrantyMonths === null || inicial?.warrantyMonths === undefined
       ? ''
@@ -122,7 +150,12 @@ export function FormularioDeProducto({
         return;
       }
     }
-    const mismaUnidad = inicial?.chargeUnit === unidad;
+    const leidos = parseAdjustmentTexts(ajustes, camposDeAjuste);
+    const primerError = leidos.errors[0];
+    if (primerError !== undefined) {
+      mostrarError(primerError.code);
+      return;
+    }
     const borrador: ProductDraft = {
       code: codigo.trim() === '' ? null : codigo.trim(),
       name: nombre,
@@ -133,8 +166,11 @@ export function FormularioDeProducto({
       isTaxExempt: exento,
       isActive: inicial?.isActive ?? true,
       ruleId: REGLA_POR_UNIDAD[unidad],
-      ruleParams:
-        unidad === 'LINEAR_METER' ? { basis: base } : mismaUnidad ? inicial.ruleParams : {},
+      ruleParams: paramsWithAdjustments(
+        REGLA_POR_UNIDAD[unidad],
+        unidad === 'LINEAR_METER' ? { basis: base } : {},
+        leidos.adjustments,
+      ),
       fiscal: inicial?.categoryId === categoria.id ? inicial.fiscal : categoria.fiscalDefaults,
       warrantyMonths: meses,
       warrantyText: inicial?.warrantyText ?? null,
@@ -240,6 +276,26 @@ export function FormularioDeProducto({
           }}
         />
       </div>
+      {camposDeAjuste.length === 0 ? null : (
+        <fieldset className="formulario__grupo">
+          <legend>{t.formulario.ajustes}</legend>
+          <p className="formulario__ayuda">{t.formulario.ajustesAyuda}</p>
+          <div className="formulario__par">
+            {camposDeAjuste.map((campo) => (
+              <CampoNumerico
+                key={campo}
+                etiqueta={etiquetaDeAjuste(campo, unidad === 'LINEAR_METER' && base === 'LENGTH')}
+                entero={campo !== 'minAreaMm2' && campo !== 'minAmountCents'}
+                value={ajustes[campo]}
+                onChange={(e) => {
+                  const valor = e.target.value;
+                  setAjustes((antes) => ({ ...antes, [campo]: valor }));
+                }}
+              />
+            ))}
+          </div>
+        </fieldset>
+      )}
       <label className="casilla">
         <input
           type="checkbox"

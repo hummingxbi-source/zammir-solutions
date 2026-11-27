@@ -1,5 +1,6 @@
 import type { LengthUnit } from '../../../../shared-kernel/measure/length';
 import { formatMoney } from '../../../../shared-kernel/money/money';
+import { readAdjustments } from './adjustments';
 import type { PriceAdjustment, PriceResult } from './types';
 
 /** Número con `escala` unidades por entero, solo con aritmética de enteros: 1255 mm en metros es
@@ -71,4 +72,21 @@ export function formatPriceDetail(resultado: PriceResult): string {
   }
   const notas = resultado.adjustments.map(nota);
   return notas.length === 0 ? texto : `${texto} (${notas.join('; ')})`;
+}
+
+/** La medida máxima del producto para avisarla al capturar, en la unidad que se usa: "180 × 260 cm",
+ *  "ancho 180 cm" o "largo 610 cm". `null` si no tiene [RF-M1-14]. */
+export function formatMaxMeasure(ruleParams: unknown, unidad: LengthUnit): string | null {
+  const { maxWidthMm: ancho, maxHeightMm: alto } = readAdjustments(ruleParams);
+  const porLargo = (ruleParams as { basis?: unknown } | null)?.basis === 'LENGTH';
+  if (porLargo) {
+    return ancho === null ? null : `largo ${longitud(ancho, unidad)}`;
+  }
+  if (ancho !== null && alto !== null) {
+    const [a, h] = [longitud(ancho, unidad), longitud(alto, unidad)];
+    return `${a.replace(/ \S+$/, '')} × ${h}`;
+  }
+  if (ancho !== null) return `ancho ${longitud(ancho, unidad)}`;
+  if (alto !== null) return `alto ${longitud(alto, unidad)}`;
+  return null;
 }
