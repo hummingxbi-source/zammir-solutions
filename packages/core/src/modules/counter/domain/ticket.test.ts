@@ -6,6 +6,7 @@ import { money } from '../../../shared-kernel/money/money';
 import { createPriceRegistry, defaultRules } from '../../catalog/domain/pricing/registry';
 import type { QuoteProduct } from '../../quotes/domain/quote-line';
 import {
+  addBundleToTicket,
   addTicketLineExtra,
   addToTicket,
   EMPTY_TICKET,
@@ -304,6 +305,60 @@ describe('cargos extra en el mostrador [RF-M1-17]', () => {
     // Sin extras sí se juntan, como siempre.
     const igual = addToTicket(t, vidrio, entrada({ widthMm: 1000, heightMm: 1000 }), deps);
     expect(igual.ok && igual.value.lines.map((l) => l.quantity)).toEqual([2]);
+  });
+});
+
+describe('paquetes en el mostrador [RF-M1-18]', () => {
+  const catalogo = [
+    { ...vidrio, kind: 'CUSTOM' as const },
+    { ...pieza, kind: 'STANDARD' as const },
+    { ...servicio, kind: 'SERVICE' as const },
+  ];
+  const cancel = {
+    bundleItems: [
+      { productId: vidrio.id, quantity: 1 },
+      { productId: pieza.id, quantity: 2 },
+    ],
+  };
+  let k = 0;
+  const nuevoId = () => {
+    k += 1;
+    return `b-${String(k)}`;
+  };
+  const medidas = { widthMm: 1000, heightMm: 1000, quantity: 1, displayUnit: 'cm' as const };
+
+  it('se convierte en renglones normales con su precio; el total es la suma', () => {
+    const r = addBundleToTicket(EMPTY_TICKET, cancel, catalogo, medidas, nuevoId, deps);
+    expect(r.ok && r.value.lines.map((l) => [l.name, l.quantity, l.lineTotalCents])).toEqual([
+      ['Vidrio claro 6 mm', 1, 28_000],
+      ['Chapa de baño', 2, 23_200],
+    ]);
+    expect(r.ok && ticketTotals(r.value).totalCents).toBe(51_200);
+  });
+
+  it('una pieza que ya estaba en el ticket suma cantidad', () => {
+    const antes = con([pieza, {}]);
+    const r = addBundleToTicket(antes, cancel, catalogo, medidas, nuevoId, deps);
+    expect(r.ok && r.value.lines.map((l) => [l.name, l.quantity])).toEqual([
+      ['Chapa de baño', 3],
+      ['Vidrio claro 6 mm', 1],
+    ]);
+  });
+
+  it('todo o nada: un componente que falta o una medida mala no cambia el ticket', () => {
+    const antes = con([servicio, {}]);
+    const sinVidrio = addBundleToTicket(antes, cancel, catalogo.slice(1), medidas, nuevoId, deps);
+    expect(sinVidrio).toEqual({ ok: false, error: { code: 'BUNDLE_COMPONENT_NOT_FOUND' } });
+    const sinMedidas = addBundleToTicket(
+      antes,
+      cancel,
+      catalogo,
+      { ...medidas, widthMm: null },
+      nuevoId,
+      deps,
+    );
+    expect(sinMedidas).toEqual({ ok: false, error: { code: 'INPUT_INVALID' } });
+    expect(antes.lines).toHaveLength(1);
   });
 });
 

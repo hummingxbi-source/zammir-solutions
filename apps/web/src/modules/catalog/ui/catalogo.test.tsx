@@ -115,6 +115,13 @@ async function sembrar(deps: CatalogoDeps): Promise<void> {
   }
 }
 
+async function idDe(deps: CatalogoDeps, codigo: string): Promise<string> {
+  const lista = await deps.products.list();
+  const p = lista.ok ? lista.value.find((x) => x.code === codigo) : undefined;
+  if (p === undefined) throw new Error(`producto ${codigo}`);
+  return p.id;
+}
+
 async function montar(opciones: { conProductos?: boolean; rol?: UserRole } = {}) {
   const deps = entorno();
   if (opciones.conProductos !== false) {
@@ -463,6 +470,50 @@ describe('Catálogo', () => {
     await montar({ rol: 'STAFF' });
     await screen.findByRole('heading', { name: /Catálogo/ });
     expect(screen.queryByRole('button', { name: 'Precios en bloque' })).toBeNull();
+  });
+
+  it('un paquete se arma con productos del catálogo y su cantidad, sin precio propio [RF-M1-18]', async () => {
+    const deps = await montar();
+    fireEvent.click(await botonAgregar());
+    const dialogo = await screen.findByRole('dialog', { name: 'Agregar producto' });
+    fireEvent.change(within(dialogo).getByLabelText('Nombre'), {
+      target: { value: 'Espejo con marco' },
+    });
+    fireEvent.change(within(dialogo).getByLabelText('Tipo'), { target: { value: 'BUNDLE' } });
+    // Un paquete no tiene precio ni forma de cobro propios.
+    expect(within(dialogo).queryByLabelText('Precio de lista con IVA')).toBeNull();
+    expect(within(dialogo).queryByLabelText('Se cobra por')).toBeNull();
+    const grupo = within(dialogo).getByRole('group', { name: 'Productos del paquete' });
+    fireEvent.click(within(grupo).getByRole('button', { name: 'Agregar producto al paquete' }));
+    fireEvent.click(within(grupo).getByRole('button', { name: 'Agregar producto al paquete' }));
+    const espejo = await idDe(deps, 'ES-4');
+    const marco = await idDe(deps, 'MA-1');
+    fireEvent.change(within(grupo).getByLabelText('Producto 1'), { target: { value: espejo } });
+    fireEvent.change(within(grupo).getByLabelText('Producto 2'), { target: { value: marco } });
+    fireEvent.change(within(grupo).getByLabelText('Cantidad 2'), { target: { value: '2' } });
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Guardar producto' }));
+    await screen.findByText('Producto agregado al catálogo.');
+    const lista = await deps.products.list();
+    const paquete = lista.ok ? lista.value.find((p) => p.name === 'Espejo con marco') : undefined;
+    expect(paquete?.kind).toBe('BUNDLE');
+    expect(paquete?.listPrice).toBe(0);
+    expect(paquete?.bundleItems).toEqual([
+      { productId: espejo, quantity: 1 },
+      { productId: marco, quantity: 2 },
+    ]);
+    expect(screen.getByText('Paquete (varios productos) · 2 productos')).toBeTruthy();
+  });
+
+  it('un paquete sin productos no se guarda y dice qué hacer', async () => {
+    await montar();
+    fireEvent.click(await botonAgregar());
+    const dialogo = await screen.findByRole('dialog', { name: 'Agregar producto' });
+    fireEvent.change(within(dialogo).getByLabelText('Nombre'), { target: { value: 'Vacío' } });
+    fireEvent.change(within(dialogo).getByLabelText('Tipo'), { target: { value: 'BUNDLE' } });
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Guardar producto' }));
+    expect(
+      await within(dialogo).findByText('El paquete necesita de 1 a 20 productos distintos.'),
+    ).toBeTruthy();
   });
 
   it('un servicio solo se cobra como servicio y una pieza estándar como pieza', async () => {

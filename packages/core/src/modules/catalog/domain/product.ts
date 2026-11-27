@@ -8,7 +8,18 @@ import { MAX_SALE_UNIT_LENGTH } from './sale-unit';
 /** Tipo de producto [RN-01]: a medida, pieza estándar o servicio. */
 /** `EXTRA`: cargo extra que se agrega a una línea de vidrio (cantos, perforaciones, biselados) y se cobra con
  *  su medida; no se vende solo [RF-M1-09]. */
-export type ProductKind = 'CUSTOM' | 'STANDARD' | 'SERVICE' | 'EXTRA';
+/** `BUNDLE`: paquete de varios productos ("cancel de baño" = vidrio + kit + tubo); al agregarlo se convierte
+ *  en un renglón normal por componente [RF-M1-18, ADR-0048]. No se vende como un renglón propio. */
+export type ProductKind = 'CUSTOM' | 'STANDARD' | 'SERVICE' | 'EXTRA' | 'BUNDLE';
+
+/** Un componente de un paquete: qué producto y cuántos por cada paquete [RF-M1-18]. */
+export interface BundleItem {
+  readonly productId: ProductId;
+  readonly quantity: number;
+}
+
+/** Cuántos componentes puede tener un paquete. */
+export const MAX_BUNDLE_ITEMS = 20;
 
 /** Unidad de cobro [RN-01]. */
 export type ChargeUnit = 'SQUARE_METER' | 'LINEAR_METER' | 'PIECE' | 'SERVICE';
@@ -55,6 +66,8 @@ export interface Product {
   /** Unidad de venta ("rollo", "par", "hora") de lo que se cobra por pieza o servicio [RF-M1-11]. Sin el
    *  campo, se lee como antes ("pieza" o "servicio"). */
   readonly saleUnitName?: string;
+  /** Componentes del paquete; solo y siempre en un producto `BUNDLE` [RF-M1-18]. */
+  readonly bundleItems?: readonly BundleItem[];
 }
 
 /** Largo máximo de la descripción de un producto [RF-M1-13]. */
@@ -87,7 +100,10 @@ export type ProductErrorCode =
   | 'DESCRIPTION_TOO_LONG'
   /** La unidad de venta es solo para lo que se cobra por pieza o por servicio [RF-M1-11]. */
   | 'SALE_UNIT_NOT_ALLOWED'
-  | 'SALE_UNIT_TOO_LONG';
+  | 'SALE_UNIT_TOO_LONG'
+  /** Un paquete necesita de 1 a 20 componentes distintos, cada uno con cantidad entera de 1 en adelante; y
+   *  solo un paquete lleva componentes [RF-M1-18]. */
+  | 'BUNDLE_ITEMS_INVALID';
 
 export interface ProductError {
   readonly code: ProductErrorCode;
@@ -99,6 +115,8 @@ const UNIDADES_POR_TIPO: Record<ProductKind, readonly ChargeUnit[]> = {
   SERVICE: ['SERVICE'],
   // m² por omisión (lo que dijo Luis); metro lineal y pieza para no tocar código si alguno se cobra distinto.
   EXTRA: ['SQUARE_METER', 'LINEAR_METER', 'PIECE'],
+  // El paquete no se cobra solo: cada componente lleva su unidad. Se guarda como pieza para que la tabla valga.
+  BUNDLE: ['PIECE'],
 };
 
 /** Unidad que cobra cada regla de hoy. Una regla nueva no declarada aquí no restringe la unidad. */
@@ -125,6 +143,21 @@ export function isProductServiceKey(texto: string): boolean {
 /** Clave de unidad del SAT: 2 o 3 letras mayúsculas o dígitos (H87, E48, KGM) [RF-M1-11]. */
 export function isUnitKey(texto: string): boolean {
   return CLAVE_UNIDAD.test(texto);
+}
+
+/** Un paquete lleva de 1 a 20 componentes distintos con cantidad entera positiva; lo demás, ninguno. Que los
+ *  componentes existan y se puedan vender lo revisa `checkBundleItems`, que conoce el catálogo. */
+function componentesValidos(borrador: ProductDraft): boolean {
+  const items = borrador.bundleItems ?? [];
+  if (borrador.kind !== 'BUNDLE') {
+    return items.length === 0;
+  }
+  return (
+    items.length >= 1 &&
+    items.length <= MAX_BUNDLE_ITEMS &&
+    new Set(items.map((i) => i.productId)).size === items.length &&
+    items.every((i) => Number.isSafeInteger(i.quantity) && i.quantity >= 1)
+  );
 }
 
 /** Formato de las claves fiscales (vacías o con la forma del catálogo del SAT). */
@@ -157,8 +190,11 @@ export function buildProduct(
   if (!UNIDADES_POR_TIPO[borrador.kind].includes(borrador.chargeUnit)) {
     return err({ code: 'KIND_UNIT_MISMATCH' });
   }
-  if (borrador.isOpenPrice === true && borrador.kind === 'EXTRA') {
+  if (borrador.isOpenPrice === true && (borrador.kind === 'EXTRA' || borrador.kind === 'BUNDLE')) {
     return err({ code: 'OPEN_PRICE_NOT_ALLOWED' });
+  }
+  if (!componentesValidos(borrador)) {
+    return err({ code: 'BUNDLE_ITEMS_INVALID' });
   }
   if (!reglas.has(borrador.ruleId)) {
     return err({ code: 'RULE_NOT_REGISTERED' });
@@ -205,7 +241,7 @@ export function buildProduct(
   // Una descripción o unidad en blanco no se guarda: el producto queda sin el campo, igual que uno de antes.
   const resto = Object.fromEntries(
     Object.entries(borrador).filter(
-      ([campo]) => campo !== 'description' && campo !== 'saleUnitName',
+      ([campo]) => campo !== 'description' && campo !== 'saleUnitName' && campo !== 'bundleItems',
     ),
   ) as unknown as ProductDraft;
   return ok({
@@ -215,5 +251,6 @@ export function buildProduct(
     code: code === '' ? null : code,
     ...(descripcion === '' ? {} : { description: descripcion }),
     ...(unidadDeVenta === '' ? {} : { saleUnitName: unidadDeVenta }),
+    ...(borrador.kind === 'BUNDLE' ? { bundleItems: borrador.bundleItems ?? [] } : {}),
   });
 }

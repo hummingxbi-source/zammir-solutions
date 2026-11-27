@@ -12,6 +12,13 @@ import {
   type QuoteProduct,
 } from '../../quotes/domain/quote-line';
 import { quoteTotals, type QuoteLine, type QuoteTotals } from '../../quotes/domain/quote';
+import {
+  expandBundle,
+  type BundleComponent,
+  type BundleError,
+  type BundleInput,
+} from '../../catalog/domain/bundle';
+import type { BundleItem } from '../../catalog/domain/product';
 
 /** El ticket actual del mostrador: lo que se está vendiendo antes de cobrar [RF-M4-01]. Es un valor puro:
  *  cada cambio devuelve un ticket nuevo, con los importes recalculados por las reglas de precio y el IVA
@@ -22,7 +29,8 @@ export interface Ticket {
 
 export const EMPTY_TICKET: Ticket = { lines: [] };
 
-export type TicketErrorCode = QuoteLineError['code'] | 'LINE_NOT_FOUND' | 'QUANTITY_INVALID';
+export type TicketErrorCode =
+  QuoteLineError['code'] | BundleError['code'] | 'LINE_NOT_FOUND' | 'QUANTITY_INVALID';
 
 export interface TicketError {
   readonly code: TicketErrorCode;
@@ -93,6 +101,32 @@ export function setTicketLinePrice(
     return err(nueva.error);
   }
   return ok({ lines: ticket.lines.map((l) => (l.id === lineId ? nueva.value : l)) });
+}
+
+/** Agrega un paquete al ticket [RF-M1-18, ADR-0048]: un renglón normal por componente, igual que si se
+ *  agregaran uno por uno (las piezas iguales suman cantidad). Todo o nada: el ticket solo cambia si todos los
+ *  componentes se pudieron agregar. `nuevoId` da el identificador de cada renglón nuevo. */
+export function addBundleToTicket(
+  ticket: Ticket,
+  paquete: { readonly bundleItems?: readonly BundleItem[] },
+  catalogo: readonly (QuoteProduct & BundleComponent)[],
+  entrada: BundleInput,
+  nuevoId: () => string,
+  deps: LineDeps,
+): Result<Ticket, TicketError> {
+  const renglones = expandBundle(paquete.bundleItems ?? [], catalogo, entrada);
+  if (!renglones.ok) {
+    return renglones;
+  }
+  let actual = ticket;
+  for (const r of renglones.value) {
+    const siguiente = addToTicket(actual, r.product, { ...r.input, id: nuevoId() }, deps);
+    if (!siguiente.ok) {
+      return siguiente;
+    }
+    actual = siguiente.value;
+  }
+  return ok(actual);
 }
 
 function cambiarLinea(

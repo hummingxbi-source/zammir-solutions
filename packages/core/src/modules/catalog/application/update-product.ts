@@ -1,6 +1,7 @@
 import type { ProductId } from '../../../shared-kernel/id';
 import { err, type Result } from '../../../shared-kernel/result';
 import type { UserRole } from '../../identity/domain/auth';
+import type { BundleError } from '../domain/bundle';
 import type { PriceRegistry } from '../domain/pricing/registry';
 import {
   buildProduct,
@@ -8,6 +9,7 @@ import {
   type ProductDraft,
   type ProductError,
 } from '../domain/product';
+import { revisarPaquete } from './check-bundle';
 import type { CatalogError, ProductAdmin } from './ports';
 
 export interface UpdateProductDeps {
@@ -23,13 +25,17 @@ export async function updateProduct(
   actor: { readonly role: UserRole | null },
   id: ProductId,
   borrador: ProductDraft,
-): Promise<Result<Product, ProductError | CatalogError>> {
+): Promise<Result<Product, ProductError | CatalogError | BundleError>> {
   if (actor.role !== 'ADMIN') {
     return err({ code: 'NOT_AUTHORIZED' });
   }
   const producto = buildProduct(id, borrador, deps.priceRules);
   if (!producto.ok) {
     return producto;
+  }
+  const paquete = await revisarPaquete(deps.products, producto.value);
+  if (!paquete.ok) {
+    return paquete;
   }
   return deps.products.update(producto.value);
 }
