@@ -1,7 +1,7 @@
 -- Precio abierto [RF-M1-10, ADR-0048, CE-01]: la marca existe, por omisión está apagada, un cargo extra no la
 -- puede tener y las dos vistas de las tablets la traen.
 begin;
-select plan(5);
+select plan(6);
 
 insert into public.products (id, name, category_id, kind, charge_unit, list_price_cents, rule_id)
 values ('b1000000-0000-0000-0000-000000000001', 'Visita',
@@ -24,6 +24,10 @@ select throws_ok(
 
 select has_column('public', 'sellable_products', 'is_open_price', 'la vista para vender trae la marca');
 select has_column('public', 'catalog_products_for_device', 'is_open_price', 'la réplica de la tablet trae la marca');
+select ok(
+  has_column_privilege('authenticated', 'public.products', 'is_open_price', 'UPDATE'),
+  'el administrador puede cambiar la marca al editar el producto'
+);
 
 select * from finish();
 rollback;
