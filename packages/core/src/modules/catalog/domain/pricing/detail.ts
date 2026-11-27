@@ -14,8 +14,13 @@ function decimal(valor: number, escala: number, decimales: number, minDecimales:
   return fraccion === '' ? String(enteros) : `${String(enteros)}.${fraccion}`;
 }
 
+/** La cifra de una longitud en la unidad que se usa, sin la unidad. */
+function cifra(mm: number, unidad: LengthUnit): string {
+  return unidad === 'm' ? decimal(mm, 1000, 3, 2) : decimal(mm, 10, 1, 0);
+}
+
 function longitud(mm: number, unidad: LengthUnit): string {
-  return unidad === 'm' ? `${decimal(mm, 1000, 3, 2)} m` : `${decimal(mm, 10, 1, 0)} cm`;
+  return `${cifra(mm, unidad)} ${unidad}`;
 }
 
 function metros(mm: number): string {
@@ -83,8 +88,7 @@ export function formatMaxMeasure(ruleParams: unknown, unidad: LengthUnit): strin
     return ancho === null ? null : `largo ${longitud(ancho, unidad)}`;
   }
   if (ancho !== null && alto !== null) {
-    const [a, h] = [longitud(ancho, unidad), longitud(alto, unidad)];
-    return `${a.replace(/ \S+$/, '')} × ${h}`;
+    return `${cifra(ancho, unidad)} × ${longitud(alto, unidad)}`;
   }
   if (ancho !== null) return `ancho ${longitud(ancho, unidad)}`;
   if (alto !== null) return `alto ${longitud(alto, unidad)}`;

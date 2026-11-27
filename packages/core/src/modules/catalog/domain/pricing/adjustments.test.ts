@@ -87,6 +87,13 @@ describe('ajustes del cobro por producto [RF-M1-14]', () => {
       'MAX_HEIGHT_INVALID',
     ]);
     expect(parseAdjustmentTexts({ minAreaMm2: '0' }, TODOS).errors).toHaveLength(1);
+    // Notación que Number() entendería, pero no son milímetros escritos a mano.
+    for (const texto of ['1e3', '0x10', '+5', '5.']) {
+      expect(parseAdjustmentTexts({ maxWidthMm: texto }, TODOS).errors).toHaveLength(1);
+    }
+    // Texto sobrante después del número no se acepta.
+    expect(parseAdjustmentTexts({ minAreaMm2: '0.5x' }, TODOS).errors).toHaveLength(1);
+    expect(parseAdjustmentTexts({ minAreaMm2: '0.5 m' }, TODOS).errors).toHaveLength(1);
     expect(parseAdjustmentTexts({ minAmountCents: '0' }, TODOS).errors).toHaveLength(1);
   });
 
@@ -140,7 +147,19 @@ describe('ajustes del cobro por producto [RF-M1-14]', () => {
       maxWidthMm: '1800',
       maxHeightMm: '2600',
     });
-    expect(adjustmentsToTexts(NO_ADJUSTMENTS).minAreaMm2).toBe('');
+    expect(adjustmentsToTexts(NO_ADJUSTMENTS)).toEqual({
+      measureStepMm: '',
+      minAreaMm2: '',
+      minAmountCents: '',
+      maxWidthMm: '',
+      maxHeightMm: '',
+    });
+    expect(
+      adjustmentsToTexts({
+        ...NO_ADJUSTMENTS,
+        minAmountCents: 120_05 as ChargeAdjustments['minAmountCents'],
+      }).minAmountCents,
+    ).toBe('120.05');
     expect(adjustmentsToTexts({ ...NO_ADJUSTMENTS, minAreaMm2: 3_000_000 }).minAreaMm2).toBe('3');
   });
 

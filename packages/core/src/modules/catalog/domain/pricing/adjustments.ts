@@ -66,7 +66,8 @@ export function paramsWithAdjustments(
   base: Readonly<Record<string, unknown>>,
   ajustes: ChargeAdjustments,
 ): Record<string, unknown> {
-  const basis = base.basis === 'LENGTH' || base.basis === 'PERIMETER' ? base.basis : null;
+  // Sin base de largo, el metro lineal es por perímetro (la regla exige una de las dos).
+  const basis = base.basis === 'LENGTH' ? 'LENGTH' : 'PERIMETER';
   const parametros: Record<string, unknown> = { ...base };
   for (const campo of adjustmentFieldsFor(ruleId, basis)) {
     const valor = ajustes[campo];
