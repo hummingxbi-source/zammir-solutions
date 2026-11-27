@@ -24,7 +24,7 @@ Hay **un solo entorno en la nube** [ADR-0043]: la cuenta de Supabase solo admite
 1. Entrar a [supabase.com](https://supabase.com) con la cuenta empresarial y crear una **organización** (por ejemplo "HummingX BI").
 2. **New project** con estos datos:
    - Nombre: `zammir-pruebas`.
-   - **Región: East US (North Virginia)**. Supabase no tiene región en México; es la más cercana y con todas las funciones.
+   - **Región: East US (Ohio), `us-east-2`**, la misma del proyecto actual (confirmada en el panel el 27 nov 2026). Supabase no tiene región en México; el proyecto nuevo de la entrega se crea en la misma región.
    - **Contraseña de la base:** una larga y aleatoria. Guardarla en el gestor de contraseñas; se pide al desplegar.
 3. Esperar a que termine de crear el proyecto (unos minutos). Anotar, **sin pegarlos en ningún lado**, de **Project Settings**:
    - **Project URL** y **Project ref** (la parte antes de `.supabase.co`).
