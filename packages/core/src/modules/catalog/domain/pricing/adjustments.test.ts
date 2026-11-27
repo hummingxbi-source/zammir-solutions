@@ -130,6 +130,11 @@ describe('ajustes del cobro por producto [RF-M1-14]', () => {
     expect(
       readAdjustments({ measureStepMm: 50, minAreaMm2: null, minAmountCents: -1, maxWidthMm: 1.5 }),
     ).toEqual({ ...NO_ADJUSTMENTS, measureStepMm: 50 });
+    expect(readAdjustments({ minAmountCents: 350_00, maxWidthMm: 1800 })).toEqual({
+      ...NO_ADJUSTMENTS,
+      minAmountCents: 350_00,
+      maxWidthMm: 1800,
+    });
   });
 
   it('a texto y de regreso da lo mismo', () => {

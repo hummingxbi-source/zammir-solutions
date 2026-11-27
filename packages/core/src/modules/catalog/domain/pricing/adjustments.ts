@@ -1,4 +1,4 @@
-import { money, type Money } from '../../../../shared-kernel/money/money';
+import type { Money } from '../../../../shared-kernel/money/money';
 import { parseMoney } from '../../../../shared-kernel/money/parse-money';
 
 /** Ajustes del cobro que se capturan por producto: redondeo de medidas, mínimos y medida máxima
@@ -48,12 +48,12 @@ export function readAdjustments(ruleParams: unknown): ChargeAdjustments {
     return NO_ADJUSTMENTS;
   }
   const p = ruleParams as Partial<Record<AdjustmentField, unknown>>;
-  const minimo = enteroPositivo(p.minAmountCents);
-  const centavos = minimo === null ? null : money(minimo);
+  // Un entero positivo seguro ya es un monto válido; la marca de `Money` solo existe al compilar.
+  const minimo = enteroPositivo(p.minAmountCents) as Money | null;
   return {
     measureStepMm: enteroPositivo(p.measureStepMm),
     minAreaMm2: enteroPositivo(p.minAreaMm2),
-    minAmountCents: centavos?.ok === true ? centavos.value : null,
+    minAmountCents: minimo,
     maxWidthMm: enteroPositivo(p.maxWidthMm),
     maxHeightMm: enteroPositivo(p.maxHeightMm),
   };
