@@ -38,3 +38,6 @@ supabase/functions/_shared/core.mjs
 # Documentos de la entrega ya llenados (nombres, montos, números de serie): solo en esta computadora,
 # nunca en el repositorio [CLAUDE.md regla 7, ADR-0045].
 /privado/
+
+# Caché de TypeScript (se genera sola; no va al repositorio)
+*.tsbuildinfo
