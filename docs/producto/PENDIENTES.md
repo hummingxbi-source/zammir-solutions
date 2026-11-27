@@ -85,6 +85,7 @@
 | PR-36 | Titular de las cuentas, el dominio y el código (pregunta 70) | **HummingX BI**, con su cuenta empresarial; los datos son de ZAMMIR y HummingX los trata por su cuenta [ADR-0045] | 25 nov 2026 |
 | PR-37 | Rol de la tercera persona del mostrador | Cajero / vendedor, sin permisos de administrador [ADR-0045] | 25 nov 2026 |
 | PR-38 | Respaldos de 30 días (era PD-32) | El plan gratuito no tiene respaldos [ADR-0038]: respaldo nocturno propio, cifrado, con 30 días en GitHub y las fotos aparte [ADR-0046]. Restauración de una copia real de la nube ensayada y aprobada en Supabase local | 25 nov 2026 |
+| PR-39 | Catálogo escalable (fase 11) | Aprobado: precio abierto (cualquiera lo fija; debajo de la referencia pide PIN), 3 decimales, precios por porcentaje redondeados al peso. RF-M1-10 a RF-M1-18 [ADR-0048] | 27 nov 2026 |
 
 ## Propuestas
 
@@ -95,7 +96,7 @@ Funciones que alguien cree que faltan o sobran. **No se construyen** hasta que J
 | PP-01 | Recorrido "Primeros pasos" (5 pasos) para usuarios nuevos, visto en la demo [Juanito, 2026-10-27] | Juanito | **Incorporada** en RF-UX-02 a RF-UX-05 |
 | PP-02 | Gráfica de tendencia de ingresos del último mes (~31 días) en el panel de inicio; la demo usaba 10 días [Juanito, 2026-10-27] | Juanito | **Incorporada** en PD-31 (contenido del panel de inicio) |
 | PP-03 | Panel de inicio con ventas y medios de pago, cuentas por cobrar, tendencia y pipeline, como se vio en la demo [Juanito, 2026-10-27] | Juanito | **Incorporada** en RF-UX-01 y PD-31 |
-| PP-04 | Campo "descripción" en el producto (RF-M1-01 no lo incluye) [Juanito, 2026-10-27] | Juanito | Por aprobar |
+| PP-04 | Campo "descripción" en el producto (RF-M1-01 no lo incluye) [Juanito, 2026-10-27] | Juanito | **Aprobada** el 2026-11-27: RF-M1-13, CE-04 [ADR-0048] |
 | PP-05 | Código del producto generado por el sistema (iniciales del nombre + consecutivo) en lugar de capturado por Luis [Juanito, 2026-10-27]. RF-M1-01 ya dice "autogenerable"; falta la regla | Juanito | Por aprobar; definir regla |
 | PP-06 | Gráfica de distribución del catálogo por categoría [Juanito, 2026-10-27] | Juanito | Por aprobar |
 | PP-07 | Lista de "Atención": órdenes atrasadas o detenidas, días en la etapa actual y cuentas por cobrar viejas, con umbrales configurables | Claude, a partir de la demo | Por aprobar |

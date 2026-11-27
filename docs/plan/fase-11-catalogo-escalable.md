@@ -1,8 +1,8 @@
-# Fase 11 — Catálogo escalable (propuesta)
+# Fase 11 — Catálogo escalable
 
 - **Tipo:** código
-- **Estado:** **propuesta, por aprobar por Juanito.** No se construye nada hasta que la apruebe y se registren sus decisiones en un ADR [CLAUDE.md reglas 2, 8 y 10].
-- **Fechas:** por definir con Juanito (ver "Cuándo", al final)
+- **Estado:** **aprobada** por Juanito el 27 nov 2026, con las decisiones D1 a D3 [ADR-0048]. Se construye en ramas; no se fusiona antes de la entrega salvo que Juanito lo diga.
+- **Fechas:** desde el 27 nov 2026
 - **Origen:** investigación del mercado de vidrio y aluminio y auditoría del módulo de catálogo (27 nov 2026). El reporte está en la carpeta local `privado/investigacion/`, fuera del repositorio.
 - **Lee antes:** [00 §1, §4, §5 y §6](00-principios-de-ingenieria.md), `docs/arquitectura/SINCRONIZACION.md`, `docs/arquitectura/MODELO_DE_DATOS.md`, [ADR-0006], [ADR-0020], [ADR-0022] y [ADR-0044]
 
@@ -142,13 +142,13 @@ Cada historia va en su rama y su PR, con pruebas primero y la compuerta completa
 - Si un componente es a medida, pide las medidas una sola vez y las aplica a todos los componentes que las usan.
 - Requiere agregar el tipo nuevo a la tabla de productos con una migración nueva.
 
-## Decisiones que le tocan a HummingX (antes de empezar)
+## Decisiones (tomadas por Juanito el 27 nov) [ADR-0048]
 
 | # | Decisión | Propuesta |
 |---|---|---|
-| D1 | **Precio abierto (CE-01):** ¿quién puede fijar un precio mayor al de referencia? | Cualquier persona puede fijar un precio en un producto abierto. Si queda **debajo** de la referencia, sigue siendo un descuento y pide el PIN de un administrador, como hoy (PR-20). Todo queda en la bitácora |
-| D2 | **Decimales (CE-03):** ¿cuántos decimales? | 3 decimales (gramos, milímetros, minutos). El redondeo del importe **ya está decidido** en [ADR-0011]: precio × medidas × cantidad, redondeado una sola vez al centavo, la mitad hacia arriba. Con decimales se aplica igual |
-| D3 | **Aumento por porcentaje (CE-06):** ¿el precio nuevo se redondea? | Al peso entero hacia arriba, configurable. *(Por definir con Luis: así se ven sus precios)* |
+| D1 | **Precio abierto (CE-01):** ¿quién puede fijar el precio? | **Cualquiera.** Si queda **debajo** de la referencia es un descuento y pide el PIN de un administrador, como hoy (PR-20). Todo queda en la bitácora |
+| D2 | **Decimales (CE-03):** ¿cuántos decimales? | **3 decimales** (gramos, milímetros, minutos). El redondeo del importe **ya está decidido** en [ADR-0011]: precio × medidas × cantidad, redondeado una sola vez al centavo, la mitad hacia arriba. Con decimales se aplica igual |
+| D3 | **Aumento por porcentaje (CE-06):** ¿el precio nuevo se redondea? | **Sí, al peso.** Por omisión, hacia arriba; quien hace el cambio puede elegir otro redondeo en la vista previa |
 | D4 | **Cuándo y qué orden** | Ver la sección siguiente |
 
 ## Cuándo
