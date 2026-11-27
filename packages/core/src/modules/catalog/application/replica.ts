@@ -82,6 +82,7 @@ function paraVender(p: ReplicatedProduct): SellableProduct {
     ruleId: p.ruleId,
     ruleParams: p.ruleParams,
     ...(p.isOpenPrice === true ? { isOpenPrice: true } : {}),
+    ...(p.description === undefined ? {} : { description: p.description }),
   };
 }
 

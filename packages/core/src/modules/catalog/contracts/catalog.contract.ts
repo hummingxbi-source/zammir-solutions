@@ -208,6 +208,21 @@ export function catalogContract(
       expect(todos.ok && todos.value.find((p) => p.id === abierto.id)?.isOpenPrice).toBe(true);
     });
 
+    it('descripción: se guarda y se lee, en la lista y para vender [RF-M1-13]', async () => {
+      const h = await crear();
+      const categoria = await primeraCategoria(h);
+      const con = productoDePrueba(h.nuevoIdDeProducto(), categoria, {
+        description: 'Vidrio flotado para ventanas',
+      });
+      await h.admin.create(con);
+      const lista = await h.admin.list();
+      expect(lista.ok && lista.value.find((p) => p.id === con.id)?.description).toBe(
+        'Vidrio flotado para ventanas',
+      );
+      const paraVender = await h.reader.findSellable(con.id);
+      expect(paraVender.ok && paraVender.value.description).toBe('Vidrio flotado para ventanas');
+    });
+
     it('la lectura para vender no expone lo de administración', async () => {
       const h = await crear();
       const producto = productoDePrueba(h.nuevoIdDeProducto(), await primeraCategoria(h));

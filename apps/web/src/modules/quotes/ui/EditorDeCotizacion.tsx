@@ -412,6 +412,9 @@ export function EditorDeCotizacion({
                           }}
                         >
                           <span className="producto__nombre">{p.name}</span>
+                          {p.description === undefined ? null : (
+                            <span className="producto__descripcion">{p.description}</span>
+                          )}
                           <span className="producto__precio">{cobra(p.listPrice)}</span>
                         </button>
                       </li>

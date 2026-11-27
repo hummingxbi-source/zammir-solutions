@@ -47,6 +47,7 @@ function fila(cambios: Partial<Record<(typeof IMPORT_COLUMNS)[number], string>> 
     base_metro_lineal: '',
     garantia_meses: '',
     precio_abierto: '',
+    descripcion: '',
   };
   return IMPORT_COLUMNS.map((c) => cambios[c] ?? base[c]).join(',');
 }
@@ -175,6 +176,19 @@ describe('analyzeCatalogImport: filas válidas', () => {
     expect(
       errores(`${ENCABEZADO}\n${fila({ tipo: 'cargo extra', precio_abierto: 'si' })}`),
     ).toEqual([['-:OPEN_PRICE_NOT_ALLOWED']]);
+  });
+
+  it('descripción: opcional; con texto se guarda y con más de 500 caracteres se marca [RF-M1-13]', () => {
+    const r = analizar(
+      `${ENCABEZADO}
+${fila({ codigo: 'A', descripcion: 'Para ventanas' })}
+${fila({ codigo: 'B' })}`,
+    );
+    expect(r.rows.map((x) => x.draft?.description)).toEqual(['Para ventanas', undefined]);
+    expect(
+      errores(`${ENCABEZADO}
+${fila({ descripcion: 'a'.repeat(501) })}`),
+    ).toEqual([['descripcion:DESCRIPTION_TOO_LONG_IN_ROW']]);
   });
 
   it('una regla indicada a mano se respeta si existe', () => {

@@ -16,6 +16,7 @@ const EJEMPLOS: readonly (readonly string[])[] = [
     '',
     '12',
     'no',
+    'Vidrio flotado transparente, cortado a la medida',
   ],
   [
     'EJ-PERFIL',
@@ -29,6 +30,7 @@ const EJEMPLOS: readonly (readonly string[])[] = [
     'largo',
     '',
     'no',
+    '',
   ],
   [
     'EJ-REPARACION',
@@ -42,6 +44,7 @@ const EJEMPLOS: readonly (readonly string[])[] = [
     '',
     '',
     'si',
+    'Cambio de felpa, carretillas o seguro; el precio se fija según el trabajo',
   ],
 ];
 

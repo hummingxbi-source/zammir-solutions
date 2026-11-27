@@ -24,6 +24,15 @@ function error(cambios: Partial<ProductDraft>): string {
 }
 
 describe('buildProduct', () => {
+  it('descripción: se guarda sin espacios sobrantes; en blanco no se guarda; más de 500 no se acepta [RF-M1-13]', () => {
+    const con = buildProduct(id, { ...base, description: '  Vidrio para ventana  ' }, reglas);
+    expect(con.ok && con.value.description).toBe('Vidrio para ventana');
+    const blanco = buildProduct(id, { ...base, description: '   ' }, reglas);
+    expect(blanco.ok && 'description' in blanco.value).toBe(false);
+    expect(error({ description: 'a'.repeat(500) })).toBe('sin error');
+    expect(error({ description: 'a'.repeat(501) })).toBe('DESCRIPTION_TOO_LONG');
+  });
+
   it('precio abierto: se acepta en productos a medida, piezas y servicios, no en cargos extra [RF-M1-10]', () => {
     const abierto = buildProduct(id, { ...base, isOpenPrice: true }, reglas);
     expect(abierto.ok && abierto.value.isOpenPrice).toBe(true);

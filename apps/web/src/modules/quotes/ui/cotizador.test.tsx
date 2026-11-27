@@ -365,6 +365,24 @@ describe('Cotizador', () => {
     expect(screen.getAllByText(/con descuento autorizado/).length).toBeGreaterThan(0);
   });
 
+  it('el buscador muestra la descripción y encuentra por ella [RF-M1-13]', async () => {
+    const templado: SellableProduct = {
+      ...vidrio,
+      id: asId<'Product'>('00000000-0000-4000-8000-00000000f0b1'),
+      code: 'VT-10',
+      name: 'Cristal templado 10 mm',
+      description: 'Para puertas y barandales',
+    };
+    montar({ productos: [vidrio, templado] });
+    await empezarConClienteNuevo();
+    fireEvent.change(await screen.findByLabelText('Buscar producto o servicio'), {
+      target: { value: 'barandal' },
+    });
+    const boton = await screen.findByRole('button', { name: /Cristal templado 10 mm/ });
+    expect(within(boton).getByText('Para puertas y barandales')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /Vidrio claro 6 mm/ })).toBeNull();
+  });
+
   it('un administrador da el descuento sin pedir PIN', async () => {
     montar({ actor: admin });
     await empezarConClienteNuevo();
