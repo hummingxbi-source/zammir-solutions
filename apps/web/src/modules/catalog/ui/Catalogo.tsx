@@ -32,6 +32,7 @@ import { useSesionAdmin } from '../../identity/ui/SesionAdmin';
 import { FormularioDeProducto } from './FormularioDeProducto';
 import { Categorias } from './Categorias';
 import { ImportarCatalogo } from './ImportarCatalogo';
+import { PreciosEnBloque } from './PreciosEnBloque';
 
 const t = textos.catalogo;
 
@@ -41,6 +42,7 @@ type Ventanilla =
   /** Alta a partir de otro producto, para crear una variante sin capturar todo [RF-M1-16]. */
   | { readonly tipo: 'duplicar'; readonly producto: Product }
   | { readonly tipo: 'importar' }
+  | { readonly tipo: 'precios' }
   | null;
 
 /** Lo que usa la pantalla del catálogo: también administra las categorías [RF-M1-08]. */
@@ -176,6 +178,17 @@ export function Catalogo({ deps, actor }: CatalogoProps): ReactElement {
             >
               {t.importar}
             </Boton>
+            {actor.role === 'ADMIN' ? (
+              <Boton
+                variante="secundario"
+                onClick={() => {
+                  setAviso(null);
+                  setVentana({ tipo: 'precios' });
+                }}
+              >
+                {textos.preciosEnBloque.boton}
+              </Boton>
+            ) : null}
           </>
         }
       />
@@ -402,6 +415,24 @@ export function Catalogo({ deps, actor }: CatalogoProps): ReactElement {
             deps={deps}
             sinTitulo
             onImportado={() => {
+              void refrescar();
+            }}
+          />
+        </Ventana>
+      ) : null}
+
+      {ventana?.tipo === 'precios' ? (
+        <Ventana
+          titulo={textos.preciosEnBloque.titulo}
+          onCerrar={() => {
+            setVentana(null);
+          }}
+        >
+          <PreciosEnBloque
+            deps={deps}
+            actor={actor}
+            categorias={categorias}
+            onCambiado={() => {
               void refrescar();
             }}
           />

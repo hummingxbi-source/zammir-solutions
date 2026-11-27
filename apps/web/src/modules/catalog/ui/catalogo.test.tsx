@@ -377,6 +377,94 @@ describe('Catálogo', () => {
     expect(await within(dialogo).findByText('La clave SAT no es válida.')).toBeTruthy();
   });
 
+  it('precios en bloque: sube 8 % una categoría con vista previa, redondeado al peso hacia arriba [RF-M1-15]', async () => {
+    const deps = await montar();
+    fireEvent.click(await screen.findByRole('button', { name: 'Precios en bloque' }));
+    const dialogo = await screen.findByRole('dialog', { name: 'Precios en bloque' });
+    fireEvent.change(within(dialogo).getByLabelText('Categoría'), {
+      target: { value: (await categoria(deps, 'espejo')).id },
+    });
+    fireEvent.change(within(dialogo).getByLabelText('Porcentaje'), { target: { value: '8' } });
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Ver los cambios' }));
+    const tabla = await within(dialogo).findByRole('table', {
+      name: 'Subir o bajar por porcentaje',
+    });
+    // $410.00 × 1.08 = $442.80 → $443.00; $116.00 × 1.08 = $125.28 → $126.00.
+    expect(
+      within(tabla).getByRole('row', { name: /Espejo 4 mm \$410\.00 \$443\.00/ }),
+    ).toBeTruthy();
+    expect(
+      within(tabla).getByRole('row', { name: /Marco de madera \$116\.00 \$126\.00/ }),
+    ).toBeTruthy();
+    // Nada se guarda hasta aplicar.
+    let lista = await deps.products.list();
+    expect(lista.ok && lista.value.find((p) => p.code === 'ES-4')?.listPrice).toBe(41_000);
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Aplicar a 2 productos' }));
+    expect(await within(dialogo).findByText('Listo: se cambiaron 2 productos.')).toBeTruthy();
+    lista = await deps.products.list();
+    expect(lista.ok && lista.value.map((p) => [p.code, p.listPrice])).toEqual([
+      ['VC-6', 28_000],
+      ['ES-4', 44_300],
+      ['MA-1', 12_600],
+    ]);
+  });
+
+  it('precios en bloque: un porcentaje que no vale dice qué hacer', async () => {
+    await montar();
+    fireEvent.click(await screen.findByRole('button', { name: 'Precios en bloque' }));
+    const dialogo = await screen.findByRole('dialog', { name: 'Precios en bloque' });
+    fireEvent.change(within(dialogo).getByLabelText('Porcentaje'), { target: { value: '0' } });
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Ver los cambios' }));
+    expect(await within(dialogo).findByText('El porcentaje no es válido.')).toBeTruthy();
+  });
+
+  it('precios en bloque: el archivo actualiza por código y muestra cada cambio antes de aplicarlo', async () => {
+    const deps = await montar();
+    fireEvent.click(await screen.findByRole('button', { name: 'Precios en bloque' }));
+    const dialogo = await screen.findByRole('dialog', { name: 'Precios en bloque' });
+    const archivo = new File(['codigo,nombre,precio\nVC-6,,300\nMA-1,Marco de pino,\n'], 'c.csv', {
+      type: 'text/csv',
+    });
+    fireEvent.change(within(dialogo).getByLabelText('Archivo con los cambios (CSV)'), {
+      target: { files: [archivo] },
+    });
+    const tabla = await within(dialogo).findByRole('table', {
+      name: 'Actualizar desde un archivo',
+    });
+    expect(within(tabla).getByText(/Precio: \$280\.00 → \$300\.00/)).toBeTruthy();
+    expect(within(tabla).getByText('Nombre: Marco de madera → Marco de pino')).toBeTruthy();
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Aplicar 2 cambios' }));
+    expect(await within(dialogo).findByText('Listo: se cambiaron 2 productos.')).toBeTruthy();
+    const lista = await deps.products.list();
+    expect(lista.ok && lista.value.map((p) => [p.name, p.listPrice])).toEqual([
+      ['Vidrio claro 6 mm', 30_000],
+      ['Espejo 4 mm', 41_000],
+      ['Marco de pino', 11_600],
+    ]);
+  });
+
+  it('precios en bloque: un archivo con un código que no existe no cambia nada', async () => {
+    const deps = await montar();
+    fireEvent.click(await screen.findByRole('button', { name: 'Precios en bloque' }));
+    const dialogo = await screen.findByRole('dialog', { name: 'Precios en bloque' });
+    const archivo = new File(['codigo,precio\nVC-6,300\nNO-EXISTE,1\n'], 'c.csv', {
+      type: 'text/csv',
+    });
+    fireEvent.change(within(dialogo).getByLabelText('Archivo con los cambios (CSV)'), {
+      target: { files: [archivo] },
+    });
+    expect(await within(dialogo).findByText(/Ningún producto tiene ese código/)).toBeTruthy();
+    expect(within(dialogo).queryByRole('button', { name: /Aplicar/ })).toBeNull();
+    const lista = await deps.products.list();
+    expect(lista.ok && lista.value.find((p) => p.code === 'VC-6')?.listPrice).toBe(28_000);
+  });
+
+  it('un cajero no ve precios en bloque', async () => {
+    await montar({ rol: 'STAFF' });
+    await screen.findByRole('heading', { name: /Catálogo/ });
+    expect(screen.queryByRole('button', { name: 'Precios en bloque' })).toBeNull();
+  });
+
   it('un servicio solo se cobra como servicio y una pieza estándar como pieza', async () => {
     await montar({ conProductos: false });
     fireEvent.click(await botonAgregar());
