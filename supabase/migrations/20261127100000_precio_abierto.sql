@@ -10,6 +10,10 @@ alter table public.products add column is_open_price boolean not null default fa
 alter table public.products add constraint products_open_price_not_extra
   check (not is_open_price or kind <> 'EXTRA');
 
+-- El administrador edita productos con un permiso por columna (20261030110000_catalog_edit.sql): la marca
+-- nueva entra a esa lista; sin esto, guardar cualquier cambio de un producto se rechaza.
+grant update (is_open_price) on public.products to authenticated;
+
 -- Las dos vistas que leen las tablets agregan la marca al final (las columnas de antes no cambian).
 create or replace view public.sellable_products as
 select
