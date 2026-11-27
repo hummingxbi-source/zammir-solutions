@@ -6,6 +6,9 @@
 alter table public.products add column description text
   check (description is null or (char_length(description) between 1 and 500));
 
+-- Entra a la lista de columnas que el administrador puede editar (20261030110000_catalog_edit.sql).
+grant update (description) on public.products to authenticated;
+
 create or replace view public.sellable_products as
 select
   id, code, name, category_id, kind, charge_unit, list_price_cents,

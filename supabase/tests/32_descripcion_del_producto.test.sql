@@ -1,7 +1,7 @@
 -- Descripción del producto [RF-M1-13, ADR-0048, CE-04]: opcional, de hasta 500 caracteres, y la traen las dos
 -- vistas de las tablets.
 begin;
-select plan(5);
+select plan(6);
 
 select lives_ok(
   $$ insert into public.products (name, category_id, kind, charge_unit, list_price_cents, rule_id, description)
@@ -21,6 +21,10 @@ select throws_ok(
 
 select has_column('public', 'sellable_products', 'description', 'la vista para vender trae la descripción');
 select has_column('public', 'catalog_products_for_device', 'description', 'la réplica de la tablet la trae');
+select ok(
+  has_column_privilege('authenticated', 'public.products', 'description', 'UPDATE'),
+  'el administrador puede cambiar la descripción al editar el producto'
+);
 
 select * from finish();
 rollback;
