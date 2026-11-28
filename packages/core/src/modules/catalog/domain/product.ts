@@ -49,7 +49,12 @@ export interface Product {
   /** Precio abierto [RF-M1-10, ADR-0048]: `listPrice` es de referencia y el precio se fija al cotizar o
    *  vender. Sin el campo, el precio es fijo. */
   readonly isOpenPrice?: boolean;
+  /** Descripción opcional, de hasta 500 caracteres [RF-M1-13]. Sin el campo, no tiene. */
+  readonly description?: string;
 }
+
+/** Largo máximo de la descripción de un producto [RF-M1-13]. */
+export const MAX_DESCRIPTION_LENGTH = 500;
 
 /** Lo que se captura para dar de alta un producto: todo menos el identificador. */
 export type ProductDraft = Omit<Product, 'id'>;
@@ -74,7 +79,8 @@ export type ProductErrorCode =
   | 'FISCAL_INVALID'
   | 'WARRANTY_INVALID'
   /** Un cargo extra copia su precio del catálogo a la pieza: no puede tener precio abierto. */
-  | 'OPEN_PRICE_NOT_ALLOWED';
+  | 'OPEN_PRICE_NOT_ALLOWED'
+  | 'DESCRIPTION_TOO_LONG';
 
 export interface ProductError {
   readonly code: ProductErrorCode;
@@ -163,6 +169,20 @@ export function buildProduct(
   ) {
     return err({ code: 'WARRANTY_INVALID' });
   }
+  const descripcion = borrador.description?.trim() ?? '';
+  if (descripcion.length > MAX_DESCRIPTION_LENGTH) {
+    return err({ code: 'DESCRIPTION_TOO_LONG' });
+  }
   const code = borrador.code === null ? null : borrador.code.trim();
-  return ok({ ...borrador, id, name, code: code === '' ? null : code });
+  // Una descripción en blanco no se guarda: el producto queda sin el campo, igual que uno de antes.
+  const resto = Object.fromEntries(
+    Object.entries(borrador).filter(([campo]) => campo !== 'description'),
+  ) as unknown as ProductDraft;
+  return ok({
+    ...resto,
+    id,
+    name,
+    code: code === '' ? null : code,
+    ...(descripcion === '' ? {} : { description: descripcion }),
+  });
 }

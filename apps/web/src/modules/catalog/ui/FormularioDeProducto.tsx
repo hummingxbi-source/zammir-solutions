@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { ReactElement, SyntheticEvent } from 'react';
 import {
+  MAX_DESCRIPTION_LENGTH,
   parseMoney,
   type Category,
   type ChargeUnit,
@@ -11,6 +12,7 @@ import {
 } from '@zammir/core';
 
 import { textos } from '../../../shared/i18n/textos';
+import { AreaDeTexto } from '../../../shared/ui/AreaDeTexto';
 import { Aviso } from '../../../shared/ui/Aviso';
 import { Boton } from '../../../shared/ui/Boton';
 import { Campo, CampoNumerico } from '../../../shared/ui/Campo';
@@ -76,6 +78,7 @@ export function FormularioDeProducto({
   const [precio, setPrecio] = useState(inicial === undefined ? '' : pesosATexto(inicial.listPrice));
   const [exento, setExento] = useState(inicial?.isTaxExempt ?? false);
   const [abierto, setAbierto] = useState(inicial?.isOpenPrice === true);
+  const [descripcion, setDescripcion] = useState(inicial?.description ?? '');
   const [garantia, setGarantia] = useState(
     inicial?.warrantyMonths === null || inicial?.warrantyMonths === undefined
       ? ''
@@ -137,6 +140,7 @@ export function FormularioDeProducto({
       warrantyText: inicial?.warrantyText ?? null,
       // Un cargo extra copia su precio a la pieza: nunca tiene precio abierto [RF-M1-10].
       ...(abierto && tipo !== 'EXTRA' ? { isOpenPrice: true } : {}),
+      ...(descripcion.trim() === '' ? {} : { description: descripcion }),
     };
     setTrabajando(true);
     const falla = await onGuardar(borrador);
@@ -246,6 +250,15 @@ export function FormularioDeProducto({
         />
         {t.formulario.exento}
       </label>
+      <AreaDeTexto
+        etiqueta={t.formulario.descripcion}
+        value={descripcion}
+        maxLength={MAX_DESCRIPTION_LENGTH}
+        rows={3}
+        onChange={(e) => {
+          setDescripcion(e.target.value);
+        }}
+      />
       {tipo === 'EXTRA' ? null : (
         <label className="casilla">
           <input

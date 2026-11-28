@@ -117,6 +117,14 @@ describe('refreshCatalog', () => {
     expect(b.ok && 'isOpenPrice' in b.value).toBe(false);
   });
 
+  it('la descripción llega a la tablet para vender [RF-M1-13]', async () => {
+    const s = servidor([replicatedProduct('a', 1, { description: 'Para ventanas' })]);
+    const store = inMemoryCatalogLocalStore();
+    await refreshCatalog({ source: s.fuente, store });
+    const a = await localProductReader(store).findSellable(asId<'Product'>('a'));
+    expect(a.ok && a.value.description).toBe('Para ventanas');
+  });
+
   it('sin conexión conserva lo guardado y avisa del error', async () => {
     const s = servidor([replicatedProduct('a', 1)]);
     const store = inMemoryCatalogLocalStore();

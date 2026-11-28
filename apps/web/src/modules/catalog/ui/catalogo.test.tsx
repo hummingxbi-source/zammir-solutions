@@ -247,6 +247,25 @@ describe('Catálogo', () => {
     });
   });
 
+  it('la descripción se captura en el formulario y se guarda con el producto [RF-M1-13]', async () => {
+    const deps = await montar({ conProductos: false });
+    fireEvent.click(await botonAgregar());
+    const dialogo = await screen.findByRole('dialog', { name: 'Agregar producto' });
+    fireEvent.change(within(dialogo).getByLabelText('Nombre'), {
+      target: { value: 'Cristal templado 10 mm' },
+    });
+    fireEvent.change(within(dialogo).getByLabelText(/Descripción/), {
+      target: { value: 'Para puertas y barandales' },
+    });
+    fireEvent.change(within(dialogo).getByLabelText('Precio de lista con IVA'), {
+      target: { value: '900' },
+    });
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Guardar producto' }));
+    await screen.findByText('Producto agregado al catálogo.');
+    const lista = await deps.products.list();
+    expect(lista.ok && lista.value[0]?.description).toBe('Para puertas y barandales');
+  });
+
   it('un servicio solo se cobra como servicio y una pieza estándar como pieza', async () => {
     await montar({ conProductos: false });
     fireEvent.click(await botonAgregar());

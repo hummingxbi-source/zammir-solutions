@@ -754,6 +754,16 @@ a.boton {
   line-height: 1.3;
 }
 
+/* Descripción del producto en el buscador [RF-M1-13]: corta, para no tapar el precio. */
+.producto__descripcion {
+  color: var(--tinta-suave);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .producto__precio {
   color: var(--acento);
   font-family: var(--fuente-etiqueta);

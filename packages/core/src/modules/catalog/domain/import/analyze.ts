@@ -3,6 +3,7 @@ import { parseMoney } from '../../../../shared-kernel/money/parse-money';
 import type { PriceRegistry } from '../pricing/registry';
 import {
   buildProduct,
+  MAX_DESCRIPTION_LENGTH,
   type Category,
   type ChargeUnit,
   type ProductDraft,
@@ -24,6 +25,7 @@ export const IMPORT_COLUMNS = [
   'base_metro_lineal',
   'garantia_meses',
   'precio_abierto',
+  'descripcion',
 ] as const;
 
 export type ImportColumn = (typeof IMPORT_COLUMNS)[number];
@@ -47,6 +49,7 @@ export type ImportErrorCode =
   | 'PRICE_NEGATIVE'
   | 'EXEMPT_INVALID'
   | 'OPEN_PRICE_INVALID'
+  | 'DESCRIPTION_TOO_LONG_IN_ROW'
   | 'CODE_DUPLICATE_IN_FILE'
   | 'CODE_DUPLICATE_IN_CATALOG'
   | 'RULE_UNKNOWN'
@@ -198,6 +201,11 @@ export function analyzeCatalogImport(
     const abierto = SI.has(textoAbierto) ? true : NO.has(textoAbierto) ? false : null;
     if (abierto === null) falla('precio_abierto', 'OPEN_PRICE_INVALID');
 
+    // Descripción [RF-M1-13]: opcional, de hasta 500 caracteres.
+    const descripcion = valor('descripcion');
+    if (descripcion.length > MAX_DESCRIPTION_LENGTH)
+      falla('descripcion', 'DESCRIPTION_TOO_LONG_IN_ROW');
+
     const codigo = valor('codigo');
     if (codigo !== '') {
       const clave = codigo.toLowerCase();
@@ -258,6 +266,7 @@ export function analyzeCatalogImport(
       warrantyMonths: garantia,
       warrantyText: null,
       ...(abierto ? { isOpenPrice: true } : {}),
+      ...(descripcion === '' ? {} : { description: descripcion }),
     };
     const construido = buildProduct(asId<'Product'>('importacion'), borrador, contexto.priceRules);
     if (!construido.ok) {
@@ -284,6 +293,7 @@ export function analyzeCatalogImport(
       warrantyMonths: p.warrantyMonths,
       warrantyText: p.warrantyText,
       ...(p.isOpenPrice === true ? { isOpenPrice: true } : {}),
+      ...(p.description === undefined ? {} : { description: p.description }),
     };
     return { number: numero, draft: normalizado, errors: [] };
   });
