@@ -31,6 +31,11 @@ describe('lectura de lo que devuelve la base al portal', () => {
     expect(parsePortalDocumentRow(buena)).toEqual(buena);
   });
 
+  it('acepta una cantidad con decimales: 1.5 kg [RF-M1-12]', () => {
+    const conDecimales = { ...buena, lines: [{ ...buena.lines[0], quantity: 1.5 }] };
+    expect(parsePortalDocumentRow(conDecimales)).toEqual(conDecimales);
+  });
+
   it('acepta una orden aún sin fecha de liquidación', () => {
     expect(parsePortalDocumentRow({ ...buena, settledAt: null })?.settledAt).toBeNull();
   });
@@ -45,6 +50,10 @@ describe('lectura de lo que devuelve la base al portal', () => {
     [
       'con un concepto sin cantidad',
       { ...buena, lines: [{ name: 'a', quantity: 0, lineTotalCents: 1 }] },
+    ],
+    [
+      'con una cantidad de más de 3 decimales',
+      { ...buena, lines: [{ name: 'a', quantity: 1.2345, lineTotalCents: 1 }] },
     ],
     ['sin el campo de facturada', { ...buena, invoiced: undefined }],
   ])('si viene %s, no hay documento', (_nombre, valor) => {

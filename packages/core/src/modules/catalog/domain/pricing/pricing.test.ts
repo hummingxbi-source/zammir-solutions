@@ -324,6 +324,41 @@ describe('medida máxima [RF-M1-14]', () => {
   });
 });
 
+describe('cantidades con decimales [RF-M1-12, D2]', () => {
+  it('pieza y servicio cobran 1.5 kg o 2.5 h, redondeando una vez al centavo', () => {
+    expect(calcular('PIECE', {}, entrada({ precio: 85_00, quantity: 1.5 })).amount).toBe(127_50);
+    expect(calcular('SERVICE', {}, entrada({ precio: 350_00, quantity: 2.5 })).amount).toBe(875_00);
+    expect(calcular('PIECE', {}, entrada({ precio: 33_33, quantity: 1.5 })).amount).toBe(50_00);
+    expect(calcular('PIECE', {}, entrada({ precio: 1_00, quantity: 1.255 })).amount).toBe(1_26);
+    const r = calcular('PIECE', {}, entrada({ precio: 85_00, quantity: 1.5 }));
+    expect(formatPriceDetail(r)).toBe('1.5 × $85.00 = $127.50');
+    expect(formatPriceDetail(r, 'kilo')).toBe('1.5 kilos × $85.00 = $127.50');
+  });
+
+  it('más de 3 decimales, cero o negativo no se aceptan', () => {
+    for (const quantity of [1.2345, 0, -1]) {
+      expect(error('PIECE', {}, entrada({ precio: 100, quantity }))).toBe('INPUT_INVALID');
+    }
+  });
+
+  it('lo que se mide se cuenta en piezas enteras', () => {
+    expect(
+      error(
+        'AREA',
+        {},
+        entrada({ precio: 100, widthMm: mm(1000), heightMm: mm(1000), quantity: 1.5 }),
+      ),
+    ).toBe('INPUT_INVALID');
+    expect(
+      error(
+        'LINEAR',
+        { basis: 'LENGTH' },
+        entrada({ precio: 100, widthMm: mm(1000), quantity: 1.5 }),
+      ),
+    ).toBe('INPUT_INVALID');
+  });
+});
+
 describe('reglas por pieza (PIECE) y de servicio (SERVICE)', () => {
   it('L4: 3 piezas estándar a $450.00 dan $1,350.00', () => {
     const r = calcular('PIECE', {}, entrada({ precio: 45_000, quantity: 3 }));
@@ -350,7 +385,8 @@ describe('errores tipados', () => {
   it.each([
     ['cantidad cero', { quantity: 0 }],
     ['cantidad negativa', { quantity: -1 }],
-    ['cantidad con fracción', { quantity: 1.5 }],
+    // Con la decisión D2 pieza y servicio aceptan hasta 3 decimales; más de 3 no lo acepta ninguna regla.
+    ['cantidad con más de 3 decimales', { quantity: 1.2345 }],
     ['precio negativo', { unitPrice: m(-1) }],
     ['ancho cero', { widthMm: mm(0) }],
     ['ancho con fracción', { widthMm: mm(10.5) }],

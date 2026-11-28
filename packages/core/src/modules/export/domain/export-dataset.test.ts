@@ -136,6 +136,7 @@ const ETIQUETAS_ESPERADAS = {
   issued_at: 'Fecha',
   total_cents: 'Total',
   quantity: 'Cantidad',
+  quantity_milli: 'Cantidad en milésimas',
   line_total_cents: 'Importe',
   from_status: 'De',
   to_status: 'A',

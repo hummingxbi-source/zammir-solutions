@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { PedirEntrarConPin } from '../../identity/ui/PedirEntrarConPin';
 import type { ReactElement, SyntheticEvent } from 'react';
 import {
+  parseQuantity,
   addBundleToTicket,
   bundleChargeUnits,
   addTicketLineExtra,
@@ -191,6 +192,8 @@ export function Mostrador(props: MostradorProps): ReactElement {
   // Cómo se cobra lo que se agrega: un producto, su unidad; un paquete, las de sus componentes [RF-M1-18].
   const cobrosDe = (p: SellableProduct): readonly SellableProduct['chargeUnit'][] =>
     p.kind === 'BUNDLE' ? bundleChargeUnits(p.bundleItems ?? [], productos ?? []) : [p.chargeUnit];
+  const conDecimales = (p: SellableProduct): boolean =>
+    p.kind !== 'BUNDLE' && p.allowsDecimalQuantity === true;
   const encontrados = useMemo(
     () =>
       searchProducts(
@@ -244,11 +247,16 @@ export function Mostrador(props: MostradorProps): ReactElement {
       mostrarError('MEASURE_INVALID');
       return;
     }
-    const piezas = Number(cantidad);
+    // Con decimales solo lo que se vende así (1.5 kg); un paquete se cuenta entero [RF-M1-12].
+    const piezas = parseQuantity(cantidad, conDecimales(elegido));
+    if (!piezas.ok) {
+      mostrarError('QUANTITY_INVALID');
+      return;
+    }
     const entrada = {
       widthMm: w?.ok === true ? w.value : null,
       heightMm: h?.ok === true ? h.value : null,
-      quantity: Number.isInteger(piezas) ? piezas : 0,
+      quantity: piezas.value,
       displayUnit: unidad,
     };
     const r =
@@ -281,9 +289,9 @@ export function Mostrador(props: MostradorProps): ReactElement {
 
   function elegirProducto(p: SellableProduct): void {
     setError(null);
-    // Un paquete siempre abre su formulario: se dice cuántos y, si hace falta, las medidas.
+    // Un paquete o lo que se vende con decimales abre su formulario: cuántos y, si hace falta, las medidas.
     const medidas = p.chargeUnit === 'SQUARE_METER' || p.chargeUnit === 'LINEAR_METER';
-    if (medidas || p.kind === 'BUNDLE') {
+    if (medidas || p.kind === 'BUNDLE' || conDecimales(p)) {
       setElegido(p);
       return;
     }
@@ -631,7 +639,7 @@ export function Mostrador(props: MostradorProps): ReactElement {
                   ) : null}
                   <CampoNumerico
                     etiqueta={t.venta.cantidad}
-                    entero
+                    entero={!conDecimales(elegido)}
                     value={cantidad}
                     onChange={(e) => {
                       setCantidad(e.target.value);

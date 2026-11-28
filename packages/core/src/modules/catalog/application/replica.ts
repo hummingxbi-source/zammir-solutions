@@ -85,6 +85,7 @@ function paraVender(p: ReplicatedProduct): SellableProduct {
     ...(p.description === undefined ? {} : { description: p.description }),
     ...(p.saleUnitName === undefined ? {} : { saleUnitName: p.saleUnitName }),
     ...(p.bundleItems === undefined ? {} : { bundleItems: p.bundleItems }),
+    ...(p.allowsDecimalQuantity === true ? { allowsDecimalQuantity: true } : {}),
   };
 }
 

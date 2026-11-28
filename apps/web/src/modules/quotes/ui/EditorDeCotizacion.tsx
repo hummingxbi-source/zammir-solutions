@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactElement, SyntheticEvent } from 'react';
 import {
+  parseQuantity,
   addQuoteBundle,
   bundleChargeUnits,
   formatMaxMeasure,
@@ -135,6 +136,8 @@ export function EditorDeCotizacion({
   // Cómo se cobra lo que se agrega: un producto, su unidad; un paquete, las de sus componentes [RF-M1-18].
   const cobrosDe = (p: SellableProduct): readonly SellableProduct['chargeUnit'][] =>
     p.kind === 'BUNDLE' ? bundleChargeUnits(p.bundleItems ?? [], productos ?? []) : [p.chargeUnit];
+  const conDecimales = (p: SellableProduct): boolean =>
+    p.kind !== 'BUNDLE' && p.allowsDecimalQuantity === true;
   const encontrados = useMemo(
     () =>
       searchProducts(
@@ -196,11 +199,16 @@ export function EditorDeCotizacion({
       setError(t.errores.MEASURE_INVALID);
       return;
     }
-    const piezas = Number(cantidad);
+    // Con decimales solo lo que se vende así (1.5 kg); un paquete se cuenta entero [RF-M1-12].
+    const piezas = parseQuantity(cantidad, conDecimales(elegido));
+    if (!piezas.ok) {
+      setError(t.errores.QUANTITY_INVALID);
+      return;
+    }
     const entrada = {
       widthMm: w?.ok === true ? w.value : null,
       heightMm: h?.ok === true ? h.value : null,
-      quantity: Number.isInteger(piezas) ? piezas : 0,
+      quantity: piezas.value,
       displayUnit: unidad,
     };
     const r =
@@ -488,7 +496,7 @@ export function EditorDeCotizacion({
                   ) : null}
                   <CampoNumerico
                     etiqueta={t.producto.cantidad}
-                    entero
+                    entero={!conDecimales(elegido)}
                     value={cantidad}
                     onChange={(e) => {
                       setCantidad(e.target.value);

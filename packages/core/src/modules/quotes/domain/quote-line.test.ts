@@ -170,6 +170,18 @@ describe('cargos extra ligados a la línea [RF-M1-09, ADR-0044]', () => {
     expect(addLineExtra(lineaDeVidrio(), perforacion, 1.5, deps)).toEqual(invalido);
   });
 
+  it('un extra sin tipo declarado se acepta; uno que se cobra por servicio no', () => {
+    const perforacionSinTipo = Object.fromEntries(
+      Object.entries(perforacion).filter(([campo]) => campo !== 'kind'),
+    ) as unknown as QuoteProduct;
+    expect(addLineExtra(lineaDeVidrio(), perforacionSinTipo, 1, deps).ok).toBe(true);
+    const visita = producto('Visita', 'SERVICE', 1_000, 'SERVICE', {}, 'EXTRA');
+    expect(addLineExtra(lineaDeVidrio(), visita, 1, deps)).toEqual({
+      ok: false,
+      error: { code: 'EXTRA_INVALID' },
+    });
+  });
+
   it('en un perfil por largo (sin alto) cabe un extra por metro lineal, pero no uno por m²', () => {
     const perfil = buildQuoteLine(
       producto('Perfil', 'LINEAR_METER', 9_000, 'LINEAR', { basis: 'LENGTH' }),
@@ -261,6 +273,34 @@ describe('errores de la regla de precio en la línea', () => {
     expect(repriceQuoteLine(linea, linea.catalogPriceCents, deps).ok).toBe(true);
     expect(repriceQuoteLine(linea, -1, deps).ok).toBe(false);
     expect(repriceQuoteLine(linea, linea.catalogPriceCents + 1, deps).ok).toBe(false);
+  });
+});
+
+describe('cantidades con decimales [RF-M1-12, D2]', () => {
+  const vinil = {
+    ...producto('Vinil', 'PIECE', 85_00, 'PIECE', {}, 'STANDARD'),
+    saleUnitName: 'kilo',
+    allowsDecimalQuantity: true,
+  };
+  const entrada = (quantity: number) =>
+    ({ id: 'ld', widthMm: null, heightMm: null, quantity, displayUnit: 'cm' }) as const;
+
+  it('un producto que se vende con decimales acepta 1.5 y lo recuerda en la línea', () => {
+    const r = buildQuoteLine(vinil, entrada(1.5), deps);
+    expect(r.ok && [r.value.lineTotalCents, r.value.allowsDecimalQuantity, r.value.detail]).toEqual(
+      [127_50, true, '1.5 kilos × $85.00 = $127.50'],
+    );
+    const otra = r.ok ? recalculateQuoteLine(r.value, { quantity: 2.25 }, deps) : r;
+    expect(otra.ok && otra.value.lineTotalCents).toBe(191_25);
+  });
+
+  it('uno que se vende entero no acepta decimales; ninguno más de 3 ni cero', () => {
+    const invalido = { ok: false, error: { code: 'QUANTITY_INVALID' } };
+    const pieza = producto('Jaladera', 'PIECE', 45_00, 'PIECE', {}, 'STANDARD');
+    expect(buildQuoteLine(pieza, entrada(1.5), deps)).toEqual(invalido);
+    expect(buildQuoteLine(vinil, entrada(1.2345), deps)).toEqual(invalido);
+    expect(buildQuoteLine(vinil, entrada(0), deps)).toEqual(invalido);
+    expect('allowsDecimalQuantity' in lineaDeVidrio()).toBe(false);
   });
 });
 

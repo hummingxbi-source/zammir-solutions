@@ -44,6 +44,8 @@ export interface QuoteLine {
   /** Copia de la unidad de venta del producto ("rollo", "par", "hora") al armar la línea; así se lee la
    *  cantidad en pantalla y en los documentos [RF-M1-11]. Sin el campo, no tiene. */
   readonly saleUnitName?: string;
+  /** El producto se vende con hasta 3 decimales: la cantidad puede ser 1.5 [RF-M1-12]. Sin el campo, entera. */
+  readonly allowsDecimalQuantity?: boolean;
 }
 
 /** Un cargo extra ligado a una línea: un producto "Cargo extra" del catálogo, cobrado con la medida de la pieza

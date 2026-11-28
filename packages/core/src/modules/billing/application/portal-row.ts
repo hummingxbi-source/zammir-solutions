@@ -1,3 +1,4 @@
+import { isValidQuantity } from '../../../shared-kernel/measure/quantity';
 import { z } from 'zod';
 
 import type { PortalDocumentRecord } from './portal-lookup';
@@ -17,7 +18,8 @@ const fila = z.object({
   lines: z.array(
     z.object({
       name: z.string(),
-      quantity: z.number().int().positive(),
+      // Entera, o con hasta 3 decimales (1.5 kg) [RF-M1-12]: si no, el portal no encontraría el documento.
+      quantity: z.number().refine(isValidQuantity),
       lineTotalCents: entero,
       baseCents: entero,
       taxCents: entero,

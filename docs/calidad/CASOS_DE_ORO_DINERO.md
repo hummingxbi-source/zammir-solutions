@@ -35,6 +35,22 @@
 | L7 | Mitad exacta de centavo en metro lineal | 1 por m | 500 | 1 | 1 | — |
 | L8 | Servicio, 2 visitas | 35 000 por visita | — | 2 | 70 000 | `2 × $350.00 = $700.00` |
 
+## Cantidades con decimales (validados por Juanito el 2026-11-27) [RF-M1-12, ADR-0048, D2]
+
+Solo en lo que se vende por pieza o servicio con unidad de venta (kilo, hora). La cantidad lleva hasta 3 decimales y entra al cálculo en milésimas enteras: importe = precio × milésimas ÷ 1000, redondeado una sola vez al centavo, mitad hacia arriba. Lo que se mide (m², metro lineal) se sigue contando en piezas enteras. Pruebas: `money.test.ts` (`multiplyByQuantity`) y `pricing.test.ts`.
+
+| # | Cantidad | Precio (c) | Exacto (c) | Esperado (c) |
+|---|---|---|---|---|
+| C1 | 1.5 kg | 8 500 | 12 750 | **12 750** |
+| C2 | 2.5 h | 35 000 | 87 500 | **87 500** |
+| C3 | 0.333 kg | 1 000 | 333 | **333** |
+| C4 | 1.5 | 3 333 | 4 999.5 | **5 000** (la mitad sube) |
+| C5 | 1.255 | 100 | 125.5 | **126** |
+| C6 | 2.005 | 50 | 100.25 | **100** |
+| C7 | 0.125 | 10 | 1.25 | **1** |
+
+El desglose de IVA de cada línea sigue igual que en T1 a T6: se saca del importe ya redondeado.
+
 ## Documentos completos (por qué desglosar por línea)
 
 | # | Líneas (c) | Total | Σ bases por línea | IVA por línea | Base si se desglosara por documento | Diferencia |

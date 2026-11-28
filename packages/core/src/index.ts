@@ -22,6 +22,7 @@ export * from './modules/devices/application/ports';
 export * from './modules/devices/domain/device';
 export * from './shared-kernel/money/money';
 export * from './shared-kernel/measure/length';
+export * from './shared-kernel/measure/quantity';
 export * from './shared-kernel/tax/tax';
 export * from './modules/catalog/domain/pricing';
 export * from './modules/catalog/application/bulk-prices';

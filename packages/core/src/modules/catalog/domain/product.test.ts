@@ -103,6 +103,34 @@ describe('buildProduct', () => {
     expect(normal.ok && 'bundleItems' in normal.value).toBe(false);
   });
 
+  it('con decimales: solo por pieza o servicio con unidad de venta, ni extra ni paquete [RF-M1-12]', () => {
+    const kilo: Partial<ProductDraft> = {
+      kind: 'STANDARD',
+      chargeUnit: 'PIECE',
+      ruleId: 'PIECE',
+      ruleParams: {},
+      saleUnitName: 'kilo',
+    };
+    const bien = buildProduct(id, { ...base, ...kilo, allowsDecimalQuantity: true }, reglas);
+    expect(bien.ok && bien.value.allowsDecimalQuantity).toBe(true);
+    const sin = buildProduct(id, { ...base, ...kilo, allowsDecimalQuantity: false }, reglas);
+    expect(sin.ok && 'allowsDecimalQuantity' in sin.value).toBe(false);
+    expect(
+      error({
+        kind: 'SERVICE',
+        chargeUnit: 'SERVICE',
+        ruleId: 'SERVICE',
+        ruleParams: {},
+        saleUnitName: 'hora',
+        allowsDecimalQuantity: true,
+      }),
+    ).toBe('sin error');
+    const noPermitido = 'DECIMAL_QUANTITY_NOT_ALLOWED';
+    expect(error({ ...kilo, saleUnitName: ' ', allowsDecimalQuantity: true })).toBe(noPermitido);
+    expect(error({ allowsDecimalQuantity: true })).toBe(noPermitido);
+    expect(error({ ...kilo, kind: 'EXTRA', allowsDecimalQuantity: true })).toBe(noPermitido);
+  });
+
   it('precio abierto: se acepta en productos a medida, piezas y servicios, no en cargos extra [RF-M1-10]', () => {
     const abierto = buildProduct(id, { ...base, isOpenPrice: true }, reglas);
     expect(abierto.ok && abierto.value.isOpenPrice).toBe(true);

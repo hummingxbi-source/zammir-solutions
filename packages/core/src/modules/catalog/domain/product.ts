@@ -68,6 +68,9 @@ export interface Product {
   readonly saleUnitName?: string;
   /** Componentes del paquete; solo y siempre en un producto `BUNDLE` [RF-M1-18]. */
   readonly bundleItems?: readonly BundleItem[];
+  /** Se vende con hasta 3 decimales (1.5 kg, 2.5 h): solo lo que se cobra por pieza o servicio y dice su
+   *  unidad de venta [RF-M1-12, ADR-0048]. Sin el campo, la cantidad es entera. */
+  readonly allowsDecimalQuantity?: boolean;
 }
 
 /** Largo máximo de la descripción de un producto [RF-M1-13]. */
@@ -101,6 +104,9 @@ export type ProductErrorCode =
   /** La unidad de venta es solo para lo que se cobra por pieza o por servicio [RF-M1-11]. */
   | 'SALE_UNIT_NOT_ALLOWED'
   | 'SALE_UNIT_TOO_LONG'
+  /** Con decimales solo se vende lo que se cobra por pieza o servicio, con su unidad de venta, y que no es
+   *  cargo extra ni paquete [RF-M1-12]. */
+  | 'DECIMAL_QUANTITY_NOT_ALLOWED'
   /** Un paquete necesita de 1 a 20 componentes distintos, cada uno con cantidad entera de 1 en adelante; y
    *  solo un paquete lleva componentes [RF-M1-18]. */
   | 'BUNDLE_ITEMS_INVALID';
@@ -237,11 +243,24 @@ export function buildProduct(
   if (unidadDeVenta.length > MAX_SALE_UNIT_LENGTH) {
     return err({ code: 'SALE_UNIT_TOO_LONG' });
   }
+  if (
+    borrador.allowsDecimalQuantity === true &&
+    ((borrador.chargeUnit !== 'PIECE' && borrador.chargeUnit !== 'SERVICE') ||
+      unidadDeVenta === '' ||
+      borrador.kind === 'EXTRA' ||
+      borrador.kind === 'BUNDLE')
+  ) {
+    return err({ code: 'DECIMAL_QUANTITY_NOT_ALLOWED' });
+  }
   const code = borrador.code === null ? null : borrador.code.trim();
   // Una descripción o unidad en blanco no se guarda: el producto queda sin el campo, igual que uno de antes.
   const resto = Object.fromEntries(
     Object.entries(borrador).filter(
-      ([campo]) => campo !== 'description' && campo !== 'saleUnitName' && campo !== 'bundleItems',
+      ([campo]) =>
+        campo !== 'description' &&
+        campo !== 'saleUnitName' &&
+        campo !== 'bundleItems' &&
+        campo !== 'allowsDecimalQuantity',
     ),
   ) as unknown as ProductDraft;
   return ok({
@@ -252,5 +271,6 @@ export function buildProduct(
     ...(descripcion === '' ? {} : { description: descripcion }),
     ...(unidadDeVenta === '' ? {} : { saleUnitName: unidadDeVenta }),
     ...(borrador.kind === 'BUNDLE' ? { bundleItems: borrador.bundleItems ?? [] } : {}),
+    ...(borrador.allowsDecimalQuantity === true ? { allowsDecimalQuantity: true } : {}),
   });
 }

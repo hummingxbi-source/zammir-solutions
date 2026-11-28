@@ -46,6 +46,8 @@ export interface SellableProduct {
   readonly saleUnitName?: string;
   /** Componentes, si es un paquete [RF-M1-18]: al venderlo se convierte en un renglón por componente. */
   readonly bundleItems?: readonly BundleItem[];
+  /** Se vende con hasta 3 decimales (1.5 kg) [RF-M1-12]. */
+  readonly allowsDecimalQuantity?: boolean;
 }
 
 /** Puerto de lectura para vender: solo productos activos. */

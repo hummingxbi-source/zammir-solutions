@@ -1,17 +1,21 @@
 import { z } from 'zod';
 
 import type { Millimeters } from '../../../../shared-kernel/measure/length';
-import { multiply, type Money } from '../../../../shared-kernel/money/money';
+import { quantityToMilli } from '../../../../shared-kernel/measure/quantity';
+import { multiplyByQuantity, type Money } from '../../../../shared-kernel/money/money';
 import { err, ok, type Result } from '../../../../shared-kernel/result';
 import { areaAmount, linearAmount } from '../../../../shared-kernel/tax/tax';
 import type { PriceAdjustment, PriceError, PriceInput, PriceResult, PriceRule } from './types';
 
 /** Define una regla: valida los parámetros con su esquema, la entrada de la línea, y entrega
- *  los parámetros ya tipados al cálculo. */
+ *  los parámetros ya tipados al cálculo. Lo que se mide (m², metro lineal) se cuenta en piezas enteras; lo
+ *  que se vende por pieza o servicio puede llevar hasta 3 decimales (1.5 kg, 2.5 h) [RF-M1-12, ADR-0048]. Que
+ *  un producto en particular los admita lo decide el producto, no la regla. */
 function defineRule<P>(
   id: string,
   esquema: z.ZodType<P>,
   calcular: (entrada: PriceInput, parametros: P) => Result<PriceResult, PriceError>,
+  conDecimales = false,
 ): PriceRule {
   return {
     id,
@@ -23,12 +27,10 @@ function defineRule<P>(
       const medidasValidas = [entrada.widthMm, entrada.heightMm].every(
         (medida) => medida === null || (Number.isInteger(medida) && medida > 0),
       );
-      if (
-        !medidasValidas ||
-        !Number.isInteger(entrada.quantity) ||
-        entrada.quantity <= 0 ||
-        entrada.unitPrice < 0
-      ) {
+      // Con decimales, la cantidad la revisa el cálculo al pasarla a milésimas (una sola vez).
+      const cantidadValida =
+        conDecimales || (Number.isInteger(entrada.quantity) && entrada.quantity > 0);
+      if (!medidasValidas || !cantidadValida || entrada.unitPrice < 0) {
         return err({ code: 'INPUT_INVALID' });
       }
       return calcular(entrada, parametros.data);
@@ -202,7 +204,11 @@ export const reglaPorMetroLineal: PriceRule = defineRule('LINEAR', paramsLineal,
 
 function porUnidades(kind: 'PIECE' | 'SERVICE') {
   return (entrada: PriceInput): Result<PriceResult, PriceError> => {
-    const importe = multiply(entrada.unitPrice, entrada.quantity);
+    const milesimas = quantityToMilli(entrada.quantity);
+    if (milesimas === null) {
+      return err({ code: 'INPUT_INVALID' });
+    }
+    const importe = multiplyByQuantity(entrada.unitPrice, milesimas);
     if (!importe.ok) {
       return err(FUERA_DE_RANGO);
     }
@@ -216,11 +222,17 @@ function porUnidades(kind: 'PIECE' | 'SERVICE') {
 }
 
 /** Pieza estándar: precio por pieza × cantidad. */
-export const reglaPorPieza: PriceRule = defineRule('PIECE', paramsSinAjustes, porUnidades('PIECE'));
+export const reglaPorPieza: PriceRule = defineRule(
+  'PIECE',
+  paramsSinAjustes,
+  porUnidades('PIECE'),
+  true,
+);
 
 /** Servicio (visita o unidad): precio × cantidad. */
 export const reglaDeServicio: PriceRule = defineRule(
   'SERVICE',
   paramsSinAjustes,
   porUnidades('SERVICE'),
+  true,
 );

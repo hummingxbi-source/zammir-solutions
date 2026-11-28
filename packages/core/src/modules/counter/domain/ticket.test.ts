@@ -362,6 +362,39 @@ describe('paquetes en el mostrador [RF-M1-18]', () => {
   });
 });
 
+describe('cantidades con decimales en el mostrador [RF-M1-12]', () => {
+  const vinil: QuoteProduct = {
+    ...pieza,
+    id: asId<'Product'>('p-vinil'),
+    name: 'Vinil para cancel',
+    listPrice: precio(85_00),
+    saleUnitName: 'kilo',
+    allowsDecimalQuantity: true,
+  };
+
+  it('1.5 kg se cobra al centavo y el detalle lo dice', () => {
+    const t = con([vinil, { quantity: 1.5 }]);
+    expect(t.lines[0]?.lineTotalCents).toBe(127_50);
+    expect(t.lines[0]?.detail).toBe('1.5 kilos × $85.00 = $127.50');
+  });
+
+  it('el mismo producto suma cantidad en milésimas: 0.1 + 0.2 = 0.3', () => {
+    const t = con([vinil, { quantity: 0.1 }], [vinil, { quantity: 0.2 }]);
+    expect(t.lines.map((l) => [l.quantity, l.lineTotalCents])).toEqual([[0.3, 25_50]]);
+  });
+
+  it('cambiar la cantidad respeta lo que admite el producto', () => {
+    const t = con([vinil, { quantity: 1 }], [pieza, {}]);
+    const [deVinil, dePieza] = t.lines;
+    const r = setTicketQuantity(t, deVinil?.id ?? '', 2.5, deps);
+    expect(r.ok && r.value.lines[0]?.lineTotalCents).toBe(212_50);
+    const invalido = { ok: false, error: { code: 'QUANTITY_INVALID' } };
+    expect(setTicketQuantity(t, deVinil?.id ?? '', 1.2345, deps)).toEqual(invalido);
+    expect(setTicketQuantity(t, dePieza?.id ?? '', 1.5, deps)).toEqual(invalido);
+    expect(addToTicket(t, pieza, entrada({ quantity: 1.5 }), deps)).toEqual(invalido);
+  });
+});
+
 describe('reglas del ticket que no se ven a simple vista', () => {
   it('dos productos distintos con el mismo precio no se juntan en una línea', () => {
     const otraPieza = { ...pieza, id: asId<'Product'>('p-otra'), name: 'Jaladera' };
