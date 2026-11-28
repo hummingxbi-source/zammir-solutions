@@ -17,13 +17,14 @@
 1. **Mostrador** → *Mi turno de caja* → escribe el fondo inicial (opcional) → **Abrir turno**.
 
 **Vender en el mostrador**
-1. En *Venta rápida* busca el producto. Si va a medida, escribe ancho, alto y cantidad → **Agregar al ticket**.
+1. En *Venta rápida* busca el producto. Si va a medida, escribe ancho, alto y cantidad → **Agregar al ticket**. Lo que se vende por kilo u hora acepta decimales (*1.5*); un paquete agrega todos sus productos de una vez.
+   - Canto o perforación: **Cargo extra** en la línea del vidrio. Precio de referencia: **Fijar precio**.
 2. **Cobrar** → efectivo recibido y/o transferencia → **Registrar cobro**.
 3. **Enviar por WhatsApp** el comprobante, o **Imprimir** si el cliente lo pide.
 
 **Cotizar**
 1. **Cotizador** → **Nueva cotización** → elige o captura al cliente.
-2. Agrega productos. Para cantos, perforaciones o biselados, toca **Cargo extra** en la línea del vidrio.
+2. Agrega productos. Para cantos, perforaciones o biselados, toca **Cargo extra** en la línea del vidrio. Si el producto tiene precio de referencia, toca **Fijar precio**: arriba de la referencia no pide nada; abajo es un descuento.
 3. **Emitir cotización** → **Enviar por WhatsApp**.
 
 **Cobrar una orden de trabajo**
@@ -66,8 +67,8 @@
 
 **En la computadora** (con tu correo y contraseña)
 - **Usuarios:** **Dar de alta** a una persona con su rol y su PIN (administradores, 6 dígitos), **Restablecer PIN**, **Desactivar**. En *Tablets*: **Generar código** para conectar una y **Revocar** la que se pierda.
-- **Catálogo:** **Agregar producto**, **Importar desde archivo** y la tarjeta *Categorías*. Los cantos, perforaciones y biselados se dan de alta con el tipo *Cargo extra*.
-- **Configuración:** días para marcar una cuenta como atrasada, aviso de privacidad, términos, condiciones de la cotización y **Exportar los datos**.
+- **Catálogo:** **Agregar producto**, **Duplicar** (para otro espesor o tono), **Importar desde archivo**, **Precios en bloque** (subir o bajar una categoría por porcentaje, o actualizar desde un archivo, siempre con vista previa) y la tarjeta *Categorías*. Los cantos, perforaciones y biselados se dan de alta con el tipo *Cargo extra*; los conjuntos (vidrio + kit + tubo), con el tipo *Paquete*.
+- **Configuración:** días para marcar una cuenta como atrasada, aviso de privacidad, términos, condiciones de la cotización, unidades de venta sugeridas y **Exportar los datos**.
 
 > Nada contable se borra: ventas, órdenes y pagos solo se cancelan, con motivo y rastro.
 

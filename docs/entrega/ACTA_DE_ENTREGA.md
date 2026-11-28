@@ -151,7 +151,7 @@ Luis ejecutó los escenarios del plan de pruebas de aceptación ([`PLAN_DE_ACEPT
 - [ ] Mostrador: abrir turno, vender, cobrar, cancelar una venta y corte de caja con explicación
 - [ ] Imprimir en hoja carta, la marca COPIA al reimprimir una venta y qué hacer si la impresora no responde
 - [ ] Reportes
-- [ ] Usuarios, PIN y tablets; catálogo, categorías e importación; configuración y exportación de datos
+- [ ] Usuarios, PIN y tablets; catálogo, categorías, importación y precios en bloque; configuración y exportación de datos
 - [ ] Trabajar sin internet
 
 **Criterio (S5-11):** Luis completa **sin ayuda** un recorrido de cotización a cobro. ☐ Sí ☐ No
@@ -182,7 +182,7 @@ Observaciones: ____________________________________________________________
 - [ ] Mostrador: abrir turno, vender, cobrar, cancelar una venta y corte de caja con explicación
 - [ ] Imprimir en hoja carta, la marca COPIA al reimprimir una venta y qué hacer si la impresora no responde
 - [ ] Reportes
-- [ ] Usuarios, PIN y tablets; catálogo, categorías e importación; configuración y exportación de datos
+- [ ] Usuarios, PIN y tablets; catálogo, categorías, importación y precios en bloque; configuración y exportación de datos
 - [ ] Trabajar sin internet
 
 **Criterio (S5-12):** Ricardo completa **sin ayuda** un recorrido de cotización a cobro **y revisa los reportes**. ☐ Sí ☐ No

@@ -26,13 +26,13 @@ Este informe explica, en tres partes, qué se entrega (ficha técnica), cómo se
 
 | Módulo | Para qué sirve |
 |---|---|
-| **Cotizador** | Presupuestos en la tablet, en el local o en la obra, aun sin internet. Vidrio a medida, piezas y cargos extra (cantos, perforaciones, biselados). Se envían en PDF por WhatsApp |
+| **Cotizador** | Presupuestos en la tablet, en el local o en la obra, aun sin internet. Vidrio a medida, piezas, paquetes y cargos extra (cantos, perforaciones, biselados); cantidades con decimales (1.5 kg) y precio abierto. Se envían en PDF por WhatsApp |
 | **Órdenes de trabajo** | Cada trabajo aceptado, con fecha de entrega, anticipo, saldo, entregas por partes, avance y garantía |
 | **Mostrador y caja** | Ventas inmediatas en efectivo, transferencia o mixtas; turno por persona y corte de caja con explicación de diferencias |
 | **Clientes** | Ficha con su historial y la marca de cliente recurrente |
 | **Cuentas por cobrar** | Lo que falta por cobrar, contado desde la entrega, y la confirmación de transferencias |
 | **Reportes** | Ventas del día, la semana y el mes en hora de la Ciudad de México, comparadas con el periodo anterior |
-| **Catálogo** | Productos, precios con IVA incluido, categorías e importación desde archivo |
+| **Catálogo** | Productos, precios con IVA incluido y categorías. Descripción, unidad de venta, claves del SAT, mínimos y medida máxima por producto; paquetes; duplicar; importación desde archivo, y precios en bloque por porcentaje o desde un archivo, con vista previa |
 | **Usuarios** | Personas con PIN, roles, tablets registradas y bitácora de quién hizo qué |
 | **Legal** | Aviso de privacidad y términos, con historial de versiones, y exportación de todos los datos del negocio |
 

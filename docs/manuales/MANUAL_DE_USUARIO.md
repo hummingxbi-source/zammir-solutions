@@ -69,7 +69,10 @@ El **Cotizador** sirve para armar el presupuesto con el cliente, incluso en la o
 2. **Elige o captura al cliente.** Busca por nombre o WhatsApp; si es nuevo toca **Cliente nuevo** y escribe su nombre y su WhatsApp de 10 dígitos (el domicilio de la obra es opcional). Si ya existe alguien con ese WhatsApp, el sistema te avisa.
 3. **Agrega productos.** Escribe el nombre en *Buscar producto o servicio* y tócalo:
    - **A medida** (cristales, espejos): escribe **ancho**, **alto** y **cantidad**, y elige si las medidas son en **centímetros** o **metros**. El sistema calcula el importe y, si el producto se cobra por múltiplos de medida, te aclara cuándo subió las medidas.
-   - **Piezas y servicios:** se agregan con una cantidad.
+   - **Piezas y servicios:** se agregan con una cantidad. Si el producto dice su **unidad de venta**, la cantidad se lee así: *2 rollos*, *3 pares*. Lo que se vende **con decimales** (por ejemplo, vinil por kilo u horas de trabajo) acepta hasta 3: *1.5 kilos*, *2.5 horas*.
+   - **Paquetes** (por ejemplo, *Cancel de baño*): agregan de una vez **un renglón por cada producto** que llevan, cada uno con su precio. Si alguno es a medida, escribe las medidas **una sola vez** y sirven para todos. Escribe en *Cantidad* cuántos paquetes son.
+   - Bajo el nombre del producto ves su **descripción**, si la tiene. También sale en el documento que recibe el cliente.
+   - Si el producto tiene **medida máxima** (por ejemplo, un espejo que no pasa de 1.80 × 2.60 m), te la muestra al elegirlo y no agrega una pieza más grande: revisa la medida, divide la pieza o elige otro producto.
 4. Revisa los **Conceptos**, el **Subtotal**, el **IVA** y el **Total**. A la derecha ves la **vista previa del documento** tal como lo recibirá el cliente.
 
    ![Una cotización en armado](capturas/04-cotizacion-en-armado.png)
@@ -83,6 +86,8 @@ El **Cotizador** sirve para armar el presupuesto con el cliente, incluso en la o
 7. Cuando el cliente responda, toca **Marcar como aceptada** o **Marcar como rechazada**.
 
 **Descuentos.** **Dar descuento** pide el **PIN de un administrador**. El nuevo precio nunca puede ser mayor que el del catálogo ni negativo.
+
+**Precio abierto.** Algunos productos, como una reparación *que depende del trabajo*, tienen un precio **de referencia**. En su línea toca **Fijar precio** y escribe el precio por unidad: cualquier persona puede dejarlo en la referencia o arriba, y la línea dice *precio fijado*. Si lo dejas **debajo** de la referencia es un descuento y pide el **PIN de un administrador**.
 
 **Estados de una cotización:** Borrador, Enviada, Aceptada, Rechazada y Vencida. Las cotizaciones de cada cliente se ven en su historial.
 
@@ -102,8 +107,10 @@ El **Mostrador** es para ventas inmediatas (piezas, servicios y vidrio a medida)
 
 ### Hacer una venta
 
-1. En *Venta rápida* busca el producto. Una **pieza estándar** se agrega al **Ticket actual** con solo tocarla; lo que va **a medida** pide ancho, alto y cantidad.
+1. En *Venta rápida* busca el producto. Una **pieza estándar** se agrega al **Ticket actual** con solo tocarla; lo que va **a medida** pide ancho, alto y cantidad. Lo que se vende **con decimales** (por ejemplo, *1.5 kilos*) y los **paquetes** abren su formulario para que escribas la cantidad.
 2. En el ticket puedes cambiar la cantidad (**Una más** / **Una menos**), **Quitar** un producto o **Vaciar el ticket**.
+   - **Cargo extra:** en una línea de vidrio toca **Cargo extra** y agrega el canto, la perforación o el biselado, igual que en el cotizador. Se quita con **Quitar**.
+   - **Precio abierto:** toca **Fijar precio** en la línea. En el mostrador solo se fija en la referencia o arriba; los descuentos se dan en el cotizador, con el PIN de un administrador.
 
    ![Un ticket con un producto](capturas/07-mostrador-ticket.png)
 
@@ -240,7 +247,27 @@ La **ficha del cliente** reúne sus cotizaciones, órdenes, ventas, pagos y gara
 
 ### Catálogo
 
-Tus **productos y precios de lista, con IVA incluido**. Lo que cambies aquí se usa en el cotizador y en el mostrador. Puedes **Agregar producto**, **Editar**, **Desactivar** (nunca se borran) o **Importar desde archivo**.
+Tus **productos y precios de lista, con IVA incluido**. Lo que cambies aquí se usa en el cotizador y en el mostrador. Puedes **Agregar producto**, **Editar**, **Duplicar**, **Desactivar** (nunca se borran) o **Importar desde archivo**.
+
+Al dar de alta o editar un producto, además del nombre, el tipo, cómo se cobra y el precio, puedes capturar:
+
+- **Descripción** (opcional, hasta 500 caracteres): qué incluye o para qué sirve. Se busca con ella, se ve en el buscador y sale en el documento del cliente.
+- **Unidad de venta** (solo lo que se cobra por pieza o servicio): *rollo*, *kilo*, *par*, *hora*… Se sugieren las de **Configuración** y las que ya usa el catálogo, para que todos escriban igual.
+- **Se vende con decimales:** para lo que se cobra por kilo o por hora. Necesita la unidad de venta. La cantidad lleva hasta 3 decimales y se cobra al centavo.
+- **Precio abierto:** el precio de lista queda como referencia y se fija al cotizar o vender (ver *Cotizar*).
+- **Ajustes del cobro** (solo m² y metro lineal, todos opcionales): subir cada medida a múltiplos de unos milímetros, un área mínima por pieza, un cobro mínimo por trabajo y la **medida máxima**. Vacíos, se cobra la medida exacta, sin mínimo.
+- **Clave SAT y clave de unidad SAT** (opcionales). Vacías, se usan las de la categoría.
+
+**Duplicar** abre el formulario con todo copiado, menos el código, y el nombre con *(copia)*: sirve para dar de alta otro espesor, tono o acabado sin capturar todo de nuevo.
+
+**Paquetes.** Con el tipo *Paquete (varios productos)* eliges los productos que lleva y cuántos de cada uno. No tiene precio propio: vale lo que sus productos. Un paquete no lleva otros paquetes, cargos extra ni productos desactivados.
+
+**Precios en bloque** (botón arriba, solo administradores). Primero ves cada cambio, antes y después, y nada se guarda hasta que lo apliques; cada cambio de precio queda en el historial del producto.
+
+- **Subir o bajar por porcentaje** una categoría completa (solo los productos activos). Escribe el porcentaje (para bajar, con un menos: *-5*) y elige cómo redondear al peso: **hacia arriba** (recomendado), al más cercano o hacia abajo.
+- **Actualizar desde un archivo:** toca **Descargar el catálogo de hoy**, cambia en Excel el nombre, el precio o la descripción y súbelo. Cada producto se encuentra por su código; una celda vacía deja lo que ya tenía. Con un solo error en el archivo no se cambia nada, y el error se muestra con su fila.
+
+**Importar desde archivo** sirve para **dar de alta** productos nuevos. La plantilla trae, además, columnas opcionales para la descripción, la unidad de venta, las claves SAT y los ajustes del cobro. Los paquetes se dan de alta en la pantalla.
 
 ![El catálogo](capturas/23-catalogo.png)
 
@@ -248,7 +275,7 @@ Tus **productos y precios de lista, con IVA incluido**. Lo que cambies aquí se 
 
 ### Configuración
 
-Aquí se edita el **aviso de privacidad** (cada cambio crea una versión nueva y las anteriores se conservan), los **términos del servicio** y las **condiciones de la cotización**. El texto inicial del aviso lo preparó HummingX; ZAMMIR puede ajustarlo con su asesor cuando quiera.
+Aquí se edita el **aviso de privacidad** (cada cambio crea una versión nueva y las anteriores se conservan), los **términos del servicio**, las **condiciones de la cotización** y las **unidades de venta** que se sugieren al capturar un producto (una por renglón). El texto inicial del aviso lo preparó HummingX; ZAMMIR puede ajustarlo con su asesor cuando quiera.
 
 ![Configuración](capturas/24-configuracion.png)
 

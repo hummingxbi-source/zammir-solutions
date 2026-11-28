@@ -1,7 +1,7 @@
 # Plan maestro de entrega · ZAMMIR
 
 > **Para qué sirve.** Es el documento de traspaso. Dice dónde está el proyecto, qué falta y cómo será la entrega a ZAMMIR. Lo lee primero cualquier persona o agente de IA que tome el trabajo desde aquí.
-> **Corte:** miércoles 25 de noviembre de 2026, con la fase 10 (AJ-01 a AJ-09) fusionada y desplegada, y las decisiones de la entrega del [ADR-0045].
+> **Corte:** miércoles 25 de noviembre de 2026, con la fase 10 (AJ-01 a AJ-09) fusionada y desplegada, y las decisiones de la entrega del [ADR-0045]. **Actualizado el 28 nov** con la fase 11 (catálogo escalable), fusionada y desplegada.
 > **Regla de este documento:** solo lleva lo que se verificó en el repositorio o en producción. Lo que es una **propuesta** sin aprobar dice *(propuesta)*. Lo que está por confirmar dice *(por confirmar)*.
 > **Sin datos reales:** aquí no hay correos, apellidos, teléfonos, montos, llaves ni contraseñas [CLAUDE.md regla 7, ADR-0010].
 > **Para arrancar una conversación nueva con un agente de IA:** copiar el texto de [`PROMPT_PARA_EL_SIGUIENTE_AGENTE.md`](PROMPT_PARA_EL_SIGUIENTE_AGENTE.md).
@@ -12,9 +12,9 @@
 
 | Tema | Estado al 25 nov 2026 |
 |---|---|
-| **Construcción** | Fases 0 a 10 construidas y fusionadas en `main`. La última fue la fase 10, *ajustes de operación para la entrega* [ADR-0044], en los PR #114 a #123 (detalle en la §2). |
+| **Construcción** | Fases 0 a 11 construidas y fusionadas en `main`. La fase 10, *ajustes de operación para la entrega* [ADR-0044], va en los PR #114 a #123 (§2); la fase 11, *catálogo escalable* [ADR-0048], en los PR #132 a #143, fusionados el 28 nov (§2b). |
 | **Producción** | `https://sistema.zammir-solutions.com` responde 200 y sirve el último `main` (Vercel). Lleva la política de contenido (CSP) y la política de permisos. La función `salud` responde `{"ok":true}`. Verificado el 25 nov. |
-| **Base en la nube** | Un solo proyecto de Supabase, **`zammir-pruebas`**, con **datos inventados** [ADR-0043]. El 25 nov se aplicaron las 8 migraciones de la fase 10 (41 en total) y se desplegaron las 11 funciones, con *Desplegar a Supabase* en el entorno `pruebas`. En la entrega **se borra y se crea uno nuevo vacío**. |
+| **Base en la nube** | Un solo proyecto de Supabase, **`zammir-pruebas`**, con **datos inventados** [ADR-0043]. El 25 nov se aplicaron las 8 migraciones de la fase 10 (41 en total), y el **28 nov las 8 de la fase 11 (49 en total)**, con un respaldo a mano antes; en las dos ocasiones se desplegaron las 11 funciones con *Desplegar a Supabase* en el entorno `pruebas`. En la entrega **se borra y se crea uno nuevo vacío**. |
 | **Respaldo nocturno** | Activo desde el 24 nov y cifrado; se guarda 30 días en GitHub. Copia la base y las cuentas. La copia de las **fotos de medición** está activa desde el 25 nov, en el entorno `respaldo` [ADR-0046]; falta comprobarlo con una foto real tomada en la tablet (P2), porque `zammir-pruebas` no tenía fotos en las primeras corridas (PD-57). **Restauración de una copia de la nube ensayada y aprobada el 25 nov** (P1). |
 | **Calidad automática** | CI en verde en cada PR. Al 24 nov, en local: 2,674 pruebas de unidad y componentes, 339 de integración con Supabase local y 500 de base de datos (pgTAP, 31 archivos). También pasan lint, Prettier, dependencias, mutación del dominio y escaneo de secretos. **Para el informe de calidad se vuelven a correr.** |
 | **Facturación** | **En pausa** [ADR-0039]. El código existe y está probado, pero está apagado por interruptor. El contador de ZAMMIR sigue facturando. |
@@ -39,6 +39,24 @@
 | AJ-07 | **Entregas por partes:** una orden por cada parte, eligiendo qué líneas de la cotización entran. Se ve "Parte N" y "Faltan N líneas" | Órdenes |
 | AJ-08 | El administrador **agrega, renombra, ordena y desactiva categorías** | Catálogo → Categorías |
 | AJ-09 | **Cargos extra** (cantos, perforaciones, biselados) ligados a una línea de vidrio, cobrados por m², metro lineal o pieza | Cotizador → "Cargo extra" |
+
+## 2b. Qué se construyó en la fase 11 (para explicarlo en la capacitación)
+
+Aprobada por Juanito el 27 nov con las decisiones D1 a D3 [ADR-0048]. Las fotos de los productos quedaron fuera.
+
+| Historia | Qué cambia para ZAMMIR | Dónde se ve |
+|---|---|---|
+| CE-01 | **Precio abierto:** el precio del catálogo es de referencia y se fija al cotizar o vender. Arriba no pide nada; abajo es un descuento con PIN (D1) | Catálogo; Cotizador y Mostrador → "Fijar precio" |
+| CE-07 | **Duplicar** un producto para dar de alta otro espesor o tono | Catálogo → "Duplicar" |
+| CE-04 y PP-39 | **Descripción** del producto: se busca con ella, se ve en el buscador y sale en el documento del cliente | Catálogo, Cotizador, Mostrador, documentos |
+| CE-05 | **Ajustes del cobro** por producto: redondeo de medidas, área mínima, cobro mínimo y **medida máxima** (apagados por omisión) | Catálogo; Cotizador avisa la medida máxima |
+| CE-02 y PP-40 | **Unidad de venta** ("2 rollos", "3 pares") y **clave SAT** por producto; lista de unidades editable | Catálogo, Configuración |
+| CE-08 | **Cargos extra también en el mostrador** | Mostrador → "Cargo extra" |
+| CE-06 | **Precios en bloque:** subir o bajar una categoría por porcentaje, redondeado al peso (D3), o actualizar desde un archivo por código; siempre con vista previa y todo o nada | Catálogo → "Precios en bloque" |
+| CE-09 | **Paquetes:** un producto que agrega varios renglones de una vez (vidrio + kit + tubo) | Catálogo; Cotizador y Mostrador |
+| CE-03 | **Cantidades con decimales** (1.5 kg, 2.5 h) en lo marcado así; se cobra al centavo, la mitad hacia arriba (D2) | Catálogo; Cotizador y Mostrador |
+
+Quedan como propuestas: PP-38 (bitácora del precio fijado arriba de la referencia, sin decidir). Descartada: PP-41 (paquetes desde el CSV).
 
 Decisiones de negocio que tomó Juanito y están en ADR-0044:
 
