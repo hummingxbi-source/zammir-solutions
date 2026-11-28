@@ -6,9 +6,11 @@ import { money } from '../../../shared-kernel/money/money';
 import { createPriceRegistry, defaultRules } from '../../catalog/domain/pricing/registry';
 import type { QuoteProduct } from '../../quotes/domain/quote-line';
 import {
+  addTicketLineExtra,
   addToTicket,
   EMPTY_TICKET,
   removeFromTicket,
+  removeTicketLineExtra,
   setTicketLinePrice,
   setTicketQuantity,
   ticketTotals,
@@ -214,6 +216,119 @@ describe('ticket actual del mostrador', () => {
         },
       ),
     );
+  });
+});
+
+describe('cargos extra en el mostrador [RF-M1-17]', () => {
+  const canto = {
+    ...vidrio,
+    id: asId<'Product'>('p-canto'),
+    name: 'Canto pulido',
+    listPrice: precio(12_000),
+    kind: 'EXTRA',
+  };
+  const perforacion = {
+    ...pieza,
+    id: asId<'Product'>('p-perf'),
+    name: 'Perforación',
+    listPrice: precio(3_500),
+    kind: 'EXTRA',
+  };
+  // Vidrio de 1.00 × 1.00 m a $280.00: con canto por m² ($120.00) la línea vale $400.00.
+  const conVidrio = () => con([vidrio, { widthMm: 1000, heightMm: 1000 }]);
+
+  it('se agrega a una línea de vidrio y su importe se suma a la línea y al total', () => {
+    const t = conVidrio();
+    const id = t.lines[0]?.id ?? '';
+    const r = addTicketLineExtra(t, id, canto, 1, deps);
+    expect(r.ok && r.value.lines[0]?.lineTotalCents).toBe(40_000);
+    expect(r.ok && r.value.lines[0]?.extras?.map((e) => e.name)).toEqual(['Canto pulido']);
+    expect(r.ok && ticketTotals(r.value).totalCents).toBe(40_000);
+  });
+
+  it('se quita y la línea vuelve a su importe', () => {
+    const t = conVidrio();
+    const id = t.lines[0]?.id ?? '';
+    const con1 = addTicketLineExtra(t, id, canto, 1, deps);
+    if (!con1.ok) throw new Error('canto');
+    const sin = removeTicketLineExtra(con1.value, id, canto.id, deps);
+    expect(sin.ok && sin.value).toEqual(t);
+  });
+
+  it('no deja agregar algo que no es un cargo extra ni a una línea que no existe', () => {
+    const t = conVidrio();
+    const id = t.lines[0]?.id ?? '';
+    expect(addTicketLineExtra(t, id, { ...pieza, kind: 'STANDARD' }, 1, deps)).toEqual({
+      ok: false,
+      error: { code: 'EXTRA_INVALID' },
+    });
+    expect(addTicketLineExtra(t, 'no-existe', canto, 1, deps)).toEqual({
+      ok: false,
+      error: { code: 'LINE_NOT_FOUND' },
+    });
+    expect(removeTicketLineExtra(t, 'no-existe', canto.id, deps)).toEqual({
+      ok: false,
+      error: { code: 'LINE_NOT_FOUND' },
+    });
+    // Una perforación por pieza necesita al menos una.
+    expect(addTicketLineExtra(t, id, perforacion, 0, deps)).toEqual({
+      ok: false,
+      error: { code: 'EXTRA_INVALID' },
+    });
+  });
+
+  it('con dos líneas, el extra solo cambia la suya', () => {
+    const t = con([vidrio, { widthMm: 1000, heightMm: 1000 }], [pieza, {}]);
+    const id = t.lines[0]?.id ?? '';
+    const r = addTicketLineExtra(t, id, canto, 1, deps);
+    expect(r.ok && r.value.lines[1]).toEqual(t.lines[1]);
+    const sin = r.ok ? removeTicketLineExtra(r.value, id, canto.id, deps) : r;
+    expect(sin.ok && sin.value.lines[1]).toEqual(t.lines[1]);
+  });
+
+  it('otra pieza igual no se junta con una que lleva extras: va en su propia línea', () => {
+    const t = conVidrio();
+    const id = t.lines[0]?.id ?? '';
+    const conCanto = addTicketLineExtra(t, id, canto, 1, deps);
+    if (!conCanto.ok) throw new Error('canto');
+    const otra = addToTicket(
+      conCanto.value,
+      vidrio,
+      entrada({ widthMm: 1000, heightMm: 1000 }),
+      deps,
+    );
+    expect(otra.ok && otra.value.lines.map((l) => [l.quantity, l.lineTotalCents])).toEqual([
+      [1, 40_000],
+      [1, 28_000],
+    ]);
+    // Sin extras sí se juntan, como siempre.
+    const igual = addToTicket(t, vidrio, entrada({ widthMm: 1000, heightMm: 1000 }), deps);
+    expect(igual.ok && igual.value.lines.map((l) => l.quantity)).toEqual([2]);
+  });
+});
+
+describe('reglas del ticket que no se ven a simple vista', () => {
+  it('dos productos distintos con el mismo precio no se juntan en una línea', () => {
+    const otraPieza = { ...pieza, id: asId<'Product'>('p-otra'), name: 'Jaladera' };
+    const t = con([pieza, {}], [otraPieza, {}]);
+    expect(t.lines.map((l) => [l.name, l.quantity])).toEqual([
+      ['Chapa de baño', 1],
+      ['Jaladera', 1],
+    ]);
+  });
+
+  it('a un producto de precio fijo no se le fija precio, ni siquiera el mismo; uno abierto acepta la referencia', () => {
+    const t = con([pieza, {}], [{ ...servicio, isOpenPrice: true }, {}]);
+    const [fija, abierta] = t.lines;
+    expect(setTicketLinePrice(t, fija?.id ?? '', pieza.listPrice, deps)).toEqual({
+      ok: false,
+      error: { code: 'PRICE_INVALID' },
+    });
+    const igual = setTicketLinePrice(t, abierta?.id ?? '', servicio.listPrice, deps);
+    expect(igual.ok && igual.value.lines[1]?.unitPriceCents).toBe(servicio.listPrice);
+    // La otra línea no cambia.
+    const mas = setTicketLinePrice(t, abierta?.id ?? '', servicio.listPrice + 1_000, deps);
+    expect(mas.ok && mas.value.lines[0]).toEqual(fija);
   });
 });
 

@@ -1650,6 +1650,11 @@ export const textos = {
         mensaje: 'La medida pasa del máximo de este producto.',
         queHacer: 'Revisa la medida. Si es correcta, divide la pieza o elige otro producto.',
       },
+      EXTRA_INVALID: {
+        mensaje: 'Ese cargo extra no se puede agregar a esta línea.',
+        queHacer:
+          'Un cargo por m² o metro lineal necesita una pieza con medidas; uno por pieza, una cantidad de 1 o más.',
+      },
       AMOUNT_INVALID: {
         mensaje: 'El importe no es válido.',
         queHacer: 'Revisa las medidas y la cantidad.',

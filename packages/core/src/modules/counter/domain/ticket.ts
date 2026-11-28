@@ -1,7 +1,10 @@
+import type { ProductId } from '../../../shared-kernel/id';
 import { err, ok, type Result } from '../../../shared-kernel/result';
 import {
+  addLineExtra,
   buildQuoteLine,
   recalculateQuoteLine,
+  removeLineExtra,
   repriceQuoteLine,
   type LineDeps,
   type LineInput,
@@ -26,7 +29,7 @@ export interface TicketError {
 }
 
 /** Agrega un producto al ticket. El mismo producto con las mismas medidas suma cantidad en lugar de
- *  repetirse. */
+ *  repetirse, salvo que esa línea ya lleve cargos extra: la pieza nueva no los trae [RF-M1-17]. */
 export function addToTicket(
   ticket: Ticket,
   producto: QuoteProduct,
@@ -38,7 +41,8 @@ export function addToTicket(
       l.productId === producto.id &&
       l.widthMm === (entrada.widthMm ?? null) &&
       l.heightMm === (entrada.heightMm ?? null) &&
-      l.unitPriceCents === producto.listPrice,
+      l.unitPriceCents === producto.listPrice &&
+      (l.extras ?? []).length === 0,
   );
   if (existente !== undefined) {
     return setTicketQuantity(ticket, existente.id, existente.quantity + entrada.quantity, deps);
@@ -89,6 +93,44 @@ export function setTicketLinePrice(
     return err(nueva.error);
   }
   return ok({ lines: ticket.lines.map((l) => (l.id === lineId ? nueva.value : l)) });
+}
+
+function cambiarLinea(
+  ticket: Ticket,
+  lineId: string,
+  cambio: (linea: QuoteLine) => Result<QuoteLine, QuoteLineError>,
+): Result<Ticket, TicketError> {
+  const actual = ticket.lines.find((l) => l.id === lineId);
+  if (actual === undefined) {
+    return err({ code: 'LINE_NOT_FOUND' });
+  }
+  const nueva = cambio(actual);
+  if (!nueva.ok) {
+    return err(nueva.error);
+  }
+  return ok({ lines: ticket.lines.map((l) => (l.id === lineId ? nueva.value : l)) });
+}
+
+/** Agrega a una línea del ticket un cargo extra del catálogo (canto, perforación, biselado), igual que en el
+ *  cotizador: con la misma función y las mismas reglas [RF-M1-17, RF-M1-09]. Si ya estaba, se reemplaza. */
+export function addTicketLineExtra(
+  ticket: Ticket,
+  lineId: string,
+  extra: QuoteProduct & { readonly kind?: string },
+  cantidad: number,
+  deps: LineDeps,
+): Result<Ticket, TicketError> {
+  return cambiarLinea(ticket, lineId, (l) => addLineExtra(l, extra, cantidad, deps));
+}
+
+/** Quita un cargo extra de una línea del ticket y recalcula su importe [RF-M1-17]. */
+export function removeTicketLineExtra(
+  ticket: Ticket,
+  lineId: string,
+  productId: ProductId,
+  deps: LineDeps,
+): Result<Ticket, TicketError> {
+  return cambiarLinea(ticket, lineId, (l) => removeLineExtra(l, productId, deps));
 }
 
 export function removeFromTicket(ticket: Ticket, lineId: string): Ticket {
