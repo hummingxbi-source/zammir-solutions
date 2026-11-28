@@ -386,6 +386,33 @@ describe('Mostrador', () => {
     });
   });
 
+  it('un paquete entra al ticket como un renglón por producto [RF-M1-18]', async () => {
+    const juego: SellableProduct = {
+      ...chapa,
+      id: asId<'Product'>('00000000-0000-4000-8000-00000000f0d3'),
+      code: 'JG',
+      name: 'Juego de chapas',
+      kind: 'BUNDLE',
+      listPrice: precio(0),
+      bundleItems: [{ productId: chapa.id, quantity: 2 }],
+    };
+    await montar({ productos: [vidrio, chapa, juego] });
+    fireEvent.change(await screen.findByLabelText('Buscar producto o servicio'), {
+      target: { value: 'juego' },
+    });
+    fireEvent.click(await screen.findByRole('button', { name: /Juego de chapas.*Paquete de 1/ }));
+    // Sin componentes a medida no pide medidas: solo cuántos paquetes.
+    expect(screen.queryByLabelText('Ancho (cm)')).toBeNull();
+    fireEvent.change(screen.getByLabelText('Cantidad'), { target: { value: '2' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar al ticket' }));
+    await waitFor(() => {
+      expect(screen.getByText('Total', { selector: 'dt' }).nextElementSibling?.textContent).toBe(
+        '$464.00',
+      );
+    });
+    expect(screen.getByText(/4 × \$116\.00 = \$464\.00/)).toBeTruthy();
+  });
+
   it('una medida mal escrita no agrega nada y dice qué hacer', async () => {
     await montar();
     fireEvent.change(await screen.findByLabelText('Buscar producto o servicio'), {

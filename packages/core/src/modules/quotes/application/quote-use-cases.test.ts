@@ -11,6 +11,7 @@ import { parseOperation } from '../../sync/domain/operation';
 import type { Authorization } from '../../identity/application/authorize-with-admin-pin';
 import {
   applyQuoteDiscount,
+  addQuoteBundle,
   addQuoteLine,
   addQuoteLineExtra,
   removeQuoteLineExtra,
@@ -418,6 +419,70 @@ describe('cargos extra en el borrador [RF-M1-09, ADR-0044]', () => {
     const q = await borradorConVidrio(e);
     const r = await addQuoteLineExtra(e.deps, ana, q.id, q.lines[0]?.id ?? '', vidrio);
     expect(!r.ok && r.error.code).toBe('EXTRA_INVALID');
+  });
+});
+
+describe('paquetes en el borrador [RF-M1-18, ADR-0048]', () => {
+  const cancel: SellableProduct = {
+    ...instalacion,
+    id: asId<'Product'>('00000000-0000-4000-8000-00000000f0b0'),
+    code: 'CB-1',
+    name: 'Cancel de baño',
+    kind: 'BUNDLE',
+    chargeUnit: 'PIECE',
+    ruleId: 'PIECE',
+    listPrice: precio(0),
+    bundleItems: [
+      { productId: vidrio.id, quantity: 1 },
+      { productId: instalacion.id, quantity: 1 },
+    ],
+  };
+  const catalogo = [vidrio, instalacion, cancel];
+  const medidas = { widthMm: 1000, heightMm: 1000, quantity: 1, displayUnit: 'cm' } as const;
+
+  it('se agregan los renglones de cada componente con su precio, en una sola vez', async () => {
+    const e = entorno();
+    const q = await createQuoteDraft(e.deps, ana, { customerId: cliente });
+    if (!q.ok) throw new Error('borrador');
+    const r = await addQuoteBundle(e.deps, ana, q.value.id, cancel, catalogo, medidas);
+    expect(r.ok && r.value.lines.map((l) => [l.name, l.lineTotalCents])).toEqual([
+      ['Vidrio claro 6 mm', 28_000],
+      ['Instalación', 50_000],
+    ]);
+    const guardada = await e.store.get(q.value.id);
+    expect(guardada?.lines).toHaveLength(2);
+  });
+
+  it('todo o nada: si un componente no cuadra no se agrega ninguno', async () => {
+    const e = entorno();
+    const q = await borradorConVidrio(e);
+    const sinMedidas = await addQuoteBundle(e.deps, ana, q.id, cancel, catalogo, {
+      ...medidas,
+      widthMm: null,
+    });
+    expect(sinMedidas).toEqual({ ok: false, error: { code: 'INPUT_INVALID' } });
+    const sinComponente = await addQuoteBundle(e.deps, ana, q.id, cancel, [instalacion], medidas);
+    expect(sinComponente).toEqual({ ok: false, error: { code: 'BUNDLE_COMPONENT_NOT_FOUND' } });
+    const guardada = await e.store.get(q.id);
+    expect(guardada?.lines).toHaveLength(1);
+  });
+
+  it('solo quien puede cotizar, y solo en un borrador', async () => {
+    const e = entorno();
+    const q = await borradorConVidrio(e);
+    expect(
+      await addQuoteBundle(e.deps, { ...ana, role: null }, q.id, cancel, catalogo, medidas),
+    ).toEqual({ ok: false, error: { code: 'NOT_AUTHORIZED' } });
+    expect(
+      await addQuoteBundle(
+        e.deps,
+        ana,
+        asId<'Quote'>('00000000-0000-4000-8000-0000000000ff'),
+        cancel,
+        catalogo,
+        medidas,
+      ),
+    ).toEqual({ ok: false, error: { code: 'NOT_FOUND' } });
   });
 });
 

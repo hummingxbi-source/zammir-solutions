@@ -32,6 +32,7 @@ export * from './modules/catalog/application/in-memory-catalog';
 export * from './modules/catalog/application/ports';
 export * from './modules/catalog/domain/initial-categories';
 export * from './modules/catalog/domain/bulk-prices';
+export * from './modules/catalog/domain/bundle';
 export * from './modules/catalog/domain/product';
 export * from './modules/catalog/domain/sale-unit';
 export * from './modules/catalog/application/update-product';

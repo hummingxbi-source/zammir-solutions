@@ -60,6 +60,49 @@ describe('buildProduct', () => {
     expect(error({ saleUnitName: '   ' })).toBe('sin error');
   });
 
+  it('paquete: de 1 a 20 componentes distintos con cantidad entera; solo un paquete los lleva [RF-M1-18]', () => {
+    const paquete: Partial<ProductDraft> = {
+      kind: 'BUNDLE',
+      chargeUnit: 'PIECE',
+      ruleId: 'PIECE',
+      ruleParams: {},
+      listPrice: 0 as ProductDraft['listPrice'],
+    };
+    const item = (n: number, quantity = 1) => ({
+      productId: asId<'Product'>(`c-${String(n)}`),
+      quantity,
+    });
+    const bien = buildProduct(
+      id,
+      { ...base, ...paquete, bundleItems: [item(1), item(2, 3)] },
+      reglas,
+    );
+    expect(bien.ok && bien.value.bundleItems).toEqual([item(1), item(2, 3)]);
+    expect(error({ ...paquete, bundleItems: [] })).toBe('BUNDLE_ITEMS_INVALID');
+    expect(error({ ...paquete })).toBe('BUNDLE_ITEMS_INVALID');
+    expect(error({ ...paquete, bundleItems: [item(1), item(1)] })).toBe('BUNDLE_ITEMS_INVALID');
+    expect(error({ ...paquete, bundleItems: [item(1, 0)] })).toBe('BUNDLE_ITEMS_INVALID');
+    expect(error({ ...paquete, bundleItems: [item(1, 1.5)] })).toBe('BUNDLE_ITEMS_INVALID');
+    expect(error({ ...paquete, bundleItems: Array.from({ length: 20 }, (_, i) => item(i)) })).toBe(
+      'sin error',
+    );
+    expect(error({ ...paquete, bundleItems: Array.from({ length: 21 }, (_, i) => item(i)) })).toBe(
+      'BUNDLE_ITEMS_INVALID',
+    );
+    // Un producto que no es paquete no lleva componentes; un paquete no tiene precio abierto ni otra unidad.
+    expect(error({ bundleItems: [item(1)] })).toBe('BUNDLE_ITEMS_INVALID');
+    expect(error({ bundleItems: [] })).toBe('sin error');
+    expect(error({ ...paquete, bundleItems: [item(1)], isOpenPrice: true })).toBe(
+      'OPEN_PRICE_NOT_ALLOWED',
+    );
+    expect(error({ ...paquete, bundleItems: [item(1)], chargeUnit: 'SERVICE' })).toBe(
+      'KIND_UNIT_MISMATCH',
+    );
+    // Un producto normal no guarda una lista vacía de componentes.
+    const normal = buildProduct(id, { ...base, bundleItems: [] }, reglas);
+    expect(normal.ok && 'bundleItems' in normal.value).toBe(false);
+  });
+
   it('precio abierto: se acepta en productos a medida, piezas y servicios, no en cargos extra [RF-M1-10]', () => {
     const abierto = buildProduct(id, { ...base, isOpenPrice: true }, reglas);
     expect(abierto.ok && abierto.value.isOpenPrice).toBe(true);

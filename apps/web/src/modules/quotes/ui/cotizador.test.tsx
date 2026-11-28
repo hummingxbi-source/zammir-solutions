@@ -304,6 +304,45 @@ describe('Cotizador', () => {
     );
   });
 
+  it('un paquete pide las medidas una vez y entra como un renglón por producto [RF-M1-18]', async () => {
+    const kit: SellableProduct = {
+      ...vidrio,
+      id: asId<'Product'>('00000000-0000-4000-8000-00000000f0d1'),
+      code: 'KIT',
+      name: 'Kit de herrajes',
+      kind: 'STANDARD',
+      chargeUnit: 'PIECE',
+      ruleId: 'PIECE',
+      listPrice: 50_000 as SellableProduct['listPrice'],
+    };
+    const cancel: SellableProduct = {
+      ...kit,
+      id: asId<'Product'>('00000000-0000-4000-8000-00000000f0d2'),
+      code: 'CB',
+      name: 'Cancel de baño',
+      kind: 'BUNDLE',
+      listPrice: 0 as SellableProduct['listPrice'],
+      bundleItems: [
+        { productId: vidrio.id, quantity: 1 },
+        { productId: kit.id, quantity: 1 },
+      ],
+    };
+    montar({ productos: [vidrio, kit, cancel] });
+    await empezarConClienteNuevo();
+    fireEvent.change(await screen.findByLabelText('Buscar producto o servicio'), {
+      target: { value: 'cancel' },
+    });
+    fireEvent.click(await screen.findByRole('button', { name: /Cancel de baño.*Paquete de 2/ }));
+    fireEvent.change(screen.getByLabelText('Ancho (cm)'), { target: { value: '100' } });
+    fireEvent.change(screen.getByLabelText('Alto (cm)'), { target: { value: '100' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar a la cotización' }));
+    // Vidrio de 1.00 m² a $280.00 y el kit a $500.00.
+    expect((await screen.findAllByText(/1\.00 m² × \$280\.00 = \$280\.00/)).length).toBeGreaterThan(
+      0,
+    );
+    expect(screen.getAllByText(/1 × \$500\.00 = \$500\.00/).length).toBeGreaterThan(0);
+  });
+
   it('los campos de medida abren el teclado numérico', async () => {
     montar();
     await empezarConClienteNuevo();

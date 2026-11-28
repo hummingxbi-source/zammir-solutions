@@ -38,6 +38,8 @@ const UNIDADES_POR_TIPO: Readonly<Record<ProductKind, readonly ChargeUnit[]>> = 
   SERVICE: ['SERVICE'],
   // Cargo extra (cantos, perforaciones, biselados): m² por omisión [RF-M1-09].
   EXTRA: ['SQUARE_METER', 'LINEAR_METER', 'PIECE'],
+  // Paquete: cada componente lleva su unidad; el paquete se guarda como pieza [RF-M1-18].
+  BUNDLE: ['PIECE'],
 };
 
 const REGLA_POR_UNIDAD: Readonly<Record<ChargeUnit, string>> = {
@@ -54,6 +56,8 @@ export interface FormularioDeProductoProps {
   readonly historial?: readonly PriceChange[];
   /** Unidades de venta que ya usa el catálogo; se suman a las sugerencias para que todos escriban igual. */
   readonly unidadesDeVenta?: readonly string[];
+  /** El catálogo, para elegir los productos de un paquete [RF-M1-18]. */
+  readonly productos?: readonly Product[];
   /** Guarda el producto; devuelve el código de error o `null` si se guardó. */
   readonly onGuardar: (borrador: ProductDraft) => Promise<string | null>;
   readonly onCancelar: () => void;
@@ -84,6 +88,7 @@ export function FormularioDeProducto({
   inicial,
   historial,
   unidadesDeVenta = [],
+  productos = [],
   onGuardar,
   onCancelar,
 }: FormularioDeProductoProps): ReactElement {
@@ -108,6 +113,19 @@ export function FormularioDeProducto({
   const [abierto, setAbierto] = useState(inicial?.isOpenPrice === true);
   const [descripcion, setDescripcion] = useState(inicial?.description ?? '');
   const [unidadDeVenta, setUnidadDeVenta] = useState(inicial?.saleUnitName ?? '');
+  // Componentes del paquete [RF-M1-18]: producto y cantidad (como texto mientras se captura).
+  const [componentes, setComponentes] = useState<
+    readonly { productId: string; cantidad: string }[]
+  >(() =>
+    (inicial?.bundleItems ?? []).map((i) => ({
+      productId: i.productId,
+      cantidad: String(i.quantity),
+    })),
+  );
+  // Un paquete lleva productos que se venden solos: ni otros paquetes ni cargos extra, y activos.
+  const elegibles = productos.filter(
+    (p) => p.kind !== 'BUNDLE' && p.kind !== 'EXTRA' && p.isActive && p.id !== inicial?.id,
+  );
   // Claves SAT [RF-M1-11]: vacías, se usan las de la categoría. Al editar, solo se muestran si son propias.
   const categoriaInicial = categorias.find((c) => c.id === inicial?.categoryId);
   const propia = (
@@ -124,7 +142,8 @@ export function FormularioDeProducto({
   const [ajustes, setAjustes] = useState<AdjustmentTexts>(() =>
     adjustmentsToTexts(readAdjustments(inicial?.ruleParams)),
   );
-  const porPiezaOServicio = unidad === 'PIECE' || unidad === 'SERVICE';
+  const esPaquete = tipo === 'BUNDLE';
+  const porPiezaOServicio = !esPaquete && (unidad === 'PIECE' || unidad === 'SERVICE');
   const sugerencias = [...new Set([...SALE_UNIT_SUGGESTIONS, ...unidadesDeVenta])].sort((a, b) =>
     a.localeCompare(b, 'es-MX'),
   );
@@ -158,7 +177,8 @@ export function FormularioDeProducto({
   async function guardar(evento: SyntheticEvent): Promise<void> {
     evento.preventDefault();
     setError(null);
-    const monto = parseMoney(precio);
+    // Un paquete no tiene precio propio: vale lo que sus componentes.
+    const monto = tipo === 'BUNDLE' ? parseMoney('0') : parseMoney(precio);
     if (!monto.ok) {
       mostrarError('PRICE_INVALID');
       return;
@@ -217,9 +237,17 @@ export function FormularioDeProducto({
       warrantyMonths: meses,
       warrantyText: inicial?.warrantyText ?? null,
       // Un cargo extra copia su precio a la pieza: nunca tiene precio abierto [RF-M1-10].
-      ...(abierto && tipo !== 'EXTRA' ? { isOpenPrice: true } : {}),
+      ...(abierto && tipo !== 'EXTRA' && tipo !== 'BUNDLE' ? { isOpenPrice: true } : {}),
       ...(descripcion.trim() === '' ? {} : { description: descripcion }),
       ...(unidadDeVenta.trim() === '' || !porPiezaOServicio ? {} : { saleUnitName: unidadDeVenta }),
+      ...(tipo === 'BUNDLE'
+        ? {
+            bundleItems: componentes.map((c) => ({
+              productId: c.productId as Product['id'],
+              quantity: /^\d+$/.test(c.cantidad.trim()) ? Number(c.cantidad.trim()) : 0,
+            })),
+          }
+        : {}),
     };
     setTrabajando(true);
     const falla = await onGuardar(borrador);
@@ -272,7 +300,7 @@ export function FormularioDeProducto({
         <Seleccion
           etiqueta={t.formulario.tipo}
           value={tipo}
-          opciones={(['CUSTOM', 'STANDARD', 'SERVICE', 'EXTRA'] as const).map((k) => ({
+          opciones={(['CUSTOM', 'STANDARD', 'SERVICE', 'EXTRA', 'BUNDLE'] as const).map((k) => ({
             valor: k,
             texto: t.tipos[k],
           }))}
@@ -280,15 +308,79 @@ export function FormularioDeProducto({
             setTipo(e.target.value as ProductKind);
           }}
         />
-        <Seleccion
-          etiqueta={t.formulario.unidad}
-          value={unidad}
-          opciones={UNIDADES_POR_TIPO[tipo].map((u) => ({ valor: u, texto: t.unidades[u] }))}
-          onChange={(e) => {
-            setUnidad(e.target.value as ChargeUnit);
-          }}
-        />
+        {esPaquete ? null : (
+          <Seleccion
+            etiqueta={t.formulario.unidad}
+            value={unidad}
+            opciones={UNIDADES_POR_TIPO[tipo].map((u) => ({ valor: u, texto: t.unidades[u] }))}
+            onChange={(e) => {
+              setUnidad(e.target.value as ChargeUnit);
+            }}
+          />
+        )}
       </div>
+      {esPaquete ? (
+        <fieldset className="formulario__grupo">
+          <legend>{t.formulario.componentes}</legend>
+          <p className="formulario__ayuda">{t.formulario.componentesAyuda}</p>
+          {componentes.map((c, i) => {
+            const nombre = elegibles.find((p) => p.id === c.productId)?.name ?? '';
+            return (
+              <div key={`${c.productId}-${String(i)}`} className="formulario__par">
+                <Seleccion
+                  etiqueta={`${t.formulario.componente} ${String(i + 1)}`}
+                  value={c.productId}
+                  opciones={elegibles.map((p) => ({ valor: p.id, texto: p.name }))}
+                  onChange={(e) => {
+                    const valor = e.target.value;
+                    setComponentes((antes) =>
+                      antes.map((x, j) => (j === i ? { ...x, productId: valor } : x)),
+                    );
+                  }}
+                />
+                <CampoNumerico
+                  etiqueta={`${t.formulario.cantidadComponente} ${String(i + 1)}`}
+                  entero
+                  value={c.cantidad}
+                  onChange={(e) => {
+                    const valor = e.target.value;
+                    setComponentes((antes) =>
+                      antes.map((x, j) => (j === i ? { ...x, cantidad: valor } : x)),
+                    );
+                  }}
+                />
+                <Boton
+                  variante="secundario"
+                  aria-label={t.formulario.quitarComponente(nombre)}
+                  onClick={() => {
+                    setComponentes((antes) => antes.filter((_, j) => j !== i));
+                  }}
+                >
+                  {t.formulario.quitar}
+                </Boton>
+              </div>
+            );
+          })}
+          {elegibles.length > 0 ? (
+            <div className="formulario__acciones">
+              <Boton
+                variante="secundario"
+                onClick={() => {
+                  const libre = elegibles.find(
+                    (p) => !componentes.some((c) => c.productId === p.id),
+                  );
+                  setComponentes((antes) => [
+                    ...antes,
+                    { productId: (libre ?? elegibles[0])?.id ?? '', cantidad: '1' },
+                  ]);
+                }}
+              >
+                {t.formulario.agregarComponente}
+              </Boton>
+            </div>
+          ) : null}
+        </fieldset>
+      ) : null}
       {unidad === 'LINEAR_METER' ? (
         <Seleccion
           etiqueta={t.formulario.baseLineal}
@@ -302,23 +394,25 @@ export function FormularioDeProducto({
           }}
         />
       ) : null}
-      <div className="formulario__par">
-        <CampoNumerico
-          etiqueta={t.formulario.precio}
-          value={precio}
-          onChange={(e) => {
-            setPrecio(e.target.value);
-          }}
-        />
-        <CampoNumerico
-          etiqueta={t.formulario.garantia}
-          entero
-          value={garantia}
-          onChange={(e) => {
-            setGarantia(e.target.value);
-          }}
-        />
-      </div>
+      {esPaquete ? null : (
+        <div className="formulario__par">
+          <CampoNumerico
+            etiqueta={t.formulario.precio}
+            value={precio}
+            onChange={(e) => {
+              setPrecio(e.target.value);
+            }}
+          />
+          <CampoNumerico
+            etiqueta={t.formulario.garantia}
+            entero
+            value={garantia}
+            onChange={(e) => {
+              setGarantia(e.target.value);
+            }}
+          />
+        </div>
+      )}
       {porPiezaOServicio ? (
         <div className="campo">
           <Campo
@@ -378,7 +472,7 @@ export function FormularioDeProducto({
           setDescripcion(e.target.value);
         }}
       />
-      {tipo === 'EXTRA' ? null : (
+      {tipo === 'EXTRA' || esPaquete ? null : (
         <label className="casilla">
           <input
             type="checkbox"
@@ -394,35 +488,39 @@ export function FormularioDeProducto({
         </label>
       )}
 
-      <div className="formulario__par">
-        <div className="campo">
-          <CampoNumerico
-            etiqueta={t.formulario.claveSat}
-            entero
-            value={claveSat}
-            onChange={(e) => {
-              setClaveSat(e.target.value);
-            }}
-          />
-          <p className="formulario__ayuda">
-            {t.formulario.claveHeredada(categoriaElegida?.fiscalDefaults.productServiceKey ?? null)}
-          </p>
+      {esPaquete ? null : (
+        <div className="formulario__par">
+          <div className="campo">
+            <CampoNumerico
+              etiqueta={t.formulario.claveSat}
+              entero
+              value={claveSat}
+              onChange={(e) => {
+                setClaveSat(e.target.value);
+              }}
+            />
+            <p className="formulario__ayuda">
+              {t.formulario.claveHeredada(
+                categoriaElegida?.fiscalDefaults.productServiceKey ?? null,
+              )}
+            </p>
+          </div>
+          <div className="campo">
+            <Campo
+              etiqueta={t.formulario.claveUnidadSat}
+              value={claveUnidad}
+              autoComplete="off"
+              maxLength={3}
+              onChange={(e) => {
+                setClaveUnidad(e.target.value);
+              }}
+            />
+            <p className="formulario__ayuda">
+              {t.formulario.claveHeredada(categoriaElegida?.fiscalDefaults.unitKey ?? null)}
+            </p>
+          </div>
         </div>
-        <div className="campo">
-          <Campo
-            etiqueta={t.formulario.claveUnidadSat}
-            value={claveUnidad}
-            autoComplete="off"
-            maxLength={3}
-            onChange={(e) => {
-              setClaveUnidad(e.target.value);
-            }}
-          />
-          <p className="formulario__ayuda">
-            {t.formulario.claveHeredada(categoriaElegida?.fiscalDefaults.unitKey ?? null)}
-          </p>
-        </div>
-      </div>
+      )}
 
       {historial !== undefined && historial.length > 0 ? (
         <section aria-label={t.formulario.historial}>

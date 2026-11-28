@@ -4,6 +4,7 @@ import {
   err,
   money,
   ok,
+  type BundleItem,
   type CatalogError,
   type CatalogReplicaSource,
   type ReplicatedProduct,
@@ -53,6 +54,7 @@ interface FilaParaVender {
   /** Descripción [RF-M1-13]. Antes de CE-04 la vista no la traía. */
   readonly description?: string | null;
   readonly sale_unit_name?: string | null;
+  readonly bundle_items?: unknown;
 }
 
 interface FilaReplicada extends FilaParaVender {
@@ -167,6 +169,21 @@ function aParaVender(fila: FilaParaVender): Result<SellableProduct, CatalogError
     ...(fila.sale_unit_name === null || fila.sale_unit_name === undefined
       ? {}
       : { saleUnitName: fila.sale_unit_name }),
+    ...(fila.kind === 'BUNDLE' ? { bundleItems: componentes(fila.bundle_items) } : {}),
+  });
+}
+
+/** Los componentes de un paquete como vienen de la base (jsonb); lo que no tenga la forma esperada se omite y
+ *  el paquete no se podrá agregar, en lugar de romper la lectura del catálogo [RF-M1-18]. */
+function componentes(crudo: unknown): readonly BundleItem[] {
+  if (!Array.isArray(crudo)) {
+    return [];
+  }
+  return crudo.flatMap((c: unknown) => {
+    const item = c as { productId?: unknown; quantity?: unknown } | null;
+    return typeof item?.productId === 'string' && typeof item.quantity === 'number'
+      ? [{ productId: asId<'Product'>(item.productId), quantity: item.quantity }]
+      : [];
   });
 }
 
@@ -214,6 +231,7 @@ function aFila(p: Product) {
     is_open_price: p.isOpenPrice === true,
     description: p.description ?? null,
     sale_unit_name: p.saleUnitName ?? null,
+    bundle_items: p.bundleItems ?? [],
     fiscal_product_service_key: p.fiscal.productServiceKey,
     fiscal_unit_key: p.fiscal.unitKey,
     fiscal_tax_object: p.fiscal.taxObject,

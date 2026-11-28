@@ -1,7 +1,14 @@
 import type { CategoryId, ProductId } from '../../../shared-kernel/id';
 import type { Money } from '../../../shared-kernel/money/money';
 import type { Result } from '../../../shared-kernel/result';
-import type { Category, ChargeUnit, PriceChange, Product, ProductKind } from '../domain/product';
+import type {
+  BundleItem,
+  Category,
+  ChargeUnit,
+  PriceChange,
+  Product,
+  ProductKind,
+} from '../domain/product';
 
 export type CatalogErrorCode =
   | 'CODE_TAKEN'
@@ -37,6 +44,8 @@ export interface SellableProduct {
   readonly description?: string;
   /** Unidad de venta de lo que se cobra por pieza o servicio [RF-M1-11]. */
   readonly saleUnitName?: string;
+  /** Componentes, si es un paquete [RF-M1-18]: al venderlo se convierte en un renglón por componente. */
+  readonly bundleItems?: readonly BundleItem[];
 }
 
 /** Puerto de lectura para vender: solo productos activos. */

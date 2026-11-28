@@ -426,7 +426,9 @@ export const textos = {
       STANDARD: 'Pieza estándar',
       SERVICE: 'Servicio',
       EXTRA: 'Cargo extra (canto, perforación…)',
+      BUNDLE: 'Paquete (varios productos)',
     },
+    productosDelPaquete: (n: number) => `${String(n)} ${n === 1 ? 'producto' : 'productos'}`,
     unidades: {
       SQUARE_METER: 'Metro cuadrado',
       LINEAR_METER: 'Metro lineal',
@@ -484,6 +486,14 @@ export const textos = {
       unidadDeVenta: 'Unidad de venta (opcional)',
       unidadDeVentaAyuda:
         'Cómo se lee la cantidad: "2 rollos", "3 pares", "2 horas". Vacía, solo se ve la cantidad.',
+      componentes: 'Productos del paquete',
+      componentesAyuda:
+        'Al agregar el paquete en el cotizador o el mostrador, cada producto entra como un renglón con su precio. Si alguno es a medida, las medidas se piden una vez.',
+      componente: 'Producto',
+      cantidadComponente: 'Cantidad',
+      agregarComponente: 'Agregar producto al paquete',
+      quitar: 'Quitar',
+      quitarComponente: (nombre: string) => `Quitar ${nombre} del paquete`,
       claveSat: 'Clave SAT (opcional)',
       claveUnidadSat: 'Clave de unidad SAT (opcional)',
       claveHeredada: (clave: string | null) =>
@@ -578,6 +588,18 @@ export const textos = {
         mensaje: 'La clave SAT no es válida.',
         queHacer:
           'Escribe sus 8 dígitos, por ejemplo 30171500, o déjala vacía para usar la de la categoría.',
+      },
+      BUNDLE_ITEMS_INVALID: {
+        mensaje: 'El paquete necesita de 1 a 20 productos distintos.',
+        queHacer: 'Agrega al menos uno, sin repetir, con cantidad entera de 1 en adelante.',
+      },
+      BUNDLE_COMPONENT_NOT_FOUND: {
+        mensaje: 'Un producto del paquete ya no está en el catálogo.',
+        queHacer: 'Quítalo del paquete y guarda otra vez.',
+      },
+      BUNDLE_COMPONENT_NOT_ALLOWED: {
+        mensaje: 'Un paquete no lleva otros paquetes, cargos extra ni productos desactivados.',
+        queHacer: 'Quítalo del paquete y guarda otra vez.',
       },
       SAT_UNIT_KEY_INVALID: {
         mensaje: 'La clave de unidad SAT no es válida.',
@@ -769,6 +791,7 @@ export const textos = {
       SAT_KEY_INVALID: 'La clave SAT lleva 8 dígitos, por ejemplo 30171500, o déjala vacía.',
       SAT_UNIT_KEY_INVALID:
         'La clave de unidad SAT lleva 2 o 3 letras o números, por ejemplo H87, o déjala vacía.',
+      BUNDLE_ITEMS_INVALID: 'Los paquetes se dan de alta en la pantalla, no desde el archivo.',
       CODE_DUPLICATE_IN_FILE: 'Este código ya aparece antes en el archivo.',
       CODE_DUPLICATE_IN_CATALOG: 'Este código ya existe en el catálogo.',
       RULE_UNKNOWN: 'La regla de precio no existe.',
@@ -1571,6 +1594,7 @@ export const textos = {
       ancho: 'Ancho',
       alto: 'Alto',
       medidaMaxima: 'Medida máxima de este producto:',
+      paquete: (n: number) => `Paquete de ${String(n)} ${n === 1 ? 'producto' : 'productos'}`,
       cantidad: 'Cantidad',
       agregar: 'Agregar al ticket',
       cancelar: 'Cancelar',
@@ -1725,6 +1749,19 @@ export const textos = {
       MEASURE_TOO_LARGE: {
         mensaje: 'La medida pasa del máximo de este producto.',
         queHacer: 'Revisa la medida. Si es correcta, divide la pieza o elige otro producto.',
+      },
+      BUNDLE_COMPONENT_NOT_FOUND: {
+        mensaje: 'Un producto del paquete ya no está en el catálogo.',
+        queHacer:
+          'Agrega los productos uno por uno o pide a un administrador que corrija el paquete.',
+      },
+      BUNDLE_COMPONENT_NOT_ALLOWED: {
+        mensaje: 'Un producto del paquete no se puede vender así.',
+        queHacer: 'Pide a un administrador que corrija el paquete.',
+      },
+      BUNDLE_INPUT_INVALID: {
+        mensaje: 'La cantidad de paquetes no es válida.',
+        queHacer: 'Escribe un número entero de 1 en adelante.',
       },
       EXTRA_INVALID: {
         mensaje: 'Ese cargo extra no se puede agregar a esta línea.',
@@ -2384,6 +2421,7 @@ export const textos = {
       ancho: 'Ancho',
       alto: 'Alto',
       medidaMaxima: 'Medida máxima de este producto:',
+      paquete: (n: number) => `Paquete de ${String(n)} ${n === 1 ? 'producto' : 'productos'}`,
       cantidad: 'Cantidad',
       unidad: 'Unidad de las medidas',
       cm: 'centímetros',
@@ -2532,6 +2570,19 @@ export const textos = {
       MEASURE_TOO_LARGE: {
         mensaje: 'La medida pasa del máximo de este producto.',
         queHacer: 'Revisa la medida. Si es correcta, divide la pieza o elige otro producto.',
+      },
+      BUNDLE_COMPONENT_NOT_FOUND: {
+        mensaje: 'Un producto del paquete ya no está en el catálogo.',
+        queHacer:
+          'Agrega los productos uno por uno o pide a un administrador que corrija el paquete.',
+      },
+      BUNDLE_COMPONENT_NOT_ALLOWED: {
+        mensaje: 'Un producto del paquete no se puede vender así.',
+        queHacer: 'Pide a un administrador que corrija el paquete.',
+      },
+      BUNDLE_INPUT_INVALID: {
+        mensaje: 'La cantidad de paquetes no es válida.',
+        queHacer: 'Escribe un número entero de 1 en adelante.',
       },
       RULE_NOT_REGISTERED: {
         mensaje: 'Este producto no tiene una regla de precio.',

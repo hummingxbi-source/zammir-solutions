@@ -84,6 +84,7 @@ function paraVender(p: ReplicatedProduct): SellableProduct {
     ...(p.isOpenPrice === true ? { isOpenPrice: true } : {}),
     ...(p.description === undefined ? {} : { description: p.description }),
     ...(p.saleUnitName === undefined ? {} : { saleUnitName: p.saleUnitName }),
+    ...(p.bundleItems === undefined ? {} : { bundleItems: p.bundleItems }),
   };
 }
 

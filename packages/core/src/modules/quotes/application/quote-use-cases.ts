@@ -10,6 +10,7 @@ import type {
 import type { Random } from '../../../shared-kernel/random';
 import { err, ok, type Result } from '../../../shared-kernel/result';
 import type { SellableProduct } from '../../catalog/application/ports';
+import { expandBundle, type BundleError, type BundleInput } from '../../catalog/domain/bundle';
 import type { PriceRegistry } from '../../catalog/domain/pricing/registry';
 import type { UserRole } from '../../identity/domain/auth';
 import { defaultPermissionPolicy, type PermissionPolicy } from '../../identity/domain/permissions';
@@ -49,6 +50,7 @@ export type QuoteErrorCode =
   | 'INVALID_TRANSITION'
   /** La cotización no se pudo guardar en la cola de salida. */
   | 'STORAGE_FAILED'
+  | BundleError['code']
   | QuoteLineError['code'];
 
 export interface QuoteError {
@@ -173,6 +175,43 @@ export async function addQuoteLine(
     return linea;
   }
   return ok(await guardar(deps, { ...q.value, lines: [...q.value.lines, linea.value] }));
+}
+
+/** Agrega un paquete [RF-M1-18, ADR-0048]: lo convierte en un renglón normal por componente, cada uno con su
+ *  regla, precio e IVA. Todo o nada: si un componente falta o no cuadra con las medidas, no se agrega ninguno.
+ *  `catalogo` es lo que la tablet tiene para vender. */
+export async function addQuoteBundle(
+  deps: QuoteDeps,
+  actor: QuoteActor,
+  id: QuoteId,
+  paquete: SellableProduct,
+  catalogo: readonly SellableProduct[],
+  entrada: BundleInput,
+): Promise<Result<Quote, QuoteError>> {
+  if (!puedeCotizar(deps, actor)) {
+    return err({ code: 'NOT_AUTHORIZED' });
+  }
+  const q = await cargarBorrador(deps, id);
+  if (!q.ok) {
+    return q;
+  }
+  const renglones = expandBundle(paquete.bundleItems ?? [], catalogo, entrada);
+  if (!renglones.ok) {
+    return renglones;
+  }
+  const lineas: QuoteLine[] = [];
+  for (const r of renglones.value) {
+    const linea = buildQuoteLine(
+      r.product,
+      { ...r.input, id: deps.idGenerator.newId<'QuoteLine'>() },
+      lineDeps(deps),
+    );
+    if (!linea.ok) {
+      return linea;
+    }
+    lineas.push(linea.value);
+  }
+  return ok(await guardar(deps, { ...q.value, lines: [...q.value.lines, ...lineas] }));
 }
 
 /** Cambia medidas o cantidad de una línea; el precio se conserva. */

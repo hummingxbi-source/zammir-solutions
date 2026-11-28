@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { PedirEntrarConPin } from '../../identity/ui/PedirEntrarConPin';
 import type { ReactElement, SyntheticEvent } from 'react';
 import {
+  addBundleToTicket,
+  bundleChargeUnits,
   addTicketLineExtra,
   removeTicketLineExtra,
   formatMaxMeasure,
@@ -186,6 +188,9 @@ export function Mostrador(props: MostradorProps): ReactElement {
     () => (productos ?? []).filter((p) => p.kind === 'EXTRA'),
     [productos],
   );
+  // Cómo se cobra lo que se agrega: un producto, su unidad; un paquete, las de sus componentes [RF-M1-18].
+  const cobrosDe = (p: SellableProduct): readonly SellableProduct['chargeUnit'][] =>
+    p.kind === 'BUNDLE' ? bundleChargeUnits(p.bundleItems ?? [], productos ?? []) : [p.chargeUnit];
   const encontrados = useMemo(
     () =>
       searchProducts(
@@ -226,10 +231,11 @@ export function Mostrador(props: MostradorProps): ReactElement {
       return;
     }
     setError(null);
-    const necesitaMedidas =
-      elegido.chargeUnit === 'SQUARE_METER' || elegido.chargeUnit === 'LINEAR_METER';
+    // Un paquete pide las medidas una sola vez, según cómo se cobran sus componentes [RF-M1-18].
+    const unidades = cobrosDe(elegido);
+    const necesitaMedidas = unidades.some((u) => u === 'SQUARE_METER' || u === 'LINEAR_METER');
     const w = necesitaMedidas ? parseLength(ancho, unidad, MEDIDA_MAXIMA_MM) : null;
-    const hRequerido = elegido.chargeUnit === 'SQUARE_METER';
+    const hRequerido = unidades.includes('SQUARE_METER');
     const h =
       hRequerido || (necesitaMedidas && alto.trim() !== '')
         ? parseLength(alto, unidad, MEDIDA_MAXIMA_MM)
@@ -239,18 +245,28 @@ export function Mostrador(props: MostradorProps): ReactElement {
       return;
     }
     const piezas = Number(cantidad);
-    const r = addToTicket(
-      ticket,
-      elegido,
-      {
-        id: deps.idGenerator.newId<'Line'>(),
-        widthMm: w?.ok === true ? w.value : null,
-        heightMm: h?.ok === true ? h.value : null,
-        quantity: Number.isInteger(piezas) ? piezas : 0,
-        displayUnit: unidad,
-      },
-      lineDeps,
-    );
+    const entrada = {
+      widthMm: w?.ok === true ? w.value : null,
+      heightMm: h?.ok === true ? h.value : null,
+      quantity: Number.isInteger(piezas) ? piezas : 0,
+      displayUnit: unidad,
+    };
+    const r =
+      elegido.kind === 'BUNDLE'
+        ? addBundleToTicket(
+            ticket,
+            elegido,
+            productos ?? [],
+            entrada,
+            () => deps.idGenerator.newId<'Line'>(),
+            lineDeps,
+          )
+        : addToTicket(
+            ticket,
+            elegido,
+            { ...entrada, id: deps.idGenerator.newId<'Line'>() },
+            lineDeps,
+          );
     if (!r.ok) {
       mostrarError(r.error.code);
       return;
@@ -265,8 +281,9 @@ export function Mostrador(props: MostradorProps): ReactElement {
 
   function elegirProducto(p: SellableProduct): void {
     setError(null);
+    // Un paquete siempre abre su formulario: se dice cuántos y, si hace falta, las medidas.
     const medidas = p.chargeUnit === 'SQUARE_METER' || p.chargeUnit === 'LINEAR_METER';
-    if (medidas) {
+    if (medidas || p.kind === 'BUNDLE') {
       setElegido(p);
       return;
     }
@@ -470,7 +487,8 @@ export function Mostrador(props: MostradorProps): ReactElement {
   }
 
   const totales = ticketTotals(ticket);
-  const medidas = elegido?.chargeUnit === 'SQUARE_METER' || elegido?.chargeUnit === 'LINEAR_METER';
+  const medidas =
+    elegido !== null && cobrosDe(elegido).some((u) => u === 'SQUARE_METER' || u === 'LINEAR_METER');
   const hoy = mexicoDate(deps.clock.now());
   const ventasDeHoy = ventas
     .filter((v) => mexicoDate(new Date(v.issuedAt)) === hoy)
@@ -552,7 +570,11 @@ export function Mostrador(props: MostradorProps): ReactElement {
                           {p.description === undefined ? null : (
                             <span className="producto__descripcion">{p.description}</span>
                           )}
-                          <span className="producto__precio">{cobra(p.listPrice)}</span>
+                          <span className="producto__precio">
+                            {p.kind === 'BUNDLE'
+                              ? t.venta.paquete((p.bundleItems ?? []).length)
+                              : cobra(p.listPrice)}
+                          </span>
                         </button>
                       </li>
                     ))}
@@ -561,7 +583,10 @@ export function Mostrador(props: MostradorProps): ReactElement {
               ) : (
                 <form className="formulario" onSubmit={agregar}>
                   <p className="mostrador__elegido">
-                    <strong>{elegido.name}</strong> · {cobra(elegido.listPrice)}
+                    <strong>{elegido.name}</strong> ·{' '}
+                    {elegido.kind === 'BUNDLE'
+                      ? t.venta.paquete((elegido.bundleItems ?? []).length)
+                      : cobra(elegido.listPrice)}
                   </p>
                   {medidas ? (
                     <>

@@ -282,13 +282,17 @@ export function Catalogo({ deps, actor }: CatalogoProps): ReactElement {
               {
                 clave: 'venta',
                 rotulo: t.columnas.venta,
-                celda: (p) => `${t.tipos[p.kind]} · ${t.unidades[p.chargeUnit]}`,
+                celda: (p) =>
+                  p.kind === 'BUNDLE'
+                    ? `${t.tipos.BUNDLE} · ${t.productosDelPaquete((p.bundleItems ?? []).length)}`
+                    : `${t.tipos[p.kind]} · ${t.unidades[p.chargeUnit]}`,
               },
               {
                 clave: 'precio',
                 rotulo: t.columnas.precio,
                 numerica: true,
-                celda: (p) => formatearPesos(p.listPrice),
+                // Un paquete no tiene precio propio: vale lo que sus componentes [RF-M1-18].
+                celda: (p) => (p.kind === 'BUNDLE' ? '—' : formatearPesos(p.listPrice)),
               },
               {
                 clave: 'estado',
@@ -352,6 +356,7 @@ export function Catalogo({ deps, actor }: CatalogoProps): ReactElement {
           <FormularioDeProducto
             categorias={categorias}
             unidadesDeVenta={unidadesDeVenta}
+            productos={productos}
             onGuardar={guardarAlta}
             onCancelar={() => {
               setVentana(null);
@@ -369,6 +374,7 @@ export function Catalogo({ deps, actor }: CatalogoProps): ReactElement {
           <FormularioDeProducto
             categorias={categorias}
             unidadesDeVenta={unidadesDeVenta}
+            productos={productos}
             inicial={ventana.producto}
             historial={historial}
             onGuardar={(borrador) => guardarEdicion(ventana.producto, borrador)}
@@ -388,6 +394,7 @@ export function Catalogo({ deps, actor }: CatalogoProps): ReactElement {
           <FormularioDeProducto
             categorias={categorias}
             unidadesDeVenta={unidadesDeVenta}
+            productos={productos}
             // Copia todo (categoría, cómo se cobra, sus ajustes, datos fiscales y garantía) menos el código,
             // que no se puede repetir; el nombre lleva "(copia)" para que se note y se corrija [RF-M1-16].
             inicial={{
