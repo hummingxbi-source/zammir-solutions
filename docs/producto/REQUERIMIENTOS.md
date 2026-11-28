@@ -52,6 +52,15 @@
 - **RF-M1-07** *[Solo si P2 se activa]* Para piezas estándar: existencias, mínimo configurable y alerta de existencia baja. Descuento automático al vender o al entregar una orden. Sin compras, mermas ni costos.
 - **RF-M1-08** El administrador agrega, renombra, ordena y desactiva categorías. No se borran ni se desactivan con productos activos [ADR-0044].
 - **RF-M1-09** Cargos extra (cantos, perforaciones, biselados y similares): productos de tipo "Cargo extra" con su precio y unidad (m² por omisión; también metro lineal o pieza) que se agregan a una línea de vidrio y se cobran con la medida de esa línea [RN-02, ADR-0044].
+- **RF-M1-10** Precio abierto: un producto marcado así tiene un precio de **referencia**. Cualquier persona fija el precio al cotizar o vender; si queda debajo de la referencia es un descuento y pide el PIN de un administrador. Queda en la bitácora [ADR-0048].
+- **RF-M1-11** Unidad de venta por producto (por ejemplo rollo, kilo, juego, par, cartucho, hora), que se muestra en el cotizador, el mostrador y los documentos. Clave SAT de producto y de unidad editables por producto; vacías, se heredan de la categoría [ADR-0048].
+- **RF-M1-12** Cantidades con hasta 3 decimales en los productos marcados para ello (por ejemplo 1.5 kg o 2.5 h). El importe se calcula y redondea como dice [ADR-0011].
+- **RF-M1-13** Descripción opcional del producto, de hasta 500 caracteres, visible al buscarlo y, si se marca, en el documento del cliente.
+- **RF-M1-14** Mínimos, redondeo de medidas y medida máxima por producto, capturables en la pantalla y en la importación. Por omisión, apagados [RN-02, ADR-0006].
+- **RF-M1-15** Precios en bloque: actualizar productos existentes por código desde la importación (todo o nada) y subir o bajar por porcentaje los precios de una categoría, con vista previa y redondeo al peso. Cada cambio queda en el historial [RN-19, ADR-0048].
+- **RF-M1-16** Duplicar un producto para crear otro parecido (otro espesor, tono o acabado) sin capturar todo de nuevo.
+- **RF-M1-17** Cargos extra también en el mostrador, ligados a un renglón de vidrio, como en el cotizador [RF-M1-09].
+- **RF-M1-18** Paquetes: un producto que, al agregarse, se convierte en varios renglones normales (por ejemplo, vidrio templado + kit + tubo), cada uno con su precio, su regla y su IVA [ADR-0048].
 
 ## M2. Cotizador
 

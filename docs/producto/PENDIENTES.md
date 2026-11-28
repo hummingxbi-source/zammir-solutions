@@ -85,6 +85,7 @@
 | PR-36 | Titular de las cuentas, el dominio y el código (pregunta 70) | **HummingX BI**, con su cuenta empresarial; los datos son de ZAMMIR y HummingX los trata por su cuenta [ADR-0045] | 25 nov 2026 |
 | PR-37 | Rol de la tercera persona del mostrador | Cajero / vendedor, sin permisos de administrador [ADR-0045] | 25 nov 2026 |
 | PR-38 | Respaldos de 30 días (era PD-32) | El plan gratuito no tiene respaldos [ADR-0038]: respaldo nocturno propio, cifrado, con 30 días en GitHub y las fotos aparte [ADR-0046]. Restauración de una copia real de la nube ensayada y aprobada en Supabase local | 25 nov 2026 |
+| PR-39 | Catálogo escalable (fase 11) | Aprobado: precio abierto (cualquiera lo fija; debajo de la referencia pide PIN), 3 decimales, precios por porcentaje redondeados al peso. RF-M1-10 a RF-M1-18 [ADR-0048] | 27 nov 2026 |
 
 ## Propuestas
 
@@ -95,7 +96,7 @@ Funciones que alguien cree que faltan o sobran. **No se construyen** hasta que J
 | PP-01 | Recorrido "Primeros pasos" (5 pasos) para usuarios nuevos, visto en la demo [Juanito, 2026-10-27] | Juanito | **Incorporada** en RF-UX-02 a RF-UX-05 |
 | PP-02 | Gráfica de tendencia de ingresos del último mes (~31 días) en el panel de inicio; la demo usaba 10 días [Juanito, 2026-10-27] | Juanito | **Incorporada** en PD-31 (contenido del panel de inicio) |
 | PP-03 | Panel de inicio con ventas y medios de pago, cuentas por cobrar, tendencia y pipeline, como se vio en la demo [Juanito, 2026-10-27] | Juanito | **Incorporada** en RF-UX-01 y PD-31 |
-| PP-04 | Campo "descripción" en el producto (RF-M1-01 no lo incluye) [Juanito, 2026-10-27] | Juanito | Por aprobar |
+| PP-04 | Campo "descripción" en el producto (RF-M1-01 no lo incluye) [Juanito, 2026-10-27] | Juanito | **Aprobada** el 2026-11-27: RF-M1-13, CE-04 [ADR-0048] |
 | PP-05 | Código del producto generado por el sistema (iniciales del nombre + consecutivo) en lugar de capturado por Luis [Juanito, 2026-10-27]. RF-M1-01 ya dice "autogenerable"; falta la regla | Juanito | Por aprobar; definir regla |
 | PP-06 | Gráfica de distribución del catálogo por categoría [Juanito, 2026-10-27] | Juanito | Por aprobar |
 | PP-07 | Lista de "Atención": órdenes atrasadas o detenidas, días en la etapa actual y cuentas por cobrar viejas, con umbrales configurables | Claude, a partir de la demo | Por aprobar |
@@ -128,3 +129,7 @@ Funciones que alguien cree que faltan o sobran. **No se construyen** hasta que J
 | PP-33 | Cabeceras de seguridad del navegador en el despliegue (política de contenido, `X-Content-Type-Options`, `Referrer-Policy`, protección contra marcos). Se define al configurar producción y se prueba con la tablet, porque una política mal puesta rompe la conexión con Supabase o el portal [RNF-08, S5-07, ADR-0035] | Claude, en S5-07 | **Aprobada el 2026-11-24** y puesta en `vercel.json`; falta confirmarla con la tablet (prueba 9 de la fase 4 de `PLAN_DE_PRODUCCION.md`) |
 | PP-34 | Exportar los datos de **un solo cliente** (copia de su información para atender una solicitud de acceso a sus datos) y, si la copia completa llega a pesar demasiado o a tardar más de 60 segundos, partirla por tablas. Hoy la copia de un cliente se arma a mano desde su ficha [RF-M9-04, S5-08, ADR-0036] | Claude, en S5-08 | Por aprobar |
 | PP-35 | Registrar en el sistema la devolución del anticipo de una orden cancelada (por el mismo medio y en el turno de quien la entrega, como las devoluciones de AJ-06), para que el corte no muestre un faltante [ADR-0045] | Claude, al decidir PD-07 | Por aprobar; después de la entrega |
+| PP-38 | Precio abierto [ADR-0048, D1]: el ADR dice "todo queda en la bitácora", pero lo construido en CE-01 guarda en cada renglón el precio de referencia y el cobrado, y solo el **descuento** (precio abajo de la referencia, con PIN) va a la bitácora, como siempre. Decidir si basta así o si también se registra en la bitácora cada precio fijado arriba de la referencia [RF-M1-10] | Claude, en CE-01 | Por aprobar |
+| PP-39 | Que la **descripción** del producto salga también en el documento del cliente (cotización, orden, comprobante). En CE-04 solo se ve en el buscador: llevarla al documento exige guardarla en cada renglón y en el envío desde la tablet [RF-M1-13] | Claude, en CE-04 | **Aprobada el 2026-11-27** por Juanito; se construye antes de pasar la fase 11 a producción |
+| PP-40 | Lista de **sugerencias de unidad de venta editable** en Configuración. En CE-02 se sugieren las del plan (rollo, kilo, juego, par, cartucho, hoja, tramo, visita, hora) más las que ya usa el catálogo [RF-M1-11] | Claude, en CE-02 | **Aprobada el 2026-11-27** por Juanito; se construye antes de pasar la fase 11 a producción |
+| PP-41 | Dar de alta **paquetes desde la importación CSV** (hoy solo desde la pantalla) [RF-M1-18] | Claude, en CE-09 | **Descartada el 2026-11-27**: Juanito siguió la recomendación; los paquetes se dan de alta en la pantalla |
