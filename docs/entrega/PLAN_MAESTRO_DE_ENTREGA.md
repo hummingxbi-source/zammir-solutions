@@ -119,7 +119,7 @@ Y en el ADR-0045, **el anticipo al cancelar una orden** (PD-07, ya resuelto):
 | D6 | **Monitoreo de caídas** (PP-32): cuenta gratuita que consulte `salud` | ⏳ Sin ella, nadie se entera de una caída hasta que llama Luis |
 | D7 | **Titularidad** de cuentas, dominio y código | ✅ HummingX BI; los datos son de ZAMMIR [ADR-0045] |
 | D8 | **Contraseñas de los administradores** | ✅ Luis y Ricardo escriben la suya en persona [ADR-0045] |
-| D9 | **Dónde se capacita** (PD-60). El guion de la §6.2 capacita el domingo y el lunes **después** de recrear el proyecto. Lo que se haga ahí (ventas, cancelaciones, cortes) queda para siempre: nada contable se borra [RN-18], y el acta promete entregar el sistema sin datos de prueba | ⏳ *(propuesta)* Capacitar con datos inventados en `zammir-pruebas` el domingo y el lunes, y recrear el proyecto el lunes **después** de la última sesión y **antes** de la entrega formal. La otra opción es capacitar en el proyecto real y cancelar con motivo cada documento de práctica, dejándolo anotado en el acta |
+| D9 | **Dónde se capacita** (PD-60). Lo que se haga en el proyecto real (ventas, cancelaciones, cortes) queda para siempre: nada contable se borra [RN-18], y el acta promete entregar el sistema sin datos de prueba | ✅ **Decidido el 28 nov:** se capacita con **datos inventados en `zammir-pruebas`**, en Otumba de Gómez Farías. El proyecto real se crea vacío el lunes, **después** de la última sesión y **antes** de la entrega formal, y las tablets se limpian antes de conectarlas (§4.3, paso 8) |
 
 ### 4.2 Lo que se corrigió en los documentos (25 nov) y lo que sigue
 
@@ -147,7 +147,7 @@ Ya corregidos, con [ADR-0039], [ADR-0040], [ADR-0043], [ADR-0044] y [ADR-0045]:
 5. Respaldo nocturno: en el entorno `respaldo`, actualizar `SUPABASE_DB_URL` y las cuatro `SUPABASE_S3_*` con una llave S3 **nueva** del proyecto nuevo. Correrlo a mano y confirmar que salen la copia de la base y la de las fotos.
 6. Cuentas de **Luis y Ricardo** con su correo, **sin enviar invitación**. **Cada uno escribe su contraseña en persona.** Después, su rol de administrador por SQL (`PUESTA_EN_PRODUCCION.md` paso 1.5).
 7. Las **tres personas con PIN**: Luis y Ricardo como administradores y la persona del mostrador como **Cajero / vendedor**. Cada quien escribe el suyo en persona; **nunca** se manda por mensaje.
-8. **Dos tablets:** reconectar cada una con un código nuevo.
+8. **Dos tablets:** primero **borrar los datos del sitio** en cada una, porque guardan adentro los documentos de la capacitación y reconectar no los borra: en Chrome, ⋮ → *Configuración* → *Configuración de sitios* → *Todos los sitios* → `sistema.zammir-solutions.com` → **Borrar datos**. Después abrir la app y conectarla con un código nuevo. Comprobar que el Cotizador, Órdenes y el Mostrador no muestren nada de la práctica.
 9. **Datos reales:** catálogo, categorías, cargos extra, garantía, datos del negocio y aviso de privacidad. Revisar que no quede **ningún dato de prueba**.
 10. Prueba de humo en producción **sin dejar documentos falsos**: cotización, venta, corte y reporte. Si una venta de prueba queda, se cancela con motivo [RN-18] y se anota en el acta.
 
@@ -205,13 +205,13 @@ Los tres socios firman por HummingX BI el contrato y el acta de entrega [ADR-004
 | | 2. Pruebas con el equipo real (3 h) | P6 a P10, con datos inventados | Hoja de hallazgos (interna) |
 | | 3. Aceptación (2 h) | Luis ejecuta el plan de aceptación | Hoja de resultados (anexo A del acta) |
 | **Dom 29** | 4. Correcciones | Lo que haya salido el sábado, por PR | — |
-| | 5. Paso a producción | Recrear el proyecto, datos reales, usuarios y tablets (§4.3), y P11 y P12 | — |
-| | 6. Capacitación de Luis (3 h) y de Ricardo (3 h) | Luis completa solo un recorrido de cotización a cobro. Ricardo, lo mismo más los reportes | Anexo B del acta (sesiones 1 y 2) |
-| **Lun 30** | 7. Capacitación del mostrador (3 h) | Cada persona entra con su PIN, cobra, hace su corte y reimprime | Anexo B del acta (sesión 3) |
+| | 5. Capacitación de Luis (3 h) y de Ricardo (3 h), **en `zammir-pruebas` con datos inventados** | Luis completa solo un recorrido de cotización a cobro. Ricardo, lo mismo más los reportes | Anexo B del acta (sesiones 1 y 2) |
+| **Lun 30** | 6. Capacitación del mostrador (3 h), **en `zammir-pruebas`** | Cada persona entra con su PIN, cobra, hace su corte y reimprime | Anexo B del acta (sesión 3) |
+| | 7. Paso a producción | Recrear el proyecto vacío, datos reales, usuarios, **limpiar las tablets** y conectarlas (§4.3), y P11 y P12 | — |
 | | 8. Entrega formal (1 h) | Repaso de lo entregado, entrega del expediente, firma del contrato y del acta de entrega, constancias de capacitación, y foto y video de cierre | Contrato y acta de entrega (anexos C, D y E) |
 | **Mar 1 dic** | 9. Cierre | Etiquetar `v1.0.0`, pasar el repositorio a privado, actualizar `CIERRE_DEL_PROYECTO.md` y la retrospectiva | — |
 
-> El orden importa: **primero se prueba con datos inventados y Luis acepta; después se recrea el proyecto vacío y se cargan los datos reales** [ADR-0043]. No se recrea antes de que pasen las pruebas.
+> El orden importa: **primero se prueba y se capacita con datos inventados, y Luis acepta; después se recrea el proyecto vacío y se cargan los datos reales** [ADR-0043]. No se recrea antes de que pasen las pruebas ni antes de la última sesión de capacitación.
 
 ### 6.3 Reglas para grabar
 
