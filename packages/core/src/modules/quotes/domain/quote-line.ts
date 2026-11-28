@@ -44,6 +44,8 @@ export interface QuoteProduct {
   readonly saleUnitName?: string;
   /** Se vende con hasta 3 decimales [RF-M1-12]: se copia a la línea. */
   readonly allowsDecimalQuantity?: boolean;
+  /** Descripción del producto [RF-M1-13]: se copia a la línea para el documento del cliente. */
+  readonly description?: string;
 }
 
 export interface LineInput {
@@ -129,6 +131,7 @@ function calcularLinea(
     | 'isOpenPrice'
     | 'saleUnitName'
     | 'allowsDecimalQuantity'
+    | 'description'
   >,
   unitPriceCents: number,
   entrada: LineInput,
@@ -279,6 +282,7 @@ export function buildQuoteLine(
       ...(producto.isOpenPrice === true ? { isOpenPrice: true } : {}),
       ...(producto.saleUnitName === undefined ? {} : { saleUnitName: producto.saleUnitName }),
       ...(producto.allowsDecimalQuantity === true ? { allowsDecimalQuantity: true } : {}),
+      ...(producto.description === undefined ? {} : { description: producto.description }),
     },
     producto.listPrice,
     entrada,

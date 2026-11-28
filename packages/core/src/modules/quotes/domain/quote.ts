@@ -46,6 +46,9 @@ export interface QuoteLine {
   readonly saleUnitName?: string;
   /** El producto se vende con hasta 3 decimales: la cantidad puede ser 1.5 [RF-M1-12]. Sin el campo, entera. */
   readonly allowsDecimalQuantity?: boolean;
+  /** Copia de la descripción del producto al armar la línea; sale en el documento del cliente [RF-M1-13,
+   *  PP-39]. Sin el campo, no tiene. */
+  readonly description?: string;
 }
 
 /** Un cargo extra ligado a una línea: un producto "Cargo extra" del catálogo, cobrado con la medida de la pieza

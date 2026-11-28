@@ -421,6 +421,7 @@ function aCarga(q: Quote, lineas: readonly QuoteLine[]) {
       detail: l.detail,
       ...(l.extras === undefined || l.extras.length === 0 ? {} : { extras: l.extras }),
       ...(l.saleUnitName === undefined ? {} : { saleUnitName: l.saleUnitName }),
+      ...(l.description === undefined ? {} : { description: l.description }),
     })),
   };
 }

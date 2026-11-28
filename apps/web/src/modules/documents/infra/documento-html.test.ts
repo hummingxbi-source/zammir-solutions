@@ -63,6 +63,18 @@ describe('página de impresión del documento', () => {
     expect(html).toContain('&lt;script&gt;alert(1)&lt;/script&gt; &amp; &quot;Ana&quot;');
   });
 
+  it('la descripción del producto sale bajo su nombre, escapada [PP-39]', () => {
+    const base = documentoDePrueba(1);
+    const [primera] = base.lines;
+    if (primera === undefined) throw new Error('renglón');
+    const html = documentoAHtml(
+      { ...base, lines: [{ ...primera, description: 'Incluye rieles & jaladera' }] },
+      OPCIONES,
+    );
+    expect(html).toContain('<small class="descripcion">Incluye rieles &amp; jaladera</small>');
+    expect(documentoAHtml(base, OPCIONES)).not.toContain('class="descripcion"');
+  });
+
   it('la reimpresión sale marcada y la primera impresión no', () => {
     expect(documentoAHtml(documentoDePrueba(1), OPCIONES)).not.toContain('class="marca"');
     const copia = documentoAHtml(documentoDePrueba(1), { copia: true, rotuloDeCopia: 'COPIA' });

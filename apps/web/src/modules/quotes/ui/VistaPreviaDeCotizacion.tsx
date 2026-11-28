@@ -64,6 +64,12 @@ export function VistaPreviaDeCotizacion({
               <td>{linea.position}</td>
               <td>
                 <strong>{linea.name}</strong>
+                {linea.description === undefined ? null : (
+                  <>
+                    <br />
+                    <small className="documento__descripcion">{linea.description}</small>
+                  </>
+                )}
                 <br />
                 <small>{linea.detail}</small>
               </td>
