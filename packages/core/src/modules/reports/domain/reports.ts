@@ -1,3 +1,4 @@
+import { addQuantities } from '../../../shared-kernel/measure/quantity';
 import { addDays, mexicoDate } from '../../../shared-kernel/date/mx-date';
 import type { Refund } from '../../counter/domain/refund';
 import type { CounterSale } from '../../counter/domain/counter-sale';
@@ -208,7 +209,11 @@ export function topProducts(entrada: {
     grupos.set(key, {
       key,
       name: previo?.name ?? l.name,
-      quantity: (previo?.quantity ?? 0) + l.quantity,
+      // En milésimas, para que 0.1 kg + 0.2 kg sumen 0.3 kg y no 0.30000000000000004 [RF-M1-12].
+      quantity:
+        previo === undefined
+          ? l.quantity
+          : (addQuantities(previo.quantity, l.quantity) ?? previo.quantity),
       amountCents: (previo?.amountCents ?? 0) + l.lineTotalCents,
     });
   }

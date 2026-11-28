@@ -1,4 +1,5 @@
 import type { ProductId } from '../../../shared-kernel/id';
+import { addQuantities } from '../../../shared-kernel/measure/quantity';
 import { err, ok, type Result } from '../../../shared-kernel/result';
 import {
   addLineExtra,
@@ -53,26 +54,30 @@ export function addToTicket(
       (l.extras ?? []).length === 0,
   );
   if (existente !== undefined) {
-    return setTicketQuantity(ticket, existente.id, existente.quantity + entrada.quantity, deps);
+    // En milésimas, para que 0.1 kg + 0.2 kg den 0.3 kg [RF-M1-12].
+    const suma = addQuantities(existente.quantity, entrada.quantity);
+    if (suma === null) {
+      return err({ code: 'QUANTITY_INVALID' });
+    }
+    return setTicketQuantity(ticket, existente.id, suma, deps);
   }
   const linea = buildQuoteLine(producto, entrada, deps);
   return linea.ok ? ok({ lines: [...ticket.lines, linea.value] }) : err(linea.error);
 }
 
-/** Cambia la cantidad de una línea (entera, de 1 en adelante) y recalcula su importe. */
+/** Cambia la cantidad de una línea y recalcula su importe: entera de 1 en adelante, o con hasta 3 decimales si
+ *  el producto se vende así [RF-M1-12]. */
 export function setTicketQuantity(
   ticket: Ticket,
   lineId: string,
   cantidad: number,
   deps: LineDeps,
 ): Result<Ticket, TicketError> {
-  if (!Number.isSafeInteger(cantidad) || cantidad < 1) {
-    return err({ code: 'QUANTITY_INVALID' });
-  }
   const actual = ticket.lines.find((l) => l.id === lineId);
   if (actual === undefined) {
     return err({ code: 'LINE_NOT_FOUND' });
   }
+  // Que la cantidad valga (entera o con decimales, según el producto) lo revisa el renglón: una sola regla.
   const nueva = recalculateQuoteLine(actual, { quantity: cantidad }, deps);
   if (!nueva.ok) {
     return err(nueva.error);

@@ -342,6 +342,18 @@ describe('productos más vendidos', () => {
     expect(r.byQuantity.map((x) => x.name)).toEqual(['A']);
   });
 
+  it('suma cantidades con decimales sin error de punto flotante [RF-M1-12]', () => {
+    const conKilos = [
+      {
+        status: 'COMPLETED' as const,
+        issuedAt: '2026-11-10T18:00:00.000Z',
+        lines: [linea('v', 'Vinil', 0.1, 850), linea('v', 'Vinil', 0.2, 1_700)],
+      },
+    ];
+    const r = topProducts({ sales: conKilos, orders: [], period: periodo });
+    expect(r.byQuantity.map((x) => [x.name, x.quantity])).toEqual([['Vinil', 0.3]]);
+  });
+
   it('sin ventas da listas vacías', () => {
     const r = topProducts({ sales: [], orders: [], period: periodo });
     expect(r.byAmount).toEqual([]);

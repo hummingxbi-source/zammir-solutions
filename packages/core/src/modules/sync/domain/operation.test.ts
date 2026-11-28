@@ -67,3 +67,21 @@ describe('unidad de venta en el envío [RF-M1-11]', () => {
     expect(forma.safeParse(linea({ saleUnitName: 'a'.repeat(21) })).success).toBe(false);
   });
 });
+
+describe('cantidad con decimales en el envío [RF-M1-12]', () => {
+  it('acepta 1.5 y una tablet de antes con enteros; no acepta más de 3 decimales ni cero', () => {
+    const conDecimal = linea({
+      quantity: 1.5,
+      unitPriceCents: 7_733,
+      lineTotalCents: 11_600,
+      detail: '1.5 kilos × $77.33 = $116.00',
+    });
+    expect(createCounterSalePayloadSchema.safeParse(venta(conDecimal)).success).toBe(true);
+    expect(createCounterSalePayloadSchema.safeParse(venta(linea())).success).toBe(true);
+    for (const quantity of [1.2345, 0, -1]) {
+      expect(createCounterSalePayloadSchema.safeParse(venta(linea({ quantity }))).success).toBe(
+        false,
+      );
+    }
+  });
+});

@@ -343,6 +343,44 @@ describe('Cotizador', () => {
     expect(screen.getAllByText(/1 × \$500\.00 = \$500\.00/).length).toBeGreaterThan(0);
   });
 
+  it('lo que se vende con decimales acepta 2.5 horas; lo demás pide entero [RF-M1-12]', async () => {
+    const hora: SellableProduct = {
+      ...vidrio,
+      id: asId<'Product'>('00000000-0000-4000-8000-00000000f0e9'),
+      code: 'HR',
+      name: 'Hora de trabajo',
+      kind: 'SERVICE',
+      chargeUnit: 'SERVICE',
+      ruleId: 'SERVICE',
+      ruleParams: {},
+      listPrice: 350_00 as SellableProduct['listPrice'],
+      saleUnitName: 'hora',
+      allowsDecimalQuantity: true,
+    };
+    montar({ productos: [vidrio, hora] });
+    await empezarConClienteNuevo();
+    fireEvent.change(await screen.findByLabelText('Buscar producto o servicio'), {
+      target: { value: 'hora' },
+    });
+    fireEvent.click(await screen.findByRole('button', { name: /Hora de trabajo/ }));
+    expect(screen.getByLabelText('Cantidad').getAttribute('inputmode')).toBe('decimal');
+    fireEvent.change(screen.getByLabelText('Cantidad'), { target: { value: '2.5' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar a la cotización' }));
+    expect(
+      (await screen.findAllByText(/2\.5 horas × \$350\.00 = \$875\.00/)).length,
+    ).toBeGreaterThan(0);
+    // Un producto que se vende entero no acepta 1.5.
+    fireEvent.change(screen.getByLabelText('Buscar producto o servicio'), {
+      target: { value: 'vidrio' },
+    });
+    fireEvent.click(await screen.findByRole('button', { name: /Vidrio claro 6 mm/ }));
+    fireEvent.change(screen.getByLabelText('Ancho (cm)'), { target: { value: '100' } });
+    fireEvent.change(screen.getByLabelText('Alto (cm)'), { target: { value: '100' } });
+    fireEvent.change(screen.getByLabelText('Cantidad'), { target: { value: '1.5' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar a la cotización' }));
+    expect(await screen.findByText('La cantidad no es válida.')).toBeTruthy();
+  });
+
   it('los campos de medida abren el teclado numérico', async () => {
     montar();
     await empezarConClienteNuevo();

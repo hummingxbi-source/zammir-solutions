@@ -53,6 +53,25 @@ export function multiply(a: Money, cantidad: number): Result<Money, MoneyError> 
   return money(a * cantidad);
 }
 
+/** Monto por una cantidad con hasta 3 decimales (1.5 kg, 2.5 h) [RF-M1-12, ADR-0048, ADR-0011]: precio por
+ *  milésimas ÷ 1000, redondeado **una sola vez** al centavo, la mitad hacia arriba. Todo con enteros: la
+ *  cantidad entra en milésimas enteras (`quantityToMilli`). Con una cantidad entera da lo mismo que `multiply`. */
+export function multiplyByQuantity(a: Money, milesimas: number): Result<Money, MoneyError> {
+  if (!Number.isSafeInteger(milesimas)) {
+    return err({ code: 'NOT_INTEGER' });
+  }
+  if (milesimas < 0) {
+    return err({ code: 'NEGATIVE_QUANTITY' });
+  }
+  const escalado = a * milesimas;
+  if (!Number.isSafeInteger(escalado)) {
+    return err({ code: 'OUT_OF_RANGE' });
+  }
+  const residuo = escalado % 1000;
+  const centavos = (escalado - residuo) / 1000;
+  return money(residuo * 2 >= 1000 ? centavos + 1 : centavos);
+}
+
 /** Suma una lista de montos; se detiene si alguna suma sale del rango. */
 export function sum(montos: readonly Money[]): Result<Money, MoneyError> {
   let total = ZERO;

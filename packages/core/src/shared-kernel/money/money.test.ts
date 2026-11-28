@@ -9,6 +9,7 @@ import {
   isZero,
   money,
   multiply,
+  multiplyByQuantity,
   subtract,
   sum,
   ZERO,
@@ -270,5 +271,66 @@ describe('subir o bajar por porcentaje, al peso [RF-M1-15, D3]', () => {
         },
       ),
     );
+  });
+});
+
+describe('monto por cantidad con decimales [RF-M1-12, D2, ADR-0011]', () => {
+  const cent = (c: number) => {
+    const r = money(c);
+    if (!r.ok) throw new Error('monto');
+    return r.value;
+  };
+  const por = (c: number, milesimas: number) => {
+    const r = multiplyByQuantity(cent(c), milesimas);
+    return r.ok ? r.value : r.error.code;
+  };
+
+  // Casos de oro validados por Juanito el 2026-11-27 (docs/calidad/CASOS_DE_ORO_DINERO.md, casos C1 a C7).
+  it.each([
+    ['1.5 kg a $85.00', 85_00, 1500, 127_50],
+    ['2.5 h a $350.00', 350_00, 2500, 875_00],
+    ['0.333 kg a $10.00', 10_00, 333, 3_33],
+    ['1.5 a $33.33 (la mitad sube)', 33_33, 1500, 50_00],
+    ['1.255 a $1.00', 1_00, 1255, 1_26],
+    ['2.005 a $0.50', 50, 2005, 1_00],
+    ['0.125 a $0.10', 10, 125, 1],
+  ])('caso de oro: %s', (_, precio, milesimas, esperado) => {
+    expect(por(precio, milesimas)).toBe(esperado);
+  });
+
+  it('con cantidad entera da lo mismo que multiply', () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 0, max: 10_000_000 }),
+        fc.integer({ min: 0, max: 1_000 }),
+        (c, n) => {
+          const entero = multiply(cent(c), n);
+          expect(por(c, n * 1000)).toBe(entero.ok ? entero.value : entero.error.code);
+        },
+      ),
+    );
+  });
+
+  it('propiedad: queda a medio centavo o menos del exacto, y la mitad sube', () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 0, max: 100_000_000 }),
+        fc.integer({ min: 0, max: 1_000_000 }),
+        (c, milesimas) => {
+          const r = multiplyByQuantity(cent(c), milesimas);
+          if (!r.ok) throw new Error(r.error.code);
+          const diferencia = r.value * 1000 - c * milesimas;
+          expect(diferencia).toBeGreaterThan(-500);
+          expect(diferencia).toBeLessThanOrEqual(500);
+        },
+      ),
+    );
+  });
+
+  it('milésimas que no son enteras, negativas o un producto que no cabe se avisan', () => {
+    expect(por(100, 1.5)).toBe('NOT_INTEGER');
+    expect(por(100, -1)).toBe('NEGATIVE_QUANTITY');
+    expect(por(Number.MAX_SAFE_INTEGER, 2)).toBe('OUT_OF_RANGE');
+    expect(por(100, 0)).toBe(0);
   });
 });

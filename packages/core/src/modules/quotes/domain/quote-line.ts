@@ -1,3 +1,4 @@
+import { isValidQuantity, isWholeQuantity } from '../../../shared-kernel/measure/quantity';
 import type { LengthUnit, Millimeters } from '../../../shared-kernel/measure/length';
 import { money, type Money } from '../../../shared-kernel/money/money';
 import { err, ok, type Result } from '../../../shared-kernel/result';
@@ -12,6 +13,8 @@ export type QuoteLineErrorCode =
   | 'INPUT_INVALID'
   /** Una medida pasa del máximo del producto [RF-M1-14]. */
   | 'MEASURE_TOO_LARGE'
+  /** Cantidad con decimales en un producto que se vende entero, o con más de 3 decimales [RF-M1-12]. */
+  | 'QUANTITY_INVALID'
   | 'RULE_NOT_REGISTERED'
   | 'PARAMS_INVALID'
   /** Un importe no cabe en un entero seguro, o el IVA no se pudo calcular. */
@@ -39,6 +42,8 @@ export interface QuoteProduct {
   readonly isOpenPrice?: boolean;
   /** Unidad de venta [RF-M1-11]: se copia a la línea. */
   readonly saleUnitName?: string;
+  /** Se vende con hasta 3 decimales [RF-M1-12]: se copia a la línea. */
+  readonly allowsDecimalQuantity?: boolean;
 }
 
 export interface LineInput {
@@ -123,6 +128,7 @@ function calcularLinea(
     | 'extras'
     | 'isOpenPrice'
     | 'saleUnitName'
+    | 'allowsDecimalQuantity'
   >,
   unitPriceCents: number,
   entrada: LineInput,
@@ -131,6 +137,14 @@ function calcularLinea(
   const precio = aMoney(unitPriceCents);
   if (!precio.ok) {
     return precio;
+  }
+  // Decimales solo en lo que se vende así, y nunca más de 3 [RF-M1-12, ADR-0048].
+  const cantidadValida =
+    base.allowsDecimalQuantity === true
+      ? isValidQuantity(entrada.quantity)
+      : isWholeQuantity(entrada.quantity);
+  if (!cantidadValida) {
+    return err({ code: 'QUANTITY_INVALID' });
   }
   const calculo = deps.registry.calculate(base.ruleId, base.ruleParams, {
     unitPrice: precio.value,
@@ -264,6 +278,7 @@ export function buildQuoteLine(
       catalogPriceCents: producto.listPrice,
       ...(producto.isOpenPrice === true ? { isOpenPrice: true } : {}),
       ...(producto.saleUnitName === undefined ? {} : { saleUnitName: producto.saleUnitName }),
+      ...(producto.allowsDecimalQuantity === true ? { allowsDecimalQuantity: true } : {}),
     },
     producto.listPrice,
     entrada,

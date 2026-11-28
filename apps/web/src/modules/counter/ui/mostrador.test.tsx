@@ -413,6 +413,33 @@ describe('Mostrador', () => {
     expect(screen.getByText(/4 × \$116\.00 = \$464\.00/)).toBeTruthy();
   });
 
+  it('vende 1.5 kilos de un producto que se vende con decimales [RF-M1-12]', async () => {
+    const vinil: SellableProduct = {
+      ...chapa,
+      id: asId<'Product'>('00000000-0000-4000-8000-00000000f0e8'),
+      code: 'VN',
+      name: 'Vinil para cancel',
+      listPrice: precio(85_00),
+      saleUnitName: 'kilo',
+      allowsDecimalQuantity: true,
+    };
+    await montar({ productos: [vidrio, chapa, vinil] });
+    fireEvent.change(await screen.findByLabelText('Buscar producto o servicio'), {
+      target: { value: 'vinil' },
+    });
+    fireEvent.click(await screen.findByRole('button', { name: /Vinil para cancel/ }));
+    // Abre su formulario para escribir la cantidad, sin medidas.
+    expect(screen.queryByLabelText('Ancho (cm)')).toBeNull();
+    fireEvent.change(screen.getByLabelText('Cantidad'), { target: { value: '1.5' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar al ticket' }));
+    await waitFor(() => {
+      expect(screen.getByText('Total', { selector: 'dt' }).nextElementSibling?.textContent).toBe(
+        '$127.50',
+      );
+    });
+    expect(screen.getByText(/1\.5 kilos × \$85\.00 = \$127\.50/)).toBeTruthy();
+  });
+
   it('una medida mal escrita no agrega nada y dice qué hacer', async () => {
     await montar();
     fireEvent.change(await screen.findByLabelText('Buscar producto o servicio'), {

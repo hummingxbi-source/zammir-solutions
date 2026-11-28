@@ -55,6 +55,7 @@ interface FilaParaVender {
   readonly description?: string | null;
   readonly sale_unit_name?: string | null;
   readonly bundle_items?: unknown;
+  readonly allows_decimal_quantity?: boolean;
 }
 
 interface FilaReplicada extends FilaParaVender {
@@ -170,6 +171,7 @@ function aParaVender(fila: FilaParaVender): Result<SellableProduct, CatalogError
       ? {}
       : { saleUnitName: fila.sale_unit_name }),
     ...(fila.kind === 'BUNDLE' ? { bundleItems: componentes(fila.bundle_items) } : {}),
+    ...(fila.allows_decimal_quantity === true ? { allowsDecimalQuantity: true } : {}),
   });
 }
 
@@ -232,6 +234,7 @@ function aFila(p: Product) {
     description: p.description ?? null,
     sale_unit_name: p.saleUnitName ?? null,
     bundle_items: p.bundleItems ?? [],
+    allows_decimal_quantity: p.allowsDecimalQuantity === true,
     fiscal_product_service_key: p.fiscal.productServiceKey,
     fiscal_unit_key: p.fiscal.unitKey,
     fiscal_tax_object: p.fiscal.taxObject,

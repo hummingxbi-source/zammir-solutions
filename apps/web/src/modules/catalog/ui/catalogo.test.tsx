@@ -516,6 +516,35 @@ describe('Catálogo', () => {
     ).toBeTruthy();
   });
 
+  it('una pieza con unidad de venta se marca para venderse con decimales [RF-M1-12]', async () => {
+    const deps = await montar();
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar Marco de madera' }));
+    const dialogo = await screen.findByRole('dialog', { name: 'Editar producto' });
+    fireEvent.change(within(dialogo).getByLabelText('Unidad de venta (opcional)'), {
+      target: { value: 'kilo' },
+    });
+    fireEvent.click(within(dialogo).getByLabelText(/Se vende con decimales/));
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Guardar producto' }));
+    expect(await screen.findByText('Cambios guardados.')).toBeTruthy();
+    const lista = await deps.products.list();
+    expect(lista.ok && lista.value.find((p) => p.code === 'MA-1')?.allowsDecimalQuantity).toBe(
+      true,
+    );
+  });
+
+  it('sin unidad de venta no se puede vender con decimales y dice qué hacer', async () => {
+    await montar();
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar Marco de madera' }));
+    const dialogo = await screen.findByRole('dialog', { name: 'Editar producto' });
+    fireEvent.click(within(dialogo).getByLabelText(/Se vende con decimales/));
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Guardar producto' }));
+    expect(
+      await within(dialogo).findByText(
+        'Con decimales solo se vende lo que se cobra por pieza o servicio y dice su unidad.',
+      ),
+    ).toBeTruthy();
+  });
+
   it('un servicio solo se cobra como servicio y una pieza estándar como pieza', async () => {
     await montar({ conProductos: false });
     fireEvent.click(await botonAgregar());

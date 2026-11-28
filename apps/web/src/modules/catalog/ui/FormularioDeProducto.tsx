@@ -113,6 +113,8 @@ export function FormularioDeProducto({
   const [abierto, setAbierto] = useState(inicial?.isOpenPrice === true);
   const [descripcion, setDescripcion] = useState(inicial?.description ?? '');
   const [unidadDeVenta, setUnidadDeVenta] = useState(inicial?.saleUnitName ?? '');
+  // Cantidades con decimales (1.5 kg) [RF-M1-12]: solo por pieza o servicio, con su unidad de venta.
+  const [conDecimales, setConDecimales] = useState(inicial?.allowsDecimalQuantity === true);
   // Componentes del paquete [RF-M1-18]: producto y cantidad (como texto mientras se captura).
   const [componentes, setComponentes] = useState<
     readonly { productId: string; cantidad: string }[]
@@ -240,6 +242,7 @@ export function FormularioDeProducto({
       ...(abierto && tipo !== 'EXTRA' && tipo !== 'BUNDLE' ? { isOpenPrice: true } : {}),
       ...(descripcion.trim() === '' ? {} : { description: descripcion }),
       ...(unidadDeVenta.trim() === '' || !porPiezaOServicio ? {} : { saleUnitName: unidadDeVenta }),
+      ...(conDecimales && porPiezaOServicio ? { allowsDecimalQuantity: true } : {}),
       ...(tipo === 'BUNDLE'
         ? {
             bundleItems: componentes.map((c) => ({
@@ -431,6 +434,19 @@ export function FormularioDeProducto({
             ))}
           </datalist>
           <p className="formulario__ayuda">{t.formulario.unidadDeVentaAyuda}</p>
+          <label className="casilla">
+            <input
+              type="checkbox"
+              checked={conDecimales}
+              onChange={(e) => {
+                setConDecimales(e.target.checked);
+              }}
+            />
+            <span>
+              {t.formulario.conDecimales}
+              <span className="casilla__ayuda">{t.formulario.conDecimalesAyuda}</span>
+            </span>
+          </label>
         </div>
       ) : null}
       {camposDeAjuste.length === 0 ? null : (

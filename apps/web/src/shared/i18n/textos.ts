@@ -484,6 +484,9 @@ export const textos = {
       altoMaximo: 'Alto máximo (mm)',
       largoMaximo: 'Largo máximo (mm)',
       unidadDeVenta: 'Unidad de venta (opcional)',
+      conDecimales: 'Se vende con decimales (hasta 3: 1.5 kilos, 2.5 horas)',
+      conDecimalesAyuda:
+        'Necesita la unidad de venta. La cantidad se cobra al centavo, la mitad hacia arriba.',
       unidadDeVentaAyuda:
         'Cómo se lee la cantidad: "2 rollos", "3 pares", "2 horas". Vacía, solo se ve la cantidad.',
       componentes: 'Productos del paquete',
@@ -588,6 +591,11 @@ export const textos = {
         mensaje: 'La clave SAT no es válida.',
         queHacer:
           'Escribe sus 8 dígitos, por ejemplo 30171500, o déjala vacía para usar la de la categoría.',
+      },
+      DECIMAL_QUANTITY_NOT_ALLOWED: {
+        mensaje:
+          'Con decimales solo se vende lo que se cobra por pieza o servicio y dice su unidad.',
+        queHacer: 'Escribe la unidad de venta (por ejemplo "kilo" u "hora") o quita la marca.',
       },
       BUNDLE_ITEMS_INVALID: {
         mensaje: 'El paquete necesita de 1 a 20 productos distintos.',
@@ -792,6 +800,8 @@ export const textos = {
       SAT_UNIT_KEY_INVALID:
         'La clave de unidad SAT lleva 2 o 3 letras o números, por ejemplo H87, o déjala vacía.',
       BUNDLE_ITEMS_INVALID: 'Los paquetes se dan de alta en la pantalla, no desde el archivo.',
+      DECIMAL_QUANTITY_NOT_ALLOWED:
+        'Con decimales solo se vende lo que se cobra por pieza o servicio y dice su unidad de venta.',
       CODE_DUPLICATE_IN_FILE: 'Este código ya aparece antes en el archivo.',
       CODE_DUPLICATE_IN_CATALOG: 'Este código ya existe en el catálogo.',
       RULE_UNKNOWN: 'La regla de precio no existe.',
@@ -1736,7 +1746,8 @@ export const textos = {
       },
       QUANTITY_INVALID: {
         mensaje: 'La cantidad no es válida.',
-        queHacer: 'Escribe un número entero de 1 en adelante.',
+        queHacer:
+          'Escribe un número entero de 1 en adelante; si el producto se vende con decimales, hasta 3 (por ejemplo 1.5).',
       },
       MEASURE_INVALID: {
         mensaje: 'Las medidas no son válidas.',
@@ -2599,6 +2610,11 @@ export const textos = {
       PRICE_INVALID: {
         mensaje: 'El precio no es válido: no puede ser negativo ni mayor que el del catálogo.',
         queHacer: 'Escribe un precio menor o igual al de catálogo.',
+      },
+      QUANTITY_INVALID: {
+        mensaje: 'La cantidad no es válida.',
+        queHacer:
+          'Escribe un número entero de 1 en adelante; si el producto se vende con decimales, hasta 3 (por ejemplo 1.5).',
       },
       MEASURE_INVALID: {
         mensaje: 'Una medida no es válida.',
