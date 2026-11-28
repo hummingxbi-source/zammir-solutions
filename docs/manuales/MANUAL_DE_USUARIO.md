@@ -1,8 +1,14 @@
-# Manual de usuario (borrador)
+<!--
+  Documento HMX-ZAM-04 del expediente de entrega [ADR-0047]. Historia S4-29.
+  Las capturas usan solo datos inventados y se generan con `pnpm manual:capturas` cada vez que cambia la interfaz.
+  Se repasa con Luis, Ricardo y el equipo en las capacitaciones; lo que cambie sale en la versión siguiente.
+-->
 
-> Historia S4-29. Para quien trabaja en ZAMMIR: cajeros / vendedores y administradores. Explica el día a día con las palabras del oficio y capturas de pantalla.
-> **Todas las capturas usan datos inventados** (personas, clientes, productos y precios de prueba). Se generan con `pnpm manual:capturas` cada vez que cambia la interfaz, para que el manual no se quede viejo.
-> Es un **borrador**: se revisa con Luis y con el equipo en las capacitaciones (Sprint 5). Lo que todavía no está resuelto lo marca **(pendiente)**.
+# Manual de usuario · Sistema de gestión de ZAMMIR
+
+*HMX-ZAM-04 · versión 1.0 · HummingX BI*
+
+Este manual es para quien trabaja en ZAMMIR: cajeros / vendedores y administradores. Explica el día a día con las palabras del oficio. **Todas las capturas usan datos inventados.**
 
 ## Antes de empezar
 
@@ -12,7 +18,7 @@
   - **Administrador** (Luis, Ricardo): además da descuentos, autoriza excepciones, ve los reportes y administra personas, tablets y catálogo.
 - **Dos formas de entrar:**
   - En la **tablet**, con tu **nombre y tu PIN**.
-  - En la **computadora**, solo los administradores, con **correo y contraseña**, para las secciones de administración (Usuarios, Clientes, Catálogo y Configuración). *Facturas* aparecerá cuando se reactive la facturación (§9).
+  - En la **computadora**, solo los administradores, con **correo y contraseña**, para las secciones de administración (Usuarios, Clientes, Catálogo y Configuración). *Facturas* aparecerá cuando se reactive la facturación (ver el anexo al final).
 - **Cada quien usa su PIN.** Nunca compartas tu PIN: lo que hagas queda anotado con tu nombre.
 - **Los precios ya incluyen IVA.**
 
@@ -33,7 +39,7 @@
 
    ![La tablet ya quedó conectada](capturas/00-conectar-tablet.png)
 
-3. La primera vez la tablet necesita **internet unos momentos** para recibir el catálogo, las personas y la configuración. Si al abrir el Cotizador dice que todavía no puede cotizar, conéctala a internet y vuelve a abrir la aplicación.
+3. La primera vez la tablet necesita **internet unos momentos** para recibir el catálogo, las personas y la configuración. Si al abrir el Cotizador dice que la tablet todavía no tiene el catálogo ni la lista de personas, conéctala a internet y vuelve a abrir la aplicación.
 
 ### Entrar con tu PIN (todos los días)
 
@@ -62,13 +68,16 @@ El **Cotizador** sirve para armar el presupuesto con el cliente, incluso en la o
 
 2. **Elige o captura al cliente.** Busca por nombre o WhatsApp; si es nuevo toca **Cliente nuevo** y escribe su nombre y su WhatsApp de 10 dígitos (el domicilio de la obra es opcional). Si ya existe alguien con ese WhatsApp, el sistema te avisa.
 3. **Agrega productos.** Escribe el nombre en *Buscar producto o servicio* y tócalo:
-   - **A medida** (cristales, espejos): escribe **ancho**, **alto** y **cantidad**, y elige si las medidas son en **centímetros** o **metros**. El sistema calcula el importe y aclara cuando sube las medidas al múltiplo que se cobra (por ejemplo, *"medidas subidas a múltiplos de 50 mm"*).
-   - **Piezas y servicios:** se agregan con una cantidad.
+   - **A medida** (cristales, espejos): escribe **ancho**, **alto** y **cantidad**, y elige si las medidas son en **centímetros** o **metros**. El sistema calcula el importe y, si el producto se cobra por múltiplos de medida, te aclara cuándo subió las medidas.
+   - **Piezas y servicios:** se agregan con una cantidad. Si el producto dice su **unidad de venta**, la cantidad se lee así: *2 rollos*, *3 pares*. Lo que se vende **con decimales** (por ejemplo, vinil por kilo u horas de trabajo) acepta hasta 3: *1.5 kilos*, *2.5 horas*.
+   - **Paquetes** (por ejemplo, *Cancel de baño*): agregan de una vez **un renglón por cada producto** que llevan, cada uno con su precio. Si alguno es a medida, escribe las medidas **una sola vez** y sirven para todos. Escribe en *Cantidad* cuántos paquetes son.
+   - Bajo el nombre del producto ves su **descripción**, si la tiene. También sale en el documento que recibe el cliente.
+   - Si el producto tiene **medida máxima** (por ejemplo, un espejo que no pasa de 1.80 × 2.60 m), te la muestra al elegirlo y no agrega una pieza más grande: revisa la medida, divide la pieza o elige otro producto.
 4. Revisa los **Conceptos**, el **Subtotal**, el **IVA** y el **Total**. A la derecha ves la **vista previa del documento** tal como lo recibirá el cliente.
 
    ![Una cotización en armado](capturas/04-cotizacion-en-armado.png)
 
-   **Cantos, perforaciones, biselados.** En una línea de vidrio toca **Cargo extra**, elige el cargo (por ejemplo, *Canto pulido*) y, si se cobra por pieza, cuántas (por ejemplo, 2 perforaciones). Toca **Agregar a la línea**: el cargo se calcula con la medida de esa pieza (por m², por metro lineal del perímetro o por pieza) y se suma al importe de la línea. Se ve en el detalle de la línea y se quita con **Quitar**. Los cargos extra se dan de alta en el **Catálogo** con el tipo *Cargo extra*; no salen en el buscador porque no se venden solos.
+   **Cantos, perforaciones, biselados.** En una línea de vidrio toca **Cargo extra**, elige el cargo (por ejemplo, *Canto pulido*) y, si se cobra por pieza, cuántas (por ejemplo, 2 perforaciones). Toca **Agregar a la línea**: el cargo se calcula con la medida de esa pieza (por m², por metro lineal, del perímetro o del largo según el cargo, o por pieza) y se suma al importe de la línea. Se ve en el detalle de la línea y se quita con **Quitar**. Los cargos extra se dan de alta en el **Catálogo** con el tipo *Cargo extra*; no salen en el buscador porque no se venden solos.
 5. Toca **Emitir cotización**. Queda con un **folio provisional** (algo como `T1-0001`), un **código** y una fecha de **vigencia**. Una vez emitida **ya no se puede cambiar**: si necesitas otra versión, toca **Duplicar**.
 
    ![Una cotización emitida](capturas/05-cotizacion-emitida.png)
@@ -77,6 +86,8 @@ El **Cotizador** sirve para armar el presupuesto con el cliente, incluso en la o
 7. Cuando el cliente responda, toca **Marcar como aceptada** o **Marcar como rechazada**.
 
 **Descuentos.** **Dar descuento** pide el **PIN de un administrador**. El nuevo precio nunca puede ser mayor que el del catálogo ni negativo.
+
+**Precio abierto.** Algunos productos, como una reparación *que depende del trabajo*, tienen un precio **de referencia**. En su línea toca **Fijar precio** y escribe el precio por unidad: cualquier persona puede dejarlo en la referencia o arriba, y la línea dice *precio fijado*. Si lo dejas **debajo** de la referencia es un descuento y pide el **PIN de un administrador**.
 
 **Estados de una cotización:** Borrador, Enviada, Aceptada, Rechazada y Vencida. Las cotizaciones de cada cliente se ven en su historial.
 
@@ -96,8 +107,10 @@ El **Mostrador** es para ventas inmediatas (piezas, servicios y vidrio a medida)
 
 ### Hacer una venta
 
-1. En *Venta rápida* busca el producto. Una **pieza estándar** se agrega al **Ticket actual** con solo tocarla; lo que va **a medida** pide ancho, alto y cantidad.
+1. En *Venta rápida* busca el producto. Una **pieza estándar** se agrega al **Ticket actual** con solo tocarla; lo que va **a medida** pide ancho, alto y cantidad. Lo que se vende **con decimales** (por ejemplo, *1.5 kilos*) y los **paquetes** abren su formulario para que escribas la cantidad.
 2. En el ticket puedes cambiar la cantidad (**Una más** / **Una menos**), **Quitar** un producto o **Vaciar el ticket**.
+   - **Cargo extra:** en una línea de vidrio toca **Cargo extra** y agrega el canto, la perforación o el biselado, igual que en el cotizador. Se quita con **Quitar**.
+   - **Precio abierto:** toca **Fijar precio** en la línea. En el mostrador solo se fija en la referencia o arriba; los descuentos se dan en el cotizador, con el PIN de un administrador.
 
    ![Un ticket con un producto](capturas/07-mostrador-ticket.png)
 
@@ -151,7 +164,7 @@ Una **orden de trabajo** es un trabajo aceptado que se fabrica o instala. Lleva 
 - Avanza el estatus con **Avanzar a**: **En espera → En proceso → Listo → Entregado**.
 - **Empezar sin anticipo** necesita el **PIN de un administrador**.
 - **Entregar con saldo pendiente** necesita el **PIN de un administrador** y un **motivo**.
-- **Cancelar la orden** necesita el **PIN de un administrador** y un **motivo**. Nada se borra.
+- **Cancelar la orden** necesita el **PIN de un administrador** y un **motivo**. Nada se borra. El **anticipo no se devuelve solo**: si la orden estaba *En espera*, se recomienda devolverlo completo; si ya estaba *En proceso* o *Listo* (con el material cortado), se queda para cubrir material y mano de obra, y Luis o Ricardo pueden devolver una parte. Escribe en el motivo lo que se decidió. Si devuelves efectivo, sale de tu cajón: anótalo en la explicación de tu corte.
 - **Comprobante:** una hoja tamaño carta con el logo, el folio, el detalle, el saldo y la garantía. Se manda con **Enviar por WhatsApp** o se imprime con **Imprimir**, igual que una cotización.
 
 ---
@@ -168,11 +181,11 @@ Una **orden de trabajo** es un trabajo aceptado que se fabrica o instala. Lleva 
 
 ## Imprimir un documento
 
-Las cotizaciones, los comprobantes de trabajo, las ventas de mostrador y el corte de caja salen **en hoja tamaño carta**, con el logo de ZAMMIR y el detalle. **Ya no se usa impresora de tickets.**
+Las cotizaciones, los comprobantes de trabajo, las ventas de mostrador y el corte de caja salen **en hoja tamaño carta**, con el logo de ZAMMIR y el detalle. **No se usa impresora de tickets.**
 
 - **Enviar por WhatsApp** es el botón principal; **Imprimir** está siempre a su lado. Imprime solo cuando el cliente lo pida.
 - Al tocar **Imprimir** se abre la impresión de la tablet: elige la **impresora de Wi-Fi** y confirma.
-- Si ese documento ya se imprimió antes, la hoja sale marcada **COPIA** para que no se confunda con el original.
+- Si una **venta de mostrador** ya se imprimió antes en esa tablet, la hoja sale marcada **COPIA** para que no se confunda con el original.
 - Si la impresión no abre, **guarda el PDF** o **mándalo por WhatsApp** y vuelve a intentarlo después. Nada se pierde.
 
 ---
@@ -191,7 +204,7 @@ Al terminar tu turno:
 
    ![El corte de caja](capturas/15-corte-de-caja.png)
 
-- **Cancelar una venta ya cobrada** (en *Ventas de hoy*, botón **Cancelar**, con el PIN de un administrador y un motivo): el sistema te dice cuánto se le devuelve al cliente y por qué medio, **el mismo con que pagó**. Necesitas tu turno abierto: el efectivo devuelto **sale de tu cajón** y aparece en tu corte como *Efectivo devuelto*. El cobro original se queda en el turno donde se cobró, así que un corte ya cerrado no cambia.
+- **Cancelar una venta ya cobrada** (en *Ventas de hoy*, botón **Cancelar venta**, con el PIN de un administrador y un motivo): el sistema te dice cuánto se le devuelve al cliente y por qué medio, **el mismo con que pagó**. Necesitas tu turno abierto: el efectivo devuelto **sale de tu cajón** y aparece en tu corte como *Efectivo devuelto*. El cobro original se queda en el turno donde se cobró, así que un corte ya cerrado no cambia.
 - En los reportes, el cobro cuenta el día en que se cobró y la devolución resta el día en que se hizo.
 - La explicación de la diferencia sale en la hoja del corte y en la tabla de turnos.
 - Cada cajero ve **solo su corte**; los administradores ven los de todos.
@@ -207,7 +220,7 @@ Entra con el **PIN de un administrador**. En el Panel de inicio ves un resumen d
 
 ![Reportes](capturas/17-reportes.png)
 
-> En los reportes, **"ventas" es el efectivo y las transferencias recibidas**: lo cobrado en el mostrador más los pagos de las órdenes. No incluye lo que todavía te deben ni las ventas canceladas.
+> En los reportes, **"ventas" es el efectivo y las transferencias recibidas**: lo cobrado en el mostrador más los pagos de las órdenes. No incluye lo que todavía te deben. Si se cancela una venta, la devolución resta el día en que se hizo.
 
 ---
 
@@ -221,7 +234,7 @@ Aquí das de alta a las personas del mostrador, les asignas **rol** y **PIN**, y
 
 ![Personas del mostrador](capturas/20-usuarios.png)
 
-- **Dar de alta:** nombre, rol (*Administrador* o *Cajero / vendedor*) y PIN de 4 a 6 dígitos. **No uses números fáciles** como `0000` o `1234`.
+- **Dar de alta:** nombre, rol (*Administrador* o *Cajero / vendedor*) y PIN: de 4 a 6 dígitos para un cajero / vendedor y de **6 dígitos** para un administrador. **No uses números fáciles** como `0000` o `1234`; el sistema no los acepta. Cada persona escribe su PIN en persona.
 - **Restablecer PIN**, **Desactivar** / **Activar**: nadie se borra; quien ya no trabaja se desactiva y su historial se conserva.
 - **Bitácora:** quién hizo qué, desde qué tablet y cuándo. Solo se consulta.
 - **Tablets:** **Generar código** para una nueva y **Revocar** las que ya no se usen (se conserva su registro).
@@ -234,7 +247,27 @@ La **ficha del cliente** reúne sus cotizaciones, órdenes, ventas, pagos y gara
 
 ### Catálogo
 
-Tus **productos y precios de lista, con IVA incluido**. Lo que cambies aquí se usa en el cotizador y en el mostrador. Puedes **Agregar producto**, **Editar**, **Desactivar** (nunca se borran) o **Importar desde archivo**.
+Tus **productos y precios de lista, con IVA incluido**. Lo que cambies aquí se usa en el cotizador y en el mostrador. Puedes **Agregar producto**, **Editar**, **Duplicar**, **Desactivar** (nunca se borran) o **Importar desde archivo**.
+
+Al dar de alta o editar un producto, además del nombre, el tipo, cómo se cobra y el precio, puedes capturar:
+
+- **Descripción** (opcional, hasta 500 caracteres): qué incluye o para qué sirve. Se busca con ella, se ve en el buscador y sale en el documento del cliente.
+- **Unidad de venta** (solo lo que se cobra por pieza o servicio): *rollo*, *kilo*, *par*, *hora*… Se sugieren las de **Configuración** y las que ya usa el catálogo, para que todos escriban igual.
+- **Se vende con decimales:** para lo que se cobra por kilo o por hora. Necesita la unidad de venta. La cantidad lleva hasta 3 decimales y se cobra al centavo.
+- **Precio abierto:** el precio de lista queda como referencia y se fija al cotizar o vender (ver *Cotizar*).
+- **Ajustes del cobro** (solo m² y metro lineal, todos opcionales): subir cada medida a múltiplos de unos milímetros, un área mínima por pieza, un cobro mínimo por trabajo y la **medida máxima**. Vacíos, se cobra la medida exacta, sin mínimo.
+- **Clave SAT y clave de unidad SAT** (opcionales). Vacías, se usan las de la categoría.
+
+**Duplicar** abre el formulario con todo copiado, menos el código, y el nombre con *(copia)*: sirve para dar de alta otro espesor, tono o acabado sin capturar todo de nuevo.
+
+**Paquetes.** Con el tipo *Paquete (varios productos)* eliges los productos que lleva y cuántos de cada uno. No tiene precio propio: vale lo que sus productos. Un paquete no lleva otros paquetes, cargos extra ni productos desactivados.
+
+**Precios en bloque** (botón arriba, solo administradores). Primero ves cada cambio, antes y después, y nada se guarda hasta que lo apliques; cada cambio de precio queda en el historial del producto.
+
+- **Subir o bajar por porcentaje** una categoría completa (solo los productos activos). Escribe el porcentaje (para bajar, con un menos: *-5*) y elige cómo redondear al peso: **hacia arriba** (recomendado), al más cercano o hacia abajo.
+- **Actualizar desde un archivo:** toca **Descargar el catálogo de hoy**, cambia en Excel el nombre, el precio o la descripción y súbelo. Cada producto se encuentra por su código; una celda vacía deja lo que ya tenía. Con un solo error en el archivo no se cambia nada, y el error se muestra con su fila.
+
+**Importar desde archivo** sirve para **dar de alta** productos nuevos. La plantilla trae, además, columnas opcionales para la descripción, la unidad de venta, las claves SAT y los ajustes del cobro. Los paquetes se dan de alta en la pantalla.
 
 ![El catálogo](capturas/23-catalogo.png)
 
@@ -242,13 +275,13 @@ Tus **productos y precios de lista, con IVA incluido**. Lo que cambies aquí se 
 
 ### Configuración
 
-Aquí se edita el **aviso de privacidad** (cada cambio crea una versión nueva y las anteriores se conservan), los **términos del servicio** y las **condiciones de la cotización**. El texto del aviso es un **borrador** que debe revisar el asesor de ZAMMIR **(pendiente)**.
+Aquí se edita el **aviso de privacidad** (cada cambio crea una versión nueva y las anteriores se conservan), los **términos del servicio**, las **condiciones de la cotización** y las **unidades de venta** que se sugieren al capturar un producto (una por renglón). El texto inicial del aviso lo preparó HummingX; ZAMMIR puede ajustarlo con su asesor cuando quiera.
 
 ![Configuración](capturas/24-configuracion.png)
 
 ### Exportar los datos
 
-Al final de **Configuración** está **Exportar los datos**. Sirve para llevarte **toda la información del negocio** (clientes, productos, cotizaciones, órdenes, ventas, pagos, facturas y bitácora) en archivos que abre cualquier programa.
+Al final de **Configuración** está **Exportar los datos**. Sirve para llevarte **toda la información del negocio** (clientes, productos, cotizaciones, órdenes, ventas, pagos y bitácora) en archivos que abre cualquier programa.
 
 1. Toca **Preparar la exportación** y espera a que diga *Listo*.
 2. Elige qué descargar: **Descargar todo (ZIP)**, **Descargar JSON**, **Descargar CSV (ZIP)** (una tabla por archivo, para Excel) o **Descargar PDF** (un resumen para leer e imprimir).
@@ -260,15 +293,50 @@ Al final de **Configuración** está **Exportar los datos**. Sirve para llevarte
 
 ---
 
-## 9. Facturas (administradores)
+## 9. Cuando algo no sale como esperas
 
-> **En pausa.** Por ahora la facturación está apagada [ADR-0039]: las secciones *Facturas* y el portal del cliente no aparecen y los documentos no llevan el QR. Esta parte del manual se conserva para cuando se reactive.
+| Qué ves | Qué hacer |
+|---|---|
+| *"Esta tablet todavía no tiene el catálogo ni la lista de personas."* | Conéctala a internet unos minutos y vuelve a abrir la aplicación. |
+| *"El PIN no es correcto"* | Revísalo y vuelve a intentar. Si lo olvidaste, pide a un administrador que lo restablezca. |
+| *"Todavía no abres tu turno de caja"* | Ve al **Mostrador** y toca **Abrir turno**. |
+| *"Falta la autorización de un administrador"* | Pide a un administrador que teclee su PIN. |
+| *"Esta cotización ya se emitió y no se puede cambiar"* | Toca **Duplicar** y haz una nueva. |
+| *"Guardada en la tablet"* | Está bien guardado; saldrá solo cuando haya internet. |
+| *"Hay N operaciones sin enviar"* | Conecta la tablet a internet. No borres nada. |
+| *"Esta pantalla tuvo un problema"* | Toca **Volver a abrir**. Lo que ya guardaste no se pierde. Avisa a soporte de HummingX. |
+
+**Soporte de HummingX BI:** por WhatsApp o correo (los datos vienen en tu guía rápida), de **lunes a viernes, de 9:00 a 21:00**. Di qué pantalla estabas usando, a qué hora y el folio (si lo hay). **Nunca** mandes por mensaje tu PIN ni tu contraseña.
+
+---
+
+## Palabras que usamos
+
+| Palabra | Qué significa |
+|---|---|
+| **Anticipo** | El primer pago de un trabajo, por defecto la mitad, para empezar a fabricar. |
+| **Saldo** | Lo que falta por pagar: el total menos lo pagado. |
+| **Cotización** | El presupuesto formal con folio, vigencia y condiciones. |
+| **Orden de trabajo** | Un trabajo aceptado que se fabrica o instala. |
+| **Venta de mostrador** | Una venta inmediata, sin orden de trabajo. |
+| **Corte de caja** | El cierre de tu turno: esperado, contado y diferencia. |
+| **Folio provisional** | El número que lleva un documento mientras la tablet no lo ha enviado (`T1-0001`). |
+| **Cliente recurrente** | Un cliente con dos o más trabajos entregados. |
+
+---
+
+## Anexo · Facturación (en pausa)
+
+> **Esta parte no se usa todavía.** La facturación electrónica está construida pero **en pausa** hasta que ZAMMIR tenga en orden sus datos fiscales; mientras tanto, su contador sigue facturando. Se conserva aquí para el día en que se active.
+
+### Facturas (administradores)
+
 
 En **Facturas** hay dos pestañas: **Por facturar** y **Emitidas**. Arriba ves cuántas hay por facturar y los **timbres del año**.
 
-> **Importante:** mientras no se conecte el proveedor de timbrado real y el certificado de ZAMMIR **(pendiente)**, las facturas son **de prueba y no tienen validez fiscal**.
+> **Importante:** mientras no se conecte el proveedor de timbrado real y el certificado de ZAMMIR, las facturas son **de prueba y no tienen validez fiscal**.
 
-### Facturar una venta u orden
+#### Facturar una venta u orden
 
 1. En **Por facturar** aparecen las ventas y órdenes **ya liquidadas** que no tienen factura. Toca **Facturar**.
 
@@ -286,7 +354,7 @@ En **Facturas** hay dos pestañas: **Por facturar** y **Emitidas**. Arriba ves c
 - Aquí **sí puedes facturar aunque haya pasado el último día del mes** (el cliente, en el portal, no).
 - Una venta **ya facturada** no se puede facturar otra vez.
 
-### Revisar, descargar y cancelar
+#### Revisar, descargar y cancelar
 
 En **Emitidas** ves cada factura con su estado: **Vigente**, **Cancelada**, **En proceso** (el proveedor de timbrado no contestó; se reintenta y **nunca se timbra dos veces**; puedes tocar **Reintentar**) o **Rechazada**.
 
@@ -296,7 +364,7 @@ En **Emitidas** ves cada factura con su estado: **Vigente**, **Cancelada**, **En
 
 ---
 
-## 10. Cuando el cliente pide su factura
+### Cuando el cliente pide su factura
 
 > **En pausa.** Mientras la facturación esté apagada, los documentos no traen QR y el portal no está disponible. Si un cliente pide factura, anota sus datos y avisa a un administrador.
 
@@ -308,36 +376,3 @@ Cada **ticket** y cada **comprobante de trabajo** trae un **QR**. El cliente lo 
 2. Captura sus **datos fiscales** y recibe su factura.
 
 El cliente puede pedirla **hasta el último día del mes** de su compra. Después, o si el portal no puede, un administrador la factura desde **Facturas**. Si el portal le dice que no encuentra su compra, puede ser que la tablet todavía no la haya enviado: conéctala a internet.
-
----
-
-## 11. Cuando algo no sale como esperas
-
-| Qué ves | Qué hacer |
-|---|---|
-| *"Esta tablet todavía no puede cotizar…"* | Conéctala a internet unos minutos y vuelve a abrir la aplicación. |
-| *"El PIN no es correcto"* | Revísalo y vuelve a intentar. Si lo olvidaste, pide a un administrador que lo restablezca. |
-| *"Todavía no abres tu turno de caja"* | Ve al **Mostrador** y toca **Abrir turno**. |
-| *"Falta la autorización de un administrador"* | Pide a un administrador que teclee su PIN. |
-| *"Esta cotización ya se emitió y no se puede cambiar"* | Toca **Duplicar** y haz una nueva. |
-| *"Guardada en la tablet"* | Está bien guardado; saldrá solo cuando haya internet. |
-| *"Hay N operaciones sin enviar"* | Conecta la tablet a internet. No borres nada. |
-| *"Esta pantalla tuvo un problema"* | Toca **Volver a abrir**. Lo que ya guardaste no se pierde. Avísale a Juanito. |
-
-**Soporte:** por WhatsApp o correo, en horario hábil. Dile qué pantalla estabas usando, a qué hora y el folio (si lo hay). **Nunca** mandes por mensaje tu PIN ni tu contraseña.
-
----
-
-## Palabras que usamos
-
-| Palabra | Qué significa |
-|---|---|
-| **Anticipo** | El primer pago de un trabajo, por defecto la mitad, para empezar a fabricar. |
-| **Saldo** | Lo que falta por pagar: el total menos lo pagado. |
-| **Cotización** | El presupuesto formal con folio, vigencia y condiciones. |
-| **Orden de trabajo** | Un trabajo aceptado que se fabrica o instala. |
-| **Venta de mostrador** | Una venta inmediata, sin orden de trabajo. |
-| **Corte de caja** | El cierre de tu turno: esperado, contado y diferencia. |
-| **Folio provisional** | El número que lleva un documento mientras la tablet no lo ha enviado (`T1-0001`). |
-| **Código de verificación** | El código del comprobante que el cliente usa, con el folio, para pedir su factura (solo cuando la facturación esté activa). |
-| **Cliente recurrente** | Un cliente con dos o más trabajos entregados. |

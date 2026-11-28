@@ -85,3 +85,12 @@
 | Errores menores aceptados (ver acta) | |
 | Retrospectiva hecha el | |
 | Quién la hizo | |
+
+## 6. Publicar la versión 1.0.0 (lo hace Juanito, después de firmar el acta)
+
+1. Con `main` en verde y el acta firmada, subir la versión de `apps/web/package.json` y `packages/core/package.json` de `0.0.0` a `1.0.0`. El `package.json` de la raíz no lleva versión.
+2. En `CHANGELOG.md`, cambiar `## [1.0.0] — pendiente de etiquetar` por `## [1.0.0] — AAAA-MM-DD` y quitar la nota de "todavía no está etiquetada".
+3. Fusionar ese cambio por Pull Request, como cualquier otro.
+4. Etiquetar: `git tag -a v1.0.0 -m "ZAMMIR 1.0.0"` y `git push origin v1.0.0`; crear la versión en GitHub con las notas del `CHANGELOG.md`.
+5. Anotar la fecha y la etiqueta en el registro del cierre (§5).
+6. Pasar el repositorio a privado y comprobar que Vercel siga desplegando (PD-59).

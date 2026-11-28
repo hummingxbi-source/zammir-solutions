@@ -35,7 +35,7 @@ Eres el agente de IA que continúa el proyecto ZAMMIR en su ETAPA FINAL: la entr
 5. docs/operacion/PLAN_DE_PRODUCCION.md, docs/operacion/PUESTA_EN_PRODUCCION.md, docs/operacion/RESTAURACION.md y docs/operacion/GUIA_DE_OPERACION.md.
 6. docs/entrega/ACTA_DE_ENTREGA.md y docs/entrega/CIERRE_DEL_PROYECTO.md.
 7. docs/calidad/PLAN_DE_ACEPTACION_CLIENTE.md, docs/calidad/PRUEBAS_DE_ACEPTACION.md y docs/calidad/REVISION_DE_SEGURIDAD.md.
-8. DECISIONES.md, el índice de ADR-0001 a ADR-0045. Sobre todo: 0038 (planes gratuitos), 0039 (facturación en pausa), 0040 (impresión en hoja carta, sin ticket térmico), 0041 (sin verificación en dos pasos), 0043 (un solo proyecto hasta la entrega) 0044 (ajustes de la fase 10) y 0045 (decisiones de la entrega).
+8. DECISIONES.md, el índice de ADR-0001 a ADR-0047. Sobre todo: 0038 (planes gratuitos), 0039 (facturación en pausa), 0040 (impresión en hoja carta, sin ticket térmico), 0041 (sin verificación en dos pasos), 0043 (un solo proyecto hasta la entrega) 0044 (ajustes de la fase 10) y 0045 (decisiones de la entrega).
 9. docs/manuales/MANUAL_DE_USUARIO.md y docs/manuales/MANUAL_DE_SOPORTE.md.
 10. docs/producto/ALCANCE.md y docs/producto/REQUERIMIENTOS.md, cuando algo toque el alcance.
 
@@ -80,12 +80,12 @@ Ya decidido el 25 nov [ADR-0045]; NO lo vuelvas a preguntar:
 - D1, anticipo al cancelar una orden: sin devolución automática; "En espera" se recomienda devolverlo completo; "En proceso" o "Listo" se retiene para material y mano de obra; decide un administrador con motivo.
 - D2: el repositorio sigue público hasta la entrega y se vuelve privado después (PD-59).
 - D4: la tercera persona del mostrador es Cajero / vendedor, sin permisos de administrador.
-- Titularidad: las cuentas, el dominio y el código son de HummingX BI; los datos son de ZAMMIR y HummingX los trata por su cuenta. Firman los tres socios de HummingX.
+- Titularidad: las cuentas, el dominio y el código son de HummingX BI; los datos son de ZAMMIR y HummingX los trata por su cuenta. Firman dos por cada parte: Luis y Ricardo por ZAMMIR, y dos socios por HummingX [ADR-0049].
 - Luis y Ricardo escriben su propia contraseña en persona.
 - No hay borrador de contrato: se redacta la plantilla con [POR DEFINIR] y revisión de abogado.
 - Una tablet va incluida en el contrato y ZAMMIR compró la otra.
 - No hay consentimiento escrito para grabar: ZAMMIR lo dio de palabra.
-- El expediente son 10 documentos en PDF (plan maestro §7).
+- El expediente son 5 documentos en PDF y una constancia opcional (plan maestro §7, ADR-0047). El contrato se redacta al final.
 - Horario de soporte: lunes a viernes, de 9:00 a 21:00.
 
 Sigue abierto (pregúntamelo solo si lo necesitas):
@@ -131,19 +131,14 @@ A. REVISIÓN DEL TRASPASO
 
 B. DOCUMENTOS DESACTUALIZADOS: corregidos el 25 nov por PR (plan maestro §4.2). Revisa solo lo que siga pendiente en esa sección.
 
-C. EXPEDIENTE DE LA ENTREGA (plan maestro §7, 10 documentos)
-   Las plantillas van en docs/entrega/plantillas/. No llevan datos reales. Tono muy profesional, con encabezado de HummingX BI y de ZAMMIR, folio, versión, fecha, lugar y firmas.
-   - HMX-ZAM-01 Contrato de prestación de servicios. Lo no definido queda [POR DEFINIR]. Debe cuadrar con ALCANCE.md, ADR-0038, ADR-0039 y ADR-0045. Lleva un aviso de que lo revise un abogado.
-   - HMX-ZAM-02 Acta de capacitación: un apartado por sesión, con asistentes, temas, duración, criterio de S5-11 a S5-13 cumplido sí/no, observaciones y firmas.
-   - HMX-ZAM-03 Acta de entrega y aceptación final (ACTA_DE_ENTREGA.md), con anexos: A constancia de pruebas, B registro de accesos sin contraseñas, C carta de entrega de equipo.
-   - HMX-ZAM-04 Aviso de privacidad con hoja de acuse.
-   - HMX-ZAM-05 Informe de calidad y seguridad, con cifras corridas el mismo día y lo que NO se probó.
-   - HMX-ZAM-06 Ficha técnica del sistema (una hoja).
-   - HMX-ZAM-07 Plan de continuidad (una hoja).
-   - HMX-ZAM-08 Manual de usuario en PDF.
-   - HMX-ZAM-09 Guías rápidas por rol (Administrador y Cajero / vendedor), con bienvenida y soporte al reverso.
-   - HMX-ZAM-10 Constancia de capacitación por persona.
-   - Internos: orden del día, minuta diaria y hoja de hallazgos.
+C. EXPEDIENTE DE LA ENTREGA (plan maestro §7, 5 documentos, ADR-0047)
+   Las plantillas ya existen (docs/entrega/ACTA_DE_ENTREGA.md y docs/entrega/plantillas/), sin datos reales. Las versiones llenadas van en la carpeta local privado/, que git ignora.
+   - HMX-ZAM-01 Contrato de prestación de servicios: FALTA. Se redacta al final; lo no definido queda [POR DEFINIR]; lo revisa un abogado.
+   - HMX-ZAM-02 Acta de entrega y aceptación, con anexos A (pruebas), B (capacitación), C (accesos), D (equipo) y E (aviso de privacidad).
+   - HMX-ZAM-03 Informe técnico de entrega: llenar sus cifras corriendo todas las pruebas el mismo día.
+   - HMX-ZAM-04 Manual de usuario (faltan capturas de AJ-02 a AJ-09).
+   - HMX-ZAM-05 Guías rápidas por rol.
+   - Constancia de capacitación por persona (opcional).
 
 D. APOYO EN LO QUE HAGO YO A MANO (un paso a la vez)
    - Ensayo de restauración de la copia de la nube (RESTAURACION.md). Necesita Docker y la clave del respaldo, que tengo yo.
@@ -154,7 +149,7 @@ E. DURANTE LAS PRUEBAS CON LUIS (sábado 28)
    Cada hallazgo se corrige en una rama con PR y CI en verde. Te pido la fusión y lo verificamos en producción. Nunca se corrige nada directo en producción.
 
 F. CIERRE (después de firmar)
-   Versión 1.0.0 (pasos en ACTA_DE_ENTREGA.md), CIERRE_DEL_PROYECTO.md y la retrospectiva.
+   Versión 1.0.0 (pasos en CIERRE_DEL_PROYECTO.md §6), CIERRE_DEL_PROYECTO.md y la retrospectiva.
 
 ======================================================================
 9. CALIDAD QUE SE EXIGE A CADA PR

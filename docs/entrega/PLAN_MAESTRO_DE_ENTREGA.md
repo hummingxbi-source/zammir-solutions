@@ -1,7 +1,7 @@
 # Plan maestro de entrega · ZAMMIR
 
 > **Para qué sirve.** Es el documento de traspaso. Dice dónde está el proyecto, qué falta y cómo será la entrega a ZAMMIR. Lo lee primero cualquier persona o agente de IA que tome el trabajo desde aquí.
-> **Corte:** miércoles 25 de noviembre de 2026, con la fase 10 (AJ-01 a AJ-09) fusionada y desplegada, y las decisiones de la entrega del [ADR-0045].
+> **Corte:** miércoles 25 de noviembre de 2026, con la fase 10 (AJ-01 a AJ-09) fusionada y desplegada, y las decisiones de la entrega del [ADR-0045]. **Actualizado el 28 nov** con la fase 11 (catálogo escalable), fusionada y desplegada.
 > **Regla de este documento:** solo lleva lo que se verificó en el repositorio o en producción. Lo que es una **propuesta** sin aprobar dice *(propuesta)*. Lo que está por confirmar dice *(por confirmar)*.
 > **Sin datos reales:** aquí no hay correos, apellidos, teléfonos, montos, llaves ni contraseñas [CLAUDE.md regla 7, ADR-0010].
 > **Para arrancar una conversación nueva con un agente de IA:** copiar el texto de [`PROMPT_PARA_EL_SIGUIENTE_AGENTE.md`](PROMPT_PARA_EL_SIGUIENTE_AGENTE.md).
@@ -12,9 +12,9 @@
 
 | Tema | Estado al 25 nov 2026 |
 |---|---|
-| **Construcción** | Fases 0 a 10 construidas y fusionadas en `main`. La última fue la fase 10, *ajustes de operación para la entrega* [ADR-0044], en los PR #114 a #123 (detalle en la §2). |
+| **Construcción** | Fases 0 a 11 construidas y fusionadas en `main`. La fase 10, *ajustes de operación para la entrega* [ADR-0044], va en los PR #114 a #123 (§2); la fase 11, *catálogo escalable* [ADR-0048], en los PR #132 a #143, fusionados el 28 nov (§2b). |
 | **Producción** | `https://sistema.zammir-solutions.com` responde 200 y sirve el último `main` (Vercel). Lleva la política de contenido (CSP) y la política de permisos. La función `salud` responde `{"ok":true}`. Verificado el 25 nov. |
-| **Base en la nube** | Un solo proyecto de Supabase, **`zammir-pruebas`**, con **datos inventados** [ADR-0043]. El 25 nov se aplicaron las 8 migraciones de la fase 10 (41 en total) y se desplegaron las 11 funciones, con *Desplegar a Supabase* en el entorno `pruebas`. En la entrega **se borra y se crea uno nuevo vacío**. |
+| **Base en la nube** | Un solo proyecto de Supabase, **`zammir-pruebas`**, con **datos inventados** [ADR-0043]. El 25 nov se aplicaron las 8 migraciones de la fase 10 (41 en total), y el **28 nov las 8 de la fase 11 (49 en total)**, con un respaldo a mano antes; en las dos ocasiones se desplegaron las 11 funciones con *Desplegar a Supabase* en el entorno `pruebas`. En la entrega **se borra y se crea uno nuevo vacío**. |
 | **Respaldo nocturno** | Activo desde el 24 nov y cifrado; se guarda 30 días en GitHub. Copia la base y las cuentas. La copia de las **fotos de medición** está activa desde el 25 nov, en el entorno `respaldo` [ADR-0046]; falta comprobarlo con una foto real tomada en la tablet (P2), porque `zammir-pruebas` no tenía fotos en las primeras corridas (PD-57). **Restauración de una copia de la nube ensayada y aprobada el 25 nov** (P1). |
 | **Calidad automática** | CI en verde en cada PR. Al 24 nov, en local: 2,674 pruebas de unidad y componentes, 339 de integración con Supabase local y 500 de base de datos (pgTAP, 31 archivos). También pasan lint, Prettier, dependencias, mutación del dominio y escaneo de secretos. **Para el informe de calidad se vuelven a correr.** |
 | **Facturación** | **En pausa** [ADR-0039]. El código existe y está probado, pero está apagado por interruptor. El contador de ZAMMIR sigue facturando. |
@@ -39,6 +39,24 @@
 | AJ-07 | **Entregas por partes:** una orden por cada parte, eligiendo qué líneas de la cotización entran. Se ve "Parte N" y "Faltan N líneas" | Órdenes |
 | AJ-08 | El administrador **agrega, renombra, ordena y desactiva categorías** | Catálogo → Categorías |
 | AJ-09 | **Cargos extra** (cantos, perforaciones, biselados) ligados a una línea de vidrio, cobrados por m², metro lineal o pieza | Cotizador → "Cargo extra" |
+
+## 2b. Qué se construyó en la fase 11 (para explicarlo en la capacitación)
+
+Aprobada por Juanito el 27 nov con las decisiones D1 a D3 [ADR-0048]. Las fotos de los productos quedaron fuera.
+
+| Historia | Qué cambia para ZAMMIR | Dónde se ve |
+|---|---|---|
+| CE-01 | **Precio abierto:** el precio del catálogo es de referencia y se fija al cotizar o vender. Arriba no pide nada; abajo es un descuento con PIN (D1) | Catálogo; Cotizador y Mostrador → "Fijar precio" |
+| CE-07 | **Duplicar** un producto para dar de alta otro espesor o tono | Catálogo → "Duplicar" |
+| CE-04 y PP-39 | **Descripción** del producto: se busca con ella, se ve en el buscador y sale en el documento del cliente | Catálogo, Cotizador, Mostrador, documentos |
+| CE-05 | **Ajustes del cobro** por producto: redondeo de medidas, área mínima, cobro mínimo y **medida máxima** (apagados por omisión) | Catálogo; Cotizador avisa la medida máxima |
+| CE-02 y PP-40 | **Unidad de venta** ("2 rollos", "3 pares") y **clave SAT** por producto; lista de unidades editable | Catálogo, Configuración |
+| CE-08 | **Cargos extra también en el mostrador** | Mostrador → "Cargo extra" |
+| CE-06 | **Precios en bloque:** subir o bajar una categoría por porcentaje, redondeado al peso (D3), o actualizar desde un archivo por código; siempre con vista previa y todo o nada | Catálogo → "Precios en bloque" |
+| CE-09 | **Paquetes:** un producto que agrega varios renglones de una vez (vidrio + kit + tubo) | Catálogo; Cotizador y Mostrador |
+| CE-03 | **Cantidades con decimales** (1.5 kg, 2.5 h) en lo marcado así; se cobra al centavo, la mitad hacia arriba (D2) | Catálogo; Cotizador y Mostrador |
+
+Quedan como propuestas: PP-38 (bitácora del precio fijado arriba de la referencia, sin decidir). Descartada: PP-41 (paquetes desde el CSV).
 
 Decisiones de negocio que tomó Juanito y están en ADR-0044:
 
@@ -101,6 +119,7 @@ Y en el ADR-0045, **el anticipo al cancelar una orden** (PD-07, ya resuelto):
 | D6 | **Monitoreo de caídas** (PP-32): cuenta gratuita que consulte `salud` | ⏳ Sin ella, nadie se entera de una caída hasta que llama Luis |
 | D7 | **Titularidad** de cuentas, dominio y código | ✅ HummingX BI; los datos son de ZAMMIR [ADR-0045] |
 | D8 | **Contraseñas de los administradores** | ✅ Luis y Ricardo escriben la suya en persona [ADR-0045] |
+| D9 | **Dónde se capacita** (PD-60). Lo que se haga en el proyecto real (ventas, cancelaciones, cortes) queda para siempre: nada contable se borra [RN-18], y el acta promete entregar el sistema sin datos de prueba | ✅ **Decidido el 28 nov:** se capacita con **datos inventados en `zammir-pruebas`**, en Otumba de Gómez Farías. El proyecto real se crea vacío el lunes, **después** de la última sesión y **antes** de la entrega formal, y las tablets se limpian antes de conectarlas (§4.3, paso 8) |
 
 ### 4.2 Lo que se corrigió en los documentos (25 nov) y lo que sigue
 
@@ -128,13 +147,13 @@ Ya corregidos, con [ADR-0039], [ADR-0040], [ADR-0043], [ADR-0044] y [ADR-0045]:
 5. Respaldo nocturno: en el entorno `respaldo`, actualizar `SUPABASE_DB_URL` y las cuatro `SUPABASE_S3_*` con una llave S3 **nueva** del proyecto nuevo. Correrlo a mano y confirmar que salen la copia de la base y la de las fotos.
 6. Cuentas de **Luis y Ricardo** con su correo, **sin enviar invitación**. **Cada uno escribe su contraseña en persona.** Después, su rol de administrador por SQL (`PUESTA_EN_PRODUCCION.md` paso 1.5).
 7. Las **tres personas con PIN**: Luis y Ricardo como administradores y la persona del mostrador como **Cajero / vendedor**. Cada quien escribe el suyo en persona; **nunca** se manda por mensaje.
-8. **Dos tablets:** reconectar cada una con un código nuevo.
+8. **Dos tablets:** primero **borrar los datos del sitio** en cada una, porque guardan adentro los documentos de la capacitación y reconectar no los borra: en Chrome, ⋮ → *Configuración* → *Configuración de sitios* → *Todos los sitios* → `sistema.zammir-solutions.com` → **Borrar datos**. Después abrir la app y conectarla con un código nuevo. Comprobar que el Cotizador, Órdenes y el Mostrador no muestren nada de la práctica.
 9. **Datos reales:** catálogo, categorías, cargos extra, garantía, datos del negocio y aviso de privacidad. Revisar que no quede **ningún dato de prueba**.
 10. Prueba de humo en producción **sin dejar documentos falsos**: cotización, venta, corte y reporte. Si una venta de prueba queda, se cancela con motivo [RN-18] y se anota en el acta.
 
 ### 4.4 Versión 1.0.0 y repositorio privado (después de firmar el acta)
 
-Seguir los pasos de la sección *Publicar la versión* de `ACTA_DE_ENTREGA.md`:
+Seguir los pasos de `CIERRE_DEL_PROYECTO.md` §6:
 
 1. Subir `apps/web/package.json` y `packages/core/package.json` a `1.0.0`.
 2. Poner la fecha en `CHANGELOG.md`.
@@ -175,7 +194,7 @@ Seguir los pasos de la sección *Publicar la versión* de `ACTA_DE_ENTREGA.md`:
 | **Apoyo técnico** | Socio 2 | Prepara las tablets y la impresora, sigue la lista de pruebas y llena la hoja de hallazgos |
 | **Registro y documentos** | Socio 3 | Graba, toma la minuta, lleva los documentos impresos, recoge las firmas y cuida que la cámara **no capte pantallas con PIN, contraseñas ni datos de clientes** |
 
-Los tres socios firman por HummingX BI el contrato y el acta de entrega [ADR-0045].
+Firman el contrato y el acta de entrega dos por cada parte: por ZAMMIR, Luis y Ricardo; por HummingX BI, los dos socios que imparten la capacitación [ADR-0049]. Los nombres completos solo van en las versiones de `privado/`.
 
 ### 6.2 Guion de los tres días *(propuesta; ajustar a la hora que dé Luis)*
 
@@ -186,13 +205,13 @@ Los tres socios firman por HummingX BI el contrato y el acta de entrega [ADR-004
 | | 2. Pruebas con el equipo real (3 h) | P6 a P10, con datos inventados | Hoja de hallazgos (interna) |
 | | 3. Aceptación (2 h) | Luis ejecuta el plan de aceptación | Hoja de resultados (anexo A del acta) |
 | **Dom 29** | 4. Correcciones | Lo que haya salido el sábado, por PR | — |
-| | 5. Paso a producción | Recrear el proyecto, datos reales, usuarios y tablets (§4.3), y P11 y P12 | — |
-| | 6. Capacitación de Luis (3 h) y de Ricardo (3 h) | Luis completa solo un recorrido de cotización a cobro. Ricardo, lo mismo más los reportes | Acta de capacitación (sesiones 1 y 2) |
-| **Lun 30** | 7. Capacitación del mostrador (3 h) | Cada persona entra con su PIN, cobra, hace su corte y reimprime | Acta de capacitación (sesión 3) |
-| | 8. Entrega formal (1 h) | Repaso de lo entregado, entrega del expediente, firma del contrato y del acta de entrega, y foto y video de cierre | Contrato, acta de entrega con sus anexos y acuse del aviso de privacidad |
+| | 5. Capacitación de Luis (3 h) y de Ricardo (3 h), **en `zammir-pruebas` con datos inventados** | Luis completa solo un recorrido de cotización a cobro. Ricardo, lo mismo más los reportes | Anexo B del acta (sesiones 1 y 2) |
+| **Lun 30** | 6. Capacitación del mostrador (3 h), **en `zammir-pruebas`** | Cada persona entra con su PIN, cobra, hace su corte y reimprime | Anexo B del acta (sesión 3) |
+| | 7. Paso a producción | Recrear el proyecto vacío, datos reales, usuarios, **limpiar las tablets** y conectarlas (§4.3), y P11 y P12 | — |
+| | 8. Entrega formal (1 h) | Repaso de lo entregado, entrega del expediente, firma del contrato y del acta de entrega, constancias de capacitación, y foto y video de cierre | Contrato y acta de entrega (anexos C, D y E) |
 | **Mar 1 dic** | 9. Cierre | Etiquetar `v1.0.0`, pasar el repositorio a privado, actualizar `CIERRE_DEL_PROYECTO.md` y la retrospectiva | — |
 
-> El orden importa: **primero se prueba con datos inventados y Luis acepta; después se recrea el proyecto vacío y se cargan los datos reales** [ADR-0043]. No se recrea antes de que pasen las pruebas.
+> El orden importa: **primero se prueba y se capacita con datos inventados, y Luis acepta; después se recrea el proyecto vacío y se cargan los datos reales** [ADR-0043]. No se recrea antes de que pasen las pruebas ni antes de la última sesión de capacitación.
 
 ### 6.3 Reglas para grabar
 
@@ -202,50 +221,35 @@ Los tres socios firman por HummingX BI el contrato y el acta de entrega [ADR-004
 
 ---
 
-## 7. Expediente de la entrega (10 documentos) [ADR-0045]
+## 7. Expediente de la entrega (5 documentos) [ADR-0047]
 
-> **Dónde se guardan.** Las **plantillas sin datos** viven en el repositorio, en `docs/entrega/`. **La versión llenada**, con nombres completos, montos o números de serie, se guarda en una carpeta local que **git ignora**, se imprime y se exporta a PDF desde ahí [CLAUDE.md regla 7]. Los PDF firmados se copian además al almacenamiento de HummingX.
-> Cada documento lleva el encabezado de HummingX BI y de ZAMMIR, su folio, versión, fecha y lugar.
+> **Dónde se guardan.** Las **plantillas sin datos** viven en el repositorio: el acta en `docs/entrega/ACTA_DE_ENTREGA.md` y las demás en [`docs/entrega/plantillas/`](plantillas/README.md). **La versión llenada**, con nombres completos, montos, números de serie, datos de soporte y firmas, se prepara en la carpeta local `privado/`, que **git ignora**, y se imprime y exporta a PDF desde ahí [CLAUDE.md regla 7]. Los PDF firmados se copian además al almacenamiento de HummingX.
+> Todo va en **una carpeta** con portada, índice y folios. Cada documento lleva su folio, versión, fecha y lugar.
 
-**Formales (se firman)**
-
-| Folio | Documento | Fuente o estado | Firma |
+| Folio | Documento | Plantilla | Se firma |
 |---|---|---|---|
-| HMX-ZAM-01 | **Contrato de prestación de servicios**: alcance, entregables, soporte, garantía del software, titularidad del dominio y del código, datos personales (HummingX los trata por cuenta de ZAMMIR) y terminación | ❌ Plantilla por redactar. No hay borrador previo. Debe concordar con `ALCANCE.md`, ADR-0038, ADR-0039 y ADR-0045. Lo que no esté definido queda [POR DEFINIR]. **Lo revisa un abogado**, incluida la forma de firmar de HummingX, que no está constituida | Luis y los tres socios de HummingX |
-| HMX-ZAM-02 | **Acta de capacitación**: un apartado por sesión, con asistentes, temas, duración, criterio de S5-11 a S5-13 cumplido sí o no, y observaciones | ❌ Plantilla por redactar | Quien recibe y quien imparte, en cada sesión |
-| HMX-ZAM-03 | **Acta de entrega y aceptación final**, con sus anexos: A, constancia de pruebas de aceptación; B, registro de entrega de accesos sin contraseñas; C, carta de entrega de equipo | ✅ [`ACTA_DE_ENTREGA.md`](ACTA_DE_ENTREGA.md) | Luis y los tres socios de HummingX |
-| HMX-ZAM-04 | **Aviso de privacidad** con hoja de acuse | 🟡 Borrador base en el sistema (PD-12) | Luis |
+| HMX-ZAM-01 | **Contrato de prestación de servicios**: alcance, entregables, soporte, garantía del software, titularidad del dominio y del código, datos personales (HummingX los trata por cuenta de ZAMMIR) y terminación | ❌ **Se redacta al final.** No hay borrador previo. Debe concordar con `ALCANCE.md`, ADR-0038, ADR-0039 y ADR-0045. Lo no definido queda [POR DEFINIR]. **Lo revisa un abogado**, incluida la forma de firmar de HummingX, que no está constituida | Luis y Ricardo, y dos socios de HummingX [ADR-0049] de HummingX |
+| HMX-ZAM-02 | **Acta de entrega y aceptación**, con anexos: **A** constancia de pruebas de aceptación · **B** capacitación (un apartado por sesión) · **C** entrega de accesos, sin contraseñas · **D** entrega de equipo · **E** aviso de privacidad y su acuse | ✅ [`ACTA_DE_ENTREGA.md`](ACTA_DE_ENTREGA.md) | Luis y Ricardo, y dos socios de HummingX [ADR-0049]; anexo A el sábado, anexo B en cada sesión y el resto el lunes |
+| HMX-ZAM-03 | **Informe técnico de entrega**: ficha técnica, calidad y seguridad (cifras **corridas el mismo día**) y plan de continuidad. Es un informe de HummingX: sin sellos ni la palabra "certificado" | ✅ [`plantillas/INFORME_TECNICO_DE_ENTREGA.md`](plantillas/INFORME_TECNICO_DE_ENTREGA.md) | No |
+| HMX-ZAM-04 | **Manual de usuario** | ✅ [`MANUAL_DE_USUARIO.md`](../manuales/MANUAL_DE_USUARIO.md), versión 1.0; faltan capturas de las pantallas de AJ-02 a AJ-09 | No |
+| HMX-ZAM-05 | **Guías rápidas por rol** para plastificar, con bienvenida y soporte al reverso | ✅ [`plantillas/GUIAS_RAPIDAS.md`](plantillas/GUIAS_RAPIDAS.md) | No |
+| ✦ | *Constancia de capacitación* por persona (opcional) | ✅ [`plantillas/CONSTANCIA_DE_CAPACITACION.md`](plantillas/CONSTANCIA_DE_CAPACITACION.md) | HummingX |
 
-**De confianza**
-
-| Folio | Documento | Fuente o estado |
-|---|---|---|
-| HMX-ZAM-05 | **Informe de calidad y seguridad**: pruebas automáticas, mutación, RLS en todas las tablas, secretos, dependencias, CSP, respaldo y ensayo de restauración, y lo que **no** se probó | ❌ Con cifras **corridas el mismo día**. Fuentes: `REVISION_DE_SEGURIDAD.md`, `TESTING.md`, el CI y `RESTAURACION.md`. Son informes de HummingX: sin sellos ni la palabra "certificado" |
-| HMX-ZAM-06 | **Ficha técnica del sistema** (una hoja) | ❌ |
-| HMX-ZAM-07 | **Plan de continuidad** (una hoja): qué pasa si se va el internet, si se pierde una tablet o si se cae el servidor | ❌ Resumen de `RESTAURACION.md` en lenguaje de Luis |
-
-**De uso diario**
-
-| Folio | Documento | Fuente o estado |
-|---|---|---|
-| HMX-ZAM-08 | **Manual de usuario** en PDF | 🟡 `MANUAL_DE_USUARIO.md` (§4.2) |
-| HMX-ZAM-09 | **Guías rápidas para plastificar** (Administrador y Cajero / vendedor), con la bienvenida y los datos de soporte al reverso | ❌ |
-| HMX-ZAM-10 | **Constancia de capacitación** por persona | ❌ |
-
-**Internos (no se entregan):** orden del día, minuta de cada día, hoja de hallazgos, `MANUAL_DE_SOPORTE.md` y `GUIA_DE_OPERACION.md`.
+**Internos (no se entregan):** orden del día, minuta de cada día y hoja de hallazgos ([`plantillas/INTERNOS_DE_LA_ENTREGA.md`](plantillas/INTERNOS_DE_LA_ENTREGA.md)), `MANUAL_DE_SOPORTE.md` y `GUIA_DE_OPERACION.md`.
 
 **Lo que recibe ZAMMIR** (va en el acta):
 
 - El sistema en `https://sistema.zammir-solutions.com`, con sus datos reales y sin datos de prueba.
-- Las dos tablets con la aplicación instalada y conectadas (anexo C del acta).
+- Las dos tablets con la aplicación instalada y conectadas (anexo D del acta).
 - La impresión en hoja carta probada con su impresora.
-- Sus cuentas de administrador y los PIN de su equipo (anexo B del acta).
+- Sus cuentas de administrador y el registro de quién tiene PIN en la tablet (anexo C del acta).
 - La exportación de sus datos, probada (CSV, JSON y PDF).
 - El expediente de la entrega.
 
 **Fuera de la entrega**, y así se escribe en el acta:
 
 - Facturación activa (en pausa [ADR-0039]).
+- Ticket térmico e impresora Bluetooth [ADR-0040].
 - Portal de seguimiento P1.
 - Existencias P2.
 - Las propuestas sin aprobar de `PENDIENTES.md`.
@@ -290,7 +294,7 @@ Los tres socios firman por HummingX BI el contrato y el acta de entrega [ADR-004
 | **Comandos** | `pnpm test` · `pnpm lint` · `pnpm db:start` · `pnpm db:reset && pnpm test:db` · `pnpm test:integracion` (sirve las funciones con `pnpm funciones:empaquetar` y `supabase functions serve --no-verify-jwt --env-file supabase/functions/pruebas.env`) · `pnpm test:e2e` · `pnpm test:mutacion:critico` · `pnpm build && pnpm check:bundle` · `pnpm ensayo:restauracion` |
 | **Flujos de GitHub** | *Integración continua* (unos 10 min), *Mutación* (unos 35 min), *Desplegar a Supabase* (entrada `entorno`: `pruebas` o `produccion`) y *Respaldo nocturno* (programado a las 2:00 a. m.; GitHub lo ha corrido con horas de retraso) |
 | **Migraciones** | 41 en `supabase/migrations`, aditivas. La última es `20261125070000_cargos_extra.sql` |
-| **Decisiones** | ADR-0001 a ADR-0046 en `docs/decisiones/`, índice en `DECISIONES.md` |
+| **Decisiones** | ADR-0001 a ADR-0047 en `docs/decisiones/`, índice en `DECISIONES.md` |
 | **Pendientes** | `docs/producto/PENDIENTES.md` (PD abiertos, PR resueltos, PP propuestas) |
 | **Correcciones de interfaz que pidió Juanito** | Lo del 14 nov ya se atendió (PR #92, #93, #110 y #111). La lista sigue abierta para lo que reporte al probar |
 
@@ -306,7 +310,9 @@ Los tres socios firman por HummingX BI el contrato y el acta de entrega [ADR-004
 - [ ] Copia de fotos comprobada con una foto real (P2, PD-57).
 - [ ] P2 a P5 hechas con las dos tablets.
 - [x] Documentos de la §4.2 corregidos por PR.
-- [ ] Expediente de la §7 redactado como plantilla. Los llenados van en la carpeta local que git ignora.
+- [x] Expediente de la §7 redactado como plantilla, salvo el contrato (ADR-0047).
+- [ ] Contrato (HMX-ZAM-01) redactado y revisado por un abogado.
+- [ ] Versiones llenadas en `privado/` y exportadas a PDF.
 - [ ] Catálogo real listo para cargar, o un plan B acordado con Luis.
-- [ ] Impresiones: contrato, acta de entrega con anexos, plan de aceptación, acta de capacitación, aviso de privacidad, informe, ficha, plan de continuidad, guías rápidas, constancias y hoja de hallazgos.
+- [ ] Impresiones: contrato, acta de entrega con sus anexos A a E, hoja de resultados del plan de aceptación, informe técnico, manual de usuario, guías rápidas (plastificadas), constancias y, para uso interno, orden del día, minuta y hoja de hallazgos.
 - [ ] Gestor de contraseñas listo con las cuentas nuevas de la plataforma.
