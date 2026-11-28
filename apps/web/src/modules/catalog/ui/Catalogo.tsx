@@ -146,6 +146,10 @@ export function Catalogo({ deps, actor }: CatalogoProps): ReactElement {
     .map((c) => ({ categoria: c, productos: visibles.filter((p) => p.categoryId === c.id) }))
     .filter((g) => g.productos.length > 0);
   const categoriasEnUso = new Set(productos.map((p) => p.categoryId)).size;
+  // Las unidades de venta que ya se usan se sugieren al capturar, para que todos escriban igual [RF-M1-11].
+  const unidadesDeVenta = [
+    ...new Set(productos.flatMap((p) => (p.saleUnitName === undefined ? [] : [p.saleUnitName]))),
+  ];
 
   return (
     <section className="anima-entrada catalogo">
@@ -334,6 +338,7 @@ export function Catalogo({ deps, actor }: CatalogoProps): ReactElement {
         >
           <FormularioDeProducto
             categorias={categorias}
+            unidadesDeVenta={unidadesDeVenta}
             onGuardar={guardarAlta}
             onCancelar={() => {
               setVentana(null);
@@ -350,6 +355,7 @@ export function Catalogo({ deps, actor }: CatalogoProps): ReactElement {
         >
           <FormularioDeProducto
             categorias={categorias}
+            unidadesDeVenta={unidadesDeVenta}
             inicial={ventana.producto}
             historial={historial}
             onGuardar={(borrador) => guardarEdicion(ventana.producto, borrador)}
@@ -368,6 +374,7 @@ export function Catalogo({ deps, actor }: CatalogoProps): ReactElement {
         >
           <FormularioDeProducto
             categorias={categorias}
+            unidadesDeVenta={unidadesDeVenta}
             // Copia todo (categoría, cómo se cobra, sus ajustes, datos fiscales y garantía) menos el código,
             // que no se puede repetir; el nombre lleva "(copia)" para que se note y se corrija [RF-M1-16].
             inicial={{

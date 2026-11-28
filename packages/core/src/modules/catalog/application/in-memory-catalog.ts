@@ -37,6 +37,7 @@ function paraVender(p: Product): SellableProduct {
     ruleParams: p.ruleParams,
     ...(p.isOpenPrice === true ? { isOpenPrice: true } : {}),
     ...(p.description === undefined ? {} : { description: p.description }),
+    ...(p.saleUnitName === undefined ? {} : { saleUnitName: p.saleUnitName }),
   };
 }
 

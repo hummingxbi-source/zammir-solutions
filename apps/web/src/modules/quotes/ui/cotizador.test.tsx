@@ -278,6 +278,32 @@ describe('Cotizador', () => {
     expect(screen.getByText('Todavía no hay conceptos. Agrega el primero.')).toBeTruthy();
   });
 
+  it('la cantidad se lee con la unidad de venta del producto [RF-M1-11]', async () => {
+    const felpa: SellableProduct = {
+      ...vidrio,
+      id: asId<'Product'>('00000000-0000-4000-8000-00000000f0c1'),
+      code: 'FE-1',
+      name: 'Felpa para ventana',
+      chargeUnit: 'PIECE',
+      ruleId: 'PIECE',
+      ruleParams: {},
+      listPrice: 4_500 as SellableProduct['listPrice'],
+      saleUnitName: 'rollo',
+    };
+    montar({ productos: [felpa] });
+    await empezarConClienteNuevo();
+    fireEvent.change(await screen.findByLabelText('Buscar producto o servicio'), {
+      target: { value: 'felpa' },
+    });
+    fireEvent.click(await screen.findByRole('button', { name: /Felpa para ventana/ }));
+    fireEvent.change(screen.getByLabelText('Cantidad'), { target: { value: '2' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar a la cotización' }));
+    // Sale en la línea y en la vista del documento, tal cual.
+    expect((await screen.findAllByText(/2 rollos × \$45\.00 = \$90\.00/)).length).toBeGreaterThan(
+      0,
+    );
+  });
+
   it('los campos de medida abren el teclado numérico', async () => {
     montar();
     await empezarConClienteNuevo();

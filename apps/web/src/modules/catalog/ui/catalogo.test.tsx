@@ -329,6 +329,54 @@ describe('Catálogo', () => {
     expect(within(dialogo).queryByLabelText('Área mínima por pieza (m²)')).toBeNull();
   });
 
+  it('unidad de venta y clave SAT propias se guardan; vacías se usan las de la categoría [RF-M1-11]', async () => {
+    const deps = await montar();
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar Marco de madera' }));
+    let dialogo = await screen.findByRole('dialog', { name: 'Editar producto' });
+    // La clave de la categoría no se muestra como propia: se avisa que la hereda.
+    expect(within(dialogo).getByLabelText<HTMLInputElement>('Clave SAT (opcional)').value).toBe('');
+    expect(within(dialogo).getByText('Vacía: usa la de la categoría (01010101).')).toBeTruthy();
+    fireEvent.change(within(dialogo).getByLabelText('Unidad de venta (opcional)'), {
+      target: { value: 'par' },
+    });
+    fireEvent.change(within(dialogo).getByLabelText('Clave SAT (opcional)'), {
+      target: { value: '30171500' },
+    });
+    fireEvent.change(within(dialogo).getByLabelText('Clave de unidad SAT (opcional)'), {
+      target: { value: 'pr' },
+    });
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Guardar producto' }));
+    expect(await screen.findByText('Cambios guardados.')).toBeTruthy();
+    const lista = await deps.products.list();
+    const marco = lista.ok ? lista.value.find((p) => p.code === 'MA-1') : undefined;
+    expect(marco?.saleUnitName).toBe('par');
+    expect(marco?.fiscal).toMatchObject({ productServiceKey: '30171500', unitKey: 'PR' });
+    // Al volver a abrirlo, la clave propia sí se ve; si se borra, vuelve a la de la categoría.
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar Marco de madera' }));
+    dialogo = await screen.findByRole('dialog', { name: 'Editar producto' });
+    const clave = within(dialogo).getByLabelText<HTMLInputElement>('Clave SAT (opcional)');
+    expect(clave.value).toBe('30171500');
+    fireEvent.change(clave, { target: { value: '' } });
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Guardar producto' }));
+    await screen.findByText('Cambios guardados.');
+    const otra = await deps.products.list();
+    expect(otra.ok && otra.value.find((p) => p.code === 'MA-1')?.fiscal.productServiceKey).toBe(
+      '01010101',
+    );
+  });
+
+  it('la unidad de venta solo se ofrece por pieza o servicio, y una clave SAT mal escrita no guarda', async () => {
+    await montar();
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar Vidrio claro 6 mm' }));
+    const dialogo = await screen.findByRole('dialog', { name: 'Editar producto' });
+    expect(within(dialogo).queryByLabelText('Unidad de venta (opcional)')).toBeNull();
+    fireEvent.change(within(dialogo).getByLabelText('Clave SAT (opcional)'), {
+      target: { value: '3017' },
+    });
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Guardar producto' }));
+    expect(await within(dialogo).findByText('La clave SAT no es válida.')).toBeTruthy();
+  });
+
   it('un servicio solo se cobra como servicio y una pieza estándar como pieza', async () => {
     await montar({ conProductos: false });
     fireEvent.click(await botonAgregar());

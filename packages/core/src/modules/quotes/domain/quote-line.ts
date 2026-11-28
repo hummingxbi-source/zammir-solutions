@@ -37,6 +37,8 @@ export interface QuoteProduct {
   /** Precio abierto [RF-M1-10, ADR-0048]: el precio del catálogo es de referencia y se puede fijar más
    *  arriba al cotizar o vender. Sin el campo, el precio es fijo. */
   readonly isOpenPrice?: boolean;
+  /** Unidad de venta [RF-M1-11]: se copia a la línea. */
+  readonly saleUnitName?: string;
 }
 
 export interface LineInput {
@@ -120,6 +122,7 @@ function calcularLinea(
     | 'catalogPriceCents'
     | 'extras'
     | 'isOpenPrice'
+    | 'saleUnitName'
   >,
   unitPriceCents: number,
   entrada: LineInput,
@@ -159,7 +162,7 @@ function calcularLinea(
   if (!desglose.ok) {
     return err({ code: 'AMOUNT_INVALID' });
   }
-  const detalle = formatPriceDetail(calculo.value);
+  const detalle = formatPriceDetail(calculo.value, base.saleUnitName);
   return ok({
     ...base,
     ...(extras.length === 0 ? {} : { extras }),
@@ -260,6 +263,7 @@ export function buildQuoteLine(
       isTaxExempt: producto.isTaxExempt,
       catalogPriceCents: producto.listPrice,
       ...(producto.isOpenPrice === true ? { isOpenPrice: true } : {}),
+      ...(producto.saleUnitName === undefined ? {} : { saleUnitName: producto.saleUnitName }),
     },
     producto.listPrice,
     entrada,

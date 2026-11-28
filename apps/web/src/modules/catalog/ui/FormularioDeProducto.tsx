@@ -1,13 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import type { ReactElement, SyntheticEvent } from 'react';
 import {
   adjustmentFieldsFor,
   adjustmentsToTexts,
+  isProductServiceKey,
+  isUnitKey,
   MAX_DESCRIPTION_LENGTH,
+  MAX_SALE_UNIT_LENGTH,
   paramsWithAdjustments,
   parseAdjustmentTexts,
   parseMoney,
   readAdjustments,
+  SALE_UNIT_SUGGESTIONS,
   type AdjustmentField,
   type AdjustmentTexts,
   type Category,
@@ -48,6 +52,8 @@ export interface FormularioDeProductoProps {
   /** El producto que se edita; sin él, es un alta. */
   readonly inicial?: Product;
   readonly historial?: readonly PriceChange[];
+  /** Unidades de venta que ya usa el catálogo; se suman a las sugerencias para que todos escriban igual. */
+  readonly unidadesDeVenta?: readonly string[];
   /** Guarda el producto; devuelve el código de error o `null` si se guardó. */
   readonly onGuardar: (borrador: ProductDraft) => Promise<string | null>;
   readonly onCancelar: () => void;
@@ -77,9 +83,11 @@ export function FormularioDeProducto({
   categorias,
   inicial,
   historial,
+  unidadesDeVenta = [],
   onGuardar,
   onCancelar,
 }: FormularioDeProductoProps): ReactElement {
+  const idSugerencias = useId();
   const [nombre, setNombre] = useState(inicial?.name ?? '');
   const [codigo, setCodigo] = useState(inicial?.code ?? '');
   // Solo se ofrecen las categorías activas, más la que ya tiene el producto al editarlo [RF-M1-08].
@@ -99,10 +107,28 @@ export function FormularioDeProducto({
   const [exento, setExento] = useState(inicial?.isTaxExempt ?? false);
   const [abierto, setAbierto] = useState(inicial?.isOpenPrice === true);
   const [descripcion, setDescripcion] = useState(inicial?.description ?? '');
+  const [unidadDeVenta, setUnidadDeVenta] = useState(inicial?.saleUnitName ?? '');
+  // Claves SAT [RF-M1-11]: vacías, se usan las de la categoría. Al editar, solo se muestran si son propias.
+  const categoriaInicial = categorias.find((c) => c.id === inicial?.categoryId);
+  const propia = (
+    clave: string | null | undefined,
+    deCategoria: string | null | undefined,
+  ): string => (clave === null || clave === undefined || clave === deCategoria ? '' : clave);
+  const [claveSat, setClaveSat] = useState(
+    propia(inicial?.fiscal.productServiceKey, categoriaInicial?.fiscalDefaults.productServiceKey),
+  );
+  const [claveUnidad, setClaveUnidad] = useState(
+    propia(inicial?.fiscal.unitKey, categoriaInicial?.fiscalDefaults.unitKey),
+  );
   // Ajustes del cobro [RF-M1-14]: apagados (vacíos) mientras no se capturen.
   const [ajustes, setAjustes] = useState<AdjustmentTexts>(() =>
     adjustmentsToTexts(readAdjustments(inicial?.ruleParams)),
   );
+  const porPiezaOServicio = unidad === 'PIECE' || unidad === 'SERVICE';
+  const sugerencias = [...new Set([...SALE_UNIT_SUGGESTIONS, ...unidadesDeVenta])].sort((a, b) =>
+    a.localeCompare(b, 'es-MX'),
+  );
+  const categoriaElegida = categorias.find((c) => c.id === categoriaId);
   const camposDeAjuste = adjustmentFieldsFor(
     REGLA_POR_UNIDAD[unidad],
     unidad === 'LINEAR_METER' ? base : null,
@@ -150,6 +176,18 @@ export function FormularioDeProducto({
         return;
       }
     }
+    const sat = claveSat.trim();
+    const satUnidad = claveUnidad.trim().toUpperCase();
+    if (sat !== '' && !isProductServiceKey(sat)) {
+      mostrarError('SAT_KEY_INVALID');
+      return;
+    }
+    if (satUnidad !== '' && !isUnitKey(satUnidad)) {
+      mostrarError('SAT_UNIT_KEY_INVALID');
+      return;
+    }
+    const fiscalBase =
+      inicial?.categoryId === categoria.id ? inicial.fiscal : categoria.fiscalDefaults;
     const leidos = parseAdjustmentTexts(ajustes, camposDeAjuste);
     const primerError = leidos.errors[0];
     if (primerError !== undefined) {
@@ -171,12 +209,17 @@ export function FormularioDeProducto({
         unidad === 'LINEAR_METER' ? { basis: base } : {},
         leidos.adjustments,
       ),
-      fiscal: inicial?.categoryId === categoria.id ? inicial.fiscal : categoria.fiscalDefaults,
+      fiscal: {
+        ...fiscalBase,
+        productServiceKey: sat === '' ? categoria.fiscalDefaults.productServiceKey : sat,
+        unitKey: satUnidad === '' ? categoria.fiscalDefaults.unitKey : satUnidad,
+      },
       warrantyMonths: meses,
       warrantyText: inicial?.warrantyText ?? null,
       // Un cargo extra copia su precio a la pieza: nunca tiene precio abierto [RF-M1-10].
       ...(abierto && tipo !== 'EXTRA' ? { isOpenPrice: true } : {}),
       ...(descripcion.trim() === '' ? {} : { description: descripcion }),
+      ...(unidadDeVenta.trim() === '' || !porPiezaOServicio ? {} : { saleUnitName: unidadDeVenta }),
     };
     setTrabajando(true);
     const falla = await onGuardar(borrador);
@@ -276,6 +319,26 @@ export function FormularioDeProducto({
           }}
         />
       </div>
+      {porPiezaOServicio ? (
+        <div className="campo">
+          <Campo
+            etiqueta={t.formulario.unidadDeVenta}
+            value={unidadDeVenta}
+            maxLength={MAX_SALE_UNIT_LENGTH}
+            autoComplete="off"
+            list={idSugerencias}
+            onChange={(e) => {
+              setUnidadDeVenta(e.target.value);
+            }}
+          />
+          <datalist id={idSugerencias}>
+            {sugerencias.map((u) => (
+              <option key={u} value={u} />
+            ))}
+          </datalist>
+          <p className="formulario__ayuda">{t.formulario.unidadDeVentaAyuda}</p>
+        </div>
+      ) : null}
       {camposDeAjuste.length === 0 ? null : (
         <fieldset className="formulario__grupo">
           <legend>{t.formulario.ajustes}</legend>
@@ -330,6 +393,36 @@ export function FormularioDeProducto({
           </span>
         </label>
       )}
+
+      <div className="formulario__par">
+        <div className="campo">
+          <CampoNumerico
+            etiqueta={t.formulario.claveSat}
+            entero
+            value={claveSat}
+            onChange={(e) => {
+              setClaveSat(e.target.value);
+            }}
+          />
+          <p className="formulario__ayuda">
+            {t.formulario.claveHeredada(categoriaElegida?.fiscalDefaults.productServiceKey ?? null)}
+          </p>
+        </div>
+        <div className="campo">
+          <Campo
+            etiqueta={t.formulario.claveUnidadSat}
+            value={claveUnidad}
+            autoComplete="off"
+            maxLength={3}
+            onChange={(e) => {
+              setClaveUnidad(e.target.value);
+            }}
+          />
+          <p className="formulario__ayuda">
+            {t.formulario.claveHeredada(categoriaElegida?.fiscalDefaults.unitKey ?? null)}
+          </p>
+        </div>
+      </div>
 
       {historial !== undefined && historial.length > 0 ? (
         <section aria-label={t.formulario.historial}>

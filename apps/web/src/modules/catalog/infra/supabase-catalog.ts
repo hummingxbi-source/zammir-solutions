@@ -52,6 +52,7 @@ interface FilaParaVender {
   readonly is_open_price?: boolean;
   /** Descripción [RF-M1-13]. Antes de CE-04 la vista no la traía. */
   readonly description?: string | null;
+  readonly sale_unit_name?: string | null;
 }
 
 interface FilaReplicada extends FilaParaVender {
@@ -158,6 +159,9 @@ function aParaVender(fila: FilaParaVender): Result<SellableProduct, CatalogError
     ...(fila.description === null || fila.description === undefined
       ? {}
       : { description: fila.description }),
+    ...(fila.sale_unit_name === null || fila.sale_unit_name === undefined
+      ? {}
+      : { saleUnitName: fila.sale_unit_name }),
   });
 }
 
@@ -204,6 +208,7 @@ function aFila(p: Product) {
     rule_params: p.ruleParams,
     is_open_price: p.isOpenPrice === true,
     description: p.description ?? null,
+    sale_unit_name: p.saleUnitName ?? null,
     fiscal_product_service_key: p.fiscal.productServiceKey,
     fiscal_unit_key: p.fiscal.unitKey,
     fiscal_tax_object: p.fiscal.taxObject,

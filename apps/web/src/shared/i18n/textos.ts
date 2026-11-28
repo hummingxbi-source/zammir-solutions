@@ -481,6 +481,15 @@ export const textos = {
       anchoMaximo: 'Ancho máximo (mm)',
       altoMaximo: 'Alto máximo (mm)',
       largoMaximo: 'Largo máximo (mm)',
+      unidadDeVenta: 'Unidad de venta (opcional)',
+      unidadDeVentaAyuda:
+        'Cómo se lee la cantidad: "2 rollos", "3 pares", "2 horas". Vacía, solo se ve la cantidad.',
+      claveSat: 'Clave SAT (opcional)',
+      claveUnidadSat: 'Clave de unidad SAT (opcional)',
+      claveHeredada: (clave: string | null) =>
+        clave === null
+          ? 'Vacía: la categoría todavía no tiene.'
+          : `Vacía: usa la de la categoría (${clave}).`,
       historial: 'Cambios de precio',
       guardar: 'Guardar producto',
       guardando: 'Guardando…',
@@ -556,6 +565,24 @@ export const textos = {
       MAX_HEIGHT_INVALID: {
         mensaje: 'El alto máximo no es válido.',
         queHacer: 'Escribe milímetros enteros, por ejemplo 2600, o déjalo vacío.',
+      },
+      SALE_UNIT_NOT_ALLOWED: {
+        mensaje: 'La unidad de venta es solo para lo que se cobra por pieza o por servicio.',
+        queHacer: 'Déjala vacía o cambia la forma de cobro.',
+      },
+      SALE_UNIT_TOO_LONG: {
+        mensaje: 'La unidad de venta es muy larga.',
+        queHacer: 'Déjala en 20 caracteres o menos, por ejemplo "rollo" o "par".',
+      },
+      SAT_KEY_INVALID: {
+        mensaje: 'La clave SAT no es válida.',
+        queHacer:
+          'Escribe sus 8 dígitos, por ejemplo 30171500, o déjala vacía para usar la de la categoría.',
+      },
+      SAT_UNIT_KEY_INVALID: {
+        mensaje: 'La clave de unidad SAT no es válida.',
+        queHacer:
+          'Escribe 2 o 3 letras o números, por ejemplo H87, o déjala vacía para usar la de la categoría.',
       },
       CODE_TAKEN: {
         mensaje: 'Ese código ya lo usa otro producto.',
@@ -638,6 +665,9 @@ export const textos = {
       minimo_por_trabajo: 'Mínimo por trabajo',
       ancho_maximo_mm: 'Ancho máximo (mm)',
       alto_maximo_mm: 'Alto máximo (mm)',
+      unidad_venta: 'Unidad de venta',
+      clave_sat: 'Clave SAT',
+      clave_unidad_sat: 'Clave de unidad SAT',
     },
     errores: {
       NAME_REQUIRED_IN_ROW: 'Falta el nombre.',
@@ -657,6 +687,12 @@ export const textos = {
       MIN_AMOUNT_INVALID: 'El mínimo por trabajo debe ser un monto en pesos mayor a cero.',
       MAX_WIDTH_INVALID: 'El ancho máximo debe ser en milímetros enteros, por ejemplo 1800.',
       MAX_HEIGHT_INVALID: 'El alto máximo debe ser en milímetros enteros, por ejemplo 2600.',
+      SALE_UNIT_NOT_ALLOWED:
+        'La unidad de venta es solo para lo que se cobra por pieza o por servicio: déjala vacía.',
+      SALE_UNIT_TOO_LONG: 'La unidad de venta puede tener hasta 20 caracteres.',
+      SAT_KEY_INVALID: 'La clave SAT lleva 8 dígitos, por ejemplo 30171500, o déjala vacía.',
+      SAT_UNIT_KEY_INVALID:
+        'La clave de unidad SAT lleva 2 o 3 letras o números, por ejemplo H87, o déjala vacía.',
       CODE_DUPLICATE_IN_FILE: 'Este código ya aparece antes en el archivo.',
       CODE_DUPLICATE_IN_CATALOG: 'Este código ya existe en el catálogo.',
       RULE_UNKNOWN: 'La regla de precio no existe.',

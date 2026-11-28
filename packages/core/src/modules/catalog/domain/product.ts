@@ -3,6 +3,7 @@ import type { Millimeters } from '../../../shared-kernel/measure/length';
 import { ZERO, type Money } from '../../../shared-kernel/money/money';
 import { err, ok, type Result } from '../../../shared-kernel/result';
 import type { PriceRegistry } from './pricing/registry';
+import { MAX_SALE_UNIT_LENGTH } from './sale-unit';
 
 /** Tipo de producto [RN-01]: a medida, pieza estándar o servicio. */
 /** `EXTRA`: cargo extra que se agrega a una línea de vidrio (cantos, perforaciones, biselados) y se cobra con
@@ -51,6 +52,9 @@ export interface Product {
   readonly isOpenPrice?: boolean;
   /** Descripción opcional, de hasta 500 caracteres [RF-M1-13]. Sin el campo, no tiene. */
   readonly description?: string;
+  /** Unidad de venta ("rollo", "par", "hora") de lo que se cobra por pieza o servicio [RF-M1-11]. Sin el
+   *  campo, se lee como antes ("pieza" o "servicio"). */
+  readonly saleUnitName?: string;
 }
 
 /** Largo máximo de la descripción de un producto [RF-M1-13]. */
@@ -80,7 +84,10 @@ export type ProductErrorCode =
   | 'WARRANTY_INVALID'
   /** Un cargo extra copia su precio del catálogo a la pieza: no puede tener precio abierto. */
   | 'OPEN_PRICE_NOT_ALLOWED'
-  | 'DESCRIPTION_TOO_LONG';
+  | 'DESCRIPTION_TOO_LONG'
+  /** La unidad de venta es solo para lo que se cobra por pieza o por servicio [RF-M1-11]. */
+  | 'SALE_UNIT_NOT_ALLOWED'
+  | 'SALE_UNIT_TOO_LONG';
 
 export interface ProductError {
   readonly code: ProductErrorCode;
@@ -109,6 +116,16 @@ const OBJETO_IMPUESTO = /^\d{2}$/;
 
 /** Medida de prueba para comprobar que los parámetros de una regla son válidos sin calcular un precio real. */
 const MEDIDA_DE_PRUEBA = 1000 as Millimeters;
+
+/** Clave de producto o servicio del SAT: 8 dígitos [RF-M1-11]. */
+export function isProductServiceKey(texto: string): boolean {
+  return CLAVE_PRODUCTO.test(texto);
+}
+
+/** Clave de unidad del SAT: 2 o 3 letras mayúsculas o dígitos (H87, E48, KGM) [RF-M1-11]. */
+export function isUnitKey(texto: string): boolean {
+  return CLAVE_UNIDAD.test(texto);
+}
 
 /** Formato de las claves fiscales (vacías o con la forma del catálogo del SAT). */
 export function fiscalDataIsValid(fiscal: FiscalData): boolean {
@@ -173,10 +190,23 @@ export function buildProduct(
   if (descripcion.length > MAX_DESCRIPTION_LENGTH) {
     return err({ code: 'DESCRIPTION_TOO_LONG' });
   }
+  const unidadDeVenta = borrador.saleUnitName?.trim() ?? '';
+  if (
+    unidadDeVenta !== '' &&
+    borrador.chargeUnit !== 'PIECE' &&
+    borrador.chargeUnit !== 'SERVICE'
+  ) {
+    return err({ code: 'SALE_UNIT_NOT_ALLOWED' });
+  }
+  if (unidadDeVenta.length > MAX_SALE_UNIT_LENGTH) {
+    return err({ code: 'SALE_UNIT_TOO_LONG' });
+  }
   const code = borrador.code === null ? null : borrador.code.trim();
-  // Una descripción en blanco no se guarda: el producto queda sin el campo, igual que uno de antes.
+  // Una descripción o unidad en blanco no se guarda: el producto queda sin el campo, igual que uno de antes.
   const resto = Object.fromEntries(
-    Object.entries(borrador).filter(([campo]) => campo !== 'description'),
+    Object.entries(borrador).filter(
+      ([campo]) => campo !== 'description' && campo !== 'saleUnitName',
+    ),
   ) as unknown as ProductDraft;
   return ok({
     ...resto,
@@ -184,5 +214,6 @@ export function buildProduct(
     name,
     code: code === '' ? null : code,
     ...(descripcion === '' ? {} : { description: descripcion }),
+    ...(unidadDeVenta === '' ? {} : { saleUnitName: unidadDeVenta }),
   });
 }
