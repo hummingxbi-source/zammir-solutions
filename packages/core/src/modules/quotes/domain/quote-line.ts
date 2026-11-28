@@ -10,6 +10,8 @@ import type { LineExtra, QuoteLine } from './quote';
 export type QuoteLineErrorCode =
   /** Medidas, cantidad o precio que la regla del producto no acepta. */
   | 'INPUT_INVALID'
+  /** Una medida pasa del máximo del producto [RF-M1-14]. */
+  | 'MEASURE_TOO_LARGE'
   | 'RULE_NOT_REGISTERED'
   | 'PARAMS_INVALID'
   /** Un importe no cabe en un entero seguro, o el IVA no se pudo calcular. */
@@ -54,7 +56,11 @@ export interface LineDeps {
 }
 
 function codigoDeLinea(codigo: string): QuoteLineErrorCode {
-  return codigo === 'RULE_NOT_REGISTERED' || codigo === 'PARAMS_INVALID' ? codigo : 'INPUT_INVALID';
+  return codigo === 'RULE_NOT_REGISTERED' ||
+    codigo === 'PARAMS_INVALID' ||
+    codigo === 'MEASURE_TOO_LARGE'
+    ? codigo
+    : 'INPUT_INVALID';
 }
 
 function aMoney(centavos: number): Result<Money, QuoteLineError> {

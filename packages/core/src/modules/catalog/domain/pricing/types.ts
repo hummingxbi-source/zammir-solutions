@@ -12,7 +12,9 @@ export type PriceErrorCode =
   /** Faltan medidas, la cantidad no es válida o el precio es negativo. */
   | 'INPUT_INVALID'
   /** El importe no cabe en un entero seguro. */
-  | 'OUT_OF_RANGE';
+  | 'OUT_OF_RANGE'
+  /** Una medida pasa del máximo que el producto admite [RF-M1-14]. */
+  | 'MEASURE_TOO_LARGE';
 
 export interface PriceError {
   readonly code: PriceErrorCode;

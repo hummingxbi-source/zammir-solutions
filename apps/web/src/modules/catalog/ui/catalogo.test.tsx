@@ -266,6 +266,69 @@ describe('Catálogo', () => {
     expect(lista.ok && lista.value[0]?.description).toBe('Para puertas y barandales');
   });
 
+  it('los ajustes del cobro se capturan, se guardan y se ven al editar [RF-M1-14]', async () => {
+    const deps = await montar();
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar Vidrio claro 6 mm' }));
+    let dialogo = await screen.findByRole('dialog', { name: 'Editar producto' });
+    const grupo = within(dialogo).getByRole('group', { name: 'Ajustes del cobro (opcionales)' });
+    // Por omisión, todo apagado.
+    expect(within(grupo).getByLabelText<HTMLInputElement>('Ancho máximo (mm)').value).toBe('');
+    fireEvent.change(within(grupo).getByLabelText('Área mínima por pieza (m²)'), {
+      target: { value: '0.5' },
+    });
+    fireEvent.change(within(grupo).getByLabelText('Ancho máximo (mm)'), {
+      target: { value: '1800' },
+    });
+    fireEvent.change(within(grupo).getByLabelText('Alto máximo (mm)'), {
+      target: { value: '2600' },
+    });
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Guardar producto' }));
+    expect(await screen.findByText('Cambios guardados.')).toBeTruthy();
+    const lista = await deps.products.list();
+    expect(lista.ok && lista.value.find((p) => p.code === 'VC-6')?.ruleParams).toEqual({
+      minAreaMm2: 500_000,
+      maxWidthMm: 1800,
+      maxHeightMm: 2600,
+    });
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar Vidrio claro 6 mm' }));
+    dialogo = await screen.findByRole('dialog', { name: 'Editar producto' });
+    expect(
+      within(dialogo).getByLabelText<HTMLInputElement>('Área mínima por pieza (m²)').value,
+    ).toBe('0.5');
+  });
+
+  it('un ajuste mal escrito dice qué hacer y no guarda; una pieza no tiene ajustes [RF-M1-14]', async () => {
+    const deps = await montar({ conProductos: false });
+    fireEvent.click(await botonAgregar());
+    const dialogo = await screen.findByRole('dialog', { name: 'Agregar producto' });
+    fireEvent.change(within(dialogo).getByLabelText('Nombre'), { target: { value: 'Espejo' } });
+    fireEvent.change(within(dialogo).getByLabelText('Precio de lista con IVA'), {
+      target: { value: '300' },
+    });
+    fireEvent.change(within(dialogo).getByLabelText('Ancho máximo (mm)'), {
+      target: { value: '1.80' },
+    });
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Guardar producto' }));
+    expect(await within(dialogo).findByText('La medida máxima no es válida.')).toBeTruthy();
+    const lista = await deps.products.list();
+    expect(lista.ok && lista.value).toHaveLength(0);
+    fireEvent.change(within(dialogo).getByLabelText('Se cobra por'), {
+      target: { value: 'PIECE' },
+    });
+    expect(within(dialogo).queryByRole('group', { name: /Ajustes del cobro/ })).toBeNull();
+  });
+
+  it('con base en el largo, el metro lineal pide el largo máximo', async () => {
+    await montar({ conProductos: false });
+    fireEvent.click(await botonAgregar());
+    const dialogo = await screen.findByRole('dialog', { name: 'Agregar producto' });
+    fireEvent.change(within(dialogo).getByLabelText('Se cobra por'), {
+      target: { value: 'LINEAR_METER' },
+    });
+    expect(await within(dialogo).findByLabelText('Largo máximo (mm)')).toBeTruthy();
+    expect(within(dialogo).queryByLabelText('Área mínima por pieza (m²)')).toBeNull();
+  });
+
   it('un servicio solo se cobra como servicio y una pieza estándar como pieza', async () => {
     await montar({ conProductos: false });
     fireEvent.click(await botonAgregar());

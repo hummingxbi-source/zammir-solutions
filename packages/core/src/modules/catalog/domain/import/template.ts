@@ -17,6 +17,30 @@ const EJEMPLOS: readonly (readonly string[])[] = [
     '12',
     'no',
     'Vidrio flotado transparente, cortado a la medida',
+    '',
+    '',
+    '',
+    '',
+    '',
+  ],
+  [
+    'EJ-ESPEJO-4',
+    'Espejo de 4 mm (ejemplo)',
+    'Espejo',
+    'a medida',
+    'm²',
+    '320.00',
+    'no',
+    '',
+    '',
+    '',
+    'no',
+    'Ejemplo con medida máxima: no se cotiza una pieza de más de 1800 × 2600 mm',
+    '',
+    '',
+    '',
+    '1800',
+    '2600',
   ],
   [
     'EJ-PERFIL',
@@ -30,6 +54,11 @@ const EJEMPLOS: readonly (readonly string[])[] = [
     'largo',
     '',
     'no',
+    '',
+    '',
+    '',
+    '',
+    '',
     '',
   ],
   [
@@ -45,6 +74,11 @@ const EJEMPLOS: readonly (readonly string[])[] = [
     '',
     'si',
     'Cambio de felpa, carretillas o seguro; el precio se fija según el trabajo',
+    '',
+    '',
+    '',
+    '',
+    '',
   ],
 ];
 
@@ -53,7 +87,7 @@ function celda(texto: string): string {
 }
 
 /** Plantilla descargable en CSV UTF-8 con marca BOM (para que Excel respete los acentos), con el
- *  encabezado y tres filas de ejemplo que se borran antes de subir el catálogo real. */
+ *  encabezado y cuatro filas de ejemplo que se borran antes de subir el catálogo real. */
 export function catalogImportTemplate(): string {
   const filas = [IMPORT_COLUMNS, ...EJEMPLOS];
   return `${BOM}${filas.map((fila) => fila.map(celda).join(',')).join('\r\n')}\r\n`;

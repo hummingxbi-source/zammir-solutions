@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactElement, SyntheticEvent } from 'react';
 import {
+  formatMaxMeasure,
   addQuoteLine,
   applyQuoteDiscount,
   buildQuoteDocument,
@@ -460,6 +461,11 @@ export function EditorDeCotizacion({
                           }}
                         />
                       </div>
+                      {formatMaxMeasure(elegido.ruleParams, unidad) === null ? null : (
+                        <p className="formulario__ayuda">
+                          {t.producto.medidaMaxima} {formatMaxMeasure(elegido.ruleParams, unidad)}
+                        </p>
+                      )}
                     </>
                   ) : null}
                   <CampoNumerico

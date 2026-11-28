@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { PedirEntrarConPin } from '../../identity/ui/PedirEntrarConPin';
 import type { ReactElement, SyntheticEvent } from 'react';
 import {
+  formatMaxMeasure,
   addToTicket,
   balanceCents,
   cancelCounterSale,
@@ -550,6 +551,11 @@ export function Mostrador(props: MostradorProps): ReactElement {
                           }}
                         />
                       </div>
+                      {formatMaxMeasure(elegido.ruleParams, unidad) === null ? null : (
+                        <p className="formulario__ayuda">
+                          {t.venta.medidaMaxima} {formatMaxMeasure(elegido.ruleParams, unidad)}
+                        </p>
+                      )}
                     </>
                   ) : null}
                   <CampoNumerico
