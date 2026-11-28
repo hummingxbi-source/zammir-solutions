@@ -17,14 +17,13 @@
 1. **Mostrador** → *Mi turno de caja* → escribe el fondo inicial (opcional) → **Abrir turno**.
 
 **Vender en el mostrador**
-1. En *Venta rápida* busca el producto. Si va a medida, escribe ancho, alto y cantidad → **Agregar al ticket**. Lo que se vende por kilo u hora acepta decimales (*1.5*); un paquete agrega todos sus productos de una vez.
-   - Canto o perforación: **Cargo extra** en la línea del vidrio. Precio de referencia: **Fijar precio**.
+1. En *Venta rápida* busca el producto. Si va a medida, escribe ancho, alto y cantidad → **Agregar al ticket**. Por kilo u hora acepta decimales (*1.5*); un paquete agrega todos sus productos.
 2. **Cobrar** → efectivo recibido y/o transferencia → **Registrar cobro**.
 3. **Enviar por WhatsApp** el comprobante, o **Imprimir** si el cliente lo pide.
 
 **Cotizar**
 1. **Cotizador** → **Nueva cotización** → elige o captura al cliente.
-2. Agrega productos. Para cantos, perforaciones o biselados, toca **Cargo extra** en la línea del vidrio. Si el producto tiene precio de referencia, toca **Fijar precio**: arriba de la referencia no pide nada; abajo es un descuento.
+2. Agrega productos. Cantos o perforaciones: **Cargo extra** en la línea del vidrio. Precio de referencia: **Fijar precio** (abajo es un descuento).
 3. **Emitir cotización** → **Enviar por WhatsApp**.
 
 **Cobrar una orden de trabajo**
