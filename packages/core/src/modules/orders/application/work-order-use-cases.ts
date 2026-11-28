@@ -117,6 +117,7 @@ function lineaAPayload(l: WorkOrderLine) {
     detail: l.detail,
     ...(l.extras === undefined || l.extras.length === 0 ? {} : { extras: l.extras }),
     ...(l.saleUnitName === undefined ? {} : { saleUnitName: l.saleUnitName }),
+    ...(l.description === undefined ? {} : { description: l.description }),
     ...(l.displayUnit === undefined || l.displayUnit === null
       ? {}
       : { displayUnit: l.displayUnit }),

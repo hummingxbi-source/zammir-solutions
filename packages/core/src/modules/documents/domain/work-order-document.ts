@@ -118,6 +118,7 @@ export function buildWorkOrderDocument(entrada: BuildReceiptInput): QuoteDocumen
     lines: order.lines.map((l, i) => ({
       position: i + 1,
       name: l.name,
+      ...(l.description === undefined ? {} : { description: l.description }),
       detail: l.detail,
       quantity: String(l.quantity),
       unitPrice: dinero(l.unitPriceCents),

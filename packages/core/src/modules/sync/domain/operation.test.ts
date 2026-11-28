@@ -85,3 +85,21 @@ describe('cantidad con decimales en el envío [RF-M1-12]', () => {
     }
   });
 });
+
+describe('descripción en el envío [PP-39]', () => {
+  it('la línea la puede traer; vacía o de más de 500 caracteres no vale', () => {
+    const conDescripcion = createCounterSalePayloadSchema.safeParse(
+      venta(linea({ description: 'Para ventana corrediza' })),
+    );
+    expect(conDescripcion.success && conDescripcion.data.lines[0]?.description).toBe(
+      'Para ventana corrediza',
+    );
+    expect(
+      createCounterSalePayloadSchema.safeParse(venta(linea({ description: ' ' }))).success,
+    ).toBe(false);
+    expect(
+      createCounterSalePayloadSchema.safeParse(venta(linea({ description: 'a'.repeat(501) })))
+        .success,
+    ).toBe(false);
+  });
+});

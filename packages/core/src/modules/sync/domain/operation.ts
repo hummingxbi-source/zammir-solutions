@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { err, ok, type Result } from '../../../shared-kernel/result';
+import { MAX_DESCRIPTION_LENGTH } from '../../catalog/domain/product';
 import { MAX_SALE_UNIT_LENGTH } from '../../catalog/domain/sale-unit';
 import { isValidQuantity } from '../../../shared-kernel/measure/quantity';
 
@@ -115,6 +116,8 @@ const quoteLineSchema = z
     extras: z.array(lineExtraSchema).optional(),
     /** Opcional: unidad de venta copiada del producto [RF-M1-11]; una tablet de antes no la manda. */
     saleUnitName: z.string().trim().min(1).max(MAX_SALE_UNIT_LENGTH).optional(),
+    /** Opcional: descripción del producto para el documento del cliente [RF-M1-13, PP-39]. */
+    description: z.string().trim().min(1).max(MAX_DESCRIPTION_LENGTH).optional(),
   })
   .refine((l) => l.lineTotalCents === l.baseCents + l.taxCents, {
     message: 'el importe de la línea no es base + IVA',

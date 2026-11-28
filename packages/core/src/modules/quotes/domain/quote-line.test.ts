@@ -329,6 +329,12 @@ describe('unidad de venta [RF-M1-11]', () => {
     expect(armar(felpa, 1).detail).toBe('1 rollo × $45.00 = $45.00');
   });
 
+  it('la línea copia la descripción del producto para el documento [PP-39]', () => {
+    const conDescripcion = armar({ ...felpa, description: 'Para ventana corrediza' }, 1);
+    expect(conDescripcion.description).toBe('Para ventana corrediza');
+    expect('description' in armar(felpa, 1)).toBe(false);
+  });
+
   it('sin unidad, la línea queda como antes', () => {
     const sin = armar(producto('Jaladera', 'PIECE', 4_500, 'PIECE', {}, 'STANDARD'), 2);
     expect('saleUnitName' in sin).toBe(false);
