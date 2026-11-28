@@ -2122,6 +2122,35 @@ export const textos = {
       },
     },
   },
+  /** Unidades de venta sugeridas, en Configuración [RF-M1-11, PP-40]. */
+  unidadesDeVenta: {
+    titulo: 'Unidades de venta',
+    descripcion:
+      'Las que se sugieren al capturar un producto que se vende por pieza o servicio (rollo, kilo, par, hora…), para que todos escriban igual. También se sugieren las que ya usa el catálogo.',
+    cargando: 'Cargando…',
+    campo: 'Unidades de venta, una por renglón',
+    guardar: 'Guardar unidades',
+    guardando: 'Guardando…',
+    guardado: 'Listo. Se sugieren las unidades nuevas.',
+    errores: {
+      NOT_AUTHORIZED: {
+        mensaje: 'Tu cuenta no puede cambiar las unidades.',
+        queHacer: 'Entra con una cuenta de administrador.',
+      },
+      INVALID: {
+        mensaje: 'La lista no vale.',
+        queHacer: 'Escribe hasta 50 unidades, una por renglón, cada una de hasta 20 caracteres.',
+      },
+      SETTINGS_INVALID: {
+        mensaje: 'Las unidades guardadas no se pueden leer.',
+        queHacer: 'Avisa a soporte. Mientras, se sugiere la lista base.',
+      },
+      SETTINGS_UNAVAILABLE: {
+        mensaje: 'No se pudieron leer las unidades.',
+        queHacer: 'Revisa la conexión e inténtalo de nuevo.',
+      },
+    },
+  },
   umbralDeAtraso: {
     titulo: 'Cuentas por cobrar atrasadas',
     descripcion:

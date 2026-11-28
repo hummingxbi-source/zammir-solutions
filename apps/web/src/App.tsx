@@ -16,6 +16,7 @@ import type {
   ShareService,
   PortalDescarga,
   PortalSolicitud,
+  SaleUnitSuggestionsStore,
 } from '@zammir/core';
 
 import { textos } from './shared/i18n/textos';
@@ -32,6 +33,7 @@ import {
 } from './modules/receivables/ui/CuentasEnLaTablet';
 import { CondicionesDeCotizacion } from './modules/quotes/ui/CondicionesDeCotizacion';
 import { UmbralDeAtraso } from './modules/receivables/ui/UmbralDeAtraso';
+import { UnidadesDeVenta } from './modules/catalog/ui/UnidadesDeVenta';
 import { AvisoDePrivacidad, TerminosDelServicio } from './modules/legal/ui/AvisoDePrivacidad';
 import { Facturas } from './modules/billing/ui/Facturas';
 import { PortalDeFactura } from './modules/billing/ui/PortalDeFactura';
@@ -92,6 +94,8 @@ export interface AppProps {
   readonly umbralDeAtraso?: AgingThresholdStore | null;
   /** Avisa el umbral guardado para que las pantallas lo usen de inmediato. */
   readonly alCambiarElUmbral?: (dias: number) => void;
+  /** Unidades de venta sugeridas; aparecen en Configuración [PP-40]. */
+  readonly unidadesDeVenta?: SaleUnitSuggestionsStore | null;
   /** Bitácora consultable; aparece en Usuarios. */
   readonly bitacora?: BitacoraProps | null;
   /** Conexión de esta tablet con un código de registro; abre en `/conectar`. */
@@ -141,6 +145,7 @@ export function App({
   condiciones = null,
   umbralDeAtraso = null,
   alCambiarElUmbral,
+  unidadesDeVenta = null,
   bitacora = null,
   conectarTablet = null,
   entradaConPin = null,
@@ -237,6 +242,9 @@ export function App({
                             ? {}
                             : { alGuardar: alCambiarElUmbral })}
                         />
+                      ) : null}
+                      {unidadesDeVenta !== null ? (
+                        <UnidadesDeVenta store={unidadesDeVenta} />
                       ) : null}
                       {exportacion !== null ? <ExportarDatos {...exportacion} /> : null}
                     </section>

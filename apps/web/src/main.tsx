@@ -89,6 +89,7 @@ createRoot(root).render(
             portal={composition.portal}
             condiciones={composition.condiciones}
             umbralDeAtraso={composition.umbralDeAtraso}
+            unidadesDeVenta={composition.unidadesDeVenta}
             alCambiarElUmbral={composition.recordarUmbral}
             conectarTablet={composition.conectarTablet}
             entradaConPin={composition.entradaConPin}

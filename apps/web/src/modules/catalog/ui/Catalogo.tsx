@@ -12,6 +12,8 @@ import {
   type ProductDraft,
   type ProductKind,
   type UserRole,
+  SALE_UNIT_SUGGESTIONS,
+  type SaleUnitSuggestionsStore,
 } from '@zammir/core';
 
 import { textos } from '../../../shared/i18n/textos';
@@ -48,6 +50,8 @@ type Ventanilla =
 /** Lo que usa la pantalla del catálogo: también administra las categorías [RF-M1-08]. */
 export type CatalogoDeps = ImportCatalogDeps & {
   readonly categories: ImportCatalogDeps['categories'] & CategoryAdmin;
+  /** Las unidades de venta sugeridas en Configuración [PP-40]; sin ellas, la lista base. */
+  readonly unidadesSugeridas?: SaleUnitSuggestionsStore;
 };
 
 export interface CatalogoProps {
@@ -65,6 +69,12 @@ export function Catalogo({ deps, actor }: CatalogoProps): ReactElement {
   const [categoriaFiltro, setCategoriaFiltro] = useState('');
   const [tipoFiltro, setTipoFiltro] = useState('');
   const [ventana, setVentana] = useState<Ventanilla>(null);
+  const [sugeridas, setSugeridas] = useState<readonly string[]>(SALE_UNIT_SUGGESTIONS);
+  useEffect(() => {
+    void deps.unidadesSugeridas?.read().then((r) => {
+      if (r.ok) setSugeridas(r.value);
+    });
+  }, [deps.unidadesSugeridas]);
   const [historial, setHistorial] = useState<readonly PriceChange[]>([]);
   const [aviso, setAviso] = useState<string | null>(null);
   const [error, setError] = useState<{ mensaje: string; queHacer: string } | null>(null);
@@ -356,6 +366,7 @@ export function Catalogo({ deps, actor }: CatalogoProps): ReactElement {
           <FormularioDeProducto
             categorias={categorias}
             unidadesDeVenta={unidadesDeVenta}
+            sugeridas={sugeridas}
             productos={productos}
             onGuardar={guardarAlta}
             onCancelar={() => {
@@ -374,6 +385,7 @@ export function Catalogo({ deps, actor }: CatalogoProps): ReactElement {
           <FormularioDeProducto
             categorias={categorias}
             unidadesDeVenta={unidadesDeVenta}
+            sugeridas={sugeridas}
             productos={productos}
             inicial={ventana.producto}
             historial={historial}
@@ -394,6 +406,7 @@ export function Catalogo({ deps, actor }: CatalogoProps): ReactElement {
           <FormularioDeProducto
             categorias={categorias}
             unidadesDeVenta={unidadesDeVenta}
+            sugeridas={sugeridas}
             productos={productos}
             // Copia todo (categoría, cómo se cobra, sus ajustes, datos fiscales y garantía) menos el código,
             // que no se puede repetir; el nombre lleva "(copia)" para que se note y se corrija [RF-M1-16].

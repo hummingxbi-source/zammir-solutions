@@ -7,6 +7,7 @@ import {
   fixedClock,
   inMemoryAuditLog,
   inMemoryCatalog,
+  inMemorySaleUnitSuggestions,
   money,
   sequentialIdGenerator,
   type ProductDraft,
@@ -370,6 +371,26 @@ describe('Catálogo', () => {
     expect(otra.ok && otra.value.find((p) => p.code === 'MA-1')?.fiscal.productServiceKey).toBe(
       '01010101',
     );
+  });
+
+  it('las unidades sugeridas son las de Configuración más las que ya usa el catálogo [PP-40]', async () => {
+    const deps = entorno();
+    await sembrar(deps);
+    render(
+      <MemoryRouter>
+        <Catalogo
+          deps={{ ...deps, unidadesSugeridas: inMemorySaleUnitSuggestions(['galón']) }}
+          actor={{ role: 'ADMIN' }}
+        />
+      </MemoryRouter>,
+    );
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar Marco de madera' }));
+    const dialogo = await screen.findByRole('dialog', { name: 'Editar producto' });
+    const campo = within(dialogo).getByLabelText('Unidad de venta (opcional)');
+    const lista = document.getElementById(campo.getAttribute('list') ?? '');
+    await waitFor(() => {
+      expect([...(lista?.querySelectorAll('option') ?? [])].map((o) => o.value)).toEqual(['galón']);
+    });
   });
 
   it('la unidad de venta solo se ofrece por pieza o servicio, y una clave SAT mal escrita no guarda', async () => {
