@@ -29,7 +29,7 @@ describe('límite de errores', () => {
       </LimiteDeErrores>,
     );
     expect(screen.getByRole('alert').textContent).toContain('no se pudo mostrar');
-    expect(screen.getByRole('alert').textContent).toContain('avísale a Juanito');
+    expect(screen.getByRole('alert').textContent).toContain('avisa a soporte de HummingX');
     expect(errores).toHaveLength(1);
     fireEvent.click(screen.getByRole('button', { name: 'Volver a abrir' }));
     expect(recargar).toHaveBeenCalledTimes(1);

@@ -8,7 +8,7 @@ export const textos = {
   falla: {
     mensaje: 'Esta pantalla tuvo un problema y no se pudo mostrar.',
     queHacer:
-      'Toca "Volver a abrir". Lo que ya guardaste en la tablet no se pierde. Si sigue pasando, avísale a Juanito.',
+      'Toca "Volver a abrir". Lo que ya guardaste en la tablet no se pierde. Si sigue pasando, avisa a soporte de HummingX.',
     recargar: 'Volver a abrir',
   },
   navegacion: {
@@ -1356,7 +1356,8 @@ export const textos = {
       },
       UNAVAILABLE: {
         mensaje: 'No se pudieron preparar los datos.',
-        queHacer: 'Intenta de nuevo en unos minutos. Si sigue pasando, avísale a Juanito.',
+        queHacer:
+          'Intenta de nuevo en unos minutos. Si sigue pasando, avisa a soporte de HummingX.',
       },
       PDF: {
         mensaje: 'Los datos están listos, pero no se pudo armar el PDF.',
