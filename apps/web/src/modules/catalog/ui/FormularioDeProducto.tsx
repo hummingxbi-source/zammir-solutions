@@ -11,7 +11,6 @@ import {
   parseAdjustmentTexts,
   parseMoney,
   readAdjustments,
-  SALE_UNIT_SUGGESTIONS,
   type AdjustmentField,
   type AdjustmentTexts,
   type Category,
@@ -20,6 +19,7 @@ import {
   type Product,
   type ProductDraft,
   type ProductKind,
+  SALE_UNIT_SUGGESTIONS,
 } from '@zammir/core';
 
 import { textos } from '../../../shared/i18n/textos';
@@ -56,6 +56,8 @@ export interface FormularioDeProductoProps {
   readonly historial?: readonly PriceChange[];
   /** Unidades de venta que ya usa el catálogo; se suman a las sugerencias para que todos escriban igual. */
   readonly unidadesDeVenta?: readonly string[];
+  /** Las sugeridas en Configuración [PP-40]; sin ellas, la lista base. */
+  readonly sugeridas?: readonly string[];
   /** El catálogo, para elegir los productos de un paquete [RF-M1-18]. */
   readonly productos?: readonly Product[];
   /** Guarda el producto; devuelve el código de error o `null` si se guardó. */
@@ -88,6 +90,7 @@ export function FormularioDeProducto({
   inicial,
   historial,
   unidadesDeVenta = [],
+  sugeridas = SALE_UNIT_SUGGESTIONS,
   productos = [],
   onGuardar,
   onCancelar,
@@ -146,7 +149,7 @@ export function FormularioDeProducto({
   );
   const esPaquete = tipo === 'BUNDLE';
   const porPiezaOServicio = !esPaquete && (unidad === 'PIECE' || unidad === 'SERVICE');
-  const sugerencias = [...new Set([...SALE_UNIT_SUGGESTIONS, ...unidadesDeVenta])].sort((a, b) =>
+  const sugerencias = [...new Set([...sugeridas, ...unidadesDeVenta])].sort((a, b) =>
     a.localeCompare(b, 'es-MX'),
   );
   const categoriaElegida = categorias.find((c) => c.id === categoriaId);
