@@ -323,6 +323,40 @@ describe('Catálogo', () => {
     );
   });
 
+  it('duplicar abre el formulario con todo copiado menos el código y crea un producto nuevo [RF-M1-16]', async () => {
+    const deps = await montar();
+    const antes = await deps.products.list();
+    const original = antes.ok ? antes.value.find((p) => p.code === 'VC-6') : undefined;
+    if (original === undefined) throw new Error('sin vidrio de prueba');
+    fireEvent.click(await screen.findByRole('button', { name: `Duplicar ${original.name}` }));
+    const dialogo = await screen.findByRole('dialog', { name: 'Duplicar producto' });
+    const nombre = within(dialogo).getByLabelText<HTMLInputElement>('Nombre');
+    expect(nombre.value).toBe(`${original.name} (copia)`);
+    expect(within(dialogo).getByLabelText<HTMLInputElement>('Código (opcional)').value).toBe('');
+    fireEvent.change(nombre, { target: { value: 'Vidrio claro 9 mm' } });
+    fireEvent.change(within(dialogo).getByLabelText('Precio de lista con IVA'), {
+      target: { value: '420' },
+    });
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Guardar producto' }));
+    expect(await screen.findByText('Producto agregado al catálogo.')).toBeTruthy();
+    const despues = await deps.products.list();
+    const nuevo = despues.ok
+      ? despues.value.find((p) => p.name === 'Vidrio claro 9 mm')
+      : undefined;
+    expect(nuevo?.id).not.toBe(original.id);
+    expect(nuevo).toMatchObject({
+      categoryId: original.categoryId,
+      kind: original.kind,
+      chargeUnit: original.chargeUnit,
+      ruleParams: original.ruleParams,
+      fiscal: original.fiscal,
+      code: null,
+      listPrice: 42_000,
+    });
+    // El original no cambia.
+    expect(despues.ok && despues.value.find((p) => p.id === original.id)).toEqual(original);
+  });
+
   it('desactivar conserva el producto y se puede volver a activar', async () => {
     const deps = await montar();
     fireEvent.click(await screen.findByRole('button', { name: 'Desactivar Espejo 4 mm' }));

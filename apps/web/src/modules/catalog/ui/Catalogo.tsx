@@ -38,6 +38,8 @@ const t = textos.catalogo;
 type Ventanilla =
   | { readonly tipo: 'alta' }
   | { readonly tipo: 'edicion'; readonly producto: Product }
+  /** Alta a partir de otro producto, para crear una variante sin capturar todo [RF-M1-16]. */
+  | { readonly tipo: 'duplicar'; readonly producto: Product }
   | { readonly tipo: 'importar' }
   | null;
 
@@ -298,6 +300,16 @@ export function Catalogo({ deps, actor }: CatalogoProps): ReactElement {
                     </Boton>
                     <Boton
                       variante="secundario"
+                      aria-label={`${t.duplicar} ${p.name}`}
+                      onClick={() => {
+                        setAviso(null);
+                        setVentana({ tipo: 'duplicar', producto: p });
+                      }}
+                    >
+                      {t.duplicar}
+                    </Boton>
+                    <Boton
+                      variante="secundario"
                       aria-label={`${p.isActive ? t.desactivar : t.activar} ${p.name}`}
                       onClick={() => {
                         void alternar(p);
@@ -341,6 +353,30 @@ export function Catalogo({ deps, actor }: CatalogoProps): ReactElement {
             inicial={ventana.producto}
             historial={historial}
             onGuardar={(borrador) => guardarEdicion(ventana.producto, borrador)}
+            onCancelar={() => {
+              setVentana(null);
+            }}
+          />
+        </Ventana>
+      ) : null}
+      {ventana?.tipo === 'duplicar' ? (
+        <Ventana
+          titulo={t.formulario.tituloDuplicar}
+          onCerrar={() => {
+            setVentana(null);
+          }}
+        >
+          <FormularioDeProducto
+            categorias={categorias}
+            // Copia todo (categoría, cómo se cobra, sus ajustes, datos fiscales y garantía) menos el código,
+            // que no se puede repetir; el nombre lleva "(copia)" para que se note y se corrija [RF-M1-16].
+            inicial={{
+              ...ventana.producto,
+              name: t.nombreDeCopia(ventana.producto.name),
+              code: null,
+              isActive: true,
+            }}
+            onGuardar={guardarAlta}
             onCancelar={() => {
               setVentana(null);
             }}
