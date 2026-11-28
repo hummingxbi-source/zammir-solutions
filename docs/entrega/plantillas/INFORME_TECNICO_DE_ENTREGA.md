@@ -14,7 +14,7 @@
 | **Para** | ZAMMIR, Soluciones en Vidrio y Aluminio |
 | **Elaboró** | HummingX BI |
 | **Sistema** | Sistema de gestión de ZAMMIR, versión `1.0.0` (commit `[commit]`) |
-| **Lugar y fecha** | Otumba, Estado de México, a ____ de noviembre de 2026 |
+| **Lugar y fecha** | Otumba de Gómez Farías, Estado de México, a ____ de noviembre de 2026 |
 
 Este informe explica, en tres partes, qué se entrega (ficha técnica), cómo se comprobó que funciona y que está protegido (calidad y seguridad), y qué pasa si algo falla (continuidad). Todo lo que aquí se afirma se puede comprobar en el código, en las pruebas automáticas o en la plataforma.
 

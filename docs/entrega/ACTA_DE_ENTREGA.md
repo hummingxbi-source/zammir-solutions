@@ -16,7 +16,7 @@
 | **Sistema** | Sistema de gestión de ZAMMIR: cotizador, órdenes de trabajo, mostrador y caja, clientes, cuentas por cobrar, reportes, usuarios y legal |
 | **Versión del sistema** | `1.0.0` |
 | **Dirección** | `https://sistema.zammir-solutions.com` |
-| **Lugar y fecha** | Otumba, Estado de México, a ____ de noviembre de 2026 |
+| **Lugar y fecha** | Otumba de Gómez Farías, Estado de México, a ____ de noviembre de 2026 |
 
 En el lugar y la fecha indicados, HummingX BI entrega a ZAMMIR el sistema descrito, y ZAMMIR lo recibe en los términos de esta acta y del contrato de prestación de servicios (HMX-ZAM-01).
 

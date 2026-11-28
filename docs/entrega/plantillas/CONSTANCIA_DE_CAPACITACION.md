@@ -17,7 +17,7 @@ participó y completó la capacitación en el uso del
 
 ### Sistema de gestión de ZAMMIR
 
-con una duración de **[n] horas**, el día **[fecha]** de 2026, en Otumba, Estado de México.
+con una duración de **[n] horas**, el día **[fecha]** de 2026, en Otumba de Gómez Farías, Estado de México.
 
 **Temas:** [para Administrador: cotizador, órdenes de trabajo, mostrador y corte de caja, cuentas por cobrar, reportes y administración del sistema · para Cajero / vendedor: cotizador, mostrador, cobros, corte de caja y trabajo sin internet]
 
