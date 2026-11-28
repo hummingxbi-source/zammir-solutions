@@ -12,7 +12,9 @@ export type MoneyErrorCode =
   /** El monto, o el resultado de la operación, sale del rango de enteros seguros. */
   | 'OUT_OF_RANGE'
   /** Una cantidad negativa no tiene sentido al multiplicar un monto. */
-  | 'NEGATIVE_QUANTITY';
+  | 'NEGATIVE_QUANTITY'
+  /** Bajar más del 100 % dejaría el monto en negativo. */
+  | 'NEGATIVE_RESULT';
 
 export interface MoneyError {
   readonly code: MoneyErrorCode;
@@ -83,4 +85,38 @@ export function formatMoney(a: Money): string {
   const centavos = String(absolutos % 100).padStart(2, '0');
   const conComas = String(pesos).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   return `${signo}$${conComas}.${centavos}`;
+}
+
+/** Cómo se redondea al peso un precio que se sube o se baja por porcentaje [ADR-0048, D3]. */
+export type PesoRounding = 'UP' | 'NEAREST' | 'DOWN';
+
+const PUNTOS_BASE = 10_000;
+/** Un peso en centavos por puntos base: la unidad del producto `centavos × (10 000 + puntos base)`. */
+const PESO_POR_PUNTOS_BASE = 100 * PUNTOS_BASE;
+
+/** Sube o baja un monto por un porcentaje en puntos base (800 = +8 %, -500 = -5 %) y lo deja en pesos
+ *  completos: hacia arriba, al más cercano (la mitad sube) o hacia abajo [RF-M1-15, ADR-0048, D3]. Todo con
+ *  enteros: `centavos × (10 000 + puntos base)` y el residuo de dividir entre un peso. */
+export function changeByPercentToPeso(
+  a: Money,
+  puntosBase: number,
+  redondeo: PesoRounding,
+): Result<Money, MoneyError> {
+  if (!Number.isSafeInteger(puntosBase)) {
+    return err({ code: 'NOT_INTEGER' });
+  }
+  const factor = PUNTOS_BASE + puntosBase;
+  if (factor < 0) {
+    return err({ code: 'NEGATIVE_RESULT' });
+  }
+  const escalado = a * factor;
+  if (!Number.isSafeInteger(escalado)) {
+    return err({ code: 'OUT_OF_RANGE' });
+  }
+  const residuo = escalado % PESO_POR_PUNTOS_BASE;
+  const pesos = (escalado - residuo) / PESO_POR_PUNTOS_BASE;
+  const sube =
+    residuo > 0 &&
+    (redondeo === 'UP' || (redondeo === 'NEAREST' && residuo * 2 >= PESO_POR_PUNTOS_BASE));
+  return money((sube ? pesos + 1 : pesos) * 100);
 }

@@ -81,6 +81,9 @@ const NO_DISPONIBLE: CatalogError = { code: 'CATALOG_UNAVAILABLE' };
 /** Cuántos identificadores caben en un `in(...)` sin pasar el largo máximo de la dirección. */
 const GRUPO_DE_IDS = 150;
 
+/** Lo que lanza `update_products_in_bulk` cuando un producto del lote no existe (no_data_found). */
+const SIN_DATOS = 'P0002';
+
 function aError(error: { readonly code?: string }): CatalogError {
   switch (error.code) {
     case SIN_PERMISO:
@@ -89,6 +92,8 @@ function aError(error: { readonly code?: string }): CatalogError {
       return { code: 'CODE_TAKEN' };
     case LLAVE_FORANEA:
       return { code: 'CATEGORY_NOT_FOUND' };
+    case SIN_DATOS:
+      return { code: 'NOT_FOUND' };
     default:
       return NO_DISPONIBLE;
   }
@@ -313,6 +318,25 @@ export function supabaseCatalog(cliente: SupabaseClient): SupabaseCatalog {
         leidas.push(...(grupo.data as FilaDeProducto[]));
       }
       return leidas.length === lote.length ? aLista(leidas, aProducto) : err(NO_DISPONIBLE);
+    },
+
+    async updateMany(cambios) {
+      if (cambios.length === 0) {
+        return ok([]);
+      }
+      // Una sola llamada a la base: cambia todos o ninguno, con su historial y su bitácora [RF-M1-15].
+      const respuesta = await cliente.rpc('update_products_in_bulk', {
+        p_changes: cambios.map((c) => ({
+          id: c.id,
+          name: c.name,
+          listPriceCents: c.listPrice,
+          description: c.description,
+        })),
+      });
+      if (respuesta.error !== null) {
+        return err(aError(respuesta.error));
+      }
+      return aLista(respuesta.data as FilaDeProducto[], aProducto);
     },
 
     async update(producto) {

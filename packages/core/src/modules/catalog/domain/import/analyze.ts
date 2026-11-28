@@ -158,7 +158,8 @@ const REGLA_POR_UNIDAD: Readonly<Record<ChargeUnit, string>> = {
 const SI = new Set(['si', 's', '1', 'true', 'verdadero']);
 const NO = new Set(['no', 'n', '0', 'false', 'falso', '']);
 
-function nombreDeColumna(encabezado: string): string {
+/** Nombre de una columna del archivo, sin acentos, mayúsculas ni espacios ("Código" → "codigo"). */
+export function importColumnName(encabezado: string): string {
   return normalizeSearchText(encabezado).replace(/ /g, '_');
 }
 
@@ -176,7 +177,7 @@ export function analyzeCatalogImport(
   }
   const indices = new Map<string, number>();
   encabezado.forEach((texto, i) => {
-    const nombre = nombreDeColumna(texto);
+    const nombre = importColumnName(texto);
     if (!indices.has(nombre)) indices.set(nombre, i);
   });
   const faltan = REQUIRED_IMPORT_COLUMNS.filter((c) => !indices.has(c));

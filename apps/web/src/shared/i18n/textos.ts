@@ -616,6 +616,82 @@ export const textos = {
       },
     },
   },
+  /** Precios en bloque [RF-M1-15, ADR-0048]: por porcentaje de una categoría o desde un archivo. */
+  preciosEnBloque: {
+    boton: 'Precios en bloque',
+    titulo: 'Precios en bloque',
+    descripcion:
+      'Cambia muchos precios de una vez. Primero ves cada cambio, antes y después; nada se guarda hasta que lo apliques. Cada cambio de precio queda en el historial del producto.',
+    porcentaje: {
+      titulo: 'Subir o bajar por porcentaje',
+      ayuda:
+        'Para toda una categoría, solo los productos activos. Para bajar, escribe el porcentaje con un menos: -5.',
+      categoria: 'Categoría',
+      porcentaje: 'Porcentaje',
+      redondeo: 'Redondear al peso',
+      redondeos: {
+        UP: 'Hacia arriba (recomendado)',
+        NEAREST: 'Al peso más cercano',
+        DOWN: 'Hacia abajo',
+      },
+      verCambios: 'Ver los cambios',
+      aplicar: (n: number) => `Aplicar a ${String(n)} ${n === 1 ? 'producto' : 'productos'}`,
+    },
+    archivo: {
+      titulo: 'Actualizar desde un archivo',
+      ayuda:
+        'Descarga el catálogo de hoy, cambia en Excel el nombre, el precio o la descripción y súbelo. Cada producto se encuentra por su código; una celda vacía deja lo que ya tenía. Los productos sin código no salen en el archivo.',
+      descargar: 'Descargar el catálogo de hoy',
+      elegir: 'Archivo con los cambios (CSV)',
+      sinCambios: 'El archivo no cambia nada.',
+      aplicar: (n: number) => `Aplicar ${String(n)} ${n === 1 ? 'cambio' : 'cambios'}`,
+      fila: 'Fila',
+      producto: 'Producto',
+      cambios: 'Cambios',
+      sinCambiosFila: 'Sin cambios',
+      faltaCodigo: 'Al archivo le falta la columna "codigo".',
+      nadaQueCambiar:
+        'El archivo necesita al menos una columna que cambiar: "nombre", "precio" o "descripcion".',
+      vacio: 'El archivo está vacío.',
+      hayErrores: 'Hay errores: corrige el archivo y vuelve a subirlo. No se cambió nada.',
+      nombre: 'Nombre',
+      precio: 'Precio',
+      descripcionCampo: 'Descripción',
+      errores: {
+        CODE_REQUIRED_IN_ROW: 'Falta el código: así se encuentra el producto.',
+        CODE_NOT_IN_CATALOG: 'Ningún producto tiene ese código. Para dar de alta usa "Importar".',
+      },
+    },
+    columnas: { producto: 'Producto', antes: 'Antes', despues: 'Después' },
+    aplicado: (n: number) =>
+      `Listo: se cambiaron ${String(n)} ${n === 1 ? 'producto' : 'productos'}.`,
+    errores: {
+      PERCENT_INVALID: {
+        mensaje: 'El porcentaje no es válido.',
+        queHacer: 'Escribe un número entre -99.99 y 1000, sin cero; por ejemplo 8 o -5.',
+      },
+      NOTHING_TO_CHANGE: {
+        mensaje: 'Ningún producto activo de esa categoría cambiaría de precio.',
+        queHacer: 'Revisa la categoría o el porcentaje.',
+      },
+      AMOUNT_INVALID: {
+        mensaje: 'Algún precio nuevo sería demasiado grande.',
+        queHacer: 'Revisa el porcentaje.',
+      },
+      NOT_AUTHORIZED: {
+        mensaje: 'Solo un administrador cambia precios en bloque.',
+        queHacer: 'Entra con una cuenta de administrador.',
+      },
+      NOT_FOUND: {
+        mensaje: 'Algún producto ya no está en el catálogo.',
+        queHacer: 'Vuelve a ver los cambios: no se guardó nada.',
+      },
+      CATALOG_UNAVAILABLE: {
+        mensaje: 'No se pudo cambiar el catálogo.',
+        queHacer: 'Revisa la conexión e inténtalo de nuevo: no se guardó nada.',
+      },
+    } as Record<string, { mensaje: string; queHacer: string }>,
+  },
   importar: {
     titulo: 'Importar el catálogo',
     descripcion:

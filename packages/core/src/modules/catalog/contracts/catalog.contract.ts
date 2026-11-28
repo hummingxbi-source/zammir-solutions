@@ -383,6 +383,55 @@ export function catalogContract(
         ]);
       });
 
+      it('en bloque cambia nombre, precio y descripción de varios, con su historial [RF-M1-15]', async () => {
+        const h = await crear();
+        const a = await conProducto(h, { description: 'Antes' });
+        const b = await conProducto(h);
+        const r = await h.admin.updateMany([
+          { id: a.id, name: 'Nuevo A', listPrice: precio(30_000), description: null },
+          { id: b.id, name: b.name, listPrice: b.listPrice, description: 'Para ventanas' },
+        ]);
+        expect(r.ok && r.value.map((p) => [p.name, p.listPrice, p.description])).toEqual([
+          ['Nuevo A', 30_000, undefined],
+          [b.name, b.listPrice, 'Para ventanas'],
+        ]);
+        const leidoA = await h.admin.get(a.id);
+        expect(leidoA.ok && leidoA.value).toEqual({
+          ...Object.fromEntries(Object.entries(a).filter(([k]) => k !== 'description')),
+          name: 'Nuevo A',
+          listPrice: 30_000,
+        });
+        const historial = await h.admin.priceHistory(a.id);
+        expect(historial.ok && historial.value.map((c) => [c.oldPrice, c.newPrice])).toEqual([
+          [28_000, 30_000],
+        ]);
+        expect(await h.bitacoraDeProducto(a.id)).toEqual([
+          {
+            action: 'PRODUCT_PRICE_CHANGED',
+            oldValue: { precio_centavos: 28_000 },
+            newValue: { precio_centavos: 30_000 },
+          },
+        ]);
+        // Sin cambio de precio, no hay historial.
+        const sinCambio = await h.admin.priceHistory(b.id);
+        expect(sinCambio.ok && sinCambio.value).toEqual([]);
+      });
+
+      it('en bloque es todo o nada: si uno no existe, no cambia ninguno; vacío no hace nada', async () => {
+        const h = await crear();
+        const a = await conProducto(h);
+        const fantasma = h.nuevoIdDeProducto();
+        const r = await h.admin.updateMany([
+          { id: a.id, name: 'No debe quedar', listPrice: precio(1_00), description: null },
+          { id: fantasma, name: 'Fantasma', listPrice: precio(1_00), description: null },
+        ]);
+        expect(!r.ok && r.error.code).toBe('NOT_FOUND');
+        const leido = await h.admin.get(a.id);
+        expect(leido.ok && leido.value).toEqual(a);
+        const vacio = await h.admin.updateMany([]);
+        expect(vacio.ok && vacio.value).toEqual([]);
+      });
+
       it('guardar sin cambiar el precio no deja historial ni bitácora', async () => {
         const h = await crear();
         const original = await conProducto(h);
