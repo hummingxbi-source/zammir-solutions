@@ -16,6 +16,8 @@ export const PALABRAS_PROHIBIDAS: readonly PalabraProhibida[] = [
   { patron: /\bsincroniz\w*/i, usar: 'Guardado en la tablet / Enviado' },
   { patron: /\boffline\b/i, usar: 'Guardado en la tablet / Enviado' },
   { patron: /\blogin\b/i, usar: 'Entrar' },
+  // La interfaz es de ZAMMIR: no manda a una persona en particular, sino a soporte (PP-37).
+  { patron: /\bJuanito\b/i, usar: 'soporte de HummingX' },
 ];
 
 export interface Hallazgo {

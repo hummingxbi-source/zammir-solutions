@@ -15,6 +15,7 @@ describe('buscarPalabrasProhibidas', () => {
     ['Sincronizando datos', 'Guardado en la tablet / Enviado'],
     ['Modo offline', 'Guardado en la tablet / Enviado'],
     ['Hacer login', 'Entrar'],
+    ['Si sigue pasando, avísale a Juanito', 'soporte de HummingX'],
   ])('detecta "%s" y sugiere "%s"', (texto, usar) => {
     const hallazgos = buscarPalabrasProhibidas(texto);
     expect(hallazgos.map((h) => h.usar)).toContain(usar);
