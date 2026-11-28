@@ -80,7 +80,7 @@ Ya decidido el 25 nov [ADR-0045]; NO lo vuelvas a preguntar:
 - D1, anticipo al cancelar una orden: sin devolución automática; "En espera" se recomienda devolverlo completo; "En proceso" o "Listo" se retiene para material y mano de obra; decide un administrador con motivo.
 - D2: el repositorio sigue público hasta la entrega y se vuelve privado después (PD-59).
 - D4: la tercera persona del mostrador es Cajero / vendedor, sin permisos de administrador.
-- Titularidad: las cuentas, el dominio y el código son de HummingX BI; los datos son de ZAMMIR y HummingX los trata por su cuenta. Firman los tres socios de HummingX.
+- Titularidad: las cuentas, el dominio y el código son de HummingX BI; los datos son de ZAMMIR y HummingX los trata por su cuenta. Firman dos por cada parte: Luis y Ricardo por ZAMMIR, y dos socios por HummingX [ADR-0049].
 - Luis y Ricardo escriben su propia contraseña en persona.
 - No hay borrador de contrato: se redacta la plantilla con [POR DEFINIR] y revisión de abogado.
 - Una tablet va incluida en el contrato y ZAMMIR compró la otra.

@@ -194,7 +194,7 @@ Seguir los pasos de `CIERRE_DEL_PROYECTO.md` §6:
 | **Apoyo técnico** | Socio 2 | Prepara las tablets y la impresora, sigue la lista de pruebas y llena la hoja de hallazgos |
 | **Registro y documentos** | Socio 3 | Graba, toma la minuta, lleva los documentos impresos, recoge las firmas y cuida que la cámara **no capte pantallas con PIN, contraseñas ni datos de clientes** |
 
-Los tres socios firman por HummingX BI el contrato y el acta de entrega [ADR-0045].
+Firman el contrato y el acta de entrega dos por cada parte: por ZAMMIR, Luis y Ricardo; por HummingX BI, los dos socios que imparten la capacitación [ADR-0049]. Los nombres completos solo van en las versiones de `privado/`.
 
 ### 6.2 Guion de los tres días *(propuesta; ajustar a la hora que dé Luis)*
 
@@ -228,8 +228,8 @@ Los tres socios firman por HummingX BI el contrato y el acta de entrega [ADR-004
 
 | Folio | Documento | Plantilla | Se firma |
 |---|---|---|---|
-| HMX-ZAM-01 | **Contrato de prestación de servicios**: alcance, entregables, soporte, garantía del software, titularidad del dominio y del código, datos personales (HummingX los trata por cuenta de ZAMMIR) y terminación | ❌ **Se redacta al final.** No hay borrador previo. Debe concordar con `ALCANCE.md`, ADR-0038, ADR-0039 y ADR-0045. Lo no definido queda [POR DEFINIR]. **Lo revisa un abogado**, incluida la forma de firmar de HummingX, que no está constituida | Luis y los tres socios de HummingX |
-| HMX-ZAM-02 | **Acta de entrega y aceptación**, con anexos: **A** constancia de pruebas de aceptación · **B** capacitación (un apartado por sesión) · **C** entrega de accesos, sin contraseñas · **D** entrega de equipo · **E** aviso de privacidad y su acuse | ✅ [`ACTA_DE_ENTREGA.md`](ACTA_DE_ENTREGA.md) | Luis y los tres socios; anexo A el sábado, anexo B en cada sesión y el resto el lunes |
+| HMX-ZAM-01 | **Contrato de prestación de servicios**: alcance, entregables, soporte, garantía del software, titularidad del dominio y del código, datos personales (HummingX los trata por cuenta de ZAMMIR) y terminación | ❌ **Se redacta al final.** No hay borrador previo. Debe concordar con `ALCANCE.md`, ADR-0038, ADR-0039 y ADR-0045. Lo no definido queda [POR DEFINIR]. **Lo revisa un abogado**, incluida la forma de firmar de HummingX, que no está constituida | Luis y Ricardo, y dos socios de HummingX [ADR-0049] de HummingX |
+| HMX-ZAM-02 | **Acta de entrega y aceptación**, con anexos: **A** constancia de pruebas de aceptación · **B** capacitación (un apartado por sesión) · **C** entrega de accesos, sin contraseñas · **D** entrega de equipo · **E** aviso de privacidad y su acuse | ✅ [`ACTA_DE_ENTREGA.md`](ACTA_DE_ENTREGA.md) | Luis y Ricardo, y dos socios de HummingX [ADR-0049]; anexo A el sábado, anexo B en cada sesión y el resto el lunes |
 | HMX-ZAM-03 | **Informe técnico de entrega**: ficha técnica, calidad y seguridad (cifras **corridas el mismo día**) y plan de continuidad. Es un informe de HummingX: sin sellos ni la palabra "certificado" | ✅ [`plantillas/INFORME_TECNICO_DE_ENTREGA.md`](plantillas/INFORME_TECNICO_DE_ENTREGA.md) | No |
 | HMX-ZAM-04 | **Manual de usuario** | ✅ [`MANUAL_DE_USUARIO.md`](../manuales/MANUAL_DE_USUARIO.md), versión 1.0; faltan capturas de las pantallas de AJ-02 a AJ-09 | No |
 | HMX-ZAM-05 | **Guías rápidas por rol** para plastificar, con bienvenida y soporte al reverso | ✅ [`plantillas/GUIAS_RAPIDAS.md`](plantillas/GUIAS_RAPIDAS.md) | No |

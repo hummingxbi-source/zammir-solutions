@@ -101,10 +101,10 @@ Con estas firmas ZAMMIR da por **aceptado** el sistema descrito, en los término
 
 | | Nombre | Firma |
 |---|---|---|
-| **Por ZAMMIR** | Luis ______________________________ | |
-| **Por HummingX BI** | ______________________________ | |
-| **Por HummingX BI** | ______________________________ | |
-| **Por HummingX BI** | ______________________________ | |
+| **Por ZAMMIR** | [Representante 1 de ZAMMIR] | |
+| **Por ZAMMIR** | [Representante 2 de ZAMMIR] | |
+| **Por HummingX BI** | [Representante 1 de HummingX BI] | |
+| **Por HummingX BI** | [Representante 2 de HummingX BI] | |
 
 ---
 
@@ -123,8 +123,10 @@ Luis ejecutó los escenarios del plan de pruebas de aceptación ([`PLAN_DE_ACEPT
 
 | | Nombre | Firma |
 |---|---|---|
-| **Por ZAMMIR** | Luis ______________________________ | |
-| **Por HummingX BI** | ______________________________ | |
+| **Por ZAMMIR** | [Representante 1 de ZAMMIR] | |
+| **Por ZAMMIR** | [Representante 2 de ZAMMIR] | |
+| **Por HummingX BI** | [Representante 1 de HummingX BI] | |
+| **Por HummingX BI** | [Representante 2 de HummingX BI] | |
 
 ---
 
@@ -138,7 +140,7 @@ Luis ejecutó los escenarios del plan de pruebas de aceptación ([`PLAN_DE_ACEPT
 |---|---|
 | Fecha | |
 | Hora de inicio y de fin | ______ a ______ (duración: ______) |
-| Imparte (HummingX BI) | |
+| Imparte (HummingX BI) | [Representante 1 de HummingX BI] y [Representante 2 de HummingX BI] |
 
 **Temas vistos**
 
@@ -160,8 +162,9 @@ Observaciones: ____________________________________________________________
 
 | | Nombre | Firma |
 |---|---|---|
-| **Recibe** | Luis ______________________________ | |
-| **Imparte** | ______________________________ | |
+| **Recibe** | [Representante 1 de ZAMMIR] | |
+| **Imparte** | [Representante 1 de HummingX BI] | |
+| **Imparte** | [Representante 2 de HummingX BI] | |
 
 ### Sesión 2 · Ricardo (administrador)
 
@@ -169,7 +172,7 @@ Observaciones: ____________________________________________________________
 |---|---|
 | Fecha | |
 | Hora de inicio y de fin | ______ a ______ (duración: ______) |
-| Imparte (HummingX BI) | |
+| Imparte (HummingX BI) | [Representante 1 de HummingX BI] y [Representante 2 de HummingX BI] |
 
 **Temas vistos** (los mismos de la sesión 1, con énfasis en los reportes)
 
@@ -191,8 +194,9 @@ Observaciones: ____________________________________________________________
 
 | | Nombre | Firma |
 |---|---|---|
-| **Recibe** | Ricardo ______________________________ | |
-| **Imparte** | ______________________________ | |
+| **Recibe** | [Representante 2 de ZAMMIR] | |
+| **Imparte** | [Representante 1 de HummingX BI] | |
+| **Imparte** | [Representante 2 de HummingX BI] | |
 
 ### Sesión 3 · Equipo de mostrador (cajero / vendedor)
 
@@ -200,7 +204,7 @@ Observaciones: ____________________________________________________________
 |---|---|
 | Fecha | |
 | Hora de inicio y de fin | ______ a ______ (duración: ______) |
-| Imparte (HummingX BI) | |
+| Imparte (HummingX BI) | [Representante 1 de HummingX BI] y [Representante 2 de HummingX BI] |
 
 **Temas vistos**
 
@@ -220,7 +224,8 @@ Observaciones: ____________________________________________________________
 | | Nombre | Firma |
 |---|---|---|
 | **Recibe** | ______________________________ | |
-| **Imparte** | ______________________________ | |
+| **Imparte** | [Representante 1 de HummingX BI] | |
+| **Imparte** | [Representante 2 de HummingX BI] | |
 
 ---
 
@@ -241,8 +246,10 @@ Observaciones: ____________________________________________________________
 
 | | Nombre | Firma |
 |---|---|---|
-| **Recibe por ZAMMIR** | Luis ______________________________ | |
-| **Entrega por HummingX BI** | ______________________________ | |
+| **Recibe por ZAMMIR** | [Representante 1 de ZAMMIR] | |
+| **Recibe por ZAMMIR** | [Representante 2 de ZAMMIR] | |
+| **Entrega por HummingX BI** | [Representante 1 de HummingX BI] | |
+| **Entrega por HummingX BI** | [Representante 2 de HummingX BI] | |
 
 ---
 
@@ -259,8 +266,10 @@ Observaciones: ____________________________________________________________
 
 | | Nombre | Firma |
 |---|---|---|
-| **Recibe por ZAMMIR** | Luis ______________________________ | |
-| **Entrega por HummingX BI** | ______________________________ | |
+| **Recibe por ZAMMIR** | [Representante 1 de ZAMMIR] | |
+| **Recibe por ZAMMIR** | [Representante 2 de ZAMMIR] | |
+| **Entrega por HummingX BI** | [Representante 1 de HummingX BI] | |
+| **Entrega por HummingX BI** | [Representante 2 de HummingX BI] | |
 
 ---
 
@@ -277,5 +286,6 @@ ZAMMIR recibió el aviso de privacidad, conoce que HummingX BI trata los datos d
 
 | | Nombre | Firma |
 |---|---|---|
-| **Recibe por ZAMMIR** | Luis ______________________________ | |
+| **Recibe por ZAMMIR** | [Representante 1 de ZAMMIR] | |
+| **Recibe por ZAMMIR** | [Representante 2 de ZAMMIR] | |
 

@@ -5,8 +5,8 @@
 
 | Folio | Documento | Plantilla | Se firma | Cuándo |
 |---|---|---|---|---|
-| HMX-ZAM-01 | Contrato de prestación de servicios | *(se redacta al final; lo revisa un abogado)* | Luis y los tres socios de HummingX | Lunes 30 |
-| HMX-ZAM-02 | Acta de entrega y aceptación, con anexos A a E | [`../ACTA_DE_ENTREGA.md`](../ACTA_DE_ENTREGA.md) | Luis y los tres socios; cada anexo, el día que toca | Anexo A: sábado 28 · Anexo B: en cada sesión · Resto: lunes 30 |
+| HMX-ZAM-01 | Contrato de prestación de servicios | *(se redacta al final; lo revisa un abogado)* | Luis y Ricardo, y dos socios de HummingX [ADR-0049] | Lunes 30 |
+| HMX-ZAM-02 | Acta de entrega y aceptación, con anexos A a E | [`../ACTA_DE_ENTREGA.md`](../ACTA_DE_ENTREGA.md) | Luis y Ricardo, y dos socios de HummingX [ADR-0049]; cada anexo, el día que toca | Anexo A: sábado 28 · Anexo B: en cada sesión · Resto: lunes 30 |
 | HMX-ZAM-03 | Informe técnico de entrega | [`INFORME_TECNICO_DE_ENTREGA.md`](INFORME_TECNICO_DE_ENTREGA.md) | No | Cifras corridas el mismo día |
 | HMX-ZAM-04 | Manual de usuario | [`../../manuales/MANUAL_DE_USUARIO.md`](../../manuales/MANUAL_DE_USUARIO.md) | No | — |
 | HMX-ZAM-05 | Guías rápidas por rol | [`GUIAS_RAPIDAS.md`](GUIAS_RAPIDAS.md) | No | Se plastifican |

@@ -54,5 +54,6 @@
 | [0046](docs/decisiones/0046-respaldo-de-las-fotos-de-medicion.md) | Respaldo de las fotos de medición por el protocolo S3, con las dos copias más recientes | Aceptada | 2026-11-25 |
 | [0047](docs/decisiones/0047-expediente-de-entrega-en-cinco-documentos.md) | Expediente de la entrega en cinco documentos | Aceptada | 2026-11-25 |
 | [0048](docs/decisiones/0048-catalogo-escalable.md) | Catálogo escalable: precio abierto, unidad de venta, decimales, paquetes y precios en bloque | Aceptada | 2026-11-27 |
+| [0049](docs/decisiones/0049-quien-firma-la-entrega.md) | Quién firma los documentos de la entrega: dos por ZAMMIR y dos por HummingX | Aceptada | 2026-11-28 |
 
 Plantilla para una nueva decisión: [`docs/decisiones/0000-plantilla.md`](docs/decisiones/0000-plantilla.md).

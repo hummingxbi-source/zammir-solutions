@@ -46,8 +46,10 @@
 
 | | Nombre | Firma |
 |---|---|---|
-| Por ZAMMIR | Luis ______________________________ | |
-| Por HummingX BI | ______________________________ | |
+| Por ZAMMIR | [Representante 1 de ZAMMIR] | |
+| Por ZAMMIR | [Representante 2 de ZAMMIR] | |
+| Por HummingX BI | [Representante 1 de HummingX BI] | |
+| Por HummingX BI | [Representante 2 de HummingX BI] | |
 
 ## 3. Hoja de hallazgos
 
