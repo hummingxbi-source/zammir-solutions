@@ -174,3 +174,55 @@ describe('cargos extra ligados a la línea [RF-M1-09, ADR-0044]', () => {
     );
   });
 });
+
+describe('precio abierto [RF-M1-10, ADR-0048]', () => {
+  const reparacion = {
+    ...producto('Reparación de ventana', 'SERVICE', 50_000, 'SERVICE'),
+    isOpenPrice: true,
+  };
+  const servicioFijo = producto('Visita', 'SERVICE', 50_000, 'SERVICE');
+  const armar = (p: QuoteProduct) => {
+    const r = buildQuoteLine(
+      p,
+      { id: 'l9', widthMm: null, heightMm: null, quantity: 2, displayUnit: 'cm' },
+      deps,
+    );
+    if (!r.ok) {
+      throw new Error('línea');
+    }
+    return r.value;
+  };
+
+  it('la línea de un producto con precio abierto lo recuerda; la de uno fijo no trae la marca', () => {
+    expect(armar(reparacion).isOpenPrice).toBe(true);
+    expect('isOpenPrice' in armar(servicioFijo)).toBe(false);
+  });
+
+  it('en un producto con precio abierto el precio puede quedar arriba de la referencia y recalcula', () => {
+    const r = repriceQuoteLine(armar(reparacion), 80_000, deps);
+    expect(r.ok && r.value.unitPriceCents).toBe(80_000);
+    expect(r.ok && r.value.catalogPriceCents).toBe(50_000);
+    expect(r.ok && r.value.lineTotalCents).toBe(160_000);
+    expect(r.ok && r.value.isOpenPrice).toBe(true);
+  });
+
+  it('en un producto de precio fijo el precio nunca sube de la referencia', () => {
+    const r = repriceQuoteLine(armar(servicioFijo), 50_001, deps);
+    expect(!r.ok && r.error.code).toBe('PRICE_INVALID');
+  });
+
+  it('el precio abierto tampoco puede ser negativo ni fraccionario', () => {
+    expect(repriceQuoteLine(armar(reparacion), -1, deps).ok).toBe(false);
+    expect(repriceQuoteLine(armar(reparacion), 100.5, deps).ok).toBe(false);
+  });
+
+  it('al cambiar la cantidad se conserva el precio fijado y la marca', () => {
+    const fijado = repriceQuoteLine(armar(reparacion), 80_000, deps);
+    if (!fijado.ok) {
+      throw new Error('precio');
+    }
+    const r = recalculateQuoteLine(fijado.value, { quantity: 3 }, deps);
+    expect(r.ok && r.value.lineTotalCents).toBe(240_000);
+    expect(r.ok && r.value.isOpenPrice).toBe(true);
+  });
+});

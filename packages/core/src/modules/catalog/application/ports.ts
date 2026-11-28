@@ -31,6 +31,8 @@ export interface SellableProduct {
   readonly isTaxExempt: boolean;
   readonly ruleId: string;
   readonly ruleParams: unknown;
+  /** Precio abierto [RF-M1-10]: `listPrice` es la referencia. Sin el campo, el precio es fijo. */
+  readonly isOpenPrice?: boolean;
 }
 
 /** Puerto de lectura para vender: solo productos activos. */

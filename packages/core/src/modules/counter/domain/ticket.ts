@@ -2,6 +2,7 @@ import { err, ok, type Result } from '../../../shared-kernel/result';
 import {
   buildQuoteLine,
   recalculateQuoteLine,
+  repriceQuoteLine,
   type LineDeps,
   type LineInput,
   type QuoteLineError,
@@ -61,6 +62,29 @@ export function setTicketQuantity(
     return err({ code: 'LINE_NOT_FOUND' });
   }
   const nueva = recalculateQuoteLine(actual, { quantity: cantidad }, deps);
+  if (!nueva.ok) {
+    return err(nueva.error);
+  }
+  return ok({ lines: ticket.lines.map((l) => (l.id === lineId ? nueva.value : l)) });
+}
+
+/** Fija el precio de una línea con precio abierto [RF-M1-10, ADR-0048]: en la referencia o arriba. En el
+ *  mostrador no hay descuentos (se dan en el cotizador, con el PIN de un administrador), así que bajar de la
+ *  referencia o cambiar el precio de un producto de precio fijo no se acepta. */
+export function setTicketLinePrice(
+  ticket: Ticket,
+  lineId: string,
+  precioCents: number,
+  deps: LineDeps,
+): Result<Ticket, TicketError> {
+  const actual = ticket.lines.find((l) => l.id === lineId);
+  if (actual === undefined) {
+    return err({ code: 'LINE_NOT_FOUND' });
+  }
+  if (actual.isOpenPrice !== true || precioCents < actual.catalogPriceCents) {
+    return err({ code: 'PRICE_INVALID' });
+  }
+  const nueva = repriceQuoteLine(actual, precioCents, deps);
   if (!nueva.ok) {
     return err(nueva.error);
   }

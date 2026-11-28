@@ -38,6 +38,9 @@ export interface QuoteLine {
   /** Cargos extra de la pieza (cantos, perforaciones, biselados…), ya sumados en `baseCents`, `taxCents` y
    *  `lineTotalCents` [RF-M1-09, RN-02]. Sin el campo (líneas de antes), no hay. */
   readonly extras?: readonly LineExtra[];
+  /** El producto tiene precio abierto: `unitPriceCents` puede quedar arriba de `catalogPriceCents`, que es la
+   *  referencia [RF-M1-10, ADR-0048]. Sin el campo (líneas de antes o de precio fijo), no. */
+  readonly isOpenPrice?: boolean;
 }
 
 /** Un cargo extra ligado a una línea: un producto "Cargo extra" del catálogo, cobrado con la medida de la pieza

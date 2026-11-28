@@ -317,6 +317,54 @@ describe('Cotizador', () => {
     expect(screen.getAllByText(/con descuento autorizado/).length).toBeGreaterThan(0);
   });
 
+  it('precio abierto: un cajero fija un precio arriba de la referencia sin PIN; abajo, se lo pide [RF-M1-10]', async () => {
+    const reparacion: SellableProduct = {
+      ...instalacion,
+      id: asId<'Product'>('00000000-0000-4000-8000-00000000f0a1'),
+      code: 'REP',
+      name: 'Reparación de ventana',
+      isOpenPrice: true,
+    };
+    montar({ productos: [vidrio, reparacion] });
+    await empezarConClienteNuevo();
+    fireEvent.change(await screen.findByLabelText('Buscar producto o servicio'), {
+      target: { value: 'repar' },
+    });
+    fireEvent.click(await screen.findByRole('button', { name: /Reparación de ventana/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar a la cotización' }));
+    await waitFor(() => {
+      expect(screen.getAllByText('$500.00').length).toBeGreaterThan(0);
+    });
+    expect(screen.queryByRole('button', { name: 'Dar descuento' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Fijar precio' }));
+    const dialogo = await screen.findByRole('dialog');
+    expect(within(dialogo).getByText(/Precio de referencia: \$500\.00/)).toBeTruthy();
+    fireEvent.change(within(dialogo).getByLabelText('Precio por unidad (con IVA)'), {
+      target: { value: '800' },
+    });
+    expect(within(dialogo).queryByLabelText('PIN del administrador')).toBeNull();
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Fijar precio' }));
+    await waitFor(() => {
+      expect(screen.getAllByText('$800.00').length).toBeGreaterThan(0);
+    });
+    expect(screen.getAllByText(/precio fijado/).length).toBeGreaterThan(0);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Fijar precio' }));
+    const otra = await screen.findByRole('dialog');
+    fireEvent.change(within(otra).getByLabelText('Precio por unidad (con IVA)'), {
+      target: { value: '300' },
+    });
+    expect(within(otra).getByLabelText('PIN del administrador')).toBeTruthy();
+    fireEvent.change(within(otra).getByLabelText('PIN del administrador'), {
+      target: { value: '482915' },
+    });
+    fireEvent.click(within(otra).getByRole('button', { name: 'Fijar precio' }));
+    await waitFor(() => {
+      expect(screen.getAllByText('$300.00').length).toBeGreaterThan(0);
+    });
+    expect(screen.getAllByText(/con descuento autorizado/).length).toBeGreaterThan(0);
+  });
+
   it('un administrador da el descuento sin pedir PIN', async () => {
     montar({ actor: admin });
     await empezarConClienteNuevo();

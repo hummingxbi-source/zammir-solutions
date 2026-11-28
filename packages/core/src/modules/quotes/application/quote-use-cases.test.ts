@@ -289,6 +289,102 @@ describe('descuentos con autorización [PD-45, RN-19]', () => {
   });
 });
 
+describe('precio abierto [RF-M1-10, ADR-0048]', () => {
+  const reparacion: SellableProduct = {
+    ...instalacion,
+    id: asId<'Product'>('00000000-0000-4000-8000-00000000f0a1'),
+    code: 'REP',
+    name: 'Reparación de ventana',
+    isOpenPrice: true,
+  };
+  async function borradorConReparacion(e: ReturnType<typeof entorno>, actor = ana) {
+    const q = await createQuoteDraft(e.deps, actor, { customerId: cliente });
+    if (!q.ok) throw new Error('borrador');
+    const l = await addQuoteLine(e.deps, actor, q.value.id, reparacion, {
+      widthMm: null,
+      heightMm: null,
+      quantity: 1,
+      displayUnit: 'cm',
+    });
+    if (!l.ok) throw new Error('línea');
+    return l.value;
+  }
+  const autorizacion = (): Authorization => ({
+    adminId: luis.userId,
+    authorizedAt: new Date('2026-10-30T18:00:00.000Z'),
+  });
+
+  it('un cajero fija un precio arriba de la referencia sin PIN, y no cuenta como descuento', async () => {
+    const e = entorno();
+    const q = await borradorConReparacion(e);
+    const r = await applyQuoteDiscount(e.deps, ana, q.id, q.lines[0]?.id ?? '', 85_000);
+    expect(r.ok && r.value.lines[0]?.unitPriceCents).toBe(85_000);
+    expect(r.ok && r.value.lines[0]?.catalogPriceCents).toBe(50_000);
+    expect(r.ok && r.value.discountAuthorizedBy).toBeNull();
+  });
+
+  it('dejarlo igual que la referencia tampoco pide PIN', async () => {
+    const e = entorno();
+    const q = await borradorConReparacion(e);
+    const r = await applyQuoteDiscount(e.deps, ana, q.id, q.lines[0]?.id ?? '', 50_000);
+    expect(r.ok).toBe(true);
+  });
+
+  it('bajar de la referencia es un descuento: sin PIN no se puede, con PIN sí y queda quién autorizó', async () => {
+    const e = entorno();
+    const q = await borradorConReparacion(e);
+    const id = q.lines[0]?.id ?? '';
+    const sinPin = await applyQuoteDiscount(e.deps, ana, q.id, id, 40_000);
+    expect(!sinPin.ok && sinPin.error.code).toBe('AUTHORIZATION_REQUIRED');
+    const conPin = await applyQuoteDiscount(e.deps, ana, q.id, id, 40_000, autorizacion());
+    expect(conPin.ok && conPin.value.lines[0]?.unitPriceCents).toBe(40_000);
+    expect(conPin.ok && conPin.value.discountAuthorizedBy).toBe(luis.userId);
+  });
+
+  it('subir el precio no borra quién autorizó un descuento anterior', async () => {
+    const e = entorno();
+    const q = await borradorConReparacion(e);
+    const id = q.lines[0]?.id ?? '';
+    await applyQuoteDiscount(e.deps, ana, q.id, id, 40_000, autorizacion());
+    const r = await applyQuoteDiscount(e.deps, ana, q.id, id, 90_000);
+    expect(r.ok && r.value.discountAuthorizedBy).toBe(luis.userId);
+  });
+
+  it('la tablet sin persona no fija precios', async () => {
+    const e = entorno();
+    const q = await borradorConReparacion(e);
+    const r = await applyQuoteDiscount(
+      e.deps,
+      { userId: ana.userId, role: 'DEVICE' },
+      q.id,
+      q.lines[0]?.id ?? '',
+      90_000,
+    );
+    expect(!r.ok && r.error.code).toBe('NOT_AUTHORIZED');
+  });
+
+  it('en un producto de precio fijo un cajero sigue sin poder subir el precio', async () => {
+    const e = entorno();
+    const q = await borradorConVidrio(e);
+    const r = await applyQuoteDiscount(e.deps, ana, q.id, q.lines[0]?.id ?? '', 30_000);
+    expect(!r.ok && r.error.code).toBe('AUTHORIZATION_REQUIRED');
+  });
+
+  it('una cotización emitida conserva el precio fijado y su referencia en la operación', async () => {
+    const e = entorno();
+    const q = await borradorConReparacion(e);
+    await applyQuoteDiscount(e.deps, ana, q.id, q.lines[0]?.id ?? '', 85_000);
+    const emitida = await issueQuote(e.deps, ana, q.id);
+    expect(emitida.ok && emitida.value.lines[0]?.unitPriceCents).toBe(85_000);
+    const op = (await e.outbox.list()).at(-1);
+    const carga = op?.envelope.payload as {
+      lines: { unitPriceCents: number; catalogPriceCents: number }[];
+    };
+    expect(carga.lines[0]).toMatchObject({ unitPriceCents: 85_000, catalogPriceCents: 50_000 });
+    expect(parseOperation(op?.envelope).ok).toBe(true);
+  });
+});
+
 describe('cargos extra en el borrador [RF-M1-09, ADR-0044]', () => {
   const canto: SellableProduct = {
     ...vidrio,

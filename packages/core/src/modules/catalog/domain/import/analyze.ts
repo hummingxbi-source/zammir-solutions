@@ -23,6 +23,7 @@ export const IMPORT_COLUMNS = [
   'regla',
   'base_metro_lineal',
   'garantia_meses',
+  'precio_abierto',
 ] as const;
 
 export type ImportColumn = (typeof IMPORT_COLUMNS)[number];
@@ -45,6 +46,7 @@ export type ImportErrorCode =
   | 'PRICE_TOO_MANY_DECIMALS'
   | 'PRICE_NEGATIVE'
   | 'EXEMPT_INVALID'
+  | 'OPEN_PRICE_INVALID'
   | 'CODE_DUPLICATE_IN_FILE'
   | 'CODE_DUPLICATE_IN_CATALOG'
   | 'RULE_UNKNOWN'
@@ -191,6 +193,11 @@ export function analyzeCatalogImport(
     const exento = SI.has(textoExento) ? true : NO.has(textoExento) ? false : null;
     if (exento === null) falla('exento', 'EXEMPT_INVALID');
 
+    // Precio abierto [RF-M1-10]: columna opcional; vacía o ausente, el precio es fijo.
+    const textoAbierto = normalizeSearchText(valor('precio_abierto'));
+    const abierto = SI.has(textoAbierto) ? true : NO.has(textoAbierto) ? false : null;
+    if (abierto === null) falla('precio_abierto', 'OPEN_PRICE_INVALID');
+
     const codigo = valor('codigo');
     if (codigo !== '') {
       const clave = codigo.toLowerCase();
@@ -229,6 +236,7 @@ export function analyzeCatalogImport(
       unidad === undefined ||
       !precio.ok ||
       exento === null ||
+      abierto === null ||
       regla === null
     ) {
       return { number: numero, draft: null, errors: errores };
@@ -249,6 +257,7 @@ export function analyzeCatalogImport(
       fiscal: categoria.fiscalDefaults,
       warrantyMonths: garantia,
       warrantyText: null,
+      ...(abierto ? { isOpenPrice: true } : {}),
     };
     const construido = buildProduct(asId<'Product'>('importacion'), borrador, contexto.priceRules);
     if (!construido.ok) {
@@ -274,6 +283,7 @@ export function analyzeCatalogImport(
       fiscal: p.fiscal,
       warrantyMonths: p.warrantyMonths,
       warrantyText: p.warrantyText,
+      ...(p.isOpenPrice === true ? { isOpenPrice: true } : {}),
     };
     return { number: numero, draft: normalizado, errors: [] };
   });

@@ -9,6 +9,7 @@ import {
   addToTicket,
   EMPTY_TICKET,
   removeFromTicket,
+  setTicketLinePrice,
   setTicketQuantity,
   ticketTotals,
   type Ticket,
@@ -213,5 +214,68 @@ describe('ticket actual del mostrador', () => {
         },
       ),
     );
+  });
+});
+
+describe('precio abierto en el mostrador [RF-M1-10, ADR-0048]', () => {
+  const reparacion: QuoteProduct = {
+    id: asId<'Product'>('p-reparacion'),
+    name: 'Reparación de ventana',
+    chargeUnit: 'SERVICE',
+    listPrice: precio(50_000),
+    isTaxExempt: false,
+    ruleId: 'SERVICE',
+    ruleParams: {},
+    isOpenPrice: true,
+  };
+  const conReparacion = () => {
+    const r = addToTicket(
+      EMPTY_TICKET,
+      reparacion,
+      { id: 'l1', widthMm: null, heightMm: null, quantity: 1, displayUnit: 'cm' },
+      deps,
+    );
+    if (!r.ok) throw new Error('ticket');
+    return r.value;
+  };
+
+  it('fija un precio arriba de la referencia y recalcula el total', () => {
+    const r = setTicketLinePrice(conReparacion(), 'l1', 75_000, deps);
+    expect(r.ok && r.value.lines[0]?.unitPriceCents).toBe(75_000);
+    expect(r.ok && ticketTotals(r.value).totalCents).toBe(75_000);
+  });
+
+  it('no baja de la referencia: los descuentos se dan en el cotizador con PIN', () => {
+    const r = setTicketLinePrice(conReparacion(), 'l1', 49_999, deps);
+    expect(!r.ok && r.error.code).toBe('PRICE_INVALID');
+  });
+
+  it('no cambia el precio de un producto de precio fijo', () => {
+    const t = addToTicket(
+      EMPTY_TICKET,
+      vidrio,
+      { id: 'l2', widthMm: 1000, heightMm: 1000, quantity: 1, displayUnit: 'cm' },
+      deps,
+    );
+    if (!t.ok) throw new Error('ticket');
+    const r = setTicketLinePrice(t.value, 'l2', 30_000, deps);
+    expect(!r.ok && r.error.code).toBe('PRICE_INVALID');
+  });
+
+  it('avisa si la línea ya no está en el ticket', () => {
+    const r = setTicketLinePrice(conReparacion(), 'otra', 60_000, deps);
+    expect(!r.ok && r.error.code).toBe('LINE_NOT_FOUND');
+  });
+
+  it('el mismo producto con otro precio fijado no se suma a la línea anterior', () => {
+    const fijado = setTicketLinePrice(conReparacion(), 'l1', 75_000, deps);
+    if (!fijado.ok) throw new Error('precio');
+    const r = addToTicket(
+      fijado.value,
+      reparacion,
+      { id: 'l3', widthMm: null, heightMm: null, quantity: 1, displayUnit: 'cm' },
+      deps,
+    );
+    expect(r.ok && r.value.lines.length).toBe(2);
   });
 });

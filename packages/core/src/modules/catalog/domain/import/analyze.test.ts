@@ -46,6 +46,7 @@ function fila(cambios: Partial<Record<(typeof IMPORT_COLUMNS)[number], string>> 
     regla: '',
     base_metro_lineal: '',
     garantia_meses: '',
+    precio_abierto: '',
   };
   return IMPORT_COLUMNS.map((c) => cambios[c] ?? base[c]).join(',');
 }
@@ -141,6 +142,39 @@ describe('analyzeCatalogImport: filas válidas', () => {
       `${ENCABEZADO}\n${fila({ unidad: 'metro lineal', base_metro_lineal: 'largo' })}`,
     );
     expect(r.rows[0]?.draft?.ruleParams).toEqual({ basis: 'LENGTH' });
+  });
+
+  it('precio abierto: "sí" lo marca; vacío o "no", el precio es fijo [RF-M1-10]', () => {
+    const r = analizar(
+      [
+        ENCABEZADO,
+        fila({ codigo: 'A', precio_abierto: 'Sí' }),
+        fila({ codigo: 'B', precio_abierto: 'no' }),
+        fila({ codigo: 'C' }),
+      ].join('\n'),
+    );
+    expect(r.rows.map((x) => x.draft?.isOpenPrice)).toEqual([true, undefined, undefined]);
+  });
+
+  it('precio abierto con otro texto se marca como error de esa columna', () => {
+    expect(errores(`${ENCABEZADO}\n${fila({ precio_abierto: 'tal vez' })}`)).toEqual([
+      ['precio_abierto:OPEN_PRICE_INVALID'],
+    ]);
+  });
+
+  it('un archivo sin la columna precio_abierto se sigue leyendo (plantillas de antes)', () => {
+    const viejo = IMPORT_COLUMNS.filter((c) => c !== 'precio_abierto');
+    const r = analizar(
+      `${viejo.join(',')}\nVC-9,Vidrio,Vidrio claro / flotado,a medida,m²,10,no,,,`,
+    );
+    expect(r.rows[0]?.draft?.isOpenPrice).toBeUndefined();
+    expect(r.rows[0]?.errors).toEqual([]);
+  });
+
+  it('un cargo extra con precio abierto no se acepta', () => {
+    expect(
+      errores(`${ENCABEZADO}\n${fila({ tipo: 'cargo extra', precio_abierto: 'si' })}`),
+    ).toEqual([['-:OPEN_PRICE_NOT_ALLOWED']]);
   });
 
   it('una regla indicada a mano se respeta si existe', () => {
@@ -262,7 +296,7 @@ describe('plantilla descargable', () => {
   });
 
   it('los ejemplos conservan los acentos', () => {
-    expect(catalogImportTemplate()).toContain('Instalación a domicilio (ejemplo)');
+    expect(catalogImportTemplate()).toContain('Reparación de ventana a domicilio (ejemplo)');
     expect(catalogImportTemplate()).toContain('m²');
   });
 

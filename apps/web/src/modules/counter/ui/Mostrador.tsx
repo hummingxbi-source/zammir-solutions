@@ -11,11 +11,13 @@ import {
   mexicoDate,
   money,
   parseLength,
+  parseMoney,
   planRefunds,
   registerWorkOrderPayment,
   removeFromTicket,
   searchProducts,
   shareQuote,
+  setTicketLinePrice,
   setTicketQuantity,
   ticketTotals,
   type Authorization,
@@ -132,6 +134,9 @@ export function Mostrador(props: MostradorProps): ReactElement {
   const [alto, setAlto] = useState('');
   const [cantidad, setCantidad] = useState('1');
   const [ticket, setTicket] = useState<Ticket>(EMPTY_TICKET);
+  // Precio abierto [RF-M1-10]: la línea a la que se le está fijando el precio y lo que se escribió.
+  const [precioDe, setPrecioDe] = useState<string | null>(null);
+  const [precioTexto, setPrecioTexto] = useState('');
   const [dialogo, setDialogo] = useState<Dialogo>(null);
   const [error, setError] = useState<{ mensaje: string; queHacer: string } | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
@@ -275,6 +280,26 @@ export function Mostrador(props: MostradorProps): ReactElement {
     const r = setTicketQuantity(ticket, id, nueva, lineDeps);
     if (r.ok) {
       setTicket(r.value);
+    } else {
+      mostrarError(r.error.code);
+    }
+  }
+
+  function fijarPrecio(id: string): void {
+    const linea = ticket.lines.find((l) => l.id === id);
+    const monto = parseMoney(precioTexto);
+    if (linea === undefined || !monto.ok || monto.value < linea.catalogPriceCents) {
+      setError({
+        mensaje: t.ticket.precioDebajo(cobra(linea?.catalogPriceCents ?? 0)),
+        queHacer: t.ticket.precioDebajoQueHacer,
+      });
+      return;
+    }
+    const r = setTicketLinePrice(ticket, id, monto.value, lineDeps);
+    if (r.ok) {
+      setTicket(r.value);
+      setPrecioDe(null);
+      setError(null);
     } else {
       mostrarError(r.error.code);
     }
@@ -587,10 +612,54 @@ export function Mostrador(props: MostradorProps): ReactElement {
                       <li key={l.id} className="ticket__linea">
                         <div className="ticket__datos">
                           <strong className="ticket__nombre">{l.name}</strong>
-                          <span className="ticket__detalle">{l.detail}</span>
+                          <span className="ticket__detalle">
+                            {l.detail}
+                            {l.isOpenPrice === true && l.unitPriceCents > l.catalogPriceCents
+                              ? ` · ${t.ticket.precioFijado}`
+                              : ''}
+                          </span>
                         </div>
                         <span className="ticket__importe">{cobra(l.lineTotalCents)}</span>
+                        {precioDe === l.id ? (
+                          <form
+                            className="ticket__precio"
+                            aria-label={`${t.ticket.fijarPrecio}: ${l.name}`}
+                            onSubmit={(e) => {
+                              e.preventDefault();
+                              fijarPrecio(l.id);
+                            }}
+                          >
+                            <p>{t.ticket.referencia(cobra(l.catalogPriceCents))}</p>
+                            <CampoNumerico
+                              etiqueta={t.ticket.precioPorUnidad}
+                              value={precioTexto}
+                              onChange={(e) => {
+                                setPrecioTexto(e.target.value);
+                              }}
+                            />
+                            <Boton type="submit">{t.ticket.fijarPrecio}</Boton>
+                            <Boton
+                              variante="secundario"
+                              onClick={() => {
+                                setPrecioDe(null);
+                              }}
+                            >
+                              {t.ticket.cancelarPrecio}
+                            </Boton>
+                          </form>
+                        ) : null}
                         <div className="ticket__acciones">
+                          {l.isOpenPrice === true ? (
+                            <Boton
+                              variante="secundario"
+                              onClick={() => {
+                                setPrecioDe(l.id);
+                                setPrecioTexto('');
+                              }}
+                            >
+                              {t.ticket.fijarPrecio}
+                            </Boton>
+                          ) : null}
                           <Boton
                             variante="secundario"
                             aria-label={`${t.ticket.menos}: ${l.name}`}

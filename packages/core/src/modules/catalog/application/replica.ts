@@ -81,6 +81,7 @@ function paraVender(p: ReplicatedProduct): SellableProduct {
     isTaxExempt: p.isTaxExempt,
     ruleId: p.ruleId,
     ruleParams: p.ruleParams,
+    ...(p.isOpenPrice === true ? { isOpenPrice: true } : {}),
   };
 }
 

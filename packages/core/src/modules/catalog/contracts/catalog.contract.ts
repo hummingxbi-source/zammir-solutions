@@ -191,6 +191,23 @@ export function catalogContract(
       expect(!oculto.ok && oculto.error.code).toBe('NOT_FOUND');
     });
 
+    it('precio abierto: se guarda y se lee con su marca, en la lista y para vender [RF-M1-10]', async () => {
+      const h = await crear();
+      const categoria = await primeraCategoria(h);
+      const abierto = productoDePrueba(h.nuevoIdDeProducto(), categoria, { isOpenPrice: true });
+      const fijo = productoDePrueba(h.nuevoIdDeProducto(), categoria);
+      await h.admin.create(abierto);
+      await h.admin.create(fijo);
+      const lista = await h.admin.list();
+      expect(lista.ok && lista.value.find((p) => p.id === abierto.id)?.isOpenPrice).toBe(true);
+      const paraVender = await h.reader.findSellable(abierto.id);
+      expect(paraVender.ok && paraVender.value.isOpenPrice).toBe(true);
+      const fijoParaVender = await h.reader.findSellable(fijo.id);
+      expect(fijoParaVender.ok && fijoParaVender.value.isOpenPrice === true).toBe(false);
+      const todos = await h.reader.listSellable();
+      expect(todos.ok && todos.value.find((p) => p.id === abierto.id)?.isOpenPrice).toBe(true);
+    });
+
     it('la lectura para vender no expone lo de administración', async () => {
       const h = await crear();
       const producto = productoDePrueba(h.nuevoIdDeProducto(), await primeraCategoria(h));
