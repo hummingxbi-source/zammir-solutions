@@ -1,12 +1,13 @@
 import type { Clock } from '../../../shared-kernel/clock';
 import type { IdGenerator, ProductId } from '../../../shared-kernel/id';
-import { err, ok } from '../../../shared-kernel/result';
+import { err, ok, type Result } from '../../../shared-kernel/result';
 import type { InMemoryAuditLog } from '../../audit/application/in-memory-audit-log';
 import { recordAuditEntry } from '../../audit/application/record-audit-entry';
 import { categoryNameTaken } from '../domain/category';
 import { INITIAL_CATEGORIES } from '../domain/initial-categories';
 import type { Category, PriceChange, Product } from '../domain/product';
 import type {
+  CatalogError,
   CategoryAdmin,
   CategoryReader,
   ProductAdmin,
@@ -35,6 +36,11 @@ function paraVender(p: Product): SellableProduct {
     isTaxExempt: p.isTaxExempt,
     ruleId: p.ruleId,
     ruleParams: p.ruleParams,
+    ...(p.isOpenPrice === true ? { isOpenPrice: true } : {}),
+    ...(p.description === undefined ? {} : { description: p.description }),
+    ...(p.saleUnitName === undefined ? {} : { saleUnitName: p.saleUnitName }),
+    ...(p.bundleItems === undefined ? {} : { bundleItems: p.bundleItems }),
+    ...(p.allowsDecimalQuantity === true ? { allowsDecimalQuantity: true } : {}),
   };
 }
 
@@ -91,6 +97,47 @@ export function inMemoryCatalog(deps: InMemoryCatalogDeps): InMemoryCatalog {
       oldValue: anterior === null ? null : { nombre: anterior.name, activa: anterior.isActive },
       newValue: { nombre: c.name, activa: c.isActive },
     });
+  }
+
+  async function actualizar(producto: Product): Promise<Result<Product, CatalogError>> {
+    const anterior = productos.get(producto.id);
+    if (anterior === undefined) {
+      return err({ code: 'NOT_FOUND' });
+    }
+    if (!categorias.some((c) => c.id === producto.categoryId)) {
+      return err({ code: 'CATEGORY_NOT_FOUND' });
+    }
+    if (codigoOcupado(producto)) {
+      return err({ code: 'CODE_TAKEN' });
+    }
+    productos.set(producto.id, producto);
+
+    if (anterior.listPrice !== producto.listPrice) {
+      historial.set(producto.id, [
+        ...(historial.get(producto.id) ?? []),
+        {
+          productId: producto.id,
+          oldPrice: anterior.listPrice,
+          newPrice: producto.listPrice,
+          changedAt: deps.clock.now(),
+        },
+      ]);
+      await dejarBitacora(
+        producto,
+        'PRODUCT_PRICE_CHANGED',
+        { precio_centavos: anterior.listPrice },
+        { precio_centavos: producto.listPrice },
+      );
+    }
+    if (anterior.isActive !== producto.isActive) {
+      await dejarBitacora(
+        producto,
+        producto.isActive ? 'PRODUCT_ACTIVATED' : 'PRODUCT_DEACTIVATED',
+        { activo: anterior.isActive },
+        { activo: producto.isActive },
+      );
+    }
+    return ok(producto);
   }
 
   return {
@@ -167,45 +214,29 @@ export function inMemoryCatalog(deps: InMemoryCatalogDeps): InMemoryCatalog {
       return Promise.resolve(ok([...lote]));
     },
 
-    async update(producto) {
-      const anterior = productos.get(producto.id);
-      if (anterior === undefined) {
+    update: actualizar,
+
+    async updateMany(cambios) {
+      // Todo o nada: primero se revisa que existan todos.
+      if (cambios.some((c) => !productos.has(c.id))) {
         return err({ code: 'NOT_FOUND' });
       }
-      if (!categorias.some((c) => c.id === producto.categoryId)) {
-        return err({ code: 'CATEGORY_NOT_FOUND' });
+      const resultado: Product[] = [];
+      for (const c of cambios) {
+        const anterior = productos.get(c.id);
+        if (anterior === undefined) continue;
+        const sinDescripcion = Object.fromEntries(
+          Object.entries(anterior).filter(([campo]) => campo !== 'description'),
+        ) as unknown as Product;
+        const r = await actualizar({
+          ...sinDescripcion,
+          name: c.name,
+          listPrice: c.listPrice,
+          ...(c.description === null ? {} : { description: c.description }),
+        });
+        if (r.ok) resultado.push(r.value);
       }
-      if (codigoOcupado(producto)) {
-        return err({ code: 'CODE_TAKEN' });
-      }
-      productos.set(producto.id, producto);
-
-      if (anterior.listPrice !== producto.listPrice) {
-        historial.set(producto.id, [
-          ...(historial.get(producto.id) ?? []),
-          {
-            productId: producto.id,
-            oldPrice: anterior.listPrice,
-            newPrice: producto.listPrice,
-            changedAt: deps.clock.now(),
-          },
-        ]);
-        await dejarBitacora(
-          producto,
-          'PRODUCT_PRICE_CHANGED',
-          { precio_centavos: anterior.listPrice },
-          { precio_centavos: producto.listPrice },
-        );
-      }
-      if (anterior.isActive !== producto.isActive) {
-        await dejarBitacora(
-          producto,
-          producto.isActive ? 'PRODUCT_ACTIVATED' : 'PRODUCT_DEACTIVATED',
-          { activo: anterior.isActive },
-          { activo: producto.isActive },
-        );
-      }
-      return ok(producto);
+      return ok(resultado);
     },
 
     priceHistory(id) {

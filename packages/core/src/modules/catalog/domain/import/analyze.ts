@@ -1,14 +1,25 @@
 import { asId } from '../../../../shared-kernel/id';
 import { parseMoney } from '../../../../shared-kernel/money/parse-money';
+import {
+  adjustmentFieldsFor,
+  paramsWithAdjustments,
+  parseAdjustmentTexts,
+  type AdjustmentField,
+  type AdjustmentTextErrorCode,
+} from '../pricing/adjustments';
 import type { PriceRegistry } from '../pricing/registry';
 import {
   buildProduct,
+  isProductServiceKey,
+  isUnitKey,
+  MAX_DESCRIPTION_LENGTH,
   type Category,
   type ChargeUnit,
   type ProductDraft,
   type ProductErrorCode,
   type ProductKind,
 } from '../product';
+import { MAX_SALE_UNIT_LENGTH } from '../sale-unit';
 import { normalizeSearchText } from '../search';
 
 /** Columnas de la plantilla, en el orden en que se descargan. */
@@ -23,9 +34,29 @@ export const IMPORT_COLUMNS = [
   'regla',
   'base_metro_lineal',
   'garantia_meses',
+  'precio_abierto',
+  'descripcion',
+  'redondeo_mm',
+  'area_minima_m2',
+  'minimo_por_trabajo',
+  'ancho_maximo_mm',
+  'alto_maximo_mm',
+  'unidad_venta',
+  'clave_sat',
+  'clave_unidad_sat',
 ] as const;
 
 export type ImportColumn = (typeof IMPORT_COLUMNS)[number];
+
+/** Columna de cada ajuste del cobro [RF-M1-14]. Opcionales: vacías o ausentes, el ajuste está apagado. */
+const COLUMNA_DE_AJUSTE: Readonly<Record<AdjustmentField, ImportColumn>> = {
+  measureStepMm: 'redondeo_mm',
+  minAreaMm2: 'area_minima_m2',
+  minAmountCents: 'minimo_por_trabajo',
+  maxWidthMm: 'ancho_maximo_mm',
+  maxHeightMm: 'alto_maximo_mm',
+};
+const CAMPOS_DE_AJUSTE = Object.keys(COLUMNA_DE_AJUSTE) as AdjustmentField[];
 
 /** Sin estas columnas el archivo no se puede leer. */
 export const REQUIRED_IMPORT_COLUMNS: readonly ImportColumn[] = [
@@ -45,12 +76,20 @@ export type ImportErrorCode =
   | 'PRICE_TOO_MANY_DECIMALS'
   | 'PRICE_NEGATIVE'
   | 'EXEMPT_INVALID'
+  | 'OPEN_PRICE_INVALID'
+  | 'DESCRIPTION_TOO_LONG_IN_ROW'
   | 'CODE_DUPLICATE_IN_FILE'
   | 'CODE_DUPLICATE_IN_CATALOG'
   | 'RULE_UNKNOWN'
   | 'LINEAR_BASIS_REQUIRED'
   | 'LINEAR_BASIS_INVALID'
   | 'WARRANTY_INVALID'
+  /** Un ajuste del cobro que la regla del producto no admite (por ejemplo, área mínima en una pieza). */
+  | 'ADJUSTMENT_NOT_ALLOWED'
+  /** Claves del SAT con otro formato: 8 dígitos para el producto, 2 o 3 letras o dígitos para la unidad. */
+  | 'SAT_KEY_INVALID'
+  | 'SAT_UNIT_KEY_INVALID'
+  | AdjustmentTextErrorCode
   | ProductErrorCode;
 
 export interface ImportRowError {
@@ -119,7 +158,8 @@ const REGLA_POR_UNIDAD: Readonly<Record<ChargeUnit, string>> = {
 const SI = new Set(['si', 's', '1', 'true', 'verdadero']);
 const NO = new Set(['no', 'n', '0', 'false', 'falso', '']);
 
-function nombreDeColumna(encabezado: string): string {
+/** Nombre de una columna del archivo, sin acentos, mayúsculas ni espacios ("Código" → "codigo"). */
+export function importColumnName(encabezado: string): string {
   return normalizeSearchText(encabezado).replace(/ /g, '_');
 }
 
@@ -137,7 +177,7 @@ export function analyzeCatalogImport(
   }
   const indices = new Map<string, number>();
   encabezado.forEach((texto, i) => {
-    const nombre = nombreDeColumna(texto);
+    const nombre = importColumnName(texto);
     if (!indices.has(nombre)) indices.set(nombre, i);
   });
   const faltan = REQUIRED_IMPORT_COLUMNS.filter((c) => !indices.has(c));
@@ -191,6 +231,30 @@ export function analyzeCatalogImport(
     const exento = SI.has(textoExento) ? true : NO.has(textoExento) ? false : null;
     if (exento === null) falla('exento', 'EXEMPT_INVALID');
 
+    // Precio abierto [RF-M1-10]: columna opcional; vacía o ausente, el precio es fijo.
+    const textoAbierto = normalizeSearchText(valor('precio_abierto'));
+    const abierto = SI.has(textoAbierto) ? true : NO.has(textoAbierto) ? false : null;
+    if (abierto === null) falla('precio_abierto', 'OPEN_PRICE_INVALID');
+
+    // Descripción [RF-M1-13]: opcional, de hasta 500 caracteres.
+    const descripcion = valor('descripcion');
+    if (descripcion.length > MAX_DESCRIPTION_LENGTH)
+      falla('descripcion', 'DESCRIPTION_TOO_LONG_IN_ROW');
+
+    // Unidad de venta [RF-M1-11]: opcional, solo por pieza o servicio.
+    const unidadDeVenta = valor('unidad_venta');
+    if (unidadDeVenta !== '' && unidad !== undefined && unidad !== 'PIECE' && unidad !== 'SERVICE')
+      falla('unidad_venta', 'SALE_UNIT_NOT_ALLOWED');
+    else if (unidadDeVenta.length > MAX_SALE_UNIT_LENGTH)
+      falla('unidad_venta', 'SALE_UNIT_TOO_LONG');
+
+    // Claves del SAT por producto [RF-M1-11]: vacías, se heredan de la categoría.
+    const claveSat = valor('clave_sat');
+    if (claveSat !== '' && !isProductServiceKey(claveSat)) falla('clave_sat', 'SAT_KEY_INVALID');
+    const claveUnidad = valor('clave_unidad_sat').toUpperCase();
+    if (claveUnidad !== '' && !isUnitKey(claveUnidad))
+      falla('clave_unidad_sat', 'SAT_UNIT_KEY_INVALID');
+
     const codigo = valor('codigo');
     if (codigo !== '') {
       const clave = codigo.toLowerCase();
@@ -215,6 +279,22 @@ export function analyzeCatalogImport(
       else falla('base_metro_lineal', 'LINEAR_BASIS_INVALID');
     }
 
+    // Ajustes del cobro [RF-M1-14]: los que la regla admite se convierten; uno que no admite es un error.
+    if (regla !== null) {
+      const basis = parametros.basis === 'PERIMETER' ? 'PERIMETER' : 'LENGTH';
+      const admitidos = adjustmentFieldsFor(regla, regla === 'LINEAR' ? basis : null);
+      const textos = Object.fromEntries(
+        CAMPOS_DE_AJUSTE.map((campo) => [campo, valor(COLUMNA_DE_AJUSTE[campo])]),
+      ) as Record<AdjustmentField, string>;
+      for (const campo of CAMPOS_DE_AJUSTE) {
+        if (textos[campo] !== '' && !admitidos.includes(campo))
+          falla(COLUMNA_DE_AJUSTE[campo], 'ADJUSTMENT_NOT_ALLOWED');
+      }
+      const ajustes = parseAdjustmentTexts(textos, admitidos);
+      for (const e of ajustes.errors) falla(COLUMNA_DE_AJUSTE[e.field], e.code);
+      parametros = paramsWithAdjustments(regla, parametros, ajustes.adjustments);
+    }
+
     const textoGarantia = valor('garantia_meses');
     let garantia: number | null = null;
     if (textoGarantia !== '') {
@@ -229,6 +309,7 @@ export function analyzeCatalogImport(
       unidad === undefined ||
       !precio.ok ||
       exento === null ||
+      abierto === null ||
       regla === null
     ) {
       return { number: numero, draft: null, errors: errores };
@@ -246,9 +327,16 @@ export function analyzeCatalogImport(
       isActive: true,
       ruleId: regla,
       ruleParams: parametros,
-      fiscal: categoria.fiscalDefaults,
+      fiscal: {
+        ...categoria.fiscalDefaults,
+        ...(claveSat === '' ? {} : { productServiceKey: claveSat }),
+        ...(claveUnidad === '' ? {} : { unitKey: claveUnidad }),
+      },
       warrantyMonths: garantia,
       warrantyText: null,
+      ...(abierto ? { isOpenPrice: true } : {}),
+      ...(descripcion === '' ? {} : { description: descripcion }),
+      ...(unidadDeVenta === '' ? {} : { saleUnitName: unidadDeVenta }),
     };
     const construido = buildProduct(asId<'Product'>('importacion'), borrador, contexto.priceRules);
     if (!construido.ok) {
@@ -274,6 +362,9 @@ export function analyzeCatalogImport(
       fiscal: p.fiscal,
       warrantyMonths: p.warrantyMonths,
       warrantyText: p.warrantyText,
+      ...(p.isOpenPrice === true ? { isOpenPrice: true } : {}),
+      ...(p.description === undefined ? {} : { description: p.description }),
+      ...(p.saleUnitName === undefined ? {} : { saleUnitName: p.saleUnitName }),
     };
     return { number: numero, draft: normalizado, errors: [] };
   });

@@ -3,15 +3,18 @@ import { describe, expect, it } from 'vitest';
 
 import {
   add,
+  changeByPercentToPeso,
   compare,
   formatMoney,
   isZero,
   money,
   multiply,
+  multiplyByQuantity,
   subtract,
   sum,
   ZERO,
   type Money,
+  type PesoRounding,
 } from './money';
 
 /** Monto de prueba: falla fuerte si los centavos no valen. */
@@ -206,5 +209,128 @@ describe('propiedades', () => {
         expect(reconstruido || 0).toBe(c);
       }),
     );
+  });
+});
+
+describe('subir o bajar por porcentaje, al peso [RF-M1-15, D3]', () => {
+  const m = (c: number) => {
+    const r = money(c);
+    if (!r.ok) throw new Error('monto');
+    return r.value;
+  };
+  const cambio = (c: number, bps: number, r: PesoRounding) => {
+    const x = changeByPercentToPeso(m(c), bps, r);
+    return x.ok ? x.value : x.error.code;
+  };
+
+  it('casos de oro: +8 % a $450.00 da $486.00 exacto; a $455.50 da $491.94 y se redondea', () => {
+    expect(cambio(450_00, 800, 'UP')).toBe(486_00);
+    expect(cambio(455_50, 800, 'UP')).toBe(492_00);
+    expect(cambio(455_50, 800, 'NEAREST')).toBe(492_00);
+    expect(cambio(455_50, 800, 'DOWN')).toBe(491_00);
+  });
+
+  it('al más cercano, la mitad sube: $10.50 sin cambio da $11.00 y $10.49 da $10.00', () => {
+    expect(cambio(10_50, 0, 'NEAREST')).toBe(11_00);
+    expect(cambio(10_49, 0, 'NEAREST')).toBe(10_00);
+    expect(cambio(10_49, 0, 'UP')).toBe(11_00);
+    expect(cambio(10_00, 0, 'UP')).toBe(10_00);
+  });
+
+  it('bajar: -5 % a $280.00 da $266.00; -100 % da cero y más de -100 % no se puede', () => {
+    expect(cambio(280_00, -500, 'UP')).toBe(266_00);
+    expect(cambio(280_00, -10_000, 'UP')).toBe(0);
+    expect(cambio(280_00, -10_001, 'UP')).toBe('NEGATIVE_RESULT');
+  });
+
+  it('un porcentaje con fracción de punto base o que desborda se avisa', () => {
+    expect(cambio(100, 1.5, 'UP')).toBe('NOT_INTEGER');
+    expect(cambio(Number.MAX_SAFE_INTEGER, 1, 'UP')).toBe('OUT_OF_RANGE');
+    // El paso intermedio (centavos × 10 000) no cabe aunque el resultado sí: se avisa en lugar de redondear mal.
+    expect(cambio(2 ** 50, 0, 'UP')).toBe('OUT_OF_RANGE');
+  });
+
+  it('propiedad: el resultado es pesos completos y queda a menos de un peso del exacto, del lado pedido', () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 0, max: 100_000_000 }),
+        fc.integer({ min: -10_000, max: 50_000 }),
+        (centavos, bps) => {
+          // El exacto en centavos × 10 000, para comparar sin flotantes.
+          const exacto = centavos * (10_000 + bps);
+          for (const r of ['UP', 'NEAREST', 'DOWN'] as const) {
+            const x = changeByPercentToPeso(m(centavos), bps, r);
+            if (!x.ok) throw new Error(x.error.code);
+            expect(x.value % 100).toBe(0);
+            const diferencia = x.value * 10_000 - exacto;
+            expect(Math.abs(diferencia)).toBeLessThan(1_000_000);
+            if (r === 'UP') expect(diferencia).toBeGreaterThanOrEqual(0);
+            if (r === 'DOWN') expect(diferencia).toBeLessThanOrEqual(0);
+            if (r === 'NEAREST') expect(Math.abs(diferencia) * 2).toBeLessThanOrEqual(1_000_000);
+          }
+        },
+      ),
+    );
+  });
+});
+
+describe('monto por cantidad con decimales [RF-M1-12, D2, ADR-0011]', () => {
+  const cent = (c: number) => {
+    const r = money(c);
+    if (!r.ok) throw new Error('monto');
+    return r.value;
+  };
+  const por = (c: number, milesimas: number) => {
+    const r = multiplyByQuantity(cent(c), milesimas);
+    return r.ok ? r.value : r.error.code;
+  };
+
+  // Casos de oro validados por Juanito el 2026-11-27 (docs/calidad/CASOS_DE_ORO_DINERO.md, casos C1 a C7).
+  it.each([
+    ['1.5 kg a $85.00', 85_00, 1500, 127_50],
+    ['2.5 h a $350.00', 350_00, 2500, 875_00],
+    ['0.333 kg a $10.00', 10_00, 333, 3_33],
+    ['1.5 a $33.33 (la mitad sube)', 33_33, 1500, 50_00],
+    ['1.255 a $1.00', 1_00, 1255, 1_26],
+    ['2.005 a $0.50', 50, 2005, 1_00],
+    ['0.125 a $0.10', 10, 125, 1],
+  ])('caso de oro: %s', (_, precio, milesimas, esperado) => {
+    expect(por(precio, milesimas)).toBe(esperado);
+  });
+
+  it('con cantidad entera da lo mismo que multiply', () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 0, max: 10_000_000 }),
+        fc.integer({ min: 0, max: 1_000 }),
+        (c, n) => {
+          const entero = multiply(cent(c), n);
+          expect(por(c, n * 1000)).toBe(entero.ok ? entero.value : entero.error.code);
+        },
+      ),
+    );
+  });
+
+  it('propiedad: queda a medio centavo o menos del exacto, y la mitad sube', () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 0, max: 100_000_000 }),
+        fc.integer({ min: 0, max: 1_000_000 }),
+        (c, milesimas) => {
+          const r = multiplyByQuantity(cent(c), milesimas);
+          if (!r.ok) throw new Error(r.error.code);
+          const diferencia = r.value * 1000 - c * milesimas;
+          expect(diferencia).toBeGreaterThan(-500);
+          expect(diferencia).toBeLessThanOrEqual(500);
+        },
+      ),
+    );
+  });
+
+  it('milésimas que no son enteras, negativas o un producto que no cabe se avisan', () => {
+    expect(por(100, 1.5)).toBe('NOT_INTEGER');
+    expect(por(100, -1)).toBe('NEGATIVE_QUANTITY');
+    expect(por(Number.MAX_SAFE_INTEGER, 2)).toBe('OUT_OF_RANGE');
+    expect(por(100, 0)).toBe(0);
   });
 });

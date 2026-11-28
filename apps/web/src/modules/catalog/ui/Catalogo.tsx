@@ -12,6 +12,8 @@ import {
   type ProductDraft,
   type ProductKind,
   type UserRole,
+  SALE_UNIT_SUGGESTIONS,
+  type SaleUnitSuggestionsStore,
 } from '@zammir/core';
 
 import { textos } from '../../../shared/i18n/textos';
@@ -32,18 +34,24 @@ import { useSesionAdmin } from '../../identity/ui/SesionAdmin';
 import { FormularioDeProducto } from './FormularioDeProducto';
 import { Categorias } from './Categorias';
 import { ImportarCatalogo } from './ImportarCatalogo';
+import { PreciosEnBloque } from './PreciosEnBloque';
 
 const t = textos.catalogo;
 
 type Ventanilla =
   | { readonly tipo: 'alta' }
   | { readonly tipo: 'edicion'; readonly producto: Product }
+  /** Alta a partir de otro producto, para crear una variante sin capturar todo [RF-M1-16]. */
+  | { readonly tipo: 'duplicar'; readonly producto: Product }
   | { readonly tipo: 'importar' }
+  | { readonly tipo: 'precios' }
   | null;
 
 /** Lo que usa la pantalla del catálogo: también administra las categorías [RF-M1-08]. */
 export type CatalogoDeps = ImportCatalogDeps & {
   readonly categories: ImportCatalogDeps['categories'] & CategoryAdmin;
+  /** Las unidades de venta sugeridas en Configuración [PP-40]; sin ellas, la lista base. */
+  readonly unidadesSugeridas?: SaleUnitSuggestionsStore;
 };
 
 export interface CatalogoProps {
@@ -61,6 +69,12 @@ export function Catalogo({ deps, actor }: CatalogoProps): ReactElement {
   const [categoriaFiltro, setCategoriaFiltro] = useState('');
   const [tipoFiltro, setTipoFiltro] = useState('');
   const [ventana, setVentana] = useState<Ventanilla>(null);
+  const [sugeridas, setSugeridas] = useState<readonly string[]>(SALE_UNIT_SUGGESTIONS);
+  useEffect(() => {
+    void deps.unidadesSugeridas?.read().then((r) => {
+      if (r.ok) setSugeridas(r.value);
+    });
+  }, [deps.unidadesSugeridas]);
   const [historial, setHistorial] = useState<readonly PriceChange[]>([]);
   const [aviso, setAviso] = useState<string | null>(null);
   const [error, setError] = useState<{ mensaje: string; queHacer: string } | null>(null);
@@ -144,6 +158,10 @@ export function Catalogo({ deps, actor }: CatalogoProps): ReactElement {
     .map((c) => ({ categoria: c, productos: visibles.filter((p) => p.categoryId === c.id) }))
     .filter((g) => g.productos.length > 0);
   const categoriasEnUso = new Set(productos.map((p) => p.categoryId)).size;
+  // Las unidades de venta que ya se usan se sugieren al capturar, para que todos escriban igual [RF-M1-11].
+  const unidadesDeVenta = [
+    ...new Set(productos.flatMap((p) => (p.saleUnitName === undefined ? [] : [p.saleUnitName]))),
+  ];
 
   return (
     <section className="anima-entrada catalogo">
@@ -170,6 +188,17 @@ export function Catalogo({ deps, actor }: CatalogoProps): ReactElement {
             >
               {t.importar}
             </Boton>
+            {actor.role === 'ADMIN' ? (
+              <Boton
+                variante="secundario"
+                onClick={() => {
+                  setAviso(null);
+                  setVentana({ tipo: 'precios' });
+                }}
+              >
+                {textos.preciosEnBloque.boton}
+              </Boton>
+            ) : null}
           </>
         }
       />
@@ -263,13 +292,17 @@ export function Catalogo({ deps, actor }: CatalogoProps): ReactElement {
               {
                 clave: 'venta',
                 rotulo: t.columnas.venta,
-                celda: (p) => `${t.tipos[p.kind]} · ${t.unidades[p.chargeUnit]}`,
+                celda: (p) =>
+                  p.kind === 'BUNDLE'
+                    ? `${t.tipos.BUNDLE} · ${t.productosDelPaquete((p.bundleItems ?? []).length)}`
+                    : `${t.tipos[p.kind]} · ${t.unidades[p.chargeUnit]}`,
               },
               {
                 clave: 'precio',
                 rotulo: t.columnas.precio,
                 numerica: true,
-                celda: (p) => formatearPesos(p.listPrice),
+                // Un paquete no tiene precio propio: vale lo que sus componentes [RF-M1-18].
+                celda: (p) => (p.kind === 'BUNDLE' ? '—' : formatearPesos(p.listPrice)),
               },
               {
                 clave: 'estado',
@@ -298,6 +331,16 @@ export function Catalogo({ deps, actor }: CatalogoProps): ReactElement {
                     </Boton>
                     <Boton
                       variante="secundario"
+                      aria-label={`${t.duplicar} ${p.name}`}
+                      onClick={() => {
+                        setAviso(null);
+                        setVentana({ tipo: 'duplicar', producto: p });
+                      }}
+                    >
+                      {t.duplicar}
+                    </Boton>
+                    <Boton
+                      variante="secundario"
                       aria-label={`${p.isActive ? t.desactivar : t.activar} ${p.name}`}
                       onClick={() => {
                         void alternar(p);
@@ -322,6 +365,9 @@ export function Catalogo({ deps, actor }: CatalogoProps): ReactElement {
         >
           <FormularioDeProducto
             categorias={categorias}
+            unidadesDeVenta={unidadesDeVenta}
+            sugeridas={sugeridas}
+            productos={productos}
             onGuardar={guardarAlta}
             onCancelar={() => {
               setVentana(null);
@@ -338,9 +384,39 @@ export function Catalogo({ deps, actor }: CatalogoProps): ReactElement {
         >
           <FormularioDeProducto
             categorias={categorias}
+            unidadesDeVenta={unidadesDeVenta}
+            sugeridas={sugeridas}
+            productos={productos}
             inicial={ventana.producto}
             historial={historial}
             onGuardar={(borrador) => guardarEdicion(ventana.producto, borrador)}
+            onCancelar={() => {
+              setVentana(null);
+            }}
+          />
+        </Ventana>
+      ) : null}
+      {ventana?.tipo === 'duplicar' ? (
+        <Ventana
+          titulo={t.formulario.tituloDuplicar}
+          onCerrar={() => {
+            setVentana(null);
+          }}
+        >
+          <FormularioDeProducto
+            categorias={categorias}
+            unidadesDeVenta={unidadesDeVenta}
+            sugeridas={sugeridas}
+            productos={productos}
+            // Copia todo (categoría, cómo se cobra, sus ajustes, datos fiscales y garantía) menos el código,
+            // que no se puede repetir; el nombre lleva "(copia)" para que se note y se corrija [RF-M1-16].
+            inicial={{
+              ...ventana.producto,
+              name: t.nombreDeCopia(ventana.producto.name),
+              code: null,
+              isActive: true,
+            }}
+            onGuardar={guardarAlta}
             onCancelar={() => {
               setVentana(null);
             }}
@@ -359,6 +435,24 @@ export function Catalogo({ deps, actor }: CatalogoProps): ReactElement {
             deps={deps}
             sinTitulo
             onImportado={() => {
+              void refrescar();
+            }}
+          />
+        </Ventana>
+      ) : null}
+
+      {ventana?.tipo === 'precios' ? (
+        <Ventana
+          titulo={textos.preciosEnBloque.titulo}
+          onCerrar={() => {
+            setVentana(null);
+          }}
+        >
+          <PreciosEnBloque
+            deps={deps}
+            actor={actor}
+            categorias={categorias}
+            onCambiado={() => {
               void refrescar();
             }}
           />

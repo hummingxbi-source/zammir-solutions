@@ -181,14 +181,23 @@ function filas(e: Estado): void {
   const { fuentes } = e;
   for (const linea of e.doc.lines) {
     const nombre = envolver(linea.name, fuentes.negrita, 10, COL_CONCEPTO - 4);
+    // La descripción del producto va bajo el nombre, antes del cálculo [RF-M1-13, PP-39].
+    const descripcion =
+      linea.description === undefined
+        ? []
+        : envolver(linea.description, fuentes.normal, 8, COL_CONCEPTO - 4);
     const detalle = envolver(linea.detail, fuentes.normal, 8, COL_CONCEPTO - 4);
-    const alto = Math.max(1, nombre.length) * 12 + detalle.length * 10 + 8;
+    const alto = Math.max(1, nombre.length) * 12 + (descripcion.length + detalle.length) * 10 + 8;
     asegurarEspacio(e, alto, true);
     let y = e.y;
     texto(e, String(linea.position), MARGEN, y, { size: 10 });
     for (const renglon of nombre) {
       texto(e, renglon, MARGEN + COL_POS, y, { size: 10, bold: true });
       y -= 12;
+    }
+    for (const renglon of descripcion) {
+      texto(e, renglon, MARGEN + COL_POS, y, { size: 8 });
+      y -= 10;
     }
     for (const renglon of detalle) {
       texto(e, renglon, MARGEN + COL_POS, y, { size: 8, color: GRIS });

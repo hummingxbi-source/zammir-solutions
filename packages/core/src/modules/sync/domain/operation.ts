@@ -1,6 +1,9 @@
 import { z } from 'zod';
 
 import { err, ok, type Result } from '../../../shared-kernel/result';
+import { MAX_DESCRIPTION_LENGTH } from '../../catalog/domain/product';
+import { MAX_SALE_UNIT_LENGTH } from '../../catalog/domain/sale-unit';
+import { isValidQuantity } from '../../../shared-kernel/measure/quantity';
 
 /** Tipos de operación que la tablet manda al servidor [ADR-0016]. Cada caso de uso que cambia datos
  *  compartidos es un tipo; los demás cambios son solo locales. */
@@ -99,7 +102,11 @@ const quoteLineSchema = z
     ruleParams: z.unknown().optional(),
     widthMm: entero.min(1).nullable().optional(),
     heightMm: entero.min(1).nullable().optional(),
-    quantity: entero.min(1),
+    /** Entera, o con hasta 3 decimales (1.5 kg) [RF-M1-12]. Una tablet de antes manda enteros: sigue valiendo.
+     *  El servidor la guarda tal cual (numeric) y su copia en milésimas enteras. */
+    quantity: z
+      .number()
+      .refine(isValidQuantity, { message: 'la cantidad lleva hasta 3 decimales' }),
     lineTotalCents: centavos,
     baseCents: centavos,
     taxCents: centavos,
@@ -107,6 +114,10 @@ const quoteLineSchema = z
     detail: z.string().optional(),
     /** Opcional: las líneas de antes no traen cargos extra. */
     extras: z.array(lineExtraSchema).optional(),
+    /** Opcional: unidad de venta copiada del producto [RF-M1-11]; una tablet de antes no la manda. */
+    saleUnitName: z.string().trim().min(1).max(MAX_SALE_UNIT_LENGTH).optional(),
+    /** Opcional: descripción del producto para el documento del cliente [RF-M1-13, PP-39]. */
+    description: z.string().trim().min(1).max(MAX_DESCRIPTION_LENGTH).optional(),
   })
   .refine((l) => l.lineTotalCents === l.baseCents + l.taxCents, {
     message: 'el importe de la línea no es base + IVA',

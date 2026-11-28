@@ -64,6 +64,7 @@ td { padding: 6px 4px; border-bottom: 0.5pt solid #bfbfbf; vertical-align: top; 
 tr { break-inside: avoid; }
 .num { text-align: right; white-space: nowrap; }
 td small { display: block; color: #595959; font-size: 8pt; }
+td small.descripcion { color: #1a1a1a; }
 .totales { margin: 8px 0 12px auto; width: 55%; }
 .totales div { display: flex; justify-content: space-between; padding: 2px 0; }
 .totales .fuerte { font-size: 12pt; font-weight: 700; }
@@ -89,7 +90,7 @@ export function documentoAHtml(doc: QuoteDocument, opciones: OpcionesDeHtml): st
   const filas = doc.lines
     .map(
       (linea) =>
-        `<tr><td>${String(linea.position)}</td><td><strong>${esc(linea.name)}</strong><small>${esc(linea.detail)}</small></td><td class="num">${esc(linea.quantity)}</td><td class="num">${esc(linea.unitPrice)}</td><td class="num"><strong>${esc(linea.amount)}</strong></td></tr>`,
+        `<tr><td>${String(linea.position)}</td><td><strong>${esc(linea.name)}</strong>${linea.description === undefined ? '' : `<small class="descripcion">${esc(linea.description)}</small>`}<small>${esc(linea.detail)}</small></td><td class="num">${esc(linea.quantity)}</td><td class="num">${esc(linea.unitPrice)}</td><td class="num"><strong>${esc(linea.amount)}</strong></td></tr>`,
     )
     .join('');
 

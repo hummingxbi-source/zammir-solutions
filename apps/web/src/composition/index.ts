@@ -62,6 +62,7 @@ import {
   type PortalConsulta,
   type PortalDescarga,
   type PortalSolicitud,
+  type SaleUnitSuggestionsStore,
 } from '@zammir/core';
 
 import {
@@ -97,6 +98,7 @@ import type { ContactoPublico } from '../modules/legal/ui/PaginaLegalPublica';
 import { supabaseLegal } from '../modules/legal/infra/supabase-legal';
 import { supabaseQuoteConditions } from '../modules/settings/infra/supabase-quote-conditions';
 import { supabaseUmbralDeAtraso } from '../modules/settings/infra/supabase-umbral-de-atraso';
+import { supabaseUnidadesDeVenta } from '../modules/settings/infra/supabase-unidades-de-venta';
 import { pdfLibRenderer } from '../modules/documents/infra/pdf-lib-renderer';
 import { entornoDelNavegador, webShareService } from '../modules/documents/infra/web-share-service';
 import type { PrepararReportes } from '../modules/reports/ui/ReportesEnLaTablet';
@@ -177,6 +179,8 @@ export interface Composition {
   readonly umbralDeAtraso: AgingThresholdStore | null;
   /** Guarda en la tablet el umbral vigente, para usarlo sin internet. */
   readonly recordarUmbral: (dias: number) => void;
+  /** Unidades de venta sugeridas; `null` si no hay servidor configurado [PP-40]. */
+  readonly unidadesDeVenta: SaleUnitSuggestionsStore | null;
   /** Altas y correcciones de clientes; `null` si no hay servidor configurado. */
   readonly clientes: ManageCustomersDeps | null;
   /** Conexión de esta tablet con un código de registro; `null` si no hay servidor configurado. */
@@ -864,6 +868,7 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
   // PD-33: el umbral vive en el servidor y se recuerda en la tablet para que los reportes funcionen sin internet.
   // Si nunca se ha leído, las pantallas usan el valor por omisión del dominio.
   const umbralDeAtraso = cliente === null ? null : supabaseUmbralDeAtraso(cliente);
+  const unidadesDeVenta = cliente === null ? null : supabaseUnidadesDeVenta(cliente);
   const claveDelUmbral = 'zammir.umbralDeAtraso';
   const recordarUmbral = (dias: number): void => {
     try {
@@ -969,6 +974,7 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
             categories: supabaseCatalog(cliente),
             idGenerator: uuidIdGenerator,
             priceRules: reglas,
+            ...(unidadesDeVenta === null ? {} : { unidadesSugeridas: unidadesDeVenta }),
           },
     bitacora: cliente === null ? null : supabaseAuditReader(cliente),
     cargarNombres: async () => {
@@ -1005,6 +1011,7 @@ export function createComposition(entorno: EntornoSupabase = {}): Composition {
     condiciones: cliente === null ? null : supabaseQuoteConditions(cliente),
     umbralDeAtraso,
     recordarUmbral,
+    unidadesDeVenta,
     clientes:
       cliente === null
         ? null

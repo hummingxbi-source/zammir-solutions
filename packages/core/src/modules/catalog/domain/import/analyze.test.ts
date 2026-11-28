@@ -46,6 +46,16 @@ function fila(cambios: Partial<Record<(typeof IMPORT_COLUMNS)[number], string>> 
     regla: '',
     base_metro_lineal: '',
     garantia_meses: '',
+    precio_abierto: '',
+    descripcion: '',
+    redondeo_mm: '',
+    area_minima_m2: '',
+    minimo_por_trabajo: '',
+    ancho_maximo_mm: '',
+    alto_maximo_mm: '',
+    unidad_venta: '',
+    clave_sat: '',
+    clave_unidad_sat: '',
   };
   return IMPORT_COLUMNS.map((c) => cambios[c] ?? base[c]).join(',');
 }
@@ -141,6 +151,146 @@ describe('analyzeCatalogImport: filas válidas', () => {
       `${ENCABEZADO}\n${fila({ unidad: 'metro lineal', base_metro_lineal: 'largo' })}`,
     );
     expect(r.rows[0]?.draft?.ruleParams).toEqual({ basis: 'LENGTH' });
+  });
+
+  it('precio abierto: "sí" lo marca; vacío o "no", el precio es fijo [RF-M1-10]', () => {
+    const r = analizar(
+      [
+        ENCABEZADO,
+        fila({ codigo: 'A', precio_abierto: 'Sí' }),
+        fila({ codigo: 'B', precio_abierto: 'no' }),
+        fila({ codigo: 'C' }),
+      ].join('\n'),
+    );
+    expect(r.rows.map((x) => x.draft?.isOpenPrice)).toEqual([true, undefined, undefined]);
+  });
+
+  it('precio abierto con otro texto se marca como error de esa columna', () => {
+    expect(errores(`${ENCABEZADO}\n${fila({ precio_abierto: 'tal vez' })}`)).toEqual([
+      ['precio_abierto:OPEN_PRICE_INVALID'],
+    ]);
+  });
+
+  it('un archivo sin la columna precio_abierto se sigue leyendo (plantillas de antes)', () => {
+    const viejo = IMPORT_COLUMNS.filter((c) => c !== 'precio_abierto');
+    const r = analizar(
+      `${viejo.join(',')}\nVC-9,Vidrio,Vidrio claro / flotado,a medida,m²,10,no,,,`,
+    );
+    expect(r.rows[0]?.draft?.isOpenPrice).toBeUndefined();
+    expect(r.rows[0]?.errors).toEqual([]);
+  });
+
+  it('un cargo extra con precio abierto no se acepta', () => {
+    expect(
+      errores(`${ENCABEZADO}\n${fila({ tipo: 'cargo extra', precio_abierto: 'si' })}`),
+    ).toEqual([['-:OPEN_PRICE_NOT_ALLOWED']]);
+  });
+
+  it('descripción: opcional; con texto se guarda y con más de 500 caracteres se marca [RF-M1-13]', () => {
+    const r = analizar(
+      `${ENCABEZADO}
+${fila({ codigo: 'A', descripcion: 'Para ventanas' })}
+${fila({ codigo: 'B' })}`,
+    );
+    expect(r.rows.map((x) => x.draft?.description)).toEqual(['Para ventanas', undefined]);
+    expect(
+      errores(`${ENCABEZADO}
+${fila({ descripcion: 'a'.repeat(501) })}`),
+    ).toEqual([['descripcion:DESCRIPTION_TOO_LONG_IN_ROW']]);
+  });
+
+  it('ajustes del cobro: opcionales; vacíos quedan apagados [RF-M1-14]', () => {
+    const r = analizar(
+      `${ENCABEZADO}
+${fila({ codigo: 'A', redondeo_mm: '50', area_minima_m2: '0.5', minimo_por_trabajo: '350', ancho_maximo_mm: '1800', alto_maximo_mm: '2600' })}
+${fila({ codigo: 'B' })}`,
+    );
+    expect(r.valid).toBe(true);
+    expect(r.rows.map((x) => x.draft?.ruleParams)).toEqual([
+      {
+        measureStepMm: 50,
+        minAreaMm2: 500_000,
+        minAmountCents: 350_00,
+        maxWidthMm: 1800,
+        maxHeightMm: 2600,
+      },
+      {},
+    ]);
+  });
+
+  it('ajustes del cobro en metro lineal: el largo máximo va en ancho y conserva la base', () => {
+    const r = analizar(
+      `${ENCABEZADO}
+${fila({ unidad: 'metro lineal', base_metro_lineal: 'largo', ancho_maximo_mm: '6100', minimo_por_trabajo: '100' })}`,
+    );
+    expect(r.rows[0]?.draft?.ruleParams).toEqual({
+      basis: 'LENGTH',
+      minAmountCents: 100_00,
+      maxWidthMm: 6100,
+    });
+  });
+
+  it('un ajuste mal escrito o que la regla no admite se marca en su columna', () => {
+    expect(
+      errores(
+        `${ENCABEZADO}
+${fila({ redondeo_mm: '0', area_minima_m2: 'medio', ancho_maximo_mm: '1.5' })}`,
+      ),
+    ).toEqual([
+      [
+        'redondeo_mm:MEASURE_STEP_INVALID',
+        'area_minima_m2:MIN_AREA_INVALID',
+        'ancho_maximo_mm:MAX_WIDTH_INVALID',
+      ],
+    ]);
+    expect(
+      errores(
+        `${ENCABEZADO}
+${fila({ tipo: 'servicio', unidad: 'servicio', minimo_por_trabajo: '100' })}`,
+      ),
+    ).toEqual([['minimo_por_trabajo:ADJUSTMENT_NOT_ALLOWED']]);
+    expect(
+      errores(
+        `${ENCABEZADO}
+${fila({ unidad: 'metro lineal', base_metro_lineal: 'largo', area_minima_m2: '1', alto_maximo_mm: '100' })}`,
+      ),
+    ).toEqual([['area_minima_m2:ADJUSTMENT_NOT_ALLOWED', 'alto_maximo_mm:ADJUSTMENT_NOT_ALLOWED']]);
+  });
+
+  it('unidad de venta: opcional, solo por pieza o servicio [RF-M1-11]', () => {
+    const pieza = { tipo: 'pieza estándar', unidad: 'pieza', categoria: 'Herrajes' };
+    const r = analizar(
+      `${ENCABEZADO}
+${fila({ ...pieza, codigo: 'A', unidad_venta: 'par' })}
+${fila({ ...pieza, codigo: 'B' })}`,
+    );
+    expect(r.rows.map((x) => x.draft?.saleUnitName)).toEqual(['par', undefined]);
+    expect(
+      errores(`${ENCABEZADO}
+${fila({ unidad_venta: 'hoja' })}`),
+    ).toEqual([['unidad_venta:SALE_UNIT_NOT_ALLOWED']]);
+    expect(
+      errores(`${ENCABEZADO}
+${fila({ ...pieza, unidad_venta: 'a'.repeat(21) })}`),
+    ).toEqual([['unidad_venta:SALE_UNIT_TOO_LONG']]);
+  });
+
+  it('claves del SAT: vacías se heredan de la categoría; escritas se validan y la unidad va en mayúsculas', () => {
+    const categoria = categorias.find((c) => c.name === 'Vidrio claro / flotado');
+    const heredada = analizar(`${ENCABEZADO}
+${fila()}`);
+    expect(heredada.rows[0]?.draft?.fiscal).toEqual(categoria?.fiscalDefaults);
+    const propia = analizar(`${ENCABEZADO}
+${fila({ clave_sat: '30171500', clave_unidad_sat: 'h87' })}`);
+    expect(propia.rows[0]?.draft?.fiscal).toEqual({
+      ...categoria?.fiscalDefaults,
+      productServiceKey: '30171500',
+      unitKey: 'H87',
+    });
+    expect(
+      errores(`${ENCABEZADO}
+${fila({ clave_sat: '3017', clave_unidad_sat: 'PIEZA' })}`),
+    ).toEqual([['clave_sat:SAT_KEY_INVALID', 'clave_unidad_sat:SAT_UNIT_KEY_INVALID']]);
   });
 
   it('una regla indicada a mano se respeta si existe', () => {
@@ -258,11 +408,13 @@ describe('plantilla descargable', () => {
     expect(parseCsv(plantilla)[0]).toEqual([...IMPORT_COLUMNS]);
     const r = analizar(plantilla);
     expect(r.valid).toBe(true);
-    expect(r.rows).toHaveLength(3);
+    expect(r.rows).toHaveLength(4);
+    expect(r.rows[1]?.draft?.ruleParams).toEqual({ maxWidthMm: 1800, maxHeightMm: 2600 });
+    expect(r.rows[3]?.draft?.saleUnitName).toBe('visita');
   });
 
   it('los ejemplos conservan los acentos', () => {
-    expect(catalogImportTemplate()).toContain('Instalación a domicilio (ejemplo)');
+    expect(catalogImportTemplate()).toContain('Reparación de ventana a domicilio (ejemplo)');
     expect(catalogImportTemplate()).toContain('m²');
   });
 

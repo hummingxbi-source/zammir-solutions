@@ -7,6 +7,7 @@ import {
   fixedClock,
   inMemoryAuditLog,
   inMemoryCatalog,
+  inMemorySaleUnitSuggestions,
   money,
   sequentialIdGenerator,
   type ProductDraft,
@@ -113,6 +114,13 @@ async function sembrar(deps: CatalogoDeps): Promise<void> {
     const r = await createProduct(deps, { role: 'ADMIN' }, b);
     expect(r.ok).toBe(true);
   }
+}
+
+async function idDe(deps: CatalogoDeps, codigo: string): Promise<string> {
+  const lista = await deps.products.list();
+  const p = lista.ok ? lista.value.find((x) => x.code === codigo) : undefined;
+  if (p === undefined) throw new Error(`producto ${codigo}`);
+  return p.id;
 }
 
 async function montar(opciones: { conProductos?: boolean; rol?: UserRole } = {}) {
@@ -222,6 +230,342 @@ describe('Catálogo', () => {
     expect(lista.ok && lista.value[0]?.chargeUnit).toBe('LINEAR_METER');
   });
 
+  it('un servicio con precio abierto se guarda con su marca; un cargo extra no ofrece la casilla [RF-M1-10]', async () => {
+    const deps = await montar({ conProductos: false });
+    fireEvent.click(await botonAgregar());
+    const dialogo = await screen.findByRole('dialog', { name: 'Agregar producto' });
+    fireEvent.change(within(dialogo).getByLabelText('Nombre'), {
+      target: { value: 'Reparación de ventana' },
+    });
+    fireEvent.change(within(dialogo).getByLabelText('Tipo'), { target: { value: 'SERVICE' } });
+    fireEvent.change(within(dialogo).getByLabelText('Precio de lista con IVA'), {
+      target: { value: '500' },
+    });
+    fireEvent.click(within(dialogo).getByLabelText(/Precio abierto/));
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Guardar producto' }));
+    await screen.findByText('Producto agregado al catálogo.');
+    const lista = await deps.products.list();
+    expect(lista.ok && lista.value[0]?.isOpenPrice).toBe(true);
+
+    fireEvent.click(await botonAgregar());
+    const otro = await screen.findByRole('dialog', { name: 'Agregar producto' });
+    fireEvent.change(within(otro).getByLabelText('Tipo'), { target: { value: 'EXTRA' } });
+    await waitFor(() => {
+      expect(within(otro).queryByLabelText(/Precio abierto/)).toBeNull();
+    });
+  });
+
+  it('la descripción se captura en el formulario y se guarda con el producto [RF-M1-13]', async () => {
+    const deps = await montar({ conProductos: false });
+    fireEvent.click(await botonAgregar());
+    const dialogo = await screen.findByRole('dialog', { name: 'Agregar producto' });
+    fireEvent.change(within(dialogo).getByLabelText('Nombre'), {
+      target: { value: 'Cristal templado 10 mm' },
+    });
+    fireEvent.change(within(dialogo).getByLabelText(/Descripción/), {
+      target: { value: 'Para puertas y barandales' },
+    });
+    fireEvent.change(within(dialogo).getByLabelText('Precio de lista con IVA'), {
+      target: { value: '900' },
+    });
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Guardar producto' }));
+    await screen.findByText('Producto agregado al catálogo.');
+    const lista = await deps.products.list();
+    expect(lista.ok && lista.value[0]?.description).toBe('Para puertas y barandales');
+  });
+
+  it('los ajustes del cobro se capturan, se guardan y se ven al editar [RF-M1-14]', async () => {
+    const deps = await montar();
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar Vidrio claro 6 mm' }));
+    let dialogo = await screen.findByRole('dialog', { name: 'Editar producto' });
+    const grupo = within(dialogo).getByRole('group', { name: 'Ajustes del cobro (opcionales)' });
+    // Por omisión, todo apagado.
+    expect(within(grupo).getByLabelText<HTMLInputElement>('Ancho máximo (mm)').value).toBe('');
+    fireEvent.change(within(grupo).getByLabelText('Área mínima por pieza (m²)'), {
+      target: { value: '0.5' },
+    });
+    fireEvent.change(within(grupo).getByLabelText('Ancho máximo (mm)'), {
+      target: { value: '1800' },
+    });
+    fireEvent.change(within(grupo).getByLabelText('Alto máximo (mm)'), {
+      target: { value: '2600' },
+    });
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Guardar producto' }));
+    expect(await screen.findByText('Cambios guardados.')).toBeTruthy();
+    const lista = await deps.products.list();
+    expect(lista.ok && lista.value.find((p) => p.code === 'VC-6')?.ruleParams).toEqual({
+      minAreaMm2: 500_000,
+      maxWidthMm: 1800,
+      maxHeightMm: 2600,
+    });
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar Vidrio claro 6 mm' }));
+    dialogo = await screen.findByRole('dialog', { name: 'Editar producto' });
+    expect(
+      within(dialogo).getByLabelText<HTMLInputElement>('Área mínima por pieza (m²)').value,
+    ).toBe('0.5');
+  });
+
+  it('un ajuste mal escrito dice qué hacer y no guarda; una pieza no tiene ajustes [RF-M1-14]', async () => {
+    const deps = await montar({ conProductos: false });
+    fireEvent.click(await botonAgregar());
+    const dialogo = await screen.findByRole('dialog', { name: 'Agregar producto' });
+    fireEvent.change(within(dialogo).getByLabelText('Nombre'), { target: { value: 'Espejo' } });
+    fireEvent.change(within(dialogo).getByLabelText('Precio de lista con IVA'), {
+      target: { value: '300' },
+    });
+    fireEvent.change(within(dialogo).getByLabelText('Ancho máximo (mm)'), {
+      target: { value: '1.80' },
+    });
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Guardar producto' }));
+    expect(await within(dialogo).findByText('La medida máxima no es válida.')).toBeTruthy();
+    const lista = await deps.products.list();
+    expect(lista.ok && lista.value).toHaveLength(0);
+    fireEvent.change(within(dialogo).getByLabelText('Se cobra por'), {
+      target: { value: 'PIECE' },
+    });
+    expect(within(dialogo).queryByRole('group', { name: /Ajustes del cobro/ })).toBeNull();
+  });
+
+  it('con base en el largo, el metro lineal pide el largo máximo', async () => {
+    await montar({ conProductos: false });
+    fireEvent.click(await botonAgregar());
+    const dialogo = await screen.findByRole('dialog', { name: 'Agregar producto' });
+    fireEvent.change(within(dialogo).getByLabelText('Se cobra por'), {
+      target: { value: 'LINEAR_METER' },
+    });
+    expect(await within(dialogo).findByLabelText('Largo máximo (mm)')).toBeTruthy();
+    expect(within(dialogo).queryByLabelText('Área mínima por pieza (m²)')).toBeNull();
+  });
+
+  it('unidad de venta y clave SAT propias se guardan; vacías se usan las de la categoría [RF-M1-11]', async () => {
+    const deps = await montar();
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar Marco de madera' }));
+    let dialogo = await screen.findByRole('dialog', { name: 'Editar producto' });
+    // La clave de la categoría no se muestra como propia: se avisa que la hereda.
+    expect(within(dialogo).getByLabelText<HTMLInputElement>('Clave SAT (opcional)').value).toBe('');
+    expect(within(dialogo).getByText('Vacía: usa la de la categoría (01010101).')).toBeTruthy();
+    fireEvent.change(within(dialogo).getByLabelText('Unidad de venta (opcional)'), {
+      target: { value: 'par' },
+    });
+    fireEvent.change(within(dialogo).getByLabelText('Clave SAT (opcional)'), {
+      target: { value: '30171500' },
+    });
+    fireEvent.change(within(dialogo).getByLabelText('Clave de unidad SAT (opcional)'), {
+      target: { value: 'pr' },
+    });
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Guardar producto' }));
+    expect(await screen.findByText('Cambios guardados.')).toBeTruthy();
+    const lista = await deps.products.list();
+    const marco = lista.ok ? lista.value.find((p) => p.code === 'MA-1') : undefined;
+    expect(marco?.saleUnitName).toBe('par');
+    expect(marco?.fiscal).toMatchObject({ productServiceKey: '30171500', unitKey: 'PR' });
+    // Al volver a abrirlo, la clave propia sí se ve; si se borra, vuelve a la de la categoría.
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar Marco de madera' }));
+    dialogo = await screen.findByRole('dialog', { name: 'Editar producto' });
+    const clave = within(dialogo).getByLabelText<HTMLInputElement>('Clave SAT (opcional)');
+    expect(clave.value).toBe('30171500');
+    fireEvent.change(clave, { target: { value: '' } });
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Guardar producto' }));
+    await screen.findByText('Cambios guardados.');
+    const otra = await deps.products.list();
+    expect(otra.ok && otra.value.find((p) => p.code === 'MA-1')?.fiscal.productServiceKey).toBe(
+      '01010101',
+    );
+  });
+
+  it('las unidades sugeridas son las de Configuración más las que ya usa el catálogo [PP-40]', async () => {
+    const deps = entorno();
+    await sembrar(deps);
+    render(
+      <MemoryRouter>
+        <Catalogo
+          deps={{ ...deps, unidadesSugeridas: inMemorySaleUnitSuggestions(['galón']) }}
+          actor={{ role: 'ADMIN' }}
+        />
+      </MemoryRouter>,
+    );
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar Marco de madera' }));
+    const dialogo = await screen.findByRole('dialog', { name: 'Editar producto' });
+    const campo = within(dialogo).getByLabelText('Unidad de venta (opcional)');
+    const lista = document.getElementById(campo.getAttribute('list') ?? '');
+    await waitFor(() => {
+      expect([...(lista?.querySelectorAll('option') ?? [])].map((o) => o.value)).toEqual(['galón']);
+    });
+  });
+
+  it('la unidad de venta solo se ofrece por pieza o servicio, y una clave SAT mal escrita no guarda', async () => {
+    await montar();
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar Vidrio claro 6 mm' }));
+    const dialogo = await screen.findByRole('dialog', { name: 'Editar producto' });
+    expect(within(dialogo).queryByLabelText('Unidad de venta (opcional)')).toBeNull();
+    fireEvent.change(within(dialogo).getByLabelText('Clave SAT (opcional)'), {
+      target: { value: '3017' },
+    });
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Guardar producto' }));
+    expect(await within(dialogo).findByText('La clave SAT no es válida.')).toBeTruthy();
+  });
+
+  it('precios en bloque: sube 8 % una categoría con vista previa, redondeado al peso hacia arriba [RF-M1-15]', async () => {
+    const deps = await montar();
+    fireEvent.click(await screen.findByRole('button', { name: 'Precios en bloque' }));
+    const dialogo = await screen.findByRole('dialog', { name: 'Precios en bloque' });
+    fireEvent.change(within(dialogo).getByLabelText('Categoría'), {
+      target: { value: (await categoria(deps, 'espejo')).id },
+    });
+    fireEvent.change(within(dialogo).getByLabelText('Porcentaje'), { target: { value: '8' } });
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Ver los cambios' }));
+    const tabla = await within(dialogo).findByRole('table', {
+      name: 'Subir o bajar por porcentaje',
+    });
+    // $410.00 × 1.08 = $442.80 → $443.00; $116.00 × 1.08 = $125.28 → $126.00.
+    expect(
+      within(tabla).getByRole('row', { name: /Espejo 4 mm \$410\.00 \$443\.00/ }),
+    ).toBeTruthy();
+    expect(
+      within(tabla).getByRole('row', { name: /Marco de madera \$116\.00 \$126\.00/ }),
+    ).toBeTruthy();
+    // Nada se guarda hasta aplicar.
+    let lista = await deps.products.list();
+    expect(lista.ok && lista.value.find((p) => p.code === 'ES-4')?.listPrice).toBe(41_000);
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Aplicar a 2 productos' }));
+    expect(await within(dialogo).findByText('Listo: se cambiaron 2 productos.')).toBeTruthy();
+    lista = await deps.products.list();
+    expect(lista.ok && lista.value.map((p) => [p.code, p.listPrice])).toEqual([
+      ['VC-6', 28_000],
+      ['ES-4', 44_300],
+      ['MA-1', 12_600],
+    ]);
+  });
+
+  it('precios en bloque: un porcentaje que no vale dice qué hacer', async () => {
+    await montar();
+    fireEvent.click(await screen.findByRole('button', { name: 'Precios en bloque' }));
+    const dialogo = await screen.findByRole('dialog', { name: 'Precios en bloque' });
+    fireEvent.change(within(dialogo).getByLabelText('Porcentaje'), { target: { value: '0' } });
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Ver los cambios' }));
+    expect(await within(dialogo).findByText('El porcentaje no es válido.')).toBeTruthy();
+  });
+
+  it('precios en bloque: el archivo actualiza por código y muestra cada cambio antes de aplicarlo', async () => {
+    const deps = await montar();
+    fireEvent.click(await screen.findByRole('button', { name: 'Precios en bloque' }));
+    const dialogo = await screen.findByRole('dialog', { name: 'Precios en bloque' });
+    const archivo = new File(['codigo,nombre,precio\nVC-6,,300\nMA-1,Marco de pino,\n'], 'c.csv', {
+      type: 'text/csv',
+    });
+    fireEvent.change(within(dialogo).getByLabelText('Archivo con los cambios (CSV)'), {
+      target: { files: [archivo] },
+    });
+    const tabla = await within(dialogo).findByRole('table', {
+      name: 'Actualizar desde un archivo',
+    });
+    expect(within(tabla).getByText(/Precio: \$280\.00 → \$300\.00/)).toBeTruthy();
+    expect(within(tabla).getByText('Nombre: Marco de madera → Marco de pino')).toBeTruthy();
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Aplicar 2 cambios' }));
+    expect(await within(dialogo).findByText('Listo: se cambiaron 2 productos.')).toBeTruthy();
+    const lista = await deps.products.list();
+    expect(lista.ok && lista.value.map((p) => [p.name, p.listPrice])).toEqual([
+      ['Vidrio claro 6 mm', 30_000],
+      ['Espejo 4 mm', 41_000],
+      ['Marco de pino', 11_600],
+    ]);
+  });
+
+  it('precios en bloque: un archivo con un código que no existe no cambia nada', async () => {
+    const deps = await montar();
+    fireEvent.click(await screen.findByRole('button', { name: 'Precios en bloque' }));
+    const dialogo = await screen.findByRole('dialog', { name: 'Precios en bloque' });
+    const archivo = new File(['codigo,precio\nVC-6,300\nNO-EXISTE,1\n'], 'c.csv', {
+      type: 'text/csv',
+    });
+    fireEvent.change(within(dialogo).getByLabelText('Archivo con los cambios (CSV)'), {
+      target: { files: [archivo] },
+    });
+    expect(await within(dialogo).findByText(/Ningún producto tiene ese código/)).toBeTruthy();
+    expect(within(dialogo).queryByRole('button', { name: /Aplicar/ })).toBeNull();
+    const lista = await deps.products.list();
+    expect(lista.ok && lista.value.find((p) => p.code === 'VC-6')?.listPrice).toBe(28_000);
+  });
+
+  it('un cajero no ve precios en bloque', async () => {
+    await montar({ rol: 'STAFF' });
+    await screen.findByRole('heading', { name: /Catálogo/ });
+    expect(screen.queryByRole('button', { name: 'Precios en bloque' })).toBeNull();
+  });
+
+  it('un paquete se arma con productos del catálogo y su cantidad, sin precio propio [RF-M1-18]', async () => {
+    const deps = await montar();
+    fireEvent.click(await botonAgregar());
+    const dialogo = await screen.findByRole('dialog', { name: 'Agregar producto' });
+    fireEvent.change(within(dialogo).getByLabelText('Nombre'), {
+      target: { value: 'Espejo con marco' },
+    });
+    fireEvent.change(within(dialogo).getByLabelText('Tipo'), { target: { value: 'BUNDLE' } });
+    // Un paquete no tiene precio ni forma de cobro propios.
+    expect(within(dialogo).queryByLabelText('Precio de lista con IVA')).toBeNull();
+    expect(within(dialogo).queryByLabelText('Se cobra por')).toBeNull();
+    const grupo = within(dialogo).getByRole('group', { name: 'Productos del paquete' });
+    fireEvent.click(within(grupo).getByRole('button', { name: 'Agregar producto al paquete' }));
+    fireEvent.click(within(grupo).getByRole('button', { name: 'Agregar producto al paquete' }));
+    const espejo = await idDe(deps, 'ES-4');
+    const marco = await idDe(deps, 'MA-1');
+    fireEvent.change(within(grupo).getByLabelText('Producto 1'), { target: { value: espejo } });
+    fireEvent.change(within(grupo).getByLabelText('Producto 2'), { target: { value: marco } });
+    fireEvent.change(within(grupo).getByLabelText('Cantidad 2'), { target: { value: '2' } });
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Guardar producto' }));
+    await screen.findByText('Producto agregado al catálogo.');
+    const lista = await deps.products.list();
+    const paquete = lista.ok ? lista.value.find((p) => p.name === 'Espejo con marco') : undefined;
+    expect(paquete?.kind).toBe('BUNDLE');
+    expect(paquete?.listPrice).toBe(0);
+    expect(paquete?.bundleItems).toEqual([
+      { productId: espejo, quantity: 1 },
+      { productId: marco, quantity: 2 },
+    ]);
+    expect(screen.getByText('Paquete (varios productos) · 2 productos')).toBeTruthy();
+  });
+
+  it('un paquete sin productos no se guarda y dice qué hacer', async () => {
+    await montar();
+    fireEvent.click(await botonAgregar());
+    const dialogo = await screen.findByRole('dialog', { name: 'Agregar producto' });
+    fireEvent.change(within(dialogo).getByLabelText('Nombre'), { target: { value: 'Vacío' } });
+    fireEvent.change(within(dialogo).getByLabelText('Tipo'), { target: { value: 'BUNDLE' } });
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Guardar producto' }));
+    expect(
+      await within(dialogo).findByText('El paquete necesita de 1 a 20 productos distintos.'),
+    ).toBeTruthy();
+  });
+
+  it('una pieza con unidad de venta se marca para venderse con decimales [RF-M1-12]', async () => {
+    const deps = await montar();
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar Marco de madera' }));
+    const dialogo = await screen.findByRole('dialog', { name: 'Editar producto' });
+    fireEvent.change(within(dialogo).getByLabelText('Unidad de venta (opcional)'), {
+      target: { value: 'kilo' },
+    });
+    fireEvent.click(within(dialogo).getByLabelText(/Se vende con decimales/));
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Guardar producto' }));
+    expect(await screen.findByText('Cambios guardados.')).toBeTruthy();
+    const lista = await deps.products.list();
+    expect(lista.ok && lista.value.find((p) => p.code === 'MA-1')?.allowsDecimalQuantity).toBe(
+      true,
+    );
+  });
+
+  it('sin unidad de venta no se puede vender con decimales y dice qué hacer', async () => {
+    await montar();
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar Marco de madera' }));
+    const dialogo = await screen.findByRole('dialog', { name: 'Editar producto' });
+    fireEvent.click(within(dialogo).getByLabelText(/Se vende con decimales/));
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Guardar producto' }));
+    expect(
+      await within(dialogo).findByText(
+        'Con decimales solo se vende lo que se cobra por pieza o servicio y dice su unidad.',
+      ),
+    ).toBeTruthy();
+  });
+
   it('un servicio solo se cobra como servicio y una pieza estándar como pieza', async () => {
     await montar({ conProductos: false });
     fireEvent.click(await botonAgregar());
@@ -296,6 +640,40 @@ describe('Catálogo', () => {
     expect(within(dialogo).getByLabelText<HTMLInputElement>('Nombre').value).toBe(
       'Vidrio claro 6 mm',
     );
+  });
+
+  it('duplicar abre el formulario con todo copiado menos el código y crea un producto nuevo [RF-M1-16]', async () => {
+    const deps = await montar();
+    const antes = await deps.products.list();
+    const original = antes.ok ? antes.value.find((p) => p.code === 'VC-6') : undefined;
+    if (original === undefined) throw new Error('sin vidrio de prueba');
+    fireEvent.click(await screen.findByRole('button', { name: `Duplicar ${original.name}` }));
+    const dialogo = await screen.findByRole('dialog', { name: 'Duplicar producto' });
+    const nombre = within(dialogo).getByLabelText<HTMLInputElement>('Nombre');
+    expect(nombre.value).toBe(`${original.name} (copia)`);
+    expect(within(dialogo).getByLabelText<HTMLInputElement>('Código (opcional)').value).toBe('');
+    fireEvent.change(nombre, { target: { value: 'Vidrio claro 9 mm' } });
+    fireEvent.change(within(dialogo).getByLabelText('Precio de lista con IVA'), {
+      target: { value: '420' },
+    });
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Guardar producto' }));
+    expect(await screen.findByText('Producto agregado al catálogo.')).toBeTruthy();
+    const despues = await deps.products.list();
+    const nuevo = despues.ok
+      ? despues.value.find((p) => p.name === 'Vidrio claro 9 mm')
+      : undefined;
+    expect(nuevo?.id).not.toBe(original.id);
+    expect(nuevo).toMatchObject({
+      categoryId: original.categoryId,
+      kind: original.kind,
+      chargeUnit: original.chargeUnit,
+      ruleParams: original.ruleParams,
+      fiscal: original.fiscal,
+      code: null,
+      listPrice: 42_000,
+    });
+    // El original no cambia.
+    expect(despues.ok && despues.value.find((p) => p.id === original.id)).toEqual(original);
   });
 
   it('desactivar conserva el producto y se puede volver a activar', async () => {

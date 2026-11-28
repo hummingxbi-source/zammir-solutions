@@ -86,6 +86,41 @@ describe('conceptos del CFDI a partir de las líneas', () => {
     expect(validateStampRequest(solicitud).ok).toBe(true);
   });
 
+  it('con cantidades con decimales la factura lleva la cantidad tal cual y sigue cuadrando [RF-M1-12]', () => {
+    // 1.5 kg a $85.00 = $127.50 con IVA ($109.91 + $17.59) y 0.333 kg a $10.00 = $3.33 ($2.87 + $0.46).
+    const r = buildInvoiceConcepts([
+      linea({
+        name: 'Vinil',
+        quantity: 1.5,
+        baseCents: 10_991,
+        taxCents: 1_759,
+        lineTotalCents: 12_750,
+      }),
+      linea({ name: 'Felpa', quantity: 0.333, baseCents: 287, taxCents: 46, lineTotalCents: 333 }),
+    ]);
+    if (!r.ok) throw new Error('no armó');
+    expect(r.value.map((c) => c.quantity)).toEqual([1.5, 0.333]);
+    const solicitud: StampRequest = {
+      requestId: 'solicitud-2',
+      paymentForm: '01',
+      paymentMethod: 'PUE',
+      recipient: receptor,
+      concepts: r.value,
+      issuedAt: new Date('2026-11-03T18:00:00.000Z'),
+    };
+    expect(validateStampRequest(solicitud).ok).toBe(true);
+  });
+
+  it('el valor unitario cuadra con cualquier cantidad de hasta 3 decimales razonable', () => {
+    for (const milesimas of [1, 125, 333, 1_255, 1_500, 2_005, 9_999, 123_457, 9_999_999]) {
+      const cantidad = milesimas / 1000;
+      for (const importe of [1, 99, 101, 10_000, 123_457, 9_999_999]) {
+        const micros = unitValueMicros(importe, cantidad);
+        expect(Math.round((cantidad * micros) / 10_000)).toBe(importe);
+      }
+    }
+  });
+
   it('un producto exento lleva objeto de impuesto 02 con IVA cero', () => {
     const r = buildInvoiceConcepts([
       linea({ taxCents: 0, lineTotalCents: 50_000, taxObject: '02' }),

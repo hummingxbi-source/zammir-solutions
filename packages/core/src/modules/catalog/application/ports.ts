@@ -1,7 +1,14 @@
 import type { CategoryId, ProductId } from '../../../shared-kernel/id';
 import type { Money } from '../../../shared-kernel/money/money';
 import type { Result } from '../../../shared-kernel/result';
-import type { Category, ChargeUnit, PriceChange, Product, ProductKind } from '../domain/product';
+import type {
+  BundleItem,
+  Category,
+  ChargeUnit,
+  PriceChange,
+  Product,
+  ProductKind,
+} from '../domain/product';
 
 export type CatalogErrorCode =
   | 'CODE_TAKEN'
@@ -31,6 +38,16 @@ export interface SellableProduct {
   readonly isTaxExempt: boolean;
   readonly ruleId: string;
   readonly ruleParams: unknown;
+  /** Precio abierto [RF-M1-10]: `listPrice` es la referencia. Sin el campo, el precio es fijo. */
+  readonly isOpenPrice?: boolean;
+  /** Descripción opcional [RF-M1-13]. */
+  readonly description?: string;
+  /** Unidad de venta de lo que se cobra por pieza o servicio [RF-M1-11]. */
+  readonly saleUnitName?: string;
+  /** Componentes, si es un paquete [RF-M1-18]: al venderlo se convierte en un renglón por componente. */
+  readonly bundleItems?: readonly BundleItem[];
+  /** Se vende con hasta 3 decimales (1.5 kg) [RF-M1-12]. */
+  readonly allowsDecimalQuantity?: boolean;
 }
 
 /** Puerto de lectura para vender: solo productos activos. */
@@ -41,6 +58,15 @@ export interface ProductReader {
 
 /** Puerto de administración del catálogo. Nada se borra: los productos se desactivan [RF-M1-04];
  *  por eso este puerto no tiene una operación de borrado. */
+/** Lo único que cambian los precios en bloque y la importación para actualizar [RF-M1-15]. `description`
+ *  en `null` deja al producto sin descripción. */
+export interface ProductBulkChange {
+  readonly id: ProductId;
+  readonly name: string;
+  readonly listPrice: Money;
+  readonly description: string | null;
+}
+
 export interface ProductAdmin {
   create(producto: Product): Promise<Result<Product, CatalogError>>;
   /** Da de alta varios productos de golpe, **todo o nada**: si uno falla (código repetido, categoría que
@@ -50,6 +76,11 @@ export interface ProductAdmin {
    *  con el valor anterior y el nuevo, en el mismo paso [RF-M1-06, RN-19]. Activar o desactivar
    *  también deja su entrada. */
   update(producto: Product): Promise<Result<Product, CatalogError>>;
+  /** Cambia nombre, precio y descripción de varios productos, **todo o nada**: si uno no existe, no cambia
+   *  ninguno. Cada cambio de precio deja su historial y su bitácora, igual que `update` [RF-M1-15, RN-19]. */
+  updateMany(
+    cambios: readonly ProductBulkChange[],
+  ): Promise<Result<readonly Product[], CatalogError>>;
   /** Cambios de precio de un producto, del más antiguo al más reciente. */
   priceHistory(id: ProductId): Promise<Result<readonly PriceChange[], CatalogError>>;
   get(id: ProductId): Promise<Result<Product, CatalogError>>;

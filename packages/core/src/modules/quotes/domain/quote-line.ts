@@ -1,3 +1,4 @@
+import { isValidQuantity, isWholeQuantity } from '../../../shared-kernel/measure/quantity';
 import type { LengthUnit, Millimeters } from '../../../shared-kernel/measure/length';
 import { money, type Money } from '../../../shared-kernel/money/money';
 import { err, ok, type Result } from '../../../shared-kernel/result';
@@ -10,6 +11,10 @@ import type { LineExtra, QuoteLine } from './quote';
 export type QuoteLineErrorCode =
   /** Medidas, cantidad o precio que la regla del producto no acepta. */
   | 'INPUT_INVALID'
+  /** Una medida pasa del máximo del producto [RF-M1-14]. */
+  | 'MEASURE_TOO_LARGE'
+  /** Cantidad con decimales en un producto que se vende entero, o con más de 3 decimales [RF-M1-12]. */
+  | 'QUANTITY_INVALID'
   | 'RULE_NOT_REGISTERED'
   | 'PARAMS_INVALID'
   /** Un importe no cabe en un entero seguro, o el IVA no se pudo calcular. */
@@ -32,6 +37,15 @@ export interface QuoteProduct {
   readonly isTaxExempt: boolean;
   readonly ruleId: string;
   readonly ruleParams: unknown;
+  /** Precio abierto [RF-M1-10, ADR-0048]: el precio del catálogo es de referencia y se puede fijar más
+   *  arriba al cotizar o vender. Sin el campo, el precio es fijo. */
+  readonly isOpenPrice?: boolean;
+  /** Unidad de venta [RF-M1-11]: se copia a la línea. */
+  readonly saleUnitName?: string;
+  /** Se vende con hasta 3 decimales [RF-M1-12]: se copia a la línea. */
+  readonly allowsDecimalQuantity?: boolean;
+  /** Descripción del producto [RF-M1-13]: se copia a la línea para el documento del cliente. */
+  readonly description?: string;
 }
 
 export interface LineInput {
@@ -51,7 +65,11 @@ export interface LineDeps {
 }
 
 function codigoDeLinea(codigo: string): QuoteLineErrorCode {
-  return codigo === 'RULE_NOT_REGISTERED' || codigo === 'PARAMS_INVALID' ? codigo : 'INPUT_INVALID';
+  return codigo === 'RULE_NOT_REGISTERED' ||
+    codigo === 'PARAMS_INVALID' ||
+    codigo === 'MEASURE_TOO_LARGE'
+    ? codigo
+    : 'INPUT_INVALID';
 }
 
 function aMoney(centavos: number): Result<Money, QuoteLineError> {
@@ -110,6 +128,10 @@ function calcularLinea(
     | 'isTaxExempt'
     | 'catalogPriceCents'
     | 'extras'
+    | 'isOpenPrice'
+    | 'saleUnitName'
+    | 'allowsDecimalQuantity'
+    | 'description'
   >,
   unitPriceCents: number,
   entrada: LineInput,
@@ -118,6 +140,14 @@ function calcularLinea(
   const precio = aMoney(unitPriceCents);
   if (!precio.ok) {
     return precio;
+  }
+  // Decimales solo en lo que se vende así, y nunca más de 3 [RF-M1-12, ADR-0048].
+  const cantidadValida =
+    base.allowsDecimalQuantity === true
+      ? isValidQuantity(entrada.quantity)
+      : isWholeQuantity(entrada.quantity);
+  if (!cantidadValida) {
+    return err({ code: 'QUANTITY_INVALID' });
   }
   const calculo = deps.registry.calculate(base.ruleId, base.ruleParams, {
     unitPrice: precio.value,
@@ -149,7 +179,7 @@ function calcularLinea(
   if (!desglose.ok) {
     return err({ code: 'AMOUNT_INVALID' });
   }
-  const detalle = formatPriceDetail(calculo.value);
+  const detalle = formatPriceDetail(calculo.value, base.saleUnitName);
   return ok({
     ...base,
     ...(extras.length === 0 ? {} : { extras }),
@@ -249,6 +279,10 @@ export function buildQuoteLine(
       ruleParams: producto.ruleParams,
       isTaxExempt: producto.isTaxExempt,
       catalogPriceCents: producto.listPrice,
+      ...(producto.isOpenPrice === true ? { isOpenPrice: true } : {}),
+      ...(producto.saleUnitName === undefined ? {} : { saleUnitName: producto.saleUnitName }),
+      ...(producto.allowsDecimalQuantity === true ? { allowsDecimalQuantity: true } : {}),
+      ...(producto.description === undefined ? {} : { description: producto.description }),
     },
     producto.listPrice,
     entrada,
@@ -276,8 +310,8 @@ export function recalculateQuoteLine(
   );
 }
 
-/** Cambia el precio unitario de una línea (descuento o ajuste). Nunca negativo ni mayor que el del
- *  catálogo: un aumento no es un descuento y no se hace por aquí. El permiso lo valida el caso de uso. */
+/** Cambia el precio unitario de una línea (descuento o ajuste). Nunca negativo. Solo sube del precio del
+ *  catálogo si el producto tiene precio abierto [RF-M1-10, ADR-0048]. El permiso lo valida el caso de uso. */
 export function repriceQuoteLine(
   linea: QuoteLine,
   nuevoPrecioCents: number,
@@ -286,7 +320,7 @@ export function repriceQuoteLine(
   if (
     !Number.isSafeInteger(nuevoPrecioCents) ||
     nuevoPrecioCents < 0 ||
-    nuevoPrecioCents > linea.catalogPriceCents
+    (nuevoPrecioCents > linea.catalogPriceCents && linea.isOpenPrice !== true)
   ) {
     return err({ code: 'PRICE_INVALID' });
   }

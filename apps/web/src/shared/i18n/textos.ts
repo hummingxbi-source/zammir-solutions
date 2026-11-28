@@ -411,6 +411,8 @@ export const textos = {
     agregar: 'Agregar producto',
     importar: 'Importar desde archivo',
     editar: 'Editar',
+    duplicar: 'Duplicar',
+    nombreDeCopia: (nombre: string): string => `${nombre} (copia)`,
     desactivar: 'Desactivar',
     activar: 'Activar',
     activo: 'Activo',
@@ -424,7 +426,9 @@ export const textos = {
       STANDARD: 'Pieza estándar',
       SERVICE: 'Servicio',
       EXTRA: 'Cargo extra (canto, perforación…)',
+      BUNDLE: 'Paquete (varios productos)',
     },
+    productosDelPaquete: (n: number) => `${String(n)} ${n === 1 ? 'producto' : 'productos'}`,
     unidades: {
       SQUARE_METER: 'Metro cuadrado',
       LINEAR_METER: 'Metro lineal',
@@ -454,6 +458,7 @@ export const textos = {
     formulario: {
       tituloAlta: 'Agregar producto',
       tituloEdicion: 'Editar producto',
+      tituloDuplicar: 'Duplicar producto',
       nombre: 'Nombre',
       codigo: 'Código (opcional)',
       categoria: 'Categoría',
@@ -465,6 +470,39 @@ export const textos = {
       precio: 'Precio de lista con IVA',
       garantia: 'Garantía sugerida en meses (opcional)',
       exento: 'Este producto está exento de IVA',
+      descripcion: 'Descripción (opcional, hasta 500 caracteres)',
+      precioAbierto: 'Precio abierto: el precio se fija al cotizar o vender',
+      precioAbiertoAyuda:
+        'El precio de lista queda como referencia. Cobrar más no pide PIN; cobrar menos es un descuento y pide el PIN de un administrador.',
+      ajustes: 'Ajustes del cobro (opcionales)',
+      ajustesAyuda:
+        'Déjalos vacíos para cobrar la medida exacta, sin mínimo ni medida máxima. Las piezas ya cotizadas no cambian.',
+      redondeo: 'Subir cada medida al múltiplo de (mm)',
+      areaMinima: 'Área mínima por pieza (m²)',
+      minimo: 'Cobro mínimo por trabajo, con IVA',
+      anchoMaximo: 'Ancho máximo (mm)',
+      altoMaximo: 'Alto máximo (mm)',
+      largoMaximo: 'Largo máximo (mm)',
+      unidadDeVenta: 'Unidad de venta (opcional)',
+      conDecimales: 'Se vende con decimales (hasta 3: 1.5 kilos, 2.5 horas)',
+      conDecimalesAyuda:
+        'Necesita la unidad de venta. La cantidad se cobra al centavo, la mitad hacia arriba.',
+      unidadDeVentaAyuda:
+        'Cómo se lee la cantidad: "2 rollos", "3 pares", "2 horas". Vacía, solo se ve la cantidad.',
+      componentes: 'Productos del paquete',
+      componentesAyuda:
+        'Al agregar el paquete en el cotizador o el mostrador, cada producto entra como un renglón con su precio. Si alguno es a medida, las medidas se piden una vez.',
+      componente: 'Producto',
+      cantidadComponente: 'Cantidad',
+      agregarComponente: 'Agregar producto al paquete',
+      quitar: 'Quitar',
+      quitarComponente: (nombre: string) => `Quitar ${nombre} del paquete`,
+      claveSat: 'Clave SAT (opcional)',
+      claveUnidadSat: 'Clave de unidad SAT (opcional)',
+      claveHeredada: (clave: string | null) =>
+        clave === null
+          ? 'Vacía: la categoría todavía no tiene.'
+          : `Vacía: usa la de la categoría (${clave}).`,
       historial: 'Cambios de precio',
       guardar: 'Guardar producto',
       guardando: 'Guardando…',
@@ -513,6 +551,69 @@ export const textos = {
         mensaje: 'La garantía debe ser un número de meses mayor a cero.',
         queHacer: 'Corrígela o déjala en blanco.',
       },
+      OPEN_PRICE_NOT_ALLOWED: {
+        mensaje: 'Un cargo extra no puede tener precio abierto.',
+        queHacer: 'Quita la marca de precio abierto o cambia el tipo.',
+      },
+      DESCRIPTION_TOO_LONG: {
+        mensaje: 'La descripción es muy larga.',
+        queHacer: 'Déjala en 500 caracteres o menos.',
+      },
+      MEASURE_STEP_INVALID: {
+        mensaje: 'El redondeo de medidas no es válido.',
+        queHacer: 'Escribe milímetros enteros, por ejemplo 10, o déjalo vacío.',
+      },
+      MIN_AREA_INVALID: {
+        mensaje: 'El área mínima no es válida.',
+        queHacer: 'Escríbela en m² con hasta 3 decimales, por ejemplo 0.5, o déjala vacía.',
+      },
+      MIN_AMOUNT_INVALID: {
+        mensaje: 'El cobro mínimo no es válido.',
+        queHacer: 'Escríbelo en pesos, mayor a cero, o déjalo vacío.',
+      },
+      MAX_WIDTH_INVALID: {
+        mensaje: 'La medida máxima no es válida.',
+        queHacer: 'Escribe milímetros enteros, por ejemplo 1800, o déjala vacía.',
+      },
+      MAX_HEIGHT_INVALID: {
+        mensaje: 'El alto máximo no es válido.',
+        queHacer: 'Escribe milímetros enteros, por ejemplo 2600, o déjalo vacío.',
+      },
+      SALE_UNIT_NOT_ALLOWED: {
+        mensaje: 'La unidad de venta es solo para lo que se cobra por pieza o por servicio.',
+        queHacer: 'Déjala vacía o cambia la forma de cobro.',
+      },
+      SALE_UNIT_TOO_LONG: {
+        mensaje: 'La unidad de venta es muy larga.',
+        queHacer: 'Déjala en 20 caracteres o menos, por ejemplo "rollo" o "par".',
+      },
+      SAT_KEY_INVALID: {
+        mensaje: 'La clave SAT no es válida.',
+        queHacer:
+          'Escribe sus 8 dígitos, por ejemplo 30171500, o déjala vacía para usar la de la categoría.',
+      },
+      DECIMAL_QUANTITY_NOT_ALLOWED: {
+        mensaje:
+          'Con decimales solo se vende lo que se cobra por pieza o servicio y dice su unidad.',
+        queHacer: 'Escribe la unidad de venta (por ejemplo "kilo" u "hora") o quita la marca.',
+      },
+      BUNDLE_ITEMS_INVALID: {
+        mensaje: 'El paquete necesita de 1 a 20 productos distintos.',
+        queHacer: 'Agrega al menos uno, sin repetir, con cantidad entera de 1 en adelante.',
+      },
+      BUNDLE_COMPONENT_NOT_FOUND: {
+        mensaje: 'Un producto del paquete ya no está en el catálogo.',
+        queHacer: 'Quítalo del paquete y guarda otra vez.',
+      },
+      BUNDLE_COMPONENT_NOT_ALLOWED: {
+        mensaje: 'Un paquete no lleva otros paquetes, cargos extra ni productos desactivados.',
+        queHacer: 'Quítalo del paquete y guarda otra vez.',
+      },
+      SAT_UNIT_KEY_INVALID: {
+        mensaje: 'La clave de unidad SAT no es válida.',
+        queHacer:
+          'Escribe 2 o 3 letras o números, por ejemplo H87, o déjala vacía para usar la de la categoría.',
+      },
       CODE_TAKEN: {
         mensaje: 'Ese código ya lo usa otro producto.',
         queHacer: 'Escribe uno distinto.',
@@ -544,6 +645,82 @@ export const textos = {
         queHacer: 'Recarga el catálogo e intenta de nuevo.',
       },
     },
+  },
+  /** Precios en bloque [RF-M1-15, ADR-0048]: por porcentaje de una categoría o desde un archivo. */
+  preciosEnBloque: {
+    boton: 'Precios en bloque',
+    titulo: 'Precios en bloque',
+    descripcion:
+      'Cambia muchos precios de una vez. Primero ves cada cambio, antes y después; nada se guarda hasta que lo apliques. Cada cambio de precio queda en el historial del producto.',
+    porcentaje: {
+      titulo: 'Subir o bajar por porcentaje',
+      ayuda:
+        'Para toda una categoría, solo los productos activos. Para bajar, escribe el porcentaje con un menos: -5.',
+      categoria: 'Categoría',
+      porcentaje: 'Porcentaje',
+      redondeo: 'Redondear al peso',
+      redondeos: {
+        UP: 'Hacia arriba (recomendado)',
+        NEAREST: 'Al peso más cercano',
+        DOWN: 'Hacia abajo',
+      },
+      verCambios: 'Ver los cambios',
+      aplicar: (n: number) => `Aplicar a ${String(n)} ${n === 1 ? 'producto' : 'productos'}`,
+    },
+    archivo: {
+      titulo: 'Actualizar desde un archivo',
+      ayuda:
+        'Descarga el catálogo de hoy, cambia en Excel el nombre, el precio o la descripción y súbelo. Cada producto se encuentra por su código; una celda vacía deja lo que ya tenía. Los productos sin código no salen en el archivo.',
+      descargar: 'Descargar el catálogo de hoy',
+      elegir: 'Archivo con los cambios (CSV)',
+      sinCambios: 'El archivo no cambia nada.',
+      aplicar: (n: number) => `Aplicar ${String(n)} ${n === 1 ? 'cambio' : 'cambios'}`,
+      fila: 'Fila',
+      producto: 'Producto',
+      cambios: 'Cambios',
+      sinCambiosFila: 'Sin cambios',
+      faltaCodigo: 'Al archivo le falta la columna "codigo".',
+      nadaQueCambiar:
+        'El archivo necesita al menos una columna que cambiar: "nombre", "precio" o "descripcion".',
+      vacio: 'El archivo está vacío.',
+      hayErrores: 'Hay errores: corrige el archivo y vuelve a subirlo. No se cambió nada.',
+      nombre: 'Nombre',
+      precio: 'Precio',
+      descripcionCampo: 'Descripción',
+      errores: {
+        CODE_REQUIRED_IN_ROW: 'Falta el código: así se encuentra el producto.',
+        CODE_NOT_IN_CATALOG: 'Ningún producto tiene ese código. Para dar de alta usa "Importar".',
+      },
+    },
+    columnas: { producto: 'Producto', antes: 'Antes', despues: 'Después' },
+    aplicado: (n: number) =>
+      `Listo: se cambiaron ${String(n)} ${n === 1 ? 'producto' : 'productos'}.`,
+    errores: {
+      PERCENT_INVALID: {
+        mensaje: 'El porcentaje no es válido.',
+        queHacer: 'Escribe un número entre -99.99 y 1000, sin cero; por ejemplo 8 o -5.',
+      },
+      NOTHING_TO_CHANGE: {
+        mensaje: 'Ningún producto activo de esa categoría cambiaría de precio.',
+        queHacer: 'Revisa la categoría o el porcentaje.',
+      },
+      AMOUNT_INVALID: {
+        mensaje: 'Algún precio nuevo sería demasiado grande.',
+        queHacer: 'Revisa el porcentaje.',
+      },
+      NOT_AUTHORIZED: {
+        mensaje: 'Solo un administrador cambia precios en bloque.',
+        queHacer: 'Entra con una cuenta de administrador.',
+      },
+      NOT_FOUND: {
+        mensaje: 'Algún producto ya no está en el catálogo.',
+        queHacer: 'Vuelve a ver los cambios: no se guardó nada.',
+      },
+      CATALOG_UNAVAILABLE: {
+        mensaje: 'No se pudo cambiar el catálogo.',
+        queHacer: 'Revisa la conexión e inténtalo de nuevo: no se guardó nada.',
+      },
+    } as Record<string, { mensaje: string; queHacer: string }>,
   },
   importar: {
     titulo: 'Importar el catálogo',
@@ -587,6 +764,16 @@ export const textos = {
       regla: 'Regla',
       base_metro_lineal: 'Base del metro lineal',
       garantia_meses: 'Garantía (meses)',
+      precio_abierto: 'Precio abierto',
+      descripcion: 'Descripción',
+      redondeo_mm: 'Redondeo (mm)',
+      area_minima_m2: 'Área mínima (m²)',
+      minimo_por_trabajo: 'Mínimo por trabajo',
+      ancho_maximo_mm: 'Ancho máximo (mm)',
+      alto_maximo_mm: 'Alto máximo (mm)',
+      unidad_venta: 'Unidad de venta',
+      clave_sat: 'Clave SAT',
+      clave_unidad_sat: 'Clave de unidad SAT',
     },
     errores: {
       NAME_REQUIRED_IN_ROW: 'Falta el nombre.',
@@ -597,6 +784,24 @@ export const textos = {
       PRICE_TOO_MANY_DECIMALS: 'El precio solo puede tener dos decimales.',
       PRICE_NEGATIVE: 'El precio no puede ser negativo.',
       EXEMPT_INVALID: 'En "exento" escribe sí o no.',
+      OPEN_PRICE_INVALID: 'En "precio abierto" escribe sí o no, o déjalo vacío.',
+      DESCRIPTION_TOO_LONG_IN_ROW: 'La descripción puede tener hasta 500 caracteres.',
+      ADJUSTMENT_NOT_ALLOWED:
+        'Este ajuste no aplica a esta forma de cobro: déjalo vacío (por ejemplo, el área mínima solo es para m²).',
+      MEASURE_STEP_INVALID: 'El redondeo debe ser en milímetros enteros, por ejemplo 10.',
+      MIN_AREA_INVALID: 'El área mínima va en m² con hasta 3 decimales, por ejemplo 0.5.',
+      MIN_AMOUNT_INVALID: 'El mínimo por trabajo debe ser un monto en pesos mayor a cero.',
+      MAX_WIDTH_INVALID: 'El ancho máximo debe ser en milímetros enteros, por ejemplo 1800.',
+      MAX_HEIGHT_INVALID: 'El alto máximo debe ser en milímetros enteros, por ejemplo 2600.',
+      SALE_UNIT_NOT_ALLOWED:
+        'La unidad de venta es solo para lo que se cobra por pieza o por servicio: déjala vacía.',
+      SALE_UNIT_TOO_LONG: 'La unidad de venta puede tener hasta 20 caracteres.',
+      SAT_KEY_INVALID: 'La clave SAT lleva 8 dígitos, por ejemplo 30171500, o déjala vacía.',
+      SAT_UNIT_KEY_INVALID:
+        'La clave de unidad SAT lleva 2 o 3 letras o números, por ejemplo H87, o déjala vacía.',
+      BUNDLE_ITEMS_INVALID: 'Los paquetes se dan de alta en la pantalla, no desde el archivo.',
+      DECIMAL_QUANTITY_NOT_ALLOWED:
+        'Con decimales solo se vende lo que se cobra por pieza o servicio y dice su unidad de venta.',
       CODE_DUPLICATE_IN_FILE: 'Este código ya aparece antes en el archivo.',
       CODE_DUPLICATE_IN_CATALOG: 'Este código ya existe en el catálogo.',
       RULE_UNKNOWN: 'La regla de precio no existe.',
@@ -604,6 +809,8 @@ export const textos = {
         'Un producto por metro lineal necesita la base: "largo" o "perímetro".',
       LINEAR_BASIS_INVALID: 'La base del metro lineal debe ser "largo" o "perímetro".',
       WARRANTY_INVALID: 'La garantía debe ser un número entero de meses mayor que cero.',
+      OPEN_PRICE_NOT_ALLOWED: 'Un cargo extra no puede tener precio abierto.',
+      DESCRIPTION_TOO_LONG: 'La descripción puede tener hasta 500 caracteres.',
       NAME_REQUIRED: 'Falta el nombre.',
       KIND_UNIT_MISMATCH: 'Ese tipo de producto no se cobra con esa unidad.',
       RULE_UNIT_MISMATCH: 'La regla de precio no corresponde a la unidad.',
@@ -1396,6 +1603,8 @@ export const textos = {
       m: 'metros',
       ancho: 'Ancho',
       alto: 'Alto',
+      medidaMaxima: 'Medida máxima de este producto:',
+      paquete: (n: number) => `Paquete de ${String(n)} ${n === 1 ? 'producto' : 'productos'}`,
       cantidad: 'Cantidad',
       agregar: 'Agregar al ticket',
       cancelar: 'Cancelar',
@@ -1411,6 +1620,15 @@ export const textos = {
       total: 'Total',
       cobrar: 'Cobrar',
       vaciar: 'Vaciar el ticket',
+      fijarPrecio: 'Fijar precio',
+      cancelarPrecio: 'Cancelar',
+      precioPorUnidad: 'Precio por unidad (con IVA)',
+      precioFijado: 'precio fijado',
+      referencia: (precio: string): string => `Precio de referencia: ${precio}.`,
+      precioDebajo: (precio: string): string =>
+        `En el mostrador el precio no puede quedar debajo de la referencia (${precio}).`,
+      precioDebajoQueHacer:
+        'Escribe un precio igual o mayor. Para dar un descuento, hazlo en el cotizador con el PIN de un administrador.',
     },
     cobrada: {
       titulo: 'Venta registrada',
@@ -1528,7 +1746,8 @@ export const textos = {
       },
       QUANTITY_INVALID: {
         mensaje: 'La cantidad no es válida.',
-        queHacer: 'Escribe un número entero de 1 en adelante.',
+        queHacer:
+          'Escribe un número entero de 1 en adelante; si el producto se vende con decimales, hasta 3 (por ejemplo 1.5).',
       },
       MEASURE_INVALID: {
         mensaje: 'Las medidas no son válidas.',
@@ -1537,6 +1756,28 @@ export const textos = {
       INPUT_INVALID: {
         mensaje: 'Falta información para calcular el precio.',
         queHacer: 'Revisa las medidas y la cantidad.',
+      },
+      MEASURE_TOO_LARGE: {
+        mensaje: 'La medida pasa del máximo de este producto.',
+        queHacer: 'Revisa la medida. Si es correcta, divide la pieza o elige otro producto.',
+      },
+      BUNDLE_COMPONENT_NOT_FOUND: {
+        mensaje: 'Un producto del paquete ya no está en el catálogo.',
+        queHacer:
+          'Agrega los productos uno por uno o pide a un administrador que corrija el paquete.',
+      },
+      BUNDLE_COMPONENT_NOT_ALLOWED: {
+        mensaje: 'Un producto del paquete no se puede vender así.',
+        queHacer: 'Pide a un administrador que corrija el paquete.',
+      },
+      BUNDLE_INPUT_INVALID: {
+        mensaje: 'La cantidad de paquetes no es válida.',
+        queHacer: 'Escribe un número entero de 1 en adelante.',
+      },
+      EXTRA_INVALID: {
+        mensaje: 'Ese cargo extra no se puede agregar a esta línea.',
+        queHacer:
+          'Un cargo por m² o metro lineal necesita una pieza con medidas; uno por pieza, una cantidad de 1 o más.',
       },
       AMOUNT_INVALID: {
         mensaje: 'El importe no es válido.',
@@ -1881,6 +2122,35 @@ export const textos = {
       },
     },
   },
+  /** Unidades de venta sugeridas, en Configuración [RF-M1-11, PP-40]. */
+  unidadesDeVenta: {
+    titulo: 'Unidades de venta',
+    descripcion:
+      'Las que se sugieren al capturar un producto que se vende por pieza o servicio (rollo, kilo, par, hora…), para que todos escriban igual. También se sugieren las que ya usa el catálogo.',
+    cargando: 'Cargando…',
+    campo: 'Unidades de venta, una por renglón',
+    guardar: 'Guardar unidades',
+    guardando: 'Guardando…',
+    guardado: 'Listo. Se sugieren las unidades nuevas.',
+    errores: {
+      NOT_AUTHORIZED: {
+        mensaje: 'Tu cuenta no puede cambiar las unidades.',
+        queHacer: 'Entra con una cuenta de administrador.',
+      },
+      INVALID: {
+        mensaje: 'La lista no vale.',
+        queHacer: 'Escribe hasta 50 unidades, una por renglón, cada una de hasta 20 caracteres.',
+      },
+      SETTINGS_INVALID: {
+        mensaje: 'Las unidades guardadas no se pueden leer.',
+        queHacer: 'Avisa a soporte. Mientras, se sugiere la lista base.',
+      },
+      SETTINGS_UNAVAILABLE: {
+        mensaje: 'No se pudieron leer las unidades.',
+        queHacer: 'Revisa la conexión e inténtalo de nuevo.',
+      },
+    },
+  },
   umbralDeAtraso: {
     titulo: 'Cuentas por cobrar atrasadas',
     descripcion:
@@ -2190,6 +2460,8 @@ export const textos = {
       sinResultados: 'No hay productos con eso.',
       ancho: 'Ancho',
       alto: 'Alto',
+      medidaMaxima: 'Medida máxima de este producto:',
+      paquete: (n: number) => `Paquete de ${String(n)} ${n === 1 ? 'producto' : 'productos'}`,
       cantidad: 'Cantidad',
       unidad: 'Unidad de las medidas',
       cm: 'centímetros',
@@ -2218,12 +2490,19 @@ export const textos = {
       iva: 'IVA',
       total: 'Total',
       conDescuento: 'con descuento autorizado',
+      precioFijado: 'precio fijado',
     },
     descuento: {
       titulo: 'Descuento',
+      tituloAbierto: 'Fijar precio',
       boton: 'Dar descuento',
+      botonAbierto: 'Fijar precio',
       nuevoPrecio: 'Precio nuevo por unidad (con IVA)',
+      precioAbierto: 'Precio por unidad (con IVA)',
+      referencia: (precio: string): string =>
+        `Precio de referencia: ${precio}. Si cobras menos es un descuento y necesita el PIN de un administrador.`,
       aplicar: 'Aplicar descuento',
+      aplicarAbierto: 'Fijar precio',
       pedirPin: 'Un descuento necesita el PIN de un administrador.',
       administrador: 'Administrador',
       pin: 'PIN del administrador',
@@ -2328,6 +2607,23 @@ export const textos = {
         mensaje: 'Las medidas o la cantidad no son válidas.',
         queHacer: 'Revisa ancho, alto y cantidad.',
       },
+      MEASURE_TOO_LARGE: {
+        mensaje: 'La medida pasa del máximo de este producto.',
+        queHacer: 'Revisa la medida. Si es correcta, divide la pieza o elige otro producto.',
+      },
+      BUNDLE_COMPONENT_NOT_FOUND: {
+        mensaje: 'Un producto del paquete ya no está en el catálogo.',
+        queHacer:
+          'Agrega los productos uno por uno o pide a un administrador que corrija el paquete.',
+      },
+      BUNDLE_COMPONENT_NOT_ALLOWED: {
+        mensaje: 'Un producto del paquete no se puede vender así.',
+        queHacer: 'Pide a un administrador que corrija el paquete.',
+      },
+      BUNDLE_INPUT_INVALID: {
+        mensaje: 'La cantidad de paquetes no es válida.',
+        queHacer: 'Escribe un número entero de 1 en adelante.',
+      },
       RULE_NOT_REGISTERED: {
         mensaje: 'Este producto no tiene una regla de precio.',
         queHacer: 'Avisa a un administrador para corregir el producto.',
@@ -2343,6 +2639,11 @@ export const textos = {
       PRICE_INVALID: {
         mensaje: 'El precio no es válido: no puede ser negativo ni mayor que el del catálogo.',
         queHacer: 'Escribe un precio menor o igual al de catálogo.',
+      },
+      QUANTITY_INVALID: {
+        mensaje: 'La cantidad no es válida.',
+        queHacer:
+          'Escribe un número entero de 1 en adelante; si el producto se vende con decimales, hasta 3 (por ejemplo 1.5).',
       },
       MEASURE_INVALID: {
         mensaje: 'Una medida no es válida.',

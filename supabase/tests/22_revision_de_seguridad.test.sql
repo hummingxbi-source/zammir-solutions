@@ -92,7 +92,9 @@ select is(
          order by 1),
   array['admin_customer_invoices', 'admin_error_log', 'admin_export_data', 'admin_invoice_candidates', 'admin_invoice_list',
         'admin_stamp_usage', 'anonymize_customer', 'create_device_registration_code', 'is_admin', 'is_device',
-        'list_devices', 'public_business_contact', 'receive_operation', 'revoke_device'],
+        'list_devices', 'public_business_contact', 'receive_operation', 'revoke_device',
+        -- CE-06: precios en bloque; SECURITY INVOKER y además solo para administradores [RF-M1-15].
+        'update_products_in_bulk'],
   'las funciones que llama un usuario con sesión son las esperadas'
 );
 

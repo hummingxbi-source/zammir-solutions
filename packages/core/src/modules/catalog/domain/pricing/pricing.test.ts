@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import type { Millimeters } from '../../../../shared-kernel/measure/length';
 import { money, type Money } from '../../../../shared-kernel/money/money';
 import { err, ok } from '../../../../shared-kernel/result';
-import { formatPriceDetail } from './detail';
+import { formatMaxMeasure, formatPriceDetail } from './detail';
 import { createPriceRegistry, defaultRules, type PriceRegistry } from './registry';
 import type { PriceInput, PriceResult, PriceRule } from './types';
 
@@ -267,6 +267,98 @@ describe('regla por metro lineal (LINEAR)', () => {
   });
 });
 
+describe('medida máxima [RF-M1-14]', () => {
+  const espejo = { maxWidthMm: 1800, maxHeightMm: 2600 };
+
+  it('por m²: hasta el máximo se cobra; un milímetro más no', () => {
+    const justo = entrada({ precio: 100_00, widthMm: mm(1800), heightMm: mm(2600) });
+    expect(calcular('AREA', espejo, justo).amount).toBe(468_00);
+    expect(error('AREA', espejo, { ...justo, widthMm: mm(1801) })).toBe('MEASURE_TOO_LARGE');
+    expect(error('AREA', espejo, { ...justo, heightMm: mm(2601) })).toBe('MEASURE_TOO_LARGE');
+  });
+
+  it('cada eje se revisa por separado: la medida al revés no cabe', () => {
+    const alReves = entrada({ precio: 100_00, widthMm: mm(2600), heightMm: mm(1800) });
+    expect(error('AREA', espejo, alReves)).toBe('MEASURE_TOO_LARGE');
+  });
+
+  it('con solo un máximo, el otro eje no tiene límite', () => {
+    const e = entrada({ precio: 100_00, widthMm: mm(1000), heightMm: mm(9000) });
+    expect(error('AREA', { maxWidthMm: 1800 }, e)).toBe('sin error');
+    expect(error('AREA', { maxHeightMm: 2600 }, e)).toBe('MEASURE_TOO_LARGE');
+  });
+
+  it('se compara con lo capturado, no con la medida subida al paso', () => {
+    const e = entrada({ precio: 100_00, widthMm: mm(1790), heightMm: mm(1000) });
+    const r = calcular('AREA', { measureStepMm: 100, maxWidthMm: 1790 }, e);
+    expect(r.detail).toMatchObject({ widthMm: 1800 });
+  });
+
+  it('metro lineal por largo: el máximo es el largo; por perímetro, cada medida', () => {
+    const largo = entrada({ precio: 90_00, widthMm: mm(6100) });
+    expect(error('LINEAR', { basis: 'LENGTH', maxWidthMm: 6100 }, largo)).toBe('sin error');
+    expect(error('LINEAR', { basis: 'LENGTH', maxWidthMm: 6000 }, largo)).toBe('MEASURE_TOO_LARGE');
+    const marco = entrada({ precio: 90_00, widthMm: mm(1000), heightMm: mm(2500) });
+    expect(error('LINEAR', { basis: 'PERIMETER', maxHeightMm: 2400 }, marco)).toBe(
+      'MEASURE_TOO_LARGE',
+    );
+    expect(error('LINEAR', { basis: 'PERIMETER', maxWidthMm: 1000 }, marco)).toBe('sin error');
+  });
+
+  it('la medida máxima se avisa en la unidad que se captura', () => {
+    expect(formatMaxMeasure(espejo, 'cm')).toBe('180 × 260 cm');
+    expect(formatMaxMeasure(espejo, 'm')).toBe('1.80 × 2.60 m');
+    expect(formatMaxMeasure({ maxWidthMm: 1805 }, 'cm')).toBe('ancho 180.5 cm');
+    expect(formatMaxMeasure({ maxHeightMm: 2600 }, 'cm')).toBe('alto 260 cm');
+    expect(formatMaxMeasure({ basis: 'LENGTH', maxWidthMm: 6100 }, 'm')).toBe('largo 6.10 m');
+    expect(formatMaxMeasure({ basis: 'LENGTH' }, 'm')).toBeNull();
+    expect(formatMaxMeasure({}, 'cm')).toBeNull();
+    expect(formatMaxMeasure(null, 'cm')).toBeNull();
+  });
+
+  it('apagado (null) no limita y un máximo que no es entero positivo es un error de parámetros', () => {
+    const e = entrada({ precio: 100_00, widthMm: mm(9000), heightMm: mm(9000) });
+    expect(error('AREA', { maxWidthMm: null, maxHeightMm: null }, e)).toBe('sin error');
+    expect(error('AREA', { maxWidthMm: 0 }, e)).toBe('PARAMS_INVALID');
+    expect(error('AREA', { maxHeightMm: 1.5 }, e)).toBe('PARAMS_INVALID');
+  });
+});
+
+describe('cantidades con decimales [RF-M1-12, D2]', () => {
+  it('pieza y servicio cobran 1.5 kg o 2.5 h, redondeando una vez al centavo', () => {
+    expect(calcular('PIECE', {}, entrada({ precio: 85_00, quantity: 1.5 })).amount).toBe(127_50);
+    expect(calcular('SERVICE', {}, entrada({ precio: 350_00, quantity: 2.5 })).amount).toBe(875_00);
+    expect(calcular('PIECE', {}, entrada({ precio: 33_33, quantity: 1.5 })).amount).toBe(50_00);
+    expect(calcular('PIECE', {}, entrada({ precio: 1_00, quantity: 1.255 })).amount).toBe(1_26);
+    const r = calcular('PIECE', {}, entrada({ precio: 85_00, quantity: 1.5 }));
+    expect(formatPriceDetail(r)).toBe('1.5 × $85.00 = $127.50');
+    expect(formatPriceDetail(r, 'kilo')).toBe('1.5 kilos × $85.00 = $127.50');
+  });
+
+  it('más de 3 decimales, cero o negativo no se aceptan', () => {
+    for (const quantity of [1.2345, 0, -1]) {
+      expect(error('PIECE', {}, entrada({ precio: 100, quantity }))).toBe('INPUT_INVALID');
+    }
+  });
+
+  it('lo que se mide se cuenta en piezas enteras', () => {
+    expect(
+      error(
+        'AREA',
+        {},
+        entrada({ precio: 100, widthMm: mm(1000), heightMm: mm(1000), quantity: 1.5 }),
+      ),
+    ).toBe('INPUT_INVALID');
+    expect(
+      error(
+        'LINEAR',
+        { basis: 'LENGTH' },
+        entrada({ precio: 100, widthMm: mm(1000), quantity: 1.5 }),
+      ),
+    ).toBe('INPUT_INVALID');
+  });
+});
+
 describe('reglas por pieza (PIECE) y de servicio (SERVICE)', () => {
   it('L4: 3 piezas estándar a $450.00 dan $1,350.00', () => {
     const r = calcular('PIECE', {}, entrada({ precio: 45_000, quantity: 3 }));
@@ -293,7 +385,8 @@ describe('errores tipados', () => {
   it.each([
     ['cantidad cero', { quantity: 0 }],
     ['cantidad negativa', { quantity: -1 }],
-    ['cantidad con fracción', { quantity: 1.5 }],
+    // Con la decisión D2 pieza y servicio aceptan hasta 3 decimales; más de 3 no lo acepta ninguna regla.
+    ['cantidad con más de 3 decimales', { quantity: 1.2345 }],
     ['precio negativo', { unitPrice: m(-1) }],
     ['ancho cero', { widthMm: mm(0) }],
     ['ancho con fracción', { widthMm: mm(10.5) }],

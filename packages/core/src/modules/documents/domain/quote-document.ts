@@ -48,6 +48,8 @@ export interface DocumentLabels {
 export interface QuoteDocumentLine {
   readonly position: number;
   readonly name: string;
+  /** Qué incluye o para qué sirve, si el producto tiene descripción [RF-M1-13, PP-39]. */
+  readonly description?: string;
   /** El cálculo tal como se muestra en pantalla (medidas, unidad, precio). */
   readonly detail: string;
   readonly quantity: string;
@@ -143,6 +145,7 @@ function lineaDeDocumento(l: QuoteLine, posicion: number): QuoteDocumentLine {
   return {
     position: posicion,
     name: l.name,
+    ...(l.description === undefined ? {} : { description: l.description }),
     detail: l.detail,
     quantity: String(l.quantity),
     unitPrice: dinero(l.unitPriceCents),

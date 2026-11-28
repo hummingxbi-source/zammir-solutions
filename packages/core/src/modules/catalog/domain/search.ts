@@ -14,10 +14,12 @@ export interface Searchable {
   readonly code: string | null;
   readonly categoryId: CategoryId;
   readonly kind: ProductKind;
+  /** La descripción también cuenta para encontrarlo [RF-M1-13]. */
+  readonly description?: string;
 }
 
 export interface ProductFilters {
-  /** Texto libre: cada palabra debe aparecer en el nombre o en el código. */
+  /** Texto libre: cada palabra debe aparecer en el nombre, el código o la descripción. */
   readonly text?: string;
   readonly categoryId?: CategoryId;
   readonly kind?: ProductKind;
@@ -43,7 +45,9 @@ export function searchProducts<T extends Searchable>(
       return [];
     }
     const nombre = normalizeSearchText(producto.name);
-    const paja = `${nombre} ${normalizeSearchText(producto.code ?? '')}`;
+    const paja = `${nombre} ${normalizeSearchText(producto.code ?? '')} ${normalizeSearchText(
+      producto.description ?? '',
+    )}`;
     if (!palabras.every((palabra) => paja.includes(palabra))) {
       return [];
     }

@@ -11,6 +11,7 @@ import { parseOperation } from '../../sync/domain/operation';
 import type { Authorization } from '../../identity/application/authorize-with-admin-pin';
 import {
   applyQuoteDiscount,
+  addQuoteBundle,
   addQuoteLine,
   addQuoteLineExtra,
   removeQuoteLineExtra,
@@ -289,6 +290,102 @@ describe('descuentos con autorización [PD-45, RN-19]', () => {
   });
 });
 
+describe('precio abierto [RF-M1-10, ADR-0048]', () => {
+  const reparacion: SellableProduct = {
+    ...instalacion,
+    id: asId<'Product'>('00000000-0000-4000-8000-00000000f0a1'),
+    code: 'REP',
+    name: 'Reparación de ventana',
+    isOpenPrice: true,
+  };
+  async function borradorConReparacion(e: ReturnType<typeof entorno>, actor = ana) {
+    const q = await createQuoteDraft(e.deps, actor, { customerId: cliente });
+    if (!q.ok) throw new Error('borrador');
+    const l = await addQuoteLine(e.deps, actor, q.value.id, reparacion, {
+      widthMm: null,
+      heightMm: null,
+      quantity: 1,
+      displayUnit: 'cm',
+    });
+    if (!l.ok) throw new Error('línea');
+    return l.value;
+  }
+  const autorizacion = (): Authorization => ({
+    adminId: luis.userId,
+    authorizedAt: new Date('2026-10-30T18:00:00.000Z'),
+  });
+
+  it('un cajero fija un precio arriba de la referencia sin PIN, y no cuenta como descuento', async () => {
+    const e = entorno();
+    const q = await borradorConReparacion(e);
+    const r = await applyQuoteDiscount(e.deps, ana, q.id, q.lines[0]?.id ?? '', 85_000);
+    expect(r.ok && r.value.lines[0]?.unitPriceCents).toBe(85_000);
+    expect(r.ok && r.value.lines[0]?.catalogPriceCents).toBe(50_000);
+    expect(r.ok && r.value.discountAuthorizedBy).toBeNull();
+  });
+
+  it('dejarlo igual que la referencia tampoco pide PIN', async () => {
+    const e = entorno();
+    const q = await borradorConReparacion(e);
+    const r = await applyQuoteDiscount(e.deps, ana, q.id, q.lines[0]?.id ?? '', 50_000);
+    expect(r.ok).toBe(true);
+  });
+
+  it('bajar de la referencia es un descuento: sin PIN no se puede, con PIN sí y queda quién autorizó', async () => {
+    const e = entorno();
+    const q = await borradorConReparacion(e);
+    const id = q.lines[0]?.id ?? '';
+    const sinPin = await applyQuoteDiscount(e.deps, ana, q.id, id, 40_000);
+    expect(!sinPin.ok && sinPin.error.code).toBe('AUTHORIZATION_REQUIRED');
+    const conPin = await applyQuoteDiscount(e.deps, ana, q.id, id, 40_000, autorizacion());
+    expect(conPin.ok && conPin.value.lines[0]?.unitPriceCents).toBe(40_000);
+    expect(conPin.ok && conPin.value.discountAuthorizedBy).toBe(luis.userId);
+  });
+
+  it('subir el precio no borra quién autorizó un descuento anterior', async () => {
+    const e = entorno();
+    const q = await borradorConReparacion(e);
+    const id = q.lines[0]?.id ?? '';
+    await applyQuoteDiscount(e.deps, ana, q.id, id, 40_000, autorizacion());
+    const r = await applyQuoteDiscount(e.deps, ana, q.id, id, 90_000);
+    expect(r.ok && r.value.discountAuthorizedBy).toBe(luis.userId);
+  });
+
+  it('la tablet sin persona no fija precios', async () => {
+    const e = entorno();
+    const q = await borradorConReparacion(e);
+    const r = await applyQuoteDiscount(
+      e.deps,
+      { userId: ana.userId, role: 'DEVICE' },
+      q.id,
+      q.lines[0]?.id ?? '',
+      90_000,
+    );
+    expect(!r.ok && r.error.code).toBe('NOT_AUTHORIZED');
+  });
+
+  it('en un producto de precio fijo un cajero sigue sin poder subir el precio', async () => {
+    const e = entorno();
+    const q = await borradorConVidrio(e);
+    const r = await applyQuoteDiscount(e.deps, ana, q.id, q.lines[0]?.id ?? '', 30_000);
+    expect(!r.ok && r.error.code).toBe('AUTHORIZATION_REQUIRED');
+  });
+
+  it('una cotización emitida conserva el precio fijado y su referencia en la operación', async () => {
+    const e = entorno();
+    const q = await borradorConReparacion(e);
+    await applyQuoteDiscount(e.deps, ana, q.id, q.lines[0]?.id ?? '', 85_000);
+    const emitida = await issueQuote(e.deps, ana, q.id);
+    expect(emitida.ok && emitida.value.lines[0]?.unitPriceCents).toBe(85_000);
+    const op = (await e.outbox.list()).at(-1);
+    const carga = op?.envelope.payload as {
+      lines: { unitPriceCents: number; catalogPriceCents: number }[];
+    };
+    expect(carga.lines[0]).toMatchObject({ unitPriceCents: 85_000, catalogPriceCents: 50_000 });
+    expect(parseOperation(op?.envelope).ok).toBe(true);
+  });
+});
+
 describe('cargos extra en el borrador [RF-M1-09, ADR-0044]', () => {
   const canto: SellableProduct = {
     ...vidrio,
@@ -322,6 +419,70 @@ describe('cargos extra en el borrador [RF-M1-09, ADR-0044]', () => {
     const q = await borradorConVidrio(e);
     const r = await addQuoteLineExtra(e.deps, ana, q.id, q.lines[0]?.id ?? '', vidrio);
     expect(!r.ok && r.error.code).toBe('EXTRA_INVALID');
+  });
+});
+
+describe('paquetes en el borrador [RF-M1-18, ADR-0048]', () => {
+  const cancel: SellableProduct = {
+    ...instalacion,
+    id: asId<'Product'>('00000000-0000-4000-8000-00000000f0b0'),
+    code: 'CB-1',
+    name: 'Cancel de baño',
+    kind: 'BUNDLE',
+    chargeUnit: 'PIECE',
+    ruleId: 'PIECE',
+    listPrice: precio(0),
+    bundleItems: [
+      { productId: vidrio.id, quantity: 1 },
+      { productId: instalacion.id, quantity: 1 },
+    ],
+  };
+  const catalogo = [vidrio, instalacion, cancel];
+  const medidas = { widthMm: 1000, heightMm: 1000, quantity: 1, displayUnit: 'cm' } as const;
+
+  it('se agregan los renglones de cada componente con su precio, en una sola vez', async () => {
+    const e = entorno();
+    const q = await createQuoteDraft(e.deps, ana, { customerId: cliente });
+    if (!q.ok) throw new Error('borrador');
+    const r = await addQuoteBundle(e.deps, ana, q.value.id, cancel, catalogo, medidas);
+    expect(r.ok && r.value.lines.map((l) => [l.name, l.lineTotalCents])).toEqual([
+      ['Vidrio claro 6 mm', 28_000],
+      ['Instalación', 50_000],
+    ]);
+    const guardada = await e.store.get(q.value.id);
+    expect(guardada?.lines).toHaveLength(2);
+  });
+
+  it('todo o nada: si un componente no cuadra no se agrega ninguno', async () => {
+    const e = entorno();
+    const q = await borradorConVidrio(e);
+    const sinMedidas = await addQuoteBundle(e.deps, ana, q.id, cancel, catalogo, {
+      ...medidas,
+      widthMm: null,
+    });
+    expect(sinMedidas).toEqual({ ok: false, error: { code: 'INPUT_INVALID' } });
+    const sinComponente = await addQuoteBundle(e.deps, ana, q.id, cancel, [instalacion], medidas);
+    expect(sinComponente).toEqual({ ok: false, error: { code: 'BUNDLE_COMPONENT_NOT_FOUND' } });
+    const guardada = await e.store.get(q.id);
+    expect(guardada?.lines).toHaveLength(1);
+  });
+
+  it('solo quien puede cotizar, y solo en un borrador', async () => {
+    const e = entorno();
+    const q = await borradorConVidrio(e);
+    expect(
+      await addQuoteBundle(e.deps, { ...ana, role: null }, q.id, cancel, catalogo, medidas),
+    ).toEqual({ ok: false, error: { code: 'NOT_AUTHORIZED' } });
+    expect(
+      await addQuoteBundle(
+        e.deps,
+        ana,
+        asId<'Quote'>('00000000-0000-4000-8000-0000000000ff'),
+        cancel,
+        catalogo,
+        medidas,
+      ),
+    ).toEqual({ ok: false, error: { code: 'NOT_FOUND' } });
   });
 });
 

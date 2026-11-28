@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactElement, SyntheticEvent } from 'react';
 import {
+  parseQuantity,
+  addQuoteBundle,
+  bundleChargeUnits,
+  formatMaxMeasure,
   addQuoteLine,
   applyQuoteDiscount,
   buildQuoteDocument,
@@ -129,6 +133,11 @@ export function EditorDeCotizacion({
     () => (productos ?? []).filter((p) => p.kind === 'EXTRA'),
     [productos],
   );
+  // Cómo se cobra lo que se agrega: un producto, su unidad; un paquete, las de sus componentes [RF-M1-18].
+  const cobrosDe = (p: SellableProduct): readonly SellableProduct['chargeUnit'][] =>
+    p.kind === 'BUNDLE' ? bundleChargeUnits(p.bundleItems ?? [], productos ?? []) : [p.chargeUnit];
+  const conDecimales = (p: SellableProduct): boolean =>
+    p.kind !== 'BUNDLE' && p.allowsDecimalQuantity === true;
   const encontrados = useMemo(
     () =>
       searchProducts(
@@ -177,10 +186,11 @@ export function EditorDeCotizacion({
     if (elegido === null) {
       return;
     }
-    const necesitaMedidas =
-      elegido.chargeUnit === 'SQUARE_METER' || elegido.chargeUnit === 'LINEAR_METER';
+    // Un paquete pide las medidas una sola vez, según cómo se cobran sus componentes [RF-M1-18].
+    const unidades = cobrosDe(elegido);
+    const necesitaMedidas = unidades.some((u) => u === 'SQUARE_METER' || u === 'LINEAR_METER');
     const w = necesitaMedidas ? parseLength(ancho, unidad, MEDIDA_MAXIMA_MM) : null;
-    const hRequerido = elegido.chargeUnit === 'SQUARE_METER';
+    const hRequerido = unidades.includes('SQUARE_METER');
     const h =
       hRequerido || (necesitaMedidas && alto.trim() !== '')
         ? parseLength(alto, unidad, MEDIDA_MAXIMA_MM)
@@ -189,13 +199,22 @@ export function EditorDeCotizacion({
       setError(t.errores.MEASURE_INVALID);
       return;
     }
-    const piezas = Number(cantidad);
-    const r = await addQuoteLine(deps, actor, quote.id, elegido, {
+    // Con decimales solo lo que se vende así (1.5 kg); un paquete se cuenta entero [RF-M1-12].
+    const piezas = parseQuantity(cantidad, conDecimales(elegido));
+    if (!piezas.ok) {
+      setError(t.errores.QUANTITY_INVALID);
+      return;
+    }
+    const entrada = {
       widthMm: w?.ok === true ? w.value : null,
       heightMm: h?.ok === true ? h.value : null,
-      quantity: Number.isInteger(piezas) ? piezas : 0,
+      quantity: piezas.value,
       displayUnit: unidad,
-    });
+    };
+    const r =
+      elegido.kind === 'BUNDLE'
+        ? await addQuoteBundle(deps, actor, quote.id, elegido, productos ?? [], entrada)
+        : await addQuoteLine(deps, actor, quote.id, elegido, entrada);
     if (aplicar(r)) {
       setElegido(null);
       setAncho('');
@@ -317,7 +336,8 @@ export function EditorDeCotizacion({
     descuentoDe === null ? undefined : quote.lines.find((l) => l.id === descuentoDe);
   const pedirPin =
     defaultPermissionPolicy.check(actor.role, 'PRICE_OVERRIDE') === 'NEEDS_ADMIN_AUTHORIZATION';
-  const medidas = elegido?.chargeUnit === 'SQUARE_METER' || elegido?.chargeUnit === 'LINEAR_METER';
+  const medidas =
+    elegido !== null && cobrosDe(elegido).some((u) => u === 'SQUARE_METER' || u === 'LINEAR_METER');
 
   const rotulo =
     quote.tempFolio !== null
@@ -412,7 +432,14 @@ export function EditorDeCotizacion({
                           }}
                         >
                           <span className="producto__nombre">{p.name}</span>
-                          <span className="producto__precio">{cobra(p.listPrice)}</span>
+                          {p.description === undefined ? null : (
+                            <span className="producto__descripcion">{p.description}</span>
+                          )}
+                          <span className="producto__precio">
+                            {p.kind === 'BUNDLE'
+                              ? t.producto.paquete((p.bundleItems ?? []).length)
+                              : cobra(p.listPrice)}
+                          </span>
                         </button>
                       </li>
                     ))}
@@ -421,7 +448,10 @@ export function EditorDeCotizacion({
               ) : (
                 <form className="formulario" onSubmit={(e) => void agregar(e)}>
                   <p className="mostrador__elegido">
-                    <strong>{elegido.name}</strong> · {cobra(elegido.listPrice)}
+                    <strong>{elegido.name}</strong> ·{' '}
+                    {elegido.kind === 'BUNDLE'
+                      ? t.producto.paquete((elegido.bundleItems ?? []).length)
+                      : cobra(elegido.listPrice)}
                   </p>
                   {medidas ? (
                     <>
@@ -457,11 +487,16 @@ export function EditorDeCotizacion({
                           }}
                         />
                       </div>
+                      {formatMaxMeasure(elegido.ruleParams, unidad) === null ? null : (
+                        <p className="formulario__ayuda">
+                          {t.producto.medidaMaxima} {formatMaxMeasure(elegido.ruleParams, unidad)}
+                        </p>
+                      )}
                     </>
                   ) : null}
                   <CampoNumerico
                     etiqueta={t.producto.cantidad}
-                    entero
+                    entero={!conDecimales(elegido)}
                     value={cantidad}
                     onChange={(e) => {
                       setCantidad(e.target.value);
@@ -496,7 +531,9 @@ export function EditorDeCotizacion({
                         {l.detail}
                         {l.unitPriceCents < l.catalogPriceCents
                           ? ` · ${t.lineas.conDescuento}`
-                          : ''}
+                          : l.isOpenPrice === true && l.unitPriceCents > l.catalogPriceCents
+                            ? ` · ${t.lineas.precioFijado}`
+                            : ''}
                       </span>
                     </div>
                     <span className="ticket__importe">{cobra(l.lineTotalCents)}</span>
@@ -508,7 +545,7 @@ export function EditorDeCotizacion({
                             setDescuentoDe(l.id);
                           }}
                         >
-                          {t.descuento.boton}
+                          {l.isOpenPrice === true ? t.descuento.botonAbierto : t.descuento.boton}
                         </Boton>
                         {extrasDelCatalogo.length > 0 ? (
                           <Boton

@@ -38,6 +38,17 @@ export interface QuoteLine {
   /** Cargos extra de la pieza (cantos, perforaciones, biselados…), ya sumados en `baseCents`, `taxCents` y
    *  `lineTotalCents` [RF-M1-09, RN-02]. Sin el campo (líneas de antes), no hay. */
   readonly extras?: readonly LineExtra[];
+  /** El producto tiene precio abierto: `unitPriceCents` puede quedar arriba de `catalogPriceCents`, que es la
+   *  referencia [RF-M1-10, ADR-0048]. Sin el campo (líneas de antes o de precio fijo), no. */
+  readonly isOpenPrice?: boolean;
+  /** Copia de la unidad de venta del producto ("rollo", "par", "hora") al armar la línea; así se lee la
+   *  cantidad en pantalla y en los documentos [RF-M1-11]. Sin el campo, no tiene. */
+  readonly saleUnitName?: string;
+  /** El producto se vende con hasta 3 decimales: la cantidad puede ser 1.5 [RF-M1-12]. Sin el campo, entera. */
+  readonly allowsDecimalQuantity?: boolean;
+  /** Copia de la descripción del producto al armar la línea; sale en el documento del cliente [RF-M1-13,
+   *  PP-39]. Sin el campo, no tiene. */
+  readonly description?: string;
 }
 
 /** Un cargo extra ligado a una línea: un producto "Cargo extra" del catálogo, cobrado con la medida de la pieza

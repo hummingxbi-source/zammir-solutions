@@ -23,6 +23,7 @@ function admin() {
   const productos: ProductAdmin = {
     create,
     createMany: vi.fn(),
+    updateMany: vi.fn(),
     update: vi.fn(),
     priceHistory: vi.fn(),
     get: vi.fn(),

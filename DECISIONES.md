@@ -53,5 +53,6 @@
 | [0045](docs/decisiones/0045-decisiones-de-la-entrega.md) | Decisiones de la entrega: anticipo al cancelar, titularidad, rol del mostrador, repositorio privado después de la entrega, respaldo en entorno propio con fotos y expediente | Aceptada (punto 8 sustituido por ADR-0047) | 2026-11-25 |
 | [0046](docs/decisiones/0046-respaldo-de-las-fotos-de-medicion.md) | Respaldo de las fotos de medición por el protocolo S3, con las dos copias más recientes | Aceptada | 2026-11-25 |
 | [0047](docs/decisiones/0047-expediente-de-entrega-en-cinco-documentos.md) | Expediente de la entrega en cinco documentos | Aceptada | 2026-11-25 |
+| [0048](docs/decisiones/0048-catalogo-escalable.md) | Catálogo escalable: precio abierto, unidad de venta, decimales, paquetes y precios en bloque | Aceptada | 2026-11-27 |
 
 Plantilla para una nueva decisión: [`docs/decisiones/0000-plantilla.md`](docs/decisiones/0000-plantilla.md).

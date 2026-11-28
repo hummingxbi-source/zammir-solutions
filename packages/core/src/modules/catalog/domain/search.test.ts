@@ -153,3 +153,19 @@ describe('searchProducts: filtros', () => {
     );
   });
 });
+
+describe('buscar por descripción [RF-M1-13]', () => {
+  it('una palabra que solo está en la descripción también encuentra el producto', () => {
+    const lista = [
+      p('Cristal templado 10 mm', { description: 'Para puertas y barandales' }),
+      p('Vidrio claro 3 mm'),
+    ];
+    expect(nombres(searchProducts(lista, { text: 'barandal' }))).toEqual([
+      'Cristal templado 10 mm',
+    ]);
+  });
+
+  it('sin descripción, se busca igual que antes', () => {
+    expect(nombres(searchProducts(catalogo, { text: 'barandal' }))).toEqual([]);
+  });
+});

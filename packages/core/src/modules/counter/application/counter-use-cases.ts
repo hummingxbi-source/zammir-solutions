@@ -178,6 +178,8 @@ export async function chargeCounterSale(
             isTaxExempt: l.isTaxExempt,
             detail: l.detail,
             ...(l.extras === undefined || l.extras.length === 0 ? {} : { extras: l.extras }),
+            ...(l.saleUnitName === undefined ? {} : { saleUnitName: l.saleUnitName }),
+            ...(l.description === undefined ? {} : { description: l.description }),
             displayUnit: l.displayUnit,
           })),
           payment: {

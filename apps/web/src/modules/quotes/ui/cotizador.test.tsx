@@ -263,6 +263,124 @@ describe('Cotizador', () => {
     expect(screen.getByText('Todavía no hay conceptos. Agrega el primero.')).toBeTruthy();
   });
 
+  it('avisa la medida máxima del producto y no agrega una pieza que la pasa [RF-M1-14]', async () => {
+    montar({ productos: [{ ...vidrio, ruleParams: { maxWidthMm: 1800, maxHeightMm: 2600 } }] });
+    await empezarConClienteNuevo();
+    fireEvent.change(await screen.findByLabelText('Buscar producto o servicio'), {
+      target: { value: 'vidrio' },
+    });
+    fireEvent.click(await screen.findByRole('button', { name: /Vidrio claro 6 mm/ }));
+    expect(screen.getByText('Medida máxima de este producto: 180 × 260 cm')).toBeTruthy();
+    fireEvent.change(screen.getByLabelText('Ancho (cm)'), { target: { value: '181' } });
+    fireEvent.change(screen.getByLabelText('Alto (cm)'), { target: { value: '80' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar a la cotización' }));
+    expect(await screen.findByText('La medida pasa del máximo de este producto.')).toBeTruthy();
+    expect(screen.getByText('Todavía no hay conceptos. Agrega el primero.')).toBeTruthy();
+  });
+
+  it('la cantidad se lee con la unidad de venta del producto [RF-M1-11]', async () => {
+    const felpa: SellableProduct = {
+      ...vidrio,
+      id: asId<'Product'>('00000000-0000-4000-8000-00000000f0c1'),
+      code: 'FE-1',
+      name: 'Felpa para ventana',
+      chargeUnit: 'PIECE',
+      ruleId: 'PIECE',
+      ruleParams: {},
+      listPrice: 4_500 as SellableProduct['listPrice'],
+      saleUnitName: 'rollo',
+    };
+    montar({ productos: [felpa] });
+    await empezarConClienteNuevo();
+    fireEvent.change(await screen.findByLabelText('Buscar producto o servicio'), {
+      target: { value: 'felpa' },
+    });
+    fireEvent.click(await screen.findByRole('button', { name: /Felpa para ventana/ }));
+    fireEvent.change(screen.getByLabelText('Cantidad'), { target: { value: '2' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar a la cotización' }));
+    // Sale en la línea y en la vista del documento, tal cual.
+    expect((await screen.findAllByText(/2 rollos × \$45\.00 = \$90\.00/)).length).toBeGreaterThan(
+      0,
+    );
+  });
+
+  it('un paquete pide las medidas una vez y entra como un renglón por producto [RF-M1-18]', async () => {
+    const kit: SellableProduct = {
+      ...vidrio,
+      id: asId<'Product'>('00000000-0000-4000-8000-00000000f0d1'),
+      code: 'KIT',
+      name: 'Kit de herrajes',
+      kind: 'STANDARD',
+      chargeUnit: 'PIECE',
+      ruleId: 'PIECE',
+      listPrice: 50_000 as SellableProduct['listPrice'],
+    };
+    const cancel: SellableProduct = {
+      ...kit,
+      id: asId<'Product'>('00000000-0000-4000-8000-00000000f0d2'),
+      code: 'CB',
+      name: 'Cancel de baño',
+      kind: 'BUNDLE',
+      listPrice: 0 as SellableProduct['listPrice'],
+      bundleItems: [
+        { productId: vidrio.id, quantity: 1 },
+        { productId: kit.id, quantity: 1 },
+      ],
+    };
+    montar({ productos: [vidrio, kit, cancel] });
+    await empezarConClienteNuevo();
+    fireEvent.change(await screen.findByLabelText('Buscar producto o servicio'), {
+      target: { value: 'cancel' },
+    });
+    fireEvent.click(await screen.findByRole('button', { name: /Cancel de baño.*Paquete de 2/ }));
+    fireEvent.change(screen.getByLabelText('Ancho (cm)'), { target: { value: '100' } });
+    fireEvent.change(screen.getByLabelText('Alto (cm)'), { target: { value: '100' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar a la cotización' }));
+    // Vidrio de 1.00 m² a $280.00 y el kit a $500.00.
+    expect((await screen.findAllByText(/1\.00 m² × \$280\.00 = \$280\.00/)).length).toBeGreaterThan(
+      0,
+    );
+    expect(screen.getAllByText(/1 × \$500\.00 = \$500\.00/).length).toBeGreaterThan(0);
+  });
+
+  it('lo que se vende con decimales acepta 2.5 horas; lo demás pide entero [RF-M1-12]', async () => {
+    const hora: SellableProduct = {
+      ...vidrio,
+      id: asId<'Product'>('00000000-0000-4000-8000-00000000f0e9'),
+      code: 'HR',
+      name: 'Hora de trabajo',
+      kind: 'SERVICE',
+      chargeUnit: 'SERVICE',
+      ruleId: 'SERVICE',
+      ruleParams: {},
+      listPrice: 350_00 as SellableProduct['listPrice'],
+      saleUnitName: 'hora',
+      allowsDecimalQuantity: true,
+    };
+    montar({ productos: [vidrio, hora] });
+    await empezarConClienteNuevo();
+    fireEvent.change(await screen.findByLabelText('Buscar producto o servicio'), {
+      target: { value: 'hora' },
+    });
+    fireEvent.click(await screen.findByRole('button', { name: /Hora de trabajo/ }));
+    expect(screen.getByLabelText('Cantidad').getAttribute('inputmode')).toBe('decimal');
+    fireEvent.change(screen.getByLabelText('Cantidad'), { target: { value: '2.5' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar a la cotización' }));
+    expect(
+      (await screen.findAllByText(/2\.5 horas × \$350\.00 = \$875\.00/)).length,
+    ).toBeGreaterThan(0);
+    // Un producto que se vende entero no acepta 1.5.
+    fireEvent.change(screen.getByLabelText('Buscar producto o servicio'), {
+      target: { value: 'vidrio' },
+    });
+    fireEvent.click(await screen.findByRole('button', { name: /Vidrio claro 6 mm/ }));
+    fireEvent.change(screen.getByLabelText('Ancho (cm)'), { target: { value: '100' } });
+    fireEvent.change(screen.getByLabelText('Alto (cm)'), { target: { value: '100' } });
+    fireEvent.change(screen.getByLabelText('Cantidad'), { target: { value: '1.5' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar a la cotización' }));
+    expect(await screen.findByText('La cantidad no es válida.')).toBeTruthy();
+  });
+
   it('los campos de medida abren el teclado numérico', async () => {
     montar();
     await empezarConClienteNuevo();
@@ -315,6 +433,72 @@ describe('Cotizador', () => {
     });
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(screen.getAllByText(/con descuento autorizado/).length).toBeGreaterThan(0);
+  });
+
+  it('precio abierto: un cajero fija un precio arriba de la referencia sin PIN; abajo, se lo pide [RF-M1-10]', async () => {
+    const reparacion: SellableProduct = {
+      ...instalacion,
+      id: asId<'Product'>('00000000-0000-4000-8000-00000000f0a1'),
+      code: 'REP',
+      name: 'Reparación de ventana',
+      isOpenPrice: true,
+    };
+    montar({ productos: [vidrio, reparacion] });
+    await empezarConClienteNuevo();
+    fireEvent.change(await screen.findByLabelText('Buscar producto o servicio'), {
+      target: { value: 'repar' },
+    });
+    fireEvent.click(await screen.findByRole('button', { name: /Reparación de ventana/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar a la cotización' }));
+    await waitFor(() => {
+      expect(screen.getAllByText('$500.00').length).toBeGreaterThan(0);
+    });
+    expect(screen.queryByRole('button', { name: 'Dar descuento' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Fijar precio' }));
+    const dialogo = await screen.findByRole('dialog');
+    expect(within(dialogo).getByText(/Precio de referencia: \$500\.00/)).toBeTruthy();
+    fireEvent.change(within(dialogo).getByLabelText('Precio por unidad (con IVA)'), {
+      target: { value: '800' },
+    });
+    expect(within(dialogo).queryByLabelText('PIN del administrador')).toBeNull();
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Fijar precio' }));
+    await waitFor(() => {
+      expect(screen.getAllByText('$800.00').length).toBeGreaterThan(0);
+    });
+    expect(screen.getAllByText(/precio fijado/).length).toBeGreaterThan(0);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Fijar precio' }));
+    const otra = await screen.findByRole('dialog');
+    fireEvent.change(within(otra).getByLabelText('Precio por unidad (con IVA)'), {
+      target: { value: '300' },
+    });
+    expect(within(otra).getByLabelText('PIN del administrador')).toBeTruthy();
+    fireEvent.change(within(otra).getByLabelText('PIN del administrador'), {
+      target: { value: '482915' },
+    });
+    fireEvent.click(within(otra).getByRole('button', { name: 'Fijar precio' }));
+    await waitFor(() => {
+      expect(screen.getAllByText('$300.00').length).toBeGreaterThan(0);
+    });
+    expect(screen.getAllByText(/con descuento autorizado/).length).toBeGreaterThan(0);
+  });
+
+  it('el buscador muestra la descripción y encuentra por ella [RF-M1-13]', async () => {
+    const templado: SellableProduct = {
+      ...vidrio,
+      id: asId<'Product'>('00000000-0000-4000-8000-00000000f0b1'),
+      code: 'VT-10',
+      name: 'Cristal templado 10 mm',
+      description: 'Para puertas y barandales',
+    };
+    montar({ productos: [vidrio, templado] });
+    await empezarConClienteNuevo();
+    fireEvent.change(await screen.findByLabelText('Buscar producto o servicio'), {
+      target: { value: 'barandal' },
+    });
+    const boton = await screen.findByRole('button', { name: /Cristal templado 10 mm/ });
+    expect(within(boton).getByText('Para puertas y barandales')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /Vidrio claro 6 mm/ })).toBeNull();
   });
 
   it('un administrador da el descuento sin pedir PIN', async () => {

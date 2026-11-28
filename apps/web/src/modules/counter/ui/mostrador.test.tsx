@@ -281,6 +281,53 @@ describe('Mostrador', () => {
     );
   });
 
+  it('precio abierto: fija un precio arriba de la referencia; abajo no se acepta y dice qué hacer [RF-M1-10]', async () => {
+    const reparacion: SellableProduct = {
+      ...chapa,
+      id: asId<'Product'>('00000000-0000-4000-8000-00000000f0a1'),
+      code: 'REP',
+      name: 'Reparación de ventana',
+      kind: 'SERVICE',
+      chargeUnit: 'SERVICE',
+      listPrice: precio(50_000),
+      ruleId: 'SERVICE',
+      isOpenPrice: true,
+    };
+    await montar({ productos: [chapa, reparacion] });
+    fireEvent.change(await screen.findByLabelText('Buscar producto o servicio'), {
+      target: { value: 'repar' },
+    });
+    fireEvent.click(await screen.findByRole('button', { name: /Reparación de ventana/ }));
+    await screen.findByText('Reparación de ventana', { selector: 'strong' });
+    const total = () =>
+      screen.getByText('Total', { selector: 'dt' }).nextElementSibling?.textContent;
+    expect(total()).toBe('$500.00');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Fijar precio' }));
+    const forma = await screen.findByRole('form', { name: 'Fijar precio: Reparación de ventana' });
+    fireEvent.change(within(forma).getByLabelText('Precio por unidad (con IVA)'), {
+      target: { value: '300' },
+    });
+    fireEvent.click(within(forma).getByRole('button', { name: 'Fijar precio' }));
+    expect(await screen.findByText(/no puede quedar debajo de la referencia/)).toBeTruthy();
+    expect(total()).toBe('$500.00');
+
+    fireEvent.change(within(forma).getByLabelText('Precio por unidad (con IVA)'), {
+      target: { value: '750' },
+    });
+    fireEvent.click(within(forma).getByRole('button', { name: 'Fijar precio' }));
+    await waitFor(() => {
+      expect(total()).toBe('$750.00');
+    });
+    expect(screen.getByText(/precio fijado/)).toBeTruthy();
+  });
+
+  it('un producto de precio fijo no ofrece fijar precio en el mostrador', async () => {
+    await montar();
+    await agregarChapa();
+    expect(screen.queryByRole('button', { name: 'Fijar precio' })).toBeNull();
+  });
+
   it('el vidrio a medida pide medidas y muestra el cálculo al centavo', async () => {
     await montar();
     fireEvent.change(await screen.findByLabelText('Buscar producto o servicio'), {
@@ -295,6 +342,102 @@ describe('Mostrador', () => {
     expect(screen.getByText('Total', { selector: 'dt' }).nextElementSibling?.textContent).toBe(
       '$537.60',
     );
+  });
+
+  it('agrega un cargo extra a la línea de vidrio, suma al total y se puede quitar [RF-M1-17]', async () => {
+    const canto: SellableProduct = {
+      ...vidrio,
+      id: asId<'Product'>('00000000-0000-4000-8000-00000000f0e1'),
+      code: 'CP',
+      name: 'Canto pulido',
+      kind: 'EXTRA',
+      listPrice: precio(12_000),
+    };
+    await montar({ productos: [vidrio, chapa, canto] });
+    // Un cargo extra no se vende solo: no sale en el buscador.
+    fireEvent.change(await screen.findByLabelText('Buscar producto o servicio'), {
+      target: { value: 'canto' },
+    });
+    expect(screen.queryByRole('button', { name: /Canto pulido/ })).toBeNull();
+    fireEvent.change(screen.getByLabelText('Buscar producto o servicio'), {
+      target: { value: 'vidrio' },
+    });
+    fireEvent.click(await screen.findByRole('button', { name: /Vidrio claro 6 mm/ }));
+    fireEvent.change(screen.getByLabelText('Ancho (cm)'), { target: { value: '100' } });
+    fireEvent.change(screen.getByLabelText('Alto (cm)'), { target: { value: '100' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar al ticket' }));
+    await screen.findByText(/100 cm × 100 cm = 1\.00 m² × \$280\.00 = \$280\.00/);
+    fireEvent.click(screen.getByRole('button', { name: 'Cargo extra · Vidrio claro 6 mm' }));
+    const grupo = screen.getByRole('group', { name: 'Cargo extra para Vidrio claro 6 mm' });
+    fireEvent.click(within(grupo).getByRole('button', { name: 'Agregar a la línea' }));
+    const total = () =>
+      screen.getByText('Total', { selector: 'dt' }).nextElementSibling?.textContent;
+    await waitFor(() => {
+      expect(total()).toBe('$400.00');
+    });
+    expect(
+      screen.getByText(/\+ Canto pulido: 100 cm × 100 cm = 1\.00 m² × \$120\.00 = \$120\.00/),
+    ).toBeTruthy();
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Quitar Canto pulido · Vidrio claro 6 mm' }),
+    );
+    await waitFor(() => {
+      expect(total()).toBe('$280.00');
+    });
+  });
+
+  it('un paquete entra al ticket como un renglón por producto [RF-M1-18]', async () => {
+    const juego: SellableProduct = {
+      ...chapa,
+      id: asId<'Product'>('00000000-0000-4000-8000-00000000f0d3'),
+      code: 'JG',
+      name: 'Juego de chapas',
+      kind: 'BUNDLE',
+      listPrice: precio(0),
+      bundleItems: [{ productId: chapa.id, quantity: 2 }],
+    };
+    await montar({ productos: [vidrio, chapa, juego] });
+    fireEvent.change(await screen.findByLabelText('Buscar producto o servicio'), {
+      target: { value: 'juego' },
+    });
+    fireEvent.click(await screen.findByRole('button', { name: /Juego de chapas.*Paquete de 1/ }));
+    // Sin componentes a medida no pide medidas: solo cuántos paquetes.
+    expect(screen.queryByLabelText('Ancho (cm)')).toBeNull();
+    fireEvent.change(screen.getByLabelText('Cantidad'), { target: { value: '2' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar al ticket' }));
+    await waitFor(() => {
+      expect(screen.getByText('Total', { selector: 'dt' }).nextElementSibling?.textContent).toBe(
+        '$464.00',
+      );
+    });
+    expect(screen.getByText(/4 × \$116\.00 = \$464\.00/)).toBeTruthy();
+  });
+
+  it('vende 1.5 kilos de un producto que se vende con decimales [RF-M1-12]', async () => {
+    const vinil: SellableProduct = {
+      ...chapa,
+      id: asId<'Product'>('00000000-0000-4000-8000-00000000f0e8'),
+      code: 'VN',
+      name: 'Vinil para cancel',
+      listPrice: precio(85_00),
+      saleUnitName: 'kilo',
+      allowsDecimalQuantity: true,
+    };
+    await montar({ productos: [vidrio, chapa, vinil] });
+    fireEvent.change(await screen.findByLabelText('Buscar producto o servicio'), {
+      target: { value: 'vinil' },
+    });
+    fireEvent.click(await screen.findByRole('button', { name: /Vinil para cancel/ }));
+    // Abre su formulario para escribir la cantidad, sin medidas.
+    expect(screen.queryByLabelText('Ancho (cm)')).toBeNull();
+    fireEvent.change(screen.getByLabelText('Cantidad'), { target: { value: '1.5' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar al ticket' }));
+    await waitFor(() => {
+      expect(screen.getByText('Total', { selector: 'dt' }).nextElementSibling?.textContent).toBe(
+        '$127.50',
+      );
+    });
+    expect(screen.getByText(/1\.5 kilos × \$85\.00 = \$127\.50/)).toBeTruthy();
   });
 
   it('una medida mal escrita no agrega nada y dice qué hacer', async () => {

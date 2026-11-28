@@ -1,5 +1,7 @@
 import type { LengthUnit } from '../../../../shared-kernel/measure/length';
 import { formatMoney } from '../../../../shared-kernel/money/money';
+import { saleUnitFor } from '../sale-unit';
+import { readAdjustments } from './adjustments';
 import type { PriceAdjustment, PriceResult } from './types';
 
 /** Número con `escala` unidades por entero, solo con aritmética de enteros: 1255 mm en metros es
@@ -13,8 +15,13 @@ function decimal(valor: number, escala: number, decimales: number, minDecimales:
   return fraccion === '' ? String(enteros) : `${String(enteros)}.${fraccion}`;
 }
 
+/** La cifra de una longitud en la unidad que se usa, sin la unidad. */
+function cifra(mm: number, unidad: LengthUnit): string {
+  return unidad === 'm' ? decimal(mm, 1000, 3, 2) : decimal(mm, 10, 1, 0);
+}
+
 function longitud(mm: number, unidad: LengthUnit): string {
-  return unidad === 'm' ? `${decimal(mm, 1000, 3, 2)} m` : `${decimal(mm, 10, 1, 0)} cm`;
+  return `${cifra(mm, unidad)} ${unidad}`;
 }
 
 function metros(mm: number): string {
@@ -37,8 +44,9 @@ function nota(ajuste: PriceAdjustment): string {
 }
 
 /** El cálculo a la vista, con las unidades claras [RN-04]. Ejemplo:
- *  `1.20 m × 0.80 m = 0.96 m² × $280.00 = $268.80`. */
-export function formatPriceDetail(resultado: PriceResult): string {
+ *  `1.20 m × 0.80 m = 0.96 m² × $280.00 = $268.80`. Con unidad de venta, la cantidad la dice:
+ *  `2 rollos × $45.00 = $90.00` [RF-M1-11]. */
+export function formatPriceDetail(resultado: PriceResult, unidadDeVenta?: string): string {
   const { detail, unitPrice, amount } = resultado;
   const precio = formatMoney(unitPrice);
   const importe = formatMoney(amount);
@@ -66,9 +74,28 @@ export function formatPriceDetail(resultado: PriceResult): string {
     }
     case 'PIECE':
     case 'SERVICE':
-      texto = `${String(detail.quantity)} × ${precio} = ${importe}`;
+      texto =
+        unidadDeVenta === undefined
+          ? `${String(detail.quantity)} × ${precio} = ${importe}`
+          : `${String(detail.quantity)} ${saleUnitFor(detail.quantity, unidadDeVenta)} × ${precio} = ${importe}`;
       break;
   }
   const notas = resultado.adjustments.map(nota);
   return notas.length === 0 ? texto : `${texto} (${notas.join('; ')})`;
+}
+
+/** La medida máxima del producto para avisarla al capturar, en la unidad que se usa: "180 × 260 cm",
+ *  "ancho 180 cm" o "largo 610 cm". `null` si no tiene [RF-M1-14]. */
+export function formatMaxMeasure(ruleParams: unknown, unidad: LengthUnit): string | null {
+  const { maxWidthMm: ancho, maxHeightMm: alto } = readAdjustments(ruleParams);
+  const porLargo = (ruleParams as { basis?: unknown } | null)?.basis === 'LENGTH';
+  if (porLargo) {
+    return ancho === null ? null : `largo ${longitud(ancho, unidad)}`;
+  }
+  if (ancho !== null && alto !== null) {
+    return `${cifra(ancho, unidad)} × ${longitud(alto, unidad)}`;
+  }
+  if (ancho !== null) return `ancho ${longitud(ancho, unidad)}`;
+  if (alto !== null) return `alto ${longitud(alto, unidad)}`;
+  return null;
 }

@@ -2,6 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { PedirEntrarConPin } from '../../identity/ui/PedirEntrarConPin';
 import type { ReactElement, SyntheticEvent } from 'react';
 import {
+  parseQuantity,
+  addBundleToTicket,
+  bundleChargeUnits,
+  addTicketLineExtra,
+  removeTicketLineExtra,
+  formatMaxMeasure,
   addToTicket,
   balanceCents,
   cancelCounterSale,
@@ -11,11 +17,13 @@ import {
   mexicoDate,
   money,
   parseLength,
+  parseMoney,
   planRefunds,
   registerWorkOrderPayment,
   removeFromTicket,
   searchProducts,
   shareQuote,
+  setTicketLinePrice,
   setTicketQuantity,
   ticketTotals,
   type Authorization,
@@ -54,6 +62,7 @@ import { PanelDeIndicadores } from '../../../shared/ui/PanelDeIndicadores';
 import { Tarjeta } from '../../../shared/ui/Tarjeta';
 import { CampoNumerico } from '../../../shared/ui/Campo';
 import { Campo } from '../../../shared/ui/Campo';
+import { Seleccion } from '../../../shared/ui/Seleccion';
 import { formatearPesos } from '../../../shared/ui/formatos';
 import { DialogoDeAutorizacion } from '../../orders/ui/DialogoDeAutorizacion';
 import { TurnoDeCaja, type HojaDelCorte, type Persona } from './TurnoDeCaja';
@@ -61,6 +70,8 @@ import { DialogoDeCobro } from '../../orders/ui/DialogoDeCobro';
 import type { AutorizacionDeAdministrador } from '../../quotes/ui/DialogoDeDescuento';
 
 const t = textos.mostrador;
+// Los cargos extra se ven y se capturan igual que en el cotizador [RF-M1-17].
+const tx = textos.cotizador.extras;
 
 /** Medida máxima aceptada al capturar (10 m), igual que en el cotizador. */
 const MEDIDA_MAXIMA_MM = 10_000;
@@ -132,6 +143,13 @@ export function Mostrador(props: MostradorProps): ReactElement {
   const [alto, setAlto] = useState('');
   const [cantidad, setCantidad] = useState('1');
   const [ticket, setTicket] = useState<Ticket>(EMPTY_TICKET);
+  // Cargo extra de una línea del ticket (canto, perforación…) [RF-M1-17].
+  const [extraDe, setExtraDe] = useState<string | null>(null);
+  const [extraId, setExtraId] = useState('');
+  const [cantidadExtra, setCantidadExtra] = useState('1');
+  // Precio abierto [RF-M1-10]: la línea a la que se le está fijando el precio y lo que se escribió.
+  const [precioDe, setPrecioDe] = useState<string | null>(null);
+  const [precioTexto, setPrecioTexto] = useState('');
   const [dialogo, setDialogo] = useState<Dialogo>(null);
   const [error, setError] = useState<{ mensaje: string; queHacer: string } | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
@@ -166,7 +184,16 @@ export function Mostrador(props: MostradorProps): ReactElement {
   const { alCambiarElEnvio } = props;
   useEffect(() => alCambiarElEnvio?.(() => void refrescar()), [alCambiarElEnvio, refrescar]);
 
-  // Los cargos extra se agregan a una línea en el cotizador; no se venden solos [RF-M1-09].
+  // Los cargos extra no se venden solos: se agregan a una línea del ticket [RF-M1-09, RF-M1-17].
+  const extrasDelCatalogo = useMemo(
+    () => (productos ?? []).filter((p) => p.kind === 'EXTRA'),
+    [productos],
+  );
+  // Cómo se cobra lo que se agrega: un producto, su unidad; un paquete, las de sus componentes [RF-M1-18].
+  const cobrosDe = (p: SellableProduct): readonly SellableProduct['chargeUnit'][] =>
+    p.kind === 'BUNDLE' ? bundleChargeUnits(p.bundleItems ?? [], productos ?? []) : [p.chargeUnit];
+  const conDecimales = (p: SellableProduct): boolean =>
+    p.kind !== 'BUNDLE' && p.allowsDecimalQuantity === true;
   const encontrados = useMemo(
     () =>
       searchProducts(
@@ -207,10 +234,11 @@ export function Mostrador(props: MostradorProps): ReactElement {
       return;
     }
     setError(null);
-    const necesitaMedidas =
-      elegido.chargeUnit === 'SQUARE_METER' || elegido.chargeUnit === 'LINEAR_METER';
+    // Un paquete pide las medidas una sola vez, según cómo se cobran sus componentes [RF-M1-18].
+    const unidades = cobrosDe(elegido);
+    const necesitaMedidas = unidades.some((u) => u === 'SQUARE_METER' || u === 'LINEAR_METER');
     const w = necesitaMedidas ? parseLength(ancho, unidad, MEDIDA_MAXIMA_MM) : null;
-    const hRequerido = elegido.chargeUnit === 'SQUARE_METER';
+    const hRequerido = unidades.includes('SQUARE_METER');
     const h =
       hRequerido || (necesitaMedidas && alto.trim() !== '')
         ? parseLength(alto, unidad, MEDIDA_MAXIMA_MM)
@@ -219,19 +247,34 @@ export function Mostrador(props: MostradorProps): ReactElement {
       mostrarError('MEASURE_INVALID');
       return;
     }
-    const piezas = Number(cantidad);
-    const r = addToTicket(
-      ticket,
-      elegido,
-      {
-        id: deps.idGenerator.newId<'Line'>(),
-        widthMm: w?.ok === true ? w.value : null,
-        heightMm: h?.ok === true ? h.value : null,
-        quantity: Number.isInteger(piezas) ? piezas : 0,
-        displayUnit: unidad,
-      },
-      lineDeps,
-    );
+    // Con decimales solo lo que se vende así (1.5 kg); un paquete se cuenta entero [RF-M1-12].
+    const piezas = parseQuantity(cantidad, conDecimales(elegido));
+    if (!piezas.ok) {
+      mostrarError('QUANTITY_INVALID');
+      return;
+    }
+    const entrada = {
+      widthMm: w?.ok === true ? w.value : null,
+      heightMm: h?.ok === true ? h.value : null,
+      quantity: piezas.value,
+      displayUnit: unidad,
+    };
+    const r =
+      elegido.kind === 'BUNDLE'
+        ? addBundleToTicket(
+            ticket,
+            elegido,
+            productos ?? [],
+            entrada,
+            () => deps.idGenerator.newId<'Line'>(),
+            lineDeps,
+          )
+        : addToTicket(
+            ticket,
+            elegido,
+            { ...entrada, id: deps.idGenerator.newId<'Line'>() },
+            lineDeps,
+          );
     if (!r.ok) {
       mostrarError(r.error.code);
       return;
@@ -246,8 +289,9 @@ export function Mostrador(props: MostradorProps): ReactElement {
 
   function elegirProducto(p: SellableProduct): void {
     setError(null);
+    // Un paquete o lo que se vende con decimales abre su formulario: cuántos y, si hace falta, las medidas.
     const medidas = p.chargeUnit === 'SQUARE_METER' || p.chargeUnit === 'LINEAR_METER';
-    if (medidas) {
+    if (medidas || p.kind === 'BUNDLE' || conDecimales(p)) {
       setElegido(p);
       return;
     }
@@ -271,10 +315,63 @@ export function Mostrador(props: MostradorProps): ReactElement {
     }
   }
 
+  function agregarExtra(lineId: string): void {
+    const extra = extrasDelCatalogo.find((p) => p.id === extraId);
+    if (extra === undefined) {
+      return;
+    }
+    const piezas = Number(cantidadExtra);
+    const r = addTicketLineExtra(
+      ticket,
+      lineId,
+      extra,
+      Number.isInteger(piezas) ? piezas : 0,
+      lineDeps,
+    );
+    if (r.ok) {
+      setTicket(r.value);
+      setExtraDe(null);
+      setExtraId('');
+      setCantidadExtra('1');
+      setError(null);
+    } else {
+      mostrarError(r.error.code);
+    }
+  }
+
+  function quitarExtra(lineId: string, productId: SellableProduct['id']): void {
+    const r = removeTicketLineExtra(ticket, lineId, productId, lineDeps);
+    if (r.ok) {
+      setTicket(r.value);
+    } else {
+      mostrarError(r.error.code);
+    }
+  }
+
   function cambiarCantidad(id: string, nueva: number): void {
     const r = setTicketQuantity(ticket, id, nueva, lineDeps);
     if (r.ok) {
       setTicket(r.value);
+    } else {
+      mostrarError(r.error.code);
+    }
+  }
+
+  function fijarPrecio(id: string): void {
+    const linea = ticket.lines.find((l) => l.id === id);
+    const monto = parseMoney(precioTexto);
+    if (linea === undefined || !monto.ok || monto.value < linea.catalogPriceCents) {
+      setError({
+        mensaje: t.ticket.precioDebajo(cobra(linea?.catalogPriceCents ?? 0)),
+        queHacer: t.ticket.precioDebajoQueHacer,
+      });
+      return;
+    }
+    const r = setTicketLinePrice(ticket, id, monto.value, lineDeps);
+    if (r.ok) {
+      setTicket(r.value);
+      setPrecioDe(null);
+      setError(null);
     } else {
       mostrarError(r.error.code);
     }
@@ -398,7 +495,8 @@ export function Mostrador(props: MostradorProps): ReactElement {
   }
 
   const totales = ticketTotals(ticket);
-  const medidas = elegido?.chargeUnit === 'SQUARE_METER' || elegido?.chargeUnit === 'LINEAR_METER';
+  const medidas =
+    elegido !== null && cobrosDe(elegido).some((u) => u === 'SQUARE_METER' || u === 'LINEAR_METER');
   const hoy = mexicoDate(deps.clock.now());
   const ventasDeHoy = ventas
     .filter((v) => mexicoDate(new Date(v.issuedAt)) === hoy)
@@ -477,7 +575,14 @@ export function Mostrador(props: MostradorProps): ReactElement {
                           }}
                         >
                           <span className="producto__nombre">{p.name}</span>
-                          <span className="producto__precio">{cobra(p.listPrice)}</span>
+                          {p.description === undefined ? null : (
+                            <span className="producto__descripcion">{p.description}</span>
+                          )}
+                          <span className="producto__precio">
+                            {p.kind === 'BUNDLE'
+                              ? t.venta.paquete((p.bundleItems ?? []).length)
+                              : cobra(p.listPrice)}
+                          </span>
                         </button>
                       </li>
                     ))}
@@ -486,7 +591,10 @@ export function Mostrador(props: MostradorProps): ReactElement {
               ) : (
                 <form className="formulario" onSubmit={agregar}>
                   <p className="mostrador__elegido">
-                    <strong>{elegido.name}</strong> · {cobra(elegido.listPrice)}
+                    <strong>{elegido.name}</strong> ·{' '}
+                    {elegido.kind === 'BUNDLE'
+                      ? t.venta.paquete((elegido.bundleItems ?? []).length)
+                      : cobra(elegido.listPrice)}
                   </p>
                   {medidas ? (
                     <>
@@ -522,11 +630,16 @@ export function Mostrador(props: MostradorProps): ReactElement {
                           }}
                         />
                       </div>
+                      {formatMaxMeasure(elegido.ruleParams, unidad) === null ? null : (
+                        <p className="formulario__ayuda">
+                          {t.venta.medidaMaxima} {formatMaxMeasure(elegido.ruleParams, unidad)}
+                        </p>
+                      )}
                     </>
                   ) : null}
                   <CampoNumerico
                     etiqueta={t.venta.cantidad}
-                    entero
+                    entero={!conDecimales(elegido)}
                     value={cantidad}
                     onChange={(e) => {
                       setCantidad(e.target.value);
@@ -587,10 +700,54 @@ export function Mostrador(props: MostradorProps): ReactElement {
                       <li key={l.id} className="ticket__linea">
                         <div className="ticket__datos">
                           <strong className="ticket__nombre">{l.name}</strong>
-                          <span className="ticket__detalle">{l.detail}</span>
+                          <span className="ticket__detalle">
+                            {l.detail}
+                            {l.isOpenPrice === true && l.unitPriceCents > l.catalogPriceCents
+                              ? ` · ${t.ticket.precioFijado}`
+                              : ''}
+                          </span>
                         </div>
                         <span className="ticket__importe">{cobra(l.lineTotalCents)}</span>
+                        {precioDe === l.id ? (
+                          <form
+                            className="ticket__precio"
+                            aria-label={`${t.ticket.fijarPrecio}: ${l.name}`}
+                            onSubmit={(e) => {
+                              e.preventDefault();
+                              fijarPrecio(l.id);
+                            }}
+                          >
+                            <p>{t.ticket.referencia(cobra(l.catalogPriceCents))}</p>
+                            <CampoNumerico
+                              etiqueta={t.ticket.precioPorUnidad}
+                              value={precioTexto}
+                              onChange={(e) => {
+                                setPrecioTexto(e.target.value);
+                              }}
+                            />
+                            <Boton type="submit">{t.ticket.fijarPrecio}</Boton>
+                            <Boton
+                              variante="secundario"
+                              onClick={() => {
+                                setPrecioDe(null);
+                              }}
+                            >
+                              {t.ticket.cancelarPrecio}
+                            </Boton>
+                          </form>
+                        ) : null}
                         <div className="ticket__acciones">
+                          {l.isOpenPrice === true ? (
+                            <Boton
+                              variante="secundario"
+                              onClick={() => {
+                                setPrecioDe(l.id);
+                                setPrecioTexto('');
+                              }}
+                            >
+                              {t.ticket.fijarPrecio}
+                            </Boton>
+                          ) : null}
                           <Boton
                             variante="secundario"
                             aria-label={`${t.ticket.menos}: ${l.name}`}
@@ -616,6 +773,18 @@ export function Mostrador(props: MostradorProps): ReactElement {
                           >
                             +
                           </Boton>
+                          {extrasDelCatalogo.length > 0 ? (
+                            <Boton
+                              variante="secundario"
+                              aria-label={`${tx.agregar} · ${l.name}`}
+                              onClick={() => {
+                                setExtraDe(extraDe === l.id ? null : l.id);
+                                setExtraId(extrasDelCatalogo[0]?.id ?? '');
+                              }}
+                            >
+                              {tx.agregar}
+                            </Boton>
+                          ) : null}
                           <Boton
                             variante="secundario"
                             onClick={() => {
@@ -625,6 +794,59 @@ export function Mostrador(props: MostradorProps): ReactElement {
                             {t.ticket.quitar}
                           </Boton>
                         </div>
+                        {(l.extras ?? []).length > 0 ? (
+                          <div className="ticket__extras">
+                            {(l.extras ?? []).map((x) => (
+                              <Boton
+                                key={x.productId}
+                                variante="secundario"
+                                aria-label={`${tx.quitar} ${x.name} · ${l.name}`}
+                                onClick={() => {
+                                  quitarExtra(l.id, x.productId);
+                                }}
+                              >
+                                {tx.quitar} {x.name} ({cobra(x.amountCents)})
+                              </Boton>
+                            ))}
+                          </div>
+                        ) : null}
+                        {extraDe === l.id ? (
+                          <div
+                            className="ticket__extra"
+                            role="group"
+                            aria-label={tx.titulo(l.name)}
+                          >
+                            <Seleccion
+                              etiqueta={tx.cual}
+                              value={extraId}
+                              opciones={extrasDelCatalogo.map((p) => ({
+                                valor: p.id,
+                                texto: `${p.name} · ${cobra(p.listPrice)} ${tx.porUnidad[p.chargeUnit] ?? ''}`,
+                              }))}
+                              onChange={(e) => {
+                                setExtraId(e.target.value);
+                              }}
+                            />
+                            {extrasDelCatalogo.find((p) => p.id === extraId)?.chargeUnit ===
+                            'PIECE' ? (
+                              <CampoNumerico
+                                etiqueta={tx.cuantas}
+                                entero
+                                value={cantidadExtra}
+                                onChange={(e) => {
+                                  setCantidadExtra(e.target.value);
+                                }}
+                              />
+                            ) : null}
+                            <Boton
+                              onClick={() => {
+                                agregarExtra(l.id);
+                              }}
+                            >
+                              {tx.confirmar}
+                            </Boton>
+                          </div>
+                        ) : null}
                       </li>
                     ))}
                   </ul>

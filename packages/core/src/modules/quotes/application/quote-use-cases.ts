@@ -10,6 +10,7 @@ import type {
 import type { Random } from '../../../shared-kernel/random';
 import { err, ok, type Result } from '../../../shared-kernel/result';
 import type { SellableProduct } from '../../catalog/application/ports';
+import { expandBundle, type BundleError, type BundleInput } from '../../catalog/domain/bundle';
 import type { PriceRegistry } from '../../catalog/domain/pricing/registry';
 import type { UserRole } from '../../identity/domain/auth';
 import { defaultPermissionPolicy, type PermissionPolicy } from '../../identity/domain/permissions';
@@ -49,6 +50,7 @@ export type QuoteErrorCode =
   | 'INVALID_TRANSITION'
   /** La cotización no se pudo guardar en la cola de salida. */
   | 'STORAGE_FAILED'
+  | BundleError['code']
   | QuoteLineError['code'];
 
 export interface QuoteError {
@@ -175,6 +177,43 @@ export async function addQuoteLine(
   return ok(await guardar(deps, { ...q.value, lines: [...q.value.lines, linea.value] }));
 }
 
+/** Agrega un paquete [RF-M1-18, ADR-0048]: lo convierte en un renglón normal por componente, cada uno con su
+ *  regla, precio e IVA. Todo o nada: si un componente falta o no cuadra con las medidas, no se agrega ninguno.
+ *  `catalogo` es lo que la tablet tiene para vender. */
+export async function addQuoteBundle(
+  deps: QuoteDeps,
+  actor: QuoteActor,
+  id: QuoteId,
+  paquete: SellableProduct,
+  catalogo: readonly SellableProduct[],
+  entrada: BundleInput,
+): Promise<Result<Quote, QuoteError>> {
+  if (!puedeCotizar(deps, actor)) {
+    return err({ code: 'NOT_AUTHORIZED' });
+  }
+  const q = await cargarBorrador(deps, id);
+  if (!q.ok) {
+    return q;
+  }
+  const renglones = expandBundle(paquete.bundleItems ?? [], catalogo, entrada);
+  if (!renglones.ok) {
+    return renglones;
+  }
+  const lineas: QuoteLine[] = [];
+  for (const r of renglones.value) {
+    const linea = buildQuoteLine(
+      r.product,
+      { ...r.input, id: deps.idGenerator.newId<'QuoteLine'>() },
+      lineDeps(deps),
+    );
+    if (!linea.ok) {
+      return linea;
+    }
+    lineas.push(linea.value);
+  }
+  return ok(await guardar(deps, { ...q.value, lines: [...q.value.lines, ...lineas] }));
+}
+
 /** Cambia medidas o cantidad de una línea; el precio se conserva. */
 export async function updateQuoteLine(
   deps: QuoteDeps,
@@ -287,7 +326,9 @@ export async function removeQuoteLine(
 
 /** Descuento o cambio de precio de una línea [RF-M2-03, PD-45, RN-19]. Un administrador puede hacerlo;
  *  un cajero necesita el PIN de un administrador (`authorization`). El precio anterior queda en la línea
- *  (`catalogPriceCents`) y la bitácora la escribe el servidor al recibir la cotización. */
+ *  (`catalogPriceCents`) y la bitácora la escribe el servidor al recibir la cotización.
+ *  Precio abierto [RF-M1-10, ADR-0048]: fijar el precio en la referencia o arriba no es un descuento y lo
+ *  hace cualquiera que pueda cotizar, sin PIN; bajar de la referencia sigue siendo un descuento. */
 export async function applyQuoteDiscount(
   deps: QuoteDeps,
   actor: QuoteActor,
@@ -296,13 +337,6 @@ export async function applyQuoteDiscount(
   nuevoPrecioCents: number,
   authorization?: Authorization,
 ): Promise<Result<Quote, QuoteError>> {
-  const decision = permisos(deps).check(actor.role, 'PRICE_OVERRIDE');
-  if (decision === 'DENY') {
-    return err({ code: 'NOT_AUTHORIZED' });
-  }
-  if (decision === 'NEEDS_ADMIN_AUTHORIZATION' && authorization === undefined) {
-    return err({ code: 'AUTHORIZATION_REQUIRED' });
-  }
   const q = await cargarBorrador(deps, id);
   if (!q.ok) {
     return q;
@@ -311,6 +345,20 @@ export async function applyQuoteDiscount(
   if (actual === undefined) {
     return err({ code: 'LINE_NOT_FOUND' });
   }
+  const precioAbierto = actual.isOpenPrice === true && nuevoPrecioCents >= actual.catalogPriceCents;
+  if (precioAbierto) {
+    if (!puedeCotizar(deps, actor)) {
+      return err({ code: 'NOT_AUTHORIZED' });
+    }
+  } else {
+    const decision = permisos(deps).check(actor.role, 'PRICE_OVERRIDE');
+    if (decision === 'DENY') {
+      return err({ code: 'NOT_AUTHORIZED' });
+    }
+    if (decision === 'NEEDS_ADMIN_AUTHORIZATION' && authorization === undefined) {
+      return err({ code: 'AUTHORIZATION_REQUIRED' });
+    }
+  }
   const nueva = repriceQuoteLine(actual, nuevoPrecioCents, lineDeps(deps));
   if (!nueva.ok) {
     return nueva;
@@ -318,8 +366,9 @@ export async function applyQuoteDiscount(
   const guardada = await guardar(deps, {
     ...q.value,
     lines: q.value.lines.map((l) => (l.id === lineId ? nueva.value : l)),
-    // Queda quién autorizó: un administrador se autoriza a sí mismo; un cajero, con el PIN de otro.
-    discountAuthorizedBy: authorization?.adminId ?? actor.userId,
+    // Queda quién autorizó: un administrador se autoriza a sí mismo; un cajero, con el PIN de otro. Un
+    // precio abierto no es un descuento: no cambia quién autorizó.
+    ...(precioAbierto ? {} : { discountAuthorizedBy: authorization?.adminId ?? actor.userId }),
   });
   return ok(guardada);
 }
@@ -371,6 +420,8 @@ function aCarga(q: Quote, lineas: readonly QuoteLine[]) {
       isTaxExempt: l.isTaxExempt,
       detail: l.detail,
       ...(l.extras === undefined || l.extras.length === 0 ? {} : { extras: l.extras }),
+      ...(l.saleUnitName === undefined ? {} : { saleUnitName: l.saleUnitName }),
+      ...(l.description === undefined ? {} : { description: l.description }),
     })),
   };
 }

@@ -67,6 +67,16 @@ describe('buildQuoteDocument', () => {
     expect(d.lines.map((l) => l.amount)).toEqual(['$537.60', '$500.00']);
   });
 
+  it('la descripción del producto va en el renglón del documento; sin ella, no hay campo [PP-39]', () => {
+    const conDescripcion = { ...linea(11_600, 10_000), description: 'Incluye rieles y jaladera' };
+    const d = buildQuoteDocument({
+      ...entrada,
+      quote: { ...enviada, lines: [conDescripcion, linea(50_000, 43_103)] },
+    });
+    expect(d.lines[0]?.description).toBe('Incluye rieles y jaladera');
+    expect(d.lines[1] !== undefined && 'description' in d.lines[1]).toBe(false);
+  });
+
   it('sin enviar muestra el folio provisional y la nota; ya enviada, el definitivo', () => {
     const sin = buildQuoteDocument({ ...entrada, quote: enviada });
     expect(sin.folioLabel).toBe('Folio provisional T1-0004');
